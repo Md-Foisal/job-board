@@ -1,0 +1,114 @@
+<x-layouts::app :title="'Job Create'">
+    <div class="max-w-4xl mx-auto py-8 px-4">
+        {{-- Header --}}
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-zinc-800 dark:text-white">Job Create</h1>
+            <a href="{{ route('job-listings.index') }}" 
+            class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 dark:bg-white dark:text-zinc-800 dark:hover:bg-zinc-100">Home</a>
+        </div>
+
+        {{-- Job create --}}
+        <form action="{{ route('job-listings.store') }}" 
+        method="POST" 
+        class="flex flex-col gap-4">
+            @csrf
+            {{-- title --}}
+            <label for="title" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Title</h2>
+                <input type="text" name="title" id="title" value="{{ old('title') }}" placeholder="Give a title" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('title')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- company --}}
+            <label for="company"
+                class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Company Name</h2>
+                <input type="text" name="company" id="company" value="{{ old('company') }}" placeholder="Company name"
+                    class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('company')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- description --}}
+            <label for="description"
+                class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Description</h2>
+                <textarea type="text" name="description" id="description" placeholder="Write Job description here"
+                    class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ old('description') }}</textarea>
+                @error('description')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- location --}}
+            <label for="location" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Location</h2>
+                <input type="text" name="location" id="location" value="{{ old('location') }}" placeholder="Write location" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('location')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- salary --}}
+            <label for="salary" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary range</h2>
+                <input type="text" name="salary" id="salary" value="{{ old('salary') }}" placeholder="Give salary range" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('salary')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- type --}}
+            <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>
+                <select name="type" id="type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    <option value="full-time" {{ old('type') == 'full-time' ? 'selected' : "" }}>Full Time</option>
+                    <option value="part-time" {{ old('type') == 'part-time' ? 'selected' : "" }}>Part Time</option>
+                    <option value="remote" {{ old('type') == 'remote' ? 'selected' : "" }}>Remote</option>
+                    <option value="contract" {{ old('type') == 'contract' ? 'selected' : "" }}>Contract</option>
+                    <option value="internship" {{ old('type') == 'internship' ? 'selected' : "" }}>internship</option>
+                    <option value="" disabled selected>Select one</option>
+                </select>
+                @error('type')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
+            {{-- status --}}
+            
+            {{-- Submit & cancel --}}
+            <div class="flex alignitems-center justify-evenly bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3 gap-2">
+                <button type="submit" 
+                class="cursor-pointer 
+                w-full 
+                rounded 
+                px-4 py-2 
+                bg-zinc-100
+                text-zinc-800 
+                hover:bg-zinc-200 
+                dark:bg-zinc-800 
+                dark:text-zinc-100
+                dark:hover:bg-zinc-700">Create</button>
+                <a href="{{ route('job-listings.index') }}" class="cursor-pointer 
+                w-full 
+                rounded 
+                px-4 py-2 
+                bg-zinc-100
+                text-zinc-800 
+                hover:bg-zinc-200 
+                dark:bg-zinc-800 
+                dark:text-zinc-100
+                dark:hover:bg-zinc-700 text-center">Cancel</a>
+            </div>
+        </form>
+    </div>
+</x-layouts::app>
