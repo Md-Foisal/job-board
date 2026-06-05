@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\ApplicationRequest;
 use App\Services\ApplicationService;
+use App\Events\JobApplicationSubmitted;
 
 class ApplicationController extends Controller
 {
@@ -50,15 +51,17 @@ class ApplicationController extends Controller
     public function store(ApplicationRequest $request)
     {
         $alreadyApplied = $this->applicationService->alreadyApplied($request);
-
+        
         if ($alreadyApplied) {
             return redirect()->back()->withErrors(['You have already applied for this job listing.']);
-        }
+            }
+            
+            $validatedData = $request->validated();
+            $validatedData['resume'] = $this->applicationService->storeResume($request);
+            
+            $application = $request->user()->applications()->create($validatedData);
         
-        $validatedData = $request->validated();
-        $validatedData['resume'] = $this->applicationService->storeResume($request);
-
-        $request->user()->applications()->create($validatedData);
+        JobApplicationSubmitted::dispatch($application);
 
         return redirect()->route('applications.index')->with('success', 'Application submitted successfully.');
     }
