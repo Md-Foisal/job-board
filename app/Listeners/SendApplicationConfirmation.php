@@ -5,6 +5,7 @@ namespace App\Listeners;
 use App\Events\JobApplicationSubmitted;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use App\Notifications\ApplicationSubmittedNotification;
 
 class SendApplicationConfirmation
 {
@@ -21,6 +22,6 @@ class SendApplicationConfirmation
      */
     public function handle(JobApplicationSubmitted $event): void
     {
-        logger('Application submitted: ' . $event->application->id);
+        $event->application->user->notify(new ApplicationSubmittedNotification($event->application));
     }
 }
