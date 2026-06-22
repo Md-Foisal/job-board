@@ -15,7 +15,7 @@ class EnsureUserIsEmployer
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'employer') {
+        if (!auth()->check() || !auth()->user()->hasRole('employer')) {
             abort(403, 'Unauthorized, only employers can access');
         }
         return $next($request);

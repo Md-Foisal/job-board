@@ -15,7 +15,7 @@ class EnsureUserIsCandidate
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || auth()->user()->role !== 'candidate') {
+        if (!auth()->check() || !auth()->user()->hasRole('candidate')) {
             abort(403, 'Unauthorized, only candidates can access');
         }
         return $next($request);

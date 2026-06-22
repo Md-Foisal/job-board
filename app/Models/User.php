@@ -55,6 +55,18 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function hasRole(string $role): bool
+    {
+        return $this->roles()
+        ->where('name', $role)
+        ->wherePivot('is_active', true)
+        ->where(function ($query) {
+            $query->whereNull('pivot_expires_at')
+                  ->orWhere('pivot_expires_at', '>', now());
+        })
+        ->exists();
+    }
+
     public function jobListings()
     {
         return $this->hasMany(JobListing::class);
