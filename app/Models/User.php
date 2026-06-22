@@ -12,6 +12,10 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
+use App\Models\Role;
+use App\Models\JobListing;
+use App\Models\Application;
+
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
@@ -42,6 +46,13 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public function roles() 
+    {
+        return $this->belongsToMany(Role::class)
+            ->withPivot('assigned_at', 'assigned_by', 'expires_at', 'is_active')
+            ->withTimestamps();
     }
 
     public function jobListings()
