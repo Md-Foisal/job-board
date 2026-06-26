@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Application;
 use App\Models\JobListing;
 use App\Models\User;
+use App\Models\Role;
 
 class ApplicationSeeder extends Seeder
 {
@@ -15,10 +16,14 @@ class ApplicationSeeder extends Seeder
      */
     public function run(): void
     {
+        $candidateRole = Role::where('name', 'candidate')->first();
         $jobs = JobListing::all();
-        $candidates = User::factory()->count(100)->create([
-            'role' => 'candidate',
-        ]);
+        $candidates = User::factory()
+        ->count(100)
+        ->create()
+        ->each(function ($user) use ($candidateRole) {
+            $user->roles()->attach($candidateRole->id);
+        });
 
         foreach ($candidates as $candidate) {
             $randomJobs = $jobs->random(rand(0, 5));
