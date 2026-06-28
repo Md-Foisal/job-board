@@ -52,6 +52,25 @@
                 viewable
             />
 
+            <flux:radio.group name="role" variant="cards" class="grid grid-cols-2">
+                <flux:radio value="candidate" checked>
+                    <flux:radio.indicator />
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <span class="text-2xl">👤</span>
+                        <flux:heading>Candidate</flux:heading>
+                        <flux:text size="sm">Find & apply for jobs</flux:text>
+                    </div>
+                </flux:radio>
+                <flux:radio value="employer">
+                    <flux:radio.indicator />
+                    <div class="flex flex-col items-center gap-1 text-center">
+                        <span class="text-2xl">🏢</span>
+                        <flux:heading>Employer</flux:heading>
+                        <flux:text size="sm">Post jobs & hire talent</flux:text>
+                    </div>
+                </flux:radio>
+            </flux:radio.group>
+
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
                     {{ __('Create account') }}
