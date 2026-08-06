@@ -61,8 +61,8 @@ class User extends Authenticatable
         ->where('name', $role)
         ->wherePivot('is_active', true)
         ->where(function ($query) {
-            $query->whereNull('pivot_expires_at')
-                  ->orWhere('pivot_expires_at', '>', now());
+            $query->whereNull('role_user.expires_at')
+                  ->orWhere('role_user.expires_at', '>', now());
         })
         ->exists();
     }

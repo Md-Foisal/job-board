@@ -5,7 +5,7 @@
       <h1 class="text-2xl font-bold text-zinc-800 dark:text-white">Job Show</h1>
       @auth
         <nav class="flex items-center gap-1">
-          @if (auth()->user()->role === 'candidate')
+          @if (auth()->check() && auth()->user()->hasRole('candidate'))
             <a href="{{ route('applications.create', ['job_listing_id' => $jobListing->id]) }}"
               class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 dark:bg-white dark:text-zinc-800 dark:hover:bg-zinc-100">
               Apply
@@ -37,10 +37,10 @@
 
         {{-- Status Badge --}}
         <span @class([
-          'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-          'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $jobListing->status === 'open',
-          'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $jobListing->status === 'closed',
-        ])>
+  'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
+  'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $jobListing->status === 'open',
+  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $jobListing->status === 'closed',
+])>
           {{ ucfirst($jobListing->status) }}
         </span>
       </div>
