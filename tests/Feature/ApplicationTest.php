@@ -7,7 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 test('candidate can see their applications', function () {
-    $candidate = User::factory()->create(['role' => 'candidate']);
+    $candidate = userWithRole('candidate');
     $application = Application::factory()->create(['user_id' => $candidate->id]);
 
     $response = $this->actingAs($candidate)->get(route('applications.index'));
@@ -21,7 +21,7 @@ test('guest cannot see applications', function () {
 });
 
 test('candidate can apply for a job listing', function () {
-    $candidate = User::factory()->create(['role' => 'candidate']);
+    $candidate = userWithRole('candidate');
     $jobListing = JobListing::factory()->create();
 
     Storage::fake('public');
@@ -44,9 +44,9 @@ test('candidate can apply for a job listing', function () {
 });
 
 test('non-candidate cannot apply for a job listing', function () {
-    $employer = User::factory()->create(['role' => 'employer']);
+    $employer = userWithRole('employer');
     $jobListing = JobListing::factory()->for(
-        User::factory()->create(['role' => 'employer'])
+        userWithRole('employer')
     )->create();
 
     Storage::fake('public');
@@ -62,9 +62,9 @@ test('non-candidate cannot apply for a job listing', function () {
 });
 
 test('candidate cannot apply for the same job listing twice', function () {
-    $candidate = User::factory()->create(['role' => 'candidate']);
+    $candidate = userWithRole('candidate');
     $jobListing = JobListing::factory()
-    ->for(User::factory()->create(['role' => 'employer']))
+    ->for(userWithRole('employer'))
     ->create();
 
     Application::factory()->create([
@@ -85,7 +85,7 @@ test('candidate cannot apply for the same job listing twice', function () {
 });
 
 test('application can\'t be created without required fields', function () {
-    $candidate = User::factory()->create(['role' => 'candidate']);
+    $candidate = userWithRole('candidate');
 
     $response = $this->actingAs($candidate)->post(route('applications.store'), ['cover_letter'=>'', 'resume'=>'', 'status'=>'', 'job_listing_id'=>'']);
 

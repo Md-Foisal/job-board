@@ -19,15 +19,14 @@ test('user can see job listing details', function () {
     $response->assertStatus(200);
 });
 
-test('guest cannot see job listings', function () {
+test('guest can see job listings', function () {
     $response = $this->get(route('job-listings.index'));
 
-    $response->assertRedirect(route('login'));
-})
-->todo('It will redirect to the login page after creating guest layout');
+    $response->assertStatus(200);
+});
 
 test('Employer can create job listing', function () {
-    $employer = User::factory()->create(['role' => 'employer']);
+    $employer = userWithRole('employer');
 
     $response = $this->actingAs($employer)->post(route('job-listings.store'), [
         'title' => 'Software Engineer',
@@ -46,7 +45,7 @@ test('Employer can create job listing', function () {
 });
 
 test('Non-employer can\'t create job listing', function () {
-    $candidate = User::factory()->create(['role' => 'candidate']);
+    $candidate = userWithRole('candidate');
 
     $response = $this->actingAs($candidate)->post(route('job-listings.store'), [
         'title' => 'Software Engineer',
@@ -61,7 +60,7 @@ test('Non-employer can\'t create job listing', function () {
 });
 
 test('Employer can edit job listing, but only their own', function () {
-    $employer = User::factory()->create(['role' => 'employer']);
+    $employer = userWithRole('employer');
     $jobListing = JobListing::factory()->create(['user_id' => $employer->id]);
 
     // Employer can edit their own job listing
@@ -82,7 +81,7 @@ test('Employer can edit job listing, but only their own', function () {
 
     // Employer cannot edit someone else's job listing
     $otherJobListing = JobListing::factory()
-    ->for(User::factory()->create(['role' => 'employer']))
+    ->for(userWithRole('employer'))
     ->create();
 
     $response = $this->actingAs($employer)->put(route('job-listings.update', $otherJobListing), [
@@ -98,7 +97,7 @@ test('Employer can edit job listing, but only their own', function () {
 });
 
 test('Employer can delete job listing, but only their own', function () {
-    $employer = User::factory()->create(['role' => 'employer']);
+    $employer = userWithRole('employer');
     $jobListing = JobListing::factory()->create(['user_id' => $employer->id]);
 
     // Employer can delete their own job listing
@@ -111,7 +110,7 @@ test('Employer can delete job listing, but only their own', function () {
 
     // Employer cannot delete someone else's job listing
     $otherJobListing = JobListing::factory()
-    ->for(User::factory()->create(['role' => 'employer']))
+    ->for(userWithRole('employer'))
     ->create();
 
     $response = $this->actingAs($employer)->delete(route('job-listings.destroy', $otherJobListing));
@@ -120,7 +119,7 @@ test('Employer can delete job listing, but only their own', function () {
 });
 
 test('job listing can\'t be created without required fields', function () {
-    $employer = User::factory()->create(['role' => 'employer']);
+    $employer = userWithRole('employer');
 
     $response = $this->actingAs($employer)->post(route('job-listings.store'), [
         'title' => '',

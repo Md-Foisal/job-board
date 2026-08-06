@@ -48,3 +48,11 @@ function something()
 {
     // ..
 }
+
+function userWithRole(string $roleName): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create();
+    $role = \App\Models\Role::firstOrCreate(['name' => $roleName]);
+    $user->roles()->attach($role->id, ['is_active' => true]);
+    return $user;
+}
