@@ -20,4 +20,9 @@ class JobListing extends Model
     {
         return $this->hasMany(Application::class);
     }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
 }

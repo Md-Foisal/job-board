@@ -15,6 +15,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 use App\Models\Role;
 use App\Models\JobListing;
 use App\Models\Application;
+use App\Models\Organization;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -75,5 +76,10 @@ class User extends Authenticatable
     public function applications()
     {
         return $this->hasMany(Application::class);
+    }
+
+    public function organization()
+    {
+    return $this->hasOne(Organization::class);
     }
 }
