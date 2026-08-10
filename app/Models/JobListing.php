@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\Application;
 use App\Models\EmployerProfile;
+use App\Models\Category;
 
 
 #[Fillable(['title', 'company', 'description', 'location', 'salary', 'type'])]
@@ -28,5 +29,10 @@ class JobListing extends Model
     public function employerProfile()
     {
         return $this->belongsTo(EmployerProfile::class);
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
     }
 }
