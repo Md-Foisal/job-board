@@ -10,7 +10,7 @@ use App\Models\User;
 use App\Models\JobListing;
 
 #[Fillable(['user_id', 'name', 'type', 'logo', 'website', 'about'])]
-class Organization extends Model
+class EmployerProfile extends Model
 {
     use HasFactory;
     

@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Models\User;
+use App\Models\Application;
+use App\Models\EmployerProfile;
+
 
 #[Fillable(['title', 'company', 'description', 'location', 'salary', 'type'])]
 class JobListing extends Model
@@ -21,8 +25,8 @@ class JobListing extends Model
         return $this->hasMany(Application::class);
     }
 
-    public function organization()
+    public function employerProfile()
     {
-        return $this->belongsTo(Organization::class);
+        return $this->belongsTo(EmployerProfile::class);
     }
 }

@@ -2,14 +2,14 @@
 
 namespace Database\Factories;
 
-use App\Models\Organization;
+use App\Models\EmployerProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Organization>
+ * @extends Factory<EmployerProfile>
  */
-class OrganizationFactory extends Factory
+class EmployerProfileFactory extends Factory
 {
     /**
      * Define the model's default state.

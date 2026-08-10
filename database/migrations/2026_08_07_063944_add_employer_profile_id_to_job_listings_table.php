@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_listings', function (Blueprint $table) {
-            $table->foreignId('organization_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('employer_profile_id')->nullable()->constrained()->cascadeOnDelete();
         });
     }
 
@@ -22,8 +22,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('job_listings', function (Blueprint $table) {
-            $table->dropForeign(['organization_id']);
-            $table->dropColumn('organization_id');
+            $table->dropForeign(['employer_profile_id']);
+            $table->dropColumn('employer_profile_id');
         });
     }
 };
