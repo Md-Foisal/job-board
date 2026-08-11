@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SkillSeeder::class,
             EmployerProfileSeeder::class,
+            CandidateProfileSeeder::class,
             JobListingSeeder::class,
             ApplicationSeeder::class,
         ]);

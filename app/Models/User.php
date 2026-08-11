@@ -16,6 +16,7 @@ use App\Models\Role;
 use App\Models\JobListing;
 use App\Models\Application;
 use App\Models\EmployerProfile;
+use App\Models\CandidateProfile;
 
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -81,5 +82,10 @@ class User extends Authenticatable
     public function employerProfile()
     {
     return $this->hasOne(EmployerProfile::class);
+    }
+
+    public function candidateProfile()
+    {
+        return $this->hasOne(CandidateProfile::class);
     }
 }
