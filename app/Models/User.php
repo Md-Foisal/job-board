@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 use App\Models\Role;
 use App\Models\JobListing;
@@ -23,7 +24,7 @@ use App\Models\CandidateProfile;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
