@@ -13,7 +13,7 @@ use App\Models\Category;
 use App\Models\Skill;
 
 
-#[Fillable(['title', 'company', 'description', 'location', 'salary', 'type'])]
+#[Fillable(['title', 'company', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'type'])]
 class JobListing extends Model
 {
     use HasFactory;
@@ -22,6 +22,8 @@ class JobListing extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'salary_min' => 'integer',
+            'salary_max' => 'integer',
         ];
     }
 
