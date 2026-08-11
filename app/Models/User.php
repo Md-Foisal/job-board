@@ -88,4 +88,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(CandidateProfile::class);
     }
+
+    public function savedJobs()
+    {
+        return $this->belongsToMany(JobListing::class, 'saved_jobs');
+    }
 }
