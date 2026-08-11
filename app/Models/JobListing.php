@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Application;
 use App\Models\EmployerProfile;
 use App\Models\Category;
+use App\Models\Skill;
 
 
 #[Fillable(['title', 'company', 'description', 'location', 'salary', 'type'])]
@@ -34,5 +35,10 @@ class JobListing extends Model
     public function categories()
     {
         return $this->belongsToMany(Category::class);
+    }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class);
     }
 }

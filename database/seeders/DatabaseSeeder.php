@@ -13,17 +13,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(RoleSeeder::class);
-        $this->call(CategorySeeder::class);
-        $this->call(EmployerProfileSeeder::class);
-        // User::factory(10)->create();
+        $this->call([
+            RoleSeeder::class,
+            CategorySeeder::class,
+            SkillSeeder::class,
+            EmployerProfileSeeder::class,
+            JobListingSeeder::class,
+            ApplicationSeeder::class,
+        ]);
 
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
-
-        $this->call(JobListingSeeder::class);
-        $this->call(ApplicationSeeder::class);
     }
 }
