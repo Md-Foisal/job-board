@@ -17,6 +17,14 @@ use App\Models\Skill;
 class JobListing extends Model
 {
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'expires_at' => 'datetime',
+        ];
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -39,7 +47,7 @@ class JobListing extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class);
+        return $this->belongsToMany(Skill::class)->withPivot('importance');
     }
 
     public function reports()
