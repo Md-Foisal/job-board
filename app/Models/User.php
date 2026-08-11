@@ -93,4 +93,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(JobListing::class, 'saved_jobs');
     }
+
+    public function reports()
+    {
+        return $this->morphMany(Report::class, 'reportable');
+    }
 }

@@ -41,4 +41,9 @@ class JobListing extends Model
     {
         return $this->belongsToMany(Skill::class);
     }
+
+    public function reports()
+    {
+        return $this->morphMany(Report::class, 'reportable');
+    }
 }
