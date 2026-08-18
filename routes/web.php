@@ -18,3 +18,7 @@ Route::resource('job-listings', JobListingController::class)
 Route::resource('applications', ApplicationController::class)
 ->except(['edit', 'update'])
 ->middleware(['auth', 'candidate']);
+
+Route::livewire('/profile', 'pages::profile')
+    ->middleware(['auth', 'candidate'])
+    ->name('candidate.profile');
