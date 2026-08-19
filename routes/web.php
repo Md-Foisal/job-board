@@ -19,6 +19,10 @@ Route::resource('applications', ApplicationController::class)
 ->except(['edit', 'update'])
 ->middleware(['auth', 'candidate']);
 
-Route::livewire('/profile', 'pages::profile')
+Route::livewire('/candidate-profile', 'pages::candidate-profile')
     ->middleware(['auth', 'candidate'])
     ->name('candidate.profile');
+
+Route::livewire('/employer-profile', 'pages::employer-profile')
+    ->middleware(['auth', 'employer'])
+    ->name('employer.profile');

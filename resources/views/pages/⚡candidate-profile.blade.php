@@ -25,13 +25,17 @@ new class extends Component {
 
     public function mount(): void
     {
-        $this->headline = Auth::user()->candidateProfile?->headline ?? '';
-        $this->bio = Auth::user()->candidateProfile?->bio ?? '';
-        $this->location = Auth::user()->candidateProfile?->location ?? '';
-        $this->experience_years = Auth::user()->candidateProfile?->experience_years ?? null;
-        $this->existing_resume = Auth::user()->candidateProfile?->resume;
-        $this->existing_avatar = Auth::user()->candidateProfile?->avatar;
-        $this->existing_cover_photo = Auth::user()->candidateProfile?->cover_photo;
+        $candidateProfile = Auth::user()->candidateProfile;
+
+        $this->headline = $candidateProfile?->headline ?? '';
+        $this->bio = $candidateProfile?->bio ?? '';
+        $this->location = $candidateProfile?->location ?? '';
+        $this->experience_years = $candidateProfile?->experience_years ?? null;
+
+        // Existing files
+        $this->existing_resume = $candidateProfile?->resume;
+        $this->existing_avatar = $candidateProfile?->avatar;
+        $this->existing_cover_photo = $candidateProfile?->cover_photo;
     }
 
     public function save(): void
@@ -79,7 +83,7 @@ new class extends Component {
 };
 ?>
 
-<div>
+<section>
     <flux:heading size="xl">My Profile</flux:heading>
     <flux:text class="mt-2">Set up your candidate profile.</flux:text>
 
@@ -117,4 +121,4 @@ new class extends Component {
         <flux:button variant="primary" type="submit">Save</flux:button>
 
     </form>
-</div>
+</section>

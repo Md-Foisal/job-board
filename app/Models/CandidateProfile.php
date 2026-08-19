@@ -12,6 +12,14 @@ use App\Models\Skill;
 class CandidateProfile extends Model
 {
     use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'experience_years' => 'integer',
+        ];
+    }
+    
     public function user()
     {
         return $this->belongsTo(User::class);
