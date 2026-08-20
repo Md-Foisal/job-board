@@ -18,8 +18,7 @@ new class extends Component {
         $query->where('title', 'like', '%' . $this->search . '%')
           ->orWhere('company', 'like', '%' . $this->search . '%')
           ->orWhere('location', 'like', '%' . $this->search . '%')
-          ->orWhere('description', 'like', '%' . $this->search . '%')
-          ->orWhere('salary', 'like', '%' . $this->search . '%');
+          ->orWhere('description', 'like', '%' . $this->search . '%');
       })
       ->when($this->type, function ($query) {
         $query->where('type', $this->type);
@@ -88,10 +87,22 @@ new class extends Component {
               {{ ucfirst($job->type) }}
             </span>
 
-            {{-- Salary --}}
-            @if($job->salary)
+            {{-- salary_min salary_max salary_currency salary_period --}}
+            @if($job->salary_min && $job->salary_max)
               <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                {{ $job->salary }}
+                {{ $job->salary_min }} - {{ $job->salary_max }} {{ $job->salary_currency }}/{{ $job->salary_period }}
+              </span>
+            @elseif($job->salary_min)
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                {{ $job->salary_min }}+ {{ $job->salary_currency }}/{{ $job->salary_period }}
+              </span>
+            @elseif($job->salary_max)
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Up to {{ $job->salary_max }} {{ $job->salary_currency }}/{{ $job->salary_period }}
+              </span>
+            @else
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Salary negotiable
               </span>
             @endif
           </div>

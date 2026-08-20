@@ -27,7 +27,10 @@ class JobListingRequest extends FormRequest
             'company' => ['required', 'string', 'max:255', 'min:2'],
             'description' => ['required', 'string', 'min:10'],
             'location' => ['required', 'string', 'max:255', 'min:2'],
-            'salary' => ['nullable', 'string', 'max:255', 'min:2'],
+            'salary_min' => ['nullable', 'integer', 'min:0'],
+            'salary_max' => ['nullable', 'integer', 'min:0', 'gte:salary_min'],
+            'salary_currency' => ['nullable', 'string', 'size:3'],
+            'salary_period' => ['nullable', 'string', 'in:hourly,weekly,monthly,yearly,contract'],
             'type' => ['required', 'in:full-time,part-time,remote,contract,internship'],
         ];
     }

@@ -13,7 +13,7 @@ use App\Models\Category;
 use App\Models\Skill;
 
 
-#[Fillable(['title', 'company', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'type'])]
+#[Fillable(['title', 'company', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'type', 'employer_profile_id'])]
 class JobListing extends Model
 {
     use HasFactory;

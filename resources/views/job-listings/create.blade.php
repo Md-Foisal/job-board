@@ -56,15 +56,50 @@
                 @enderror
             </label>
 
-            {{-- salary --}}
-            <label for="salary" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary range</h2>
-                <input type="text" name="salary" id="salary" value="{{ old('salary') }}" placeholder="Give salary range" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                @error('salary')
-                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
-                    </p>
-                @enderror
-            </label>
+            {{-- salary_min salary_max salary_currency salary_period --}}
+            <div class="grid grid-cols-2 gap-4">
+                <label for="salary_min" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Min</h2>
+                    <input type="number" name="salary_min" id="salary_min" value="{{ old('salary_min') }}" placeholder="Minimum salary" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_min')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="salary_max" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Max</h2>
+                    <input type="number" name="salary_max" id="salary_max" value="{{ old('salary_max') }}" placeholder="Maximum salary" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_max')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="salary_currency" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Currency</h2>
+                    <input type="text" name="salary_currency" id="salary_currency" value="{{ old('salary_currency') }}" placeholder="Currency (e.g., USD)" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_currency')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+                <label for="salary_period" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Period</h2>
+                    <select name="salary_period" id="salary_period" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="hourly" {{ old('salary_period') == 'hourly' ? 'selected' : "" }}>Hourly</option>
+                        <option value="weekly" {{ old('salary_period') == 'weekly' ? 'selected' : "" }}>Weekly</option>
+                        <option value="monthly" {{ old('salary_period') == 'monthly' ? 'selected' : "" }}>Monthly</option>
+                        <option value="yearly" {{ old('salary_period') == 'yearly' ? 'selected' : "" }}>Yearly</option>
+                        <option value="contract" {{ old('salary_period') == 'contract' ? 'selected' : "" }}>Contract</option>
+                    </select>
+                    @error('salary_period')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+            </div>
+
 
             {{-- type --}}
             <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">

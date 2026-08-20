@@ -53,9 +53,22 @@
         </span>
 
         {{-- Salary --}}
-        @if($jobListing->salary)
+        @if($jobListing->salary_min && $jobListing->salary_max)
           <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-            {{ $jobListing->salary }}
+            {{ $jobListing->salary_min }} - {{ $jobListing->salary_max }}
+            {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+          </span>
+        @elseif($jobListing->salary_min)
+          <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            {{ $jobListing->salary_min }}+ {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+          </span>
+        @elseif($jobListing->salary_max)
+          <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            Up to {{ $jobListing->salary_max }} {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+          </span>
+        @else
+          <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+            Salary negotiable
           </span>
         @endif
       </div>
