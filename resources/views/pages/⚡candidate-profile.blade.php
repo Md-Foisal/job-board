@@ -5,6 +5,8 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\Auth;
 use Flux\Flux;
 
+use App\Models\Skill;
+
 new class extends Component {
     use WithFileUploads;
 
@@ -23,6 +25,10 @@ new class extends Component {
     public $existing_avatar = null;
     public $existing_cover_photo = null;
 
+    // Skills set
+    public array $skills = [];
+    public $allSkills;
+
     public function mount(): void
     {
         $candidateProfile = Auth::user()->candidateProfile;
@@ -36,6 +42,15 @@ new class extends Component {
         $this->existing_resume = $candidateProfile?->resume;
         $this->existing_avatar = $candidateProfile?->avatar;
         $this->existing_cover_photo = $candidateProfile?->cover_photo;
+
+        // Skills set
+        $this->allSkills = Skill::all();
+        foreach ($this->allSkills as $skill) {
+            $this->skills[$skill->id] = [
+                'selected' => false,
+                'proficiency' => 'intermediate',
+            ];
+        }
     }
 
     public function save(): void
@@ -75,14 +90,21 @@ new class extends Component {
             $data['cover_photo'] = $this->cover_photo;
         }
 
-        Auth::user()->candidateProfile()->updateOrCreate([], $data);
+        $skillsToSync = [];
+        foreach ($this->skills as $skillId => $skillData) {
+            if ($skillData['selected']) {
+                $skillsToSync[$skillId] = ['proficiency' => $skillData['proficiency']];
+            }
+        }
+
+        $candidateProfile = Auth::user()->candidateProfile()->updateOrCreate([], $data);
+        $candidateProfile->skills()->sync($skillsToSync);
 
         Flux::toast(variant: 'success', text: 'Profile saved.');
         $this->reset(['resume', 'avatar', 'cover_photo']);
     }
 };
 ?>
-
 <section>
     <flux:heading size="xl">My Profile</flux:heading>
     <flux:text class="mt-2">Set up your candidate profile.</flux:text>
@@ -116,6 +138,21 @@ new class extends Component {
         @endif
 
         <flux:input wire:model="experience_years" label="Experience (years)" placeholder="How many years of experience do you have?" />
+        
+        {{-- Skills set --}}
+        
+        
+        @foreach ($allSkills as $skill)
+            <flux:checkbox wire:model.live="skills.{{ $skill->id }}.selected" label="{{ $skill->name }}" />
+            @if ($skills[$skill->id]['selected'])
+                <flux:select wire:model="skills.{{ $skill->id }}.proficiency" label="Proficiency">
+                    <flux:select.option value="beginner">Beginner</flux:select.option>
+                    <flux:select.option value="intermediate">Intermediate</flux:select.option>
+                    <flux:select.option value="advanced">Advanced</flux:select.option>
+                </flux:select>
+            @endif
+        @endforeach
+        
 
         {{-- submit button --}}
         <flux:button variant="primary" type="submit">Save</flux:button>
