@@ -129,6 +129,29 @@
                 @enderror
             </div>
 
+            {{-- skills --}}
+            <div class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Skills</h2>
+                @foreach ($skills as $skill)
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" name="skills[{{ $skill->id }}][selected]" id="skill_{{ $skill->id }}" value="1" {{ old('skills.'.$skill->id.'.selected', $jobListing->skills->contains($skill->id)) ? 'checked' : '' }} class="w-4 h-4 text-zinc-800 dark:text-zinc-100 bg-zinc-100 border-zinc-300 rounded focus:ring-zinc-200 dark:focus:ring-zinc-700 dark:bg-zinc-800 dark:border-zinc-700">
+                        <label for="skill_{{ $skill->id }}" class="text-zinc-800 dark:text-zinc-100">{{ $skill->name }}</label>
+                        <select name="skills[{{ $skill->id }}][importance]" class="ml-2 outline-none px-2 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-1 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            <option value="required" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance) == 'required' ? 'selected' : '' }}>
+                                Required
+                            </option>
+                            <option value="nice-to-have" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance) == 'nice-to-have' ? 'selected' : '' }}>
+                                Nice To Have
+                            </option>
+                        </select>
+                    </div>
+                @endforeach
+                @error('skills')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
             {{-- type --}}
             <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
                 <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>

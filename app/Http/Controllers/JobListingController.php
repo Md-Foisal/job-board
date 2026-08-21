@@ -6,6 +6,7 @@ use App\Models\JobListing;
 use Illuminate\Http\Request;
 use App\Http\Requests\JobListingRequest;
 use App\Models\Category;
+use App\Models\Skill;
 
 class JobListingController extends Controller
 {
@@ -26,7 +27,8 @@ class JobListingController extends Controller
             return redirect()->route('employer.profile')->with('error', 'You need to create an employer profile before posting a job listing.');
         }
         $categories = Category::all();
-        return view('job-listings.create', compact('categories'));
+        $skills = Skill::all();
+        return view('job-listings.create', compact('categories', 'skills'));
     }
 
     /**
@@ -36,11 +38,20 @@ class JobListingController extends Controller
     {
         $validatedData = $request->validated();
         $validatedData['employer_profile_id'] = auth()->user()->employerProfile->id;
+
+        
         $categoryIds = $validatedData['categories'];
-        unset($validatedData['categories']);
+        $skillsToSync = [];
+        foreach ($validatedData['skills'] as $skillId => $skill) {
+            if ($skill['selected'] ?? false) {
+                $skillsToSync[$skillId] = ['importance' => $skill['importance']];
+            }
+        }
+        unset($validatedData['categories'], $validatedData['skills']);
 
         $jobListing = $request->user()->jobListings()->create($validatedData);
         $jobListing->categories()->sync($categoryIds);
+        $jobListing->skills()->sync($skillsToSync);
 
         return redirect()->route('job-listings.index')->with('success', 'Job listing created successfully.');
     }
@@ -61,8 +72,9 @@ class JobListingController extends Controller
     {
         $this->authorize('update', $jobListing);
         $categories = Category::all();
+        $skills = Skill::all();
 
-        return view('job-listings.edit', compact('jobListing', 'categories'));
+        return view('job-listings.edit', compact('jobListing', 'categories', 'skills'));
     }
 
     /**
@@ -74,10 +86,17 @@ class JobListingController extends Controller
 
         $validatedData = $request->validated();
         $categoryIds = $validatedData['categories'];
-        unset($validatedData['categories']);
+        $skillsToSync = []; 
+        foreach ($validatedData['skills'] as $skillId => $skill) {
+            if ($skill['selected'] ?? false) {
+                $skillsToSync[$skillId] = ['importance' => $skill['importance']];
+            }
+        }
+        unset($validatedData['categories'], $validatedData['skills']);
 
         $jobListing->update($validatedData);
         $jobListing->categories()->sync($categoryIds);
+        $jobListing->skills()->sync($skillsToSync);
 
         return redirect()->route('job-listings.show', $jobListing)->with('success', 'Job listing updated successfully.');
     }

@@ -34,6 +34,9 @@ class JobListingRequest extends FormRequest
             'type' => ['required', 'in:full-time,part-time,remote,contract,internship'],
             'categories' => ['required', 'array'],
             'categories.*' => ['exists:categories,id'],
+            'skills' => ['required', 'array'],
+            'skills.*.selected' => ['boolean'],
+            'skills.*.importance' => ['required_if:skills.*.selected,true', 'string', 'in:required,nice-to-have'],
         ];
     }
 }
