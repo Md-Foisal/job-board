@@ -113,6 +113,22 @@
                 </label>
             </div>
 
+            {{-- categories --}}
+            <div class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Categories</h2>
+                @foreach ($categories as $category)
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" name="categories[]" id="category_{{ $category->id }}" value="{{ $category->id }}" {{ in_array($category->id, old('categories', $jobListing->categories->pluck('id')->toArray())) ? 'checked' : '' }} class="w-4 h-4 text-zinc-800 dark:text-zinc-100 bg-zinc-100 border-zinc-300 rounded focus:ring-zinc-200 dark:focus:ring-zinc-700 dark:bg-zinc-800 dark:border-zinc-700">
+                        <label for="category_{{ $category->id }}" class="text-zinc-800 dark:text-zinc-100">{{ $category->name }}</label>
+                    </div>
+                    
+                @endforeach
+                @error('categories')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
             {{-- type --}}
             <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
                 <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>

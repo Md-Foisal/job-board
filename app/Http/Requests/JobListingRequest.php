@@ -32,6 +32,8 @@ class JobListingRequest extends FormRequest
             'salary_currency' => ['nullable', 'string', 'size:3'],
             'salary_period' => ['nullable', 'string', 'in:hourly,weekly,monthly,yearly,contract'],
             'type' => ['required', 'in:full-time,part-time,remote,contract,internship'],
+            'categories' => ['required', 'array'],
+            'categories.*' => ['exists:categories,id'],
         ];
     }
 }
