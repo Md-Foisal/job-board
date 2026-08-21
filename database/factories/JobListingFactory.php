@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\JobListing;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\User;
+use App\Models\EmployerProfile;
 
 /**
  * @extends Factory<JobListing>
@@ -23,6 +24,7 @@ class JobListingFactory extends Factory
 
         return [
             'user_id' => User::factory(),
+            'employer_profile_id' => EmployerProfile::factory(),
             'title' => $this->faker->jobTitle(),
             'company' => $this->faker->company(),
             'description' => $this->faker->paragraphs(3, true),
@@ -33,6 +35,7 @@ class JobListingFactory extends Factory
             'salary_period' => $negotiable ? null : $this->faker->randomElement(['hourly', 'weekly', 'monthly', 'yearly', 'contract']),
             'type' => $this->faker->randomElement(['full-time', 'part-time', 'remote', 'contract', 'internship']),
             'status' => $this->faker->randomElement(['open', 'closed']),
+            'expires_at' => $this->faker->dateTimeBetween('+1 day', '+30 days'),
         ];
     }
 }

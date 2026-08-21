@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use \Illuminate\Database\Eloquent\Builder;
 
 use App\Models\User;
 use App\Models\Application;
@@ -13,7 +14,7 @@ use App\Models\Category;
 use App\Models\Skill;
 
 
-#[Fillable(['title', 'company', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'type', 'employer_profile_id'])]
+#[Fillable(['title', 'company', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'type', 'employer_profile_id', 'expires_at'])]
 class JobListing extends Model
 {
     use HasFactory;
@@ -25,6 +26,22 @@ class JobListing extends Model
             'salary_min' => 'integer',
             'salary_max' => 'integer',
         ];
+    }
+
+    public function scopeActive(Builder $query)
+    {
+        return $query->where('status', 'open')
+        ->where('expires_at', '>', now());
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at->isPast();
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->status === 'open' && !$this->isExpired();
     }
 
     public function user()

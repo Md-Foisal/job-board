@@ -5,7 +5,7 @@
       <h1 class="text-2xl font-bold text-zinc-800 dark:text-white">Job Show</h1>
       @auth
         <nav class="flex items-center gap-1">
-          @if (auth()->check() && auth()->user()->hasRole('candidate'))
+          @if (auth()->check() && auth()->user()->hasRole('candidate') && $jobListing->isOpen())
             <a href="{{ route('applications.create', ['job_listing_id' => $jobListing->id]) }}"
               class="px-4 py-2 bg-zinc-800 text-white rounded-lg text-sm hover:bg-zinc-700 dark:bg-white dark:text-zinc-800 dark:hover:bg-zinc-100">
               Apply
@@ -38,12 +38,27 @@
         {{-- Status Badge --}}
         <span @class([
   'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-  'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $jobListing->status === 'open',
+  'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $jobListing->isOpen(),
+  'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' => $jobListing->status === 'open' && $jobListing->isExpired(),
   'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $jobListing->status === 'closed',
 ])>
-          {{ ucfirst($jobListing->status) }}
+          @if ($jobListing->status === 'closed')
+            Closed
+          @elseif ($jobListing->isExpired())
+            Expired
+          @else
+            Open
+          @endif
         </span>
+
       </div>
+
+      @unless ($jobListing->isOpen())
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-2">
+          This job listing is no longer accepting applications. Please check other open listings.
+        </p>
+      @endunless
+
       <p class="mt-3">{{ $jobListing->description }}</p>
 
       <div class="flex flex-wrap gap-2 mt-3">

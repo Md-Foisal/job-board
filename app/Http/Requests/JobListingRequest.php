@@ -37,6 +37,7 @@ class JobListingRequest extends FormRequest
             'skills' => ['required', 'array'],
             'skills.*.selected' => ['boolean'],
             'skills.*.importance' => ['required_if:skills.*.selected,true', 'string', 'in:required,nice-to-have'],
+            'expires_at' => ['required', 'date', 'after:today', 'before_or_equal:+30 days'],
         ];
     }
 }

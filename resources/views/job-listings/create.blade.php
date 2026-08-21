@@ -140,6 +140,16 @@
             </div>
 
 
+            {{-- expires_at --}}
+            <label for="expires_at" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Application Deadline</h2>
+                <input type="date" name="expires_at" id="expires_at" value="{{ old('expires_at') }}" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('expires_at')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </label>
+
             {{-- type --}}
             <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
                 <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>

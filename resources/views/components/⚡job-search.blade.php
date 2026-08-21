@@ -8,12 +8,12 @@ new class extends Component {
   public string $search = '';
   public string $type = '';
   public string $location = '';
-  public string $status = '';
 
   #[Computed]
   public function jobListings()
   {
-    return JobListing::with('user:id,name,email')
+    return JobListing::active()
+      ->with('user:id,name,email')
       ->when($this->search, function ($query) {
         $query->where('title', 'like', '%' . $this->search . '%')
           ->orWhere('company', 'like', '%' . $this->search . '%')
@@ -25,9 +25,6 @@ new class extends Component {
       })
       ->when($this->location, function ($query) {
         $query->where('location', 'like', '%' . $this->location . '%');
-      })
-      ->when($this->status, function ($query) {
-        $query->where('status', $this->status);
       })
       ->latest()
       ->paginate(10);
@@ -48,12 +45,6 @@ new class extends Component {
           <option value="remote">Remote</option>
           <option value="contract">Contract</option>
           <option value="internship">Internship</option>
-        </select>
-    
-        <select wire:model.live="status" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
-          <option value="">Status</option>
-          <option value="open">Open</option>
-          <option value="closed">Closed</option>
         </select>
     
         <input type="text" wire:model.live="location" placeholder="location" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
