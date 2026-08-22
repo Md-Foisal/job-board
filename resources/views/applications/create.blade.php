@@ -15,7 +15,7 @@
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg font-semibold text-zinc-800 dark:text-white">{{ $jobListing->title }}</h2>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->company }} · {{ $jobListing->location }}</p>
+              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->company }} @if($jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif · {{ $jobListing->location }}</p>
             </div>
 
             {{-- Status Badge --}}
@@ -35,9 +35,21 @@
             </span>
 
             {{-- Salary --}}
-            @if($jobListing->salary)
+            @if($jobListing->salary_min && $jobListing->salary_max)
               <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                {{ $jobListing->salary }}
+                {{ $jobListing->salary_min }} - {{ $jobListing->salary_max }} {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+              </span>
+            @elseif($jobListing->salary_min)
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                {{ $jobListing->salary_min }}+ {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+              </span>
+            @elseif($jobListing->salary_max)
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Up to {{ $jobListing->salary_max }} {{ $jobListing->salary_currency }}/{{ $jobListing->salary_period }}
+              </span>
+            @else
+              <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                Salary negotiable
               </span>
             @endif
           </div>

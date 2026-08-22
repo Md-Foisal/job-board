@@ -31,7 +31,7 @@
       <div class="flex items-start justify-between gap-4">
         <div>
           <h2 class="text-lg font-semibold text-zinc-800 dark:text-white">{{ $jobListing->title }}</h2>
-          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->company }} ·
+          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->company }} @if($jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif ·
             {{ $jobListing->location }}</p>
         </div>
 

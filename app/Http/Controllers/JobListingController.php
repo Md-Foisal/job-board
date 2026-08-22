@@ -61,7 +61,7 @@ class JobListingController extends Controller
      */
     public function show(JobListing $jobListing)
     {
-        $jobListing->load('user:id,name,email');
+        $jobListing->load(['user:id,name,email', 'employerProfile:id,verified']);
         return view('job-listings.show', compact('jobListing'));
     }
 

@@ -26,7 +26,7 @@ new class extends Component {
   public function jobListings()
   {
     return JobListing::active()
-      ->with('user:id,name,email')
+      ->with(['user:id,name,email', 'employerProfile:id,verified'])
       ->when($this->search, function ($query) {
         $query->where('title', 'like', '%' . $this->search . '%')
           ->orWhere('company', 'like', '%' . $this->search . '%')
@@ -97,7 +97,7 @@ new class extends Component {
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg font-semibold text-zinc-800 dark:text-white">{{ $job->title }}</h2>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $job->company }} · {{ $job->location }}</p>
+              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $job->company }} @if($job->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif · {{ $job->location }}</p>
             </div>
 
             {{-- Status Badge --}}

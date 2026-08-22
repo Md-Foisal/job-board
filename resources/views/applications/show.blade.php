@@ -20,7 +20,7 @@
                         {{ $application->jobListing->title }}
                     </h2>
                     <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        {{ $application->jobListing->company }} ·
+                        {{ $application->jobListing->company }} @if($application->jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif ·
                         {{ $application->jobListing->location }}
                     </p>
                 </div>
@@ -75,10 +75,21 @@
                 </span>
 
                 {{-- Salary --}}
-                @if($application->jobListing->salary)
-                    <span
-                        class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                        {{ $application->jobListing->salary }}
+                @if($application->jobListing->salary_min && $application->jobListing->salary_max)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {{ $application->jobListing->salary_min }} - {{ $application->jobListing->salary_max }} {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @elseif($application->jobListing->salary_min)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {{ $application->jobListing->salary_min }}+ {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @elseif($application->jobListing->salary_max)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        Up to {{ $application->jobListing->salary_max }} {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @else
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        Salary negotiable
                     </span>
                 @endif
             </div>
