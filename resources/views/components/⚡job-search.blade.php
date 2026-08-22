@@ -8,6 +8,19 @@ new class extends Component {
   public string $search = '';
   public string $type = '';
   public string $location = '';
+  public string $salaryType = ''; // '', 'range', 'contract'
+  public string $salaryCurrency = '';
+  public ?int $minSalary = null;
+
+  #[Computed]
+  public function availableCurrencies()
+  {
+    return JobListing::query()
+      ->whereNotNull('salary_currency')
+      ->distinct()
+      ->orderBy('salary_currency')
+      ->pluck('salary_currency');
+  }
 
   #[Computed]
   public function jobListings()
@@ -25,6 +38,13 @@ new class extends Component {
       })
       ->when($this->location, function ($query) {
         $query->where('location', 'like', '%' . $this->location . '%');
+      })
+      ->when($this->salaryType === 'range' && $this->salaryCurrency && $this->minSalary, function ($query) {
+        $query->where('salary_currency', $this->salaryCurrency)
+          ->where('salary_max_monthly', '>=', $this->minSalary);
+      })
+      ->when($this->salaryType === 'contract', function ($query) {
+        $query->where('salary_period', 'contract');
       })
       ->latest()
       ->paginate(10);
@@ -45,9 +65,27 @@ new class extends Component {
           <option value="remote">Remote</option>
           <option value="contract">Contract</option>
           <option value="internship">Internship</option>
+          
         </select>
     
         <input type="text" wire:model.live="location" placeholder="location" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
+
+        <select wire:model.live="salaryType" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
+          <option value="">Any Salary</option>
+          <option value="range">Salary Range</option>
+          <option value="contract">Contract</option>
+        </select>
+
+        @if($salaryType === 'range')
+          <select wire:model.live="salaryCurrency" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
+            <option value="">Currency</option>
+            @foreach($this->availableCurrencies as $currency)
+              <option value="{{ $currency }}">{{ $currency }}</option>
+            @endforeach
+          </select>
+
+          <input type="number" wire:model.live="minSalary" placeholder="Min salary/month" class="w-0 grow-1 px-5 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
+        @endif
     </div>
 
         {{-- Job Cards --}}

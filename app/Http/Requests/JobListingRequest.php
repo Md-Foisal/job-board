@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Symfony\Component\Intl\Currencies;
 
 class JobListingRequest extends FormRequest
 {
@@ -13,6 +15,18 @@ class JobListingRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->salary_currency) {
+            $this->merge([
+                'salary_currency' => strtoupper($this->salary_currency),
+            ]);
+        }
     }
 
     /**
@@ -29,7 +43,7 @@ class JobListingRequest extends FormRequest
             'location' => ['required', 'string', 'max:255', 'min:2'],
             'salary_min' => ['nullable', 'integer', 'min:0'],
             'salary_max' => ['nullable', 'integer', 'min:0', 'gte:salary_min'],
-            'salary_currency' => ['nullable', 'string', 'size:3'],
+            'salary_currency' => ['nullable', 'string', Rule::in(Currencies::getCurrencyCodes())],
             'salary_period' => ['nullable', 'string', 'in:hourly,weekly,monthly,yearly,contract'],
             'type' => ['required', 'in:full-time,part-time,remote,contract,internship'],
             'categories' => ['required', 'array'],
