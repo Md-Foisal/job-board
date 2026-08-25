@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('type')->default('company');
+            $table->string('identity_type')->default('company');
             $table->string('logo')->nullable();
             $table->string('cover_photo')->nullable();
             $table->string('website')->nullable();

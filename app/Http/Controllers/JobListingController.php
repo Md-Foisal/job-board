@@ -36,6 +36,10 @@ class JobListingController extends Controller
      */
     public function store(JobListingRequest $request)
     {
+        if (!auth()->user()->employerProfile) {
+            return redirect()->route('employer.profile')->with('error', 'You need to create an employer profile before posting a job listing.');
+        }
+
         $validatedData = $request->validated();
         $validatedData['employer_profile_id'] = auth()->user()->employerProfile->id;
 
@@ -61,7 +65,7 @@ class JobListingController extends Controller
      */
     public function show(JobListing $jobListing)
     {
-        $jobListing->load(['user:id,name,email', 'employerProfile:id,verified']);
+        $jobListing->load(['user:id,name,email', 'employerProfile:id,name,verified']);
         return view('job-listings.show', compact('jobListing'));
     }
 

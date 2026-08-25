@@ -15,7 +15,7 @@
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg font-semibold text-zinc-800 dark:text-white">{{ $jobListing->title }}</h2>
-              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->company }} @if($jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif · {{ $jobListing->location }}</p>
+              <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{{ $jobListing->employerProfile->displayName() }} @if($jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif · {{ $jobListing->location }}</p>
             </div>
 
             {{-- Status Badge --}}
@@ -29,9 +29,12 @@
           </div>
 
           <div class="flex flex-wrap gap-2 mt-3">
-            {{-- Type Badge --}}
+            {{-- Employment Type + Work Location Badges --}}
             <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              {{ ucfirst($jobListing->type) }}
+              {{ ucfirst($jobListing->employment_type) }}
+            </span>
+            <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+              {{ ucfirst($jobListing->work_location) }}
             </span>
 
             {{-- Salary --}}

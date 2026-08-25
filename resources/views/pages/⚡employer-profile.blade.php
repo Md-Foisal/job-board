@@ -10,7 +10,7 @@ new class extends Component
     use WithFileUploads;
 
     public string $name = '';
-    public string $type = '';
+    public string $identity_type = '';
     public string $website = '';
     public string $about = '';
     public ?int $founded_year = null;
@@ -30,7 +30,7 @@ new class extends Component
 
         
         $this->name = $employerProfile?->name ?? '';
-        $this->type = $employerProfile?->type ?? '';
+        $this->identity_type = $employerProfile?->identity_type ?? '';
         $this->website = $employerProfile?->website ?? '';
         $this->about = $employerProfile?->about ?? '';
         $this->founded_year = $employerProfile?->founded_year ?? null;
@@ -45,7 +45,7 @@ new class extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
-            'type' => 'required|in:individual,company,agency',
+            'identity_type' => 'required|in:individual,company',
             'website' => 'nullable|url|max:255',
             'about' => 'nullable|string',
             'founded_year' => 'nullable|integer|min:1800|max:' . date('Y'),
@@ -56,7 +56,7 @@ new class extends Component
 
         $data = [
             'name' => $this->name,
-            'type' => $this->type,
+            'identity_type' => $this->identity_type,
             'website' => $this->website,
             'about' => $this->about,
             'founded_year' => $this->founded_year,
@@ -91,10 +91,9 @@ new class extends Component
 
         <flux:input wire:model="name" label="Name" placeholder="Enter your employer name" required />
 
-        <flux:radio.group wire:model="type" label="Type" required>
+        <flux:radio.group wire:model="identity_type" label="Type" required>
             <flux:radio value="individual" label="Individual" />
             <flux:radio value="company" label="Company" />
-            <flux:radio value="agency" label="Agency" />
         </flux:radio.group>
 
         <flux:input wire:model="website" label="Website" placeholder="https://example.com" />

@@ -21,7 +21,7 @@ class EmployerProfileFactory extends Factory
         return [
             'user_id' => User::factory(),
             'name' => fake()->company(),
-            'type' => fake()->randomElement(['company', 'agency']),
+            'identity_type' => fake()->randomElement(['individual', 'company']),
             'website' => fake()->url(),
             'about' => fake()->paragraph(),
         ];

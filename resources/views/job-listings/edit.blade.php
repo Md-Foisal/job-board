@@ -23,18 +23,6 @@
                 @enderror
             </label>
 
-            {{-- company --}}
-            <label for="company"
-                class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Company Name</h2>
-                <input type="text" name="company" id="company" value="{{ old('company', $jobListing->company) }}" placeholder="Company name"
-                    class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                @error('company')
-                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
-                    </p>
-                @enderror
-            </label>
-
             {{-- description --}}
             <label for="description"
                 class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
@@ -162,21 +150,36 @@
                 @enderror
             </label>
 
-            {{-- type --}}
-            <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>
-                <select name="type" id="type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    <option value="full-time" {{ old('type', $jobListing->type) == 'full-time' ? 'selected' : "" }}>Full Time</option>
-                    <option value="part-time" {{ old('type', $jobListing->type) == 'part-time' ? 'selected' : "" }}>Part Time</option>
-                    <option value="remote" {{ old('type', $jobListing->type) == 'remote' ? 'selected' : "" }}>Remote</option>
-                    <option value="contract" {{ old('type', $jobListing->type) == 'contract' ? 'selected' : "" }}>Contract</option>
-                    <option value="internship" {{ old('type', $jobListing->type) == 'internship' ? 'selected' : "" }}>internship</option>
-                </select>
-                @error('type')
-                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
-                    </p>
-                @enderror
-            </label>
+            {{-- employment_type + work_location --}}
+            <div class="grid grid-cols-2 gap-4">
+                <label for="employment_type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Employment Type</h2>
+                    <select name="employment_type" id="employment_type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="full-time" {{ old('employment_type', $jobListing->employment_type) == 'full-time' ? 'selected' : "" }}>Full Time</option>
+                        <option value="part-time" {{ old('employment_type', $jobListing->employment_type) == 'part-time' ? 'selected' : "" }}>Part Time</option>
+                        <option value="contract" {{ old('employment_type', $jobListing->employment_type) == 'contract' ? 'selected' : "" }}>Contract</option>
+                        <option value="internship" {{ old('employment_type', $jobListing->employment_type) == 'internship' ? 'selected' : "" }}>Internship</option>
+                        <option value="freelance" {{ old('employment_type', $jobListing->employment_type) == 'freelance' ? 'selected' : "" }}>Freelance</option>
+                    </select>
+                    @error('employment_type')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="work_location" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Work Location</h2>
+                    <select name="work_location" id="work_location" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="remote" {{ old('work_location', $jobListing->work_location) == 'remote' ? 'selected' : "" }}>Remote</option>
+                        <option value="onsite" {{ old('work_location', $jobListing->work_location) == 'onsite' ? 'selected' : "" }}>Onsite</option>
+                        <option value="hybrid" {{ old('work_location', $jobListing->work_location) == 'hybrid' ? 'selected' : "" }}>Hybrid</option>
+                    </select>
+                    @error('work_location')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+            </div>
 
             {{-- status --}}
             

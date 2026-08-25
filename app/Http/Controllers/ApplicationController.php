@@ -26,9 +26,9 @@ class ApplicationController extends Controller
         ->user()
         ->applications()
         ->with([
-            'jobListing:id,title,company,location,type,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
+            'jobListing:id,title,location,employment_type,work_location,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
             'jobListing.user:id,name',
-            'jobListing.employerProfile:id,verified',
+            'jobListing.employerProfile:id,name,verified',
         ])
         ->latest()
         ->paginate(10);
@@ -42,7 +42,7 @@ class ApplicationController extends Controller
     public function create(Request $request)
     {
         
-        $jobListing = JobListing::with(['user:id,name', 'employerProfile:id,verified'])->findOrFail($request->query('job_listing_id'));
+        $jobListing = JobListing::with(['user:id,name', 'employerProfile:id,name,verified'])->findOrFail($request->query('job_listing_id'));
         return view('applications.create', compact('jobListing'));
     }
 
@@ -75,9 +75,9 @@ class ApplicationController extends Controller
         $this->authorize('view', $application);
 
         $application->load([
-            'jobListing:id,title,company,location,type,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
+            'jobListing:id,title,location,employment_type,work_location,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
             'jobListing.user:id,name',
-            'jobListing.employerProfile:id,verified',
+            'jobListing.employerProfile:id,name,verified',
         ]);
         return view('applications.show', compact('application'));
     }

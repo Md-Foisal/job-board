@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 use App\Models\JobListing;
 
-#[Fillable(['user_id', 'name', 'type', 'logo', 'cover_photo', 'website', 'about', 'founded_year', 'location'])]
+#[Fillable(['user_id', 'name', 'identity_type', 'logo', 'cover_photo', 'website', 'about', 'founded_year', 'location'])]
 class EmployerProfile extends Model
 {
     use HasFactory;
@@ -20,7 +20,17 @@ class EmployerProfile extends Model
             'founded_year' => 'integer',
         ];
     }
-    
+
+    /**
+     * The name to show for this employer everywhere (job card, job detail,
+     * apply form, etc.) instead of asking for a free-text "company name"
+     * on every job post.
+     */
+    public function displayName(): string
+    {
+        return $this->name;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
