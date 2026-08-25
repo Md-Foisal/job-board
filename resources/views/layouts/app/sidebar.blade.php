@@ -87,6 +87,28 @@
         @endauth
     </flux:header>
 
+    {{-- Phase 4: plain (non-Livewire) controllers like JobListingController
+    redirect back with session('error'/'success') flash data (e.g. the
+    job-listing deletion guard). This layout's <flux:toast> only reacts to
+    Flux::toast() calls dispatched from within a Livewire request, which a
+    plain controller redirect can't reach -- so those flashes need their own
+    simple banner here instead of silently going nowhere. --}}
+    @if (session('success'))
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm dark:bg-green-900/30 dark:border-green-700 dark:text-green-300">
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm dark:bg-red-900/30 dark:border-red-700 dark:text-red-300">
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
     {{ $slot }}
 
     @persist('toast')

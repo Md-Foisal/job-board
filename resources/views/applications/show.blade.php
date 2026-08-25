@@ -99,7 +99,7 @@
             </div>
 
             <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
-                Posted by {{ $application->jobListing->user->name }} ·
+                Posted by {{ $application->jobListing->user?->name ?? 'Deleted user' }} ·
                 {{ $application->jobListing->created_at->diffForHumans() }}. You applied
                 {{ $application->created_at->diffForHumans() }}
             </p>

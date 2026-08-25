@@ -19,7 +19,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_listings', function (Blueprint $table) {
-            $table->foreignId('employer_profile_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('employer_profile_id')->constrained()->restrictOnDelete();
             $table->string('moderation_status')->default('pending')->after('status');
             $table->timestamp('expires_at')->nullable()->after('moderation_status');
             $table->unsignedInteger('salary_min')->nullable();

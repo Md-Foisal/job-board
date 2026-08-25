@@ -19,7 +19,18 @@ new class extends Component {
             'password' => $this->currentPasswordRules(),
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        $user = Auth::user();
+
+        // Phase 4 (account-deletion guard): don't let an employer's
+        // account vanish while a job listing of theirs is still open --
+        // any candidate who has applied (or might still apply) would be
+        // left stranded with no way to know the job disappeared.
+        if ($user->employerProfile?->jobListings()->active()->exists()) {
+            $this->addError('password', 'You have an active job listing. Please wait for it to close or expire before deleting your account.');
+            return;
+        }
+
+        tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
     }

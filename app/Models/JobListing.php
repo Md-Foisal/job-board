@@ -59,7 +59,19 @@ class JobListing extends Model
     public function scopeActive(Builder $query)
     {
         return $query->where('status', JobListingStatus::Open)
-        ->where('expires_at', '>', now());
+        ->where('expires_at', '>', now())
+        ->fromActiveUsers();
+    }
+
+    /**
+     * Exclude job listings whose owning user account has been soft-deleted.
+     * User::class carries the SoftDeletes trait, so its own global scope
+     * already keeps trashed rows out of this subquery — whereHas('user')
+     * simply matches "a non-trashed owner still exists" for free.
+     */
+    public function scopeFromActiveUsers(Builder $query)
+    {
+        return $query->whereHas('user');
     }
 
     public function isExpired(): bool

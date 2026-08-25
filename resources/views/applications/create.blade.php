@@ -59,7 +59,7 @@
 
           {{-- Posted Info --}}
           <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
-            Posted by {{ $jobListing->user->name }} · {{ $jobListing->created_at->diffForHumans() }}
+            Posted by {{ $jobListing->user?->name ?? 'Deleted user' }} · {{ $jobListing->created_at->diffForHumans() }}
           </p>
         </div>
 

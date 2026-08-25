@@ -28,6 +28,28 @@
             @endauth
         </div>
     </nav>
+
+    {{-- Phase 4: session flash messages (e.g. the job-listing / account
+    deletion guards) were being set via redirect()->with('error'/'success', ...)
+    but nothing in this shared guest layout ever rendered them -- so a blocked
+    action silently redirected back with no visible feedback. This renders
+    both on every page that uses this layout. --}}
+    @if (session('success'))
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">
+                {{ session('success') }}
+            </div>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="max-w-4xl mx-auto mt-4 px-4">
+            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">
+                {{ session('error') }}
+            </div>
+        </div>
+    @endif
+
     <main>
         {{ $slot }}
     </main>

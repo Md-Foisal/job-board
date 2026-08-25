@@ -42,7 +42,11 @@ class ApplicationController extends Controller
     public function create(Request $request)
     {
         
-        $jobListing = JobListing::with(['user:id,name', 'employerProfile:id,name,verified'])->findOrFail($request->query('job_listing_id'));
+        // Phase 4: don't let a candidate start an application against a job
+        // listing whose owning employer account has since been soft-deleted.
+        $jobListing = JobListing::fromActiveUsers()
+            ->with(['user:id,name', 'employerProfile:id,name,verified'])
+            ->findOrFail($request->query('job_listing_id'));
         return view('applications.create', compact('jobListing'));
     }
 

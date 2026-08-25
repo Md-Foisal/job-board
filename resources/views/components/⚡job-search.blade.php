@@ -152,7 +152,7 @@ new class extends Component {
           </div>
 
           <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
-            Posted by {{ $job->user->name }} · {{ $job->created_at->diffForHumans() }}
+            Posted by {{ $job->user?->name ?? 'Deleted user' }} · {{ $job->created_at->diffForHumans() }}
           </p>
         </a>
       @empty
