@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Models\User;
 use App\Models\Skill;
 
-#[Fillable(['user_id', 'headline', 'bio', 'location', 'experience_years', 'resume', 'avatar', 'cover_photo'])]
+#[Fillable(['user_id', 'headline', 'bio', 'location', 'experience_years', 'resume', 'cover_photo'])]
 class CandidateProfile extends Model
 {
     use HasFactory;

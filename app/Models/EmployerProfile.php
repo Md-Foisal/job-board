@@ -31,6 +31,16 @@ class EmployerProfile extends Model
         return $this->name;
     }
 
+    /**
+     * The image to show for this employer everywhere a logo/avatar is
+     * needed. Falls back to the underlying user's avatar for individual
+     * employers (or any company that hasn't uploaded a logo yet).
+     */
+    public function displayImage(): ?string
+    {
+        return $this->logo ?? $this->user?->avatar;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

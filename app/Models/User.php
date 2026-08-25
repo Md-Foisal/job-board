@@ -19,7 +19,7 @@ use App\Models\Application;
 use App\Models\EmployerProfile;
 use App\Models\CandidateProfile;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'avatar'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {

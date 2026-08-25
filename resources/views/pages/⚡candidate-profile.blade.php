@@ -40,7 +40,7 @@ new class extends Component {
 
         // Existing files
         $this->existing_resume = $candidateProfile?->resume;
-        $this->existing_avatar = $candidateProfile?->avatar;
+        $this->existing_avatar = Auth::user()->avatar;
         $this->existing_cover_photo = $candidateProfile?->cover_photo;
 
         // Skills set
@@ -81,7 +81,7 @@ new class extends Component {
         if ($this->avatar) {
             $this->avatar = $this->avatar->store('avatars', 'public');
             $this->existing_avatar = $this->avatar;
-            $data['avatar'] = $this->avatar;
+            Auth::user()->update(['avatar' => $this->avatar]);
         }
 
         if ($this->cover_photo) {
