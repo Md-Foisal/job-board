@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 use App\Models\User;
 use App\Models\JobListing;
+use App\Enums\IdentityType;
 
 #[Fillable(['user_id', 'name', 'identity_type', 'logo', 'cover_photo', 'website', 'about', 'founded_year', 'location'])]
 class EmployerProfile extends Model
@@ -18,6 +19,7 @@ class EmployerProfile extends Model
     {
         return [
             'founded_year' => 'integer',
+            'identity_type' => IdentityType::class,
         ];
     }
 

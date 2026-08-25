@@ -27,20 +27,20 @@
                             {{--Job Post Status Badge --}}
                             <span @class([
                                 'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->jobListing->status === 'open',
-                                'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $application->jobListing->status === 'closed',
+                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->jobListing->status === \App\Enums\JobListingStatus::Open,
+                                'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $application->jobListing->status === \App\Enums\JobListingStatus::Closed,
                             ])>
-                  {{ ucfirst($application->jobListing->status) }}
+                  {{ $application->jobListing->status->label() }}
                             </span>
 
                             {{-- Application Status Badge --}}
                             <span @class([
                                 'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-                                'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' => $application->status === 'pending',
-                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->status === 'accepted',
-                                'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $application->status === 'rejected',
+                                'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' => $application->status === \App\Enums\ApplicationStatus::Pending,
+                                'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->status === \App\Enums\ApplicationStatus::Accepted,
+                                'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $application->status === \App\Enums\ApplicationStatus::Rejected,
                             ])>
-                  {{ ucfirst($application->status) }}
+                  {{ $application->status->label() }}
                             </span>
                         </div>
                     </div>

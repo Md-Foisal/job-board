@@ -39,10 +39,10 @@
         <span @class([
   'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
   'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $jobListing->isOpen(),
-  'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' => $jobListing->status === 'open' && $jobListing->isExpired(),
-  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $jobListing->status === 'closed',
+  'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' => $jobListing->status === \App\Enums\JobListingStatus::Open && $jobListing->isExpired(),
+  'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $jobListing->status === \App\Enums\JobListingStatus::Closed,
 ])>
-          @if ($jobListing->status === 'closed')
+          @if ($jobListing->status === \App\Enums\JobListingStatus::Closed)
             Closed
           @elseif ($jobListing->isExpired())
             Expired

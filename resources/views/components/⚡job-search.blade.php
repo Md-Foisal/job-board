@@ -115,10 +115,10 @@ new class extends Component {
             {{-- Status Badge --}}
             <span @class([
     'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $job->status === 'open',
-    'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $job->status === 'closed',
+    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $job->status === \App\Enums\JobListingStatus::Open,
+    'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $job->status === \App\Enums\JobListingStatus::Closed,
   ])>
-              {{ ucfirst($job->status) }}
+              {{ $job->status->label() }}
             </span>
           </div>
 

@@ -125,10 +125,10 @@
                         <input type="checkbox" name="skills[{{ $skill->id }}][selected]" id="skill_{{ $skill->id }}" value="1" {{ old('skills.'.$skill->id.'.selected', $jobListing->skills->contains($skill->id)) ? 'checked' : '' }} class="w-4 h-4 text-zinc-800 dark:text-zinc-100 bg-zinc-100 border-zinc-300 rounded focus:ring-zinc-200 dark:focus:ring-zinc-700 dark:bg-zinc-800 dark:border-zinc-700">
                         <label for="skill_{{ $skill->id }}" class="text-zinc-800 dark:text-zinc-100">{{ $skill->name }}</label>
                         <select name="skills[{{ $skill->id }}][importance]" class="ml-2 outline-none px-2 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-1 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            <option value="required" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance) == 'required' ? 'selected' : '' }}>
+                            <option value="required" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance?->value) == 'required' ? 'selected' : '' }}>
                                 Required
                             </option>
-                            <option value="nice-to-have" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance) == 'nice-to-have' ? 'selected' : '' }}>
+                            <option value="nice-to-have" {{ old('skills.'.$skill->id.'.importance', $jobListing->skills->find($skill->id)?->pivot->importance?->value) == 'nice-to-have' ? 'selected' : '' }}>
                                 Nice To Have
                             </option>
                         </select>

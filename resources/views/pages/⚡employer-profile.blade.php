@@ -30,7 +30,7 @@ new class extends Component
 
         
         $this->name = $employerProfile?->name ?? '';
-        $this->identity_type = $employerProfile?->identity_type ?? '';
+        $this->identity_type = $employerProfile?->identity_type?->value ?? '';
         $this->website = $employerProfile?->website ?? '';
         $this->about = $employerProfile?->about ?? '';
         $this->founded_year = $employerProfile?->founded_year ?? null;

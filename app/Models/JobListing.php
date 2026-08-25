@@ -12,6 +12,9 @@ use App\Models\Application;
 use App\Models\EmployerProfile;
 use App\Models\Category;
 use App\Models\Skill;
+use App\Models\Pivots\JobListingSkillPivot;
+use App\Enums\JobListingStatus;
+use App\Enums\ModerationStatus;
 
 
 #[Fillable(['title', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'employment_type', 'work_location', 'employer_profile_id', 'expires_at'])]
@@ -25,6 +28,8 @@ class JobListing extends Model
             'expires_at' => 'datetime',
             'salary_min' => 'integer',
             'salary_max' => 'integer',
+            'status' => JobListingStatus::class,
+            'moderation_status' => ModerationStatus::class,
         ];
     }
 
@@ -53,7 +58,7 @@ class JobListing extends Model
 
     public function scopeActive(Builder $query)
     {
-        return $query->where('status', 'open')
+        return $query->where('status', JobListingStatus::Open)
         ->where('expires_at', '>', now());
     }
 
@@ -64,7 +69,7 @@ class JobListing extends Model
 
     public function isOpen(): bool
     {
-        return $this->status === 'open' && !$this->isExpired();
+        return $this->status === JobListingStatus::Open && !$this->isExpired();
     }
 
     public function user()
@@ -89,7 +94,7 @@ class JobListing extends Model
 
     public function skills()
     {
-        return $this->belongsToMany(Skill::class)->withPivot('importance');
+        return $this->belongsToMany(Skill::class)->withPivot('importance')->using(JobListingSkillPivot::class);
     }
 
     public function reports()
