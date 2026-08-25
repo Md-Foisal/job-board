@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('location')->nullable();
             $table->unsignedInteger('experience_years')->nullable();
             $table->string('resume')->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('cover_photo')->nullable();
             $table->timestamps();
         });
     }

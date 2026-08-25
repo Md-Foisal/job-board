@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('candidate_profile_skill', function (Blueprint $table) {
             $table->foreignId('candidate_profile_id')->constrained()->cascadeOnDelete();
             $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
+            $table->string('proficiency')->default('intermediate');
         });
     }
 

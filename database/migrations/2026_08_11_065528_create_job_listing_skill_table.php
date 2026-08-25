@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('job_listing_skill', function (Blueprint $table) {
             $table->foreignId('job_listing_id')->constrained()->cascadeOnDelete();
             $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
+            $table->string('importance')->default('required');
         });
     }
 

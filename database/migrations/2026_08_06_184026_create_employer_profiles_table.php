@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('employer_profiles', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->string('name');
-    $table->string('type')->default('company');
-    $table->string('logo')->nullable();
-    $table->string('website')->nullable();
-    $table->text('about')->nullable();
-    $table->boolean('verified')->default(false);
-    $table->timestamps();
-});
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('type')->default('company');
+            $table->string('logo')->nullable();
+            $table->string('cover_photo')->nullable();
+            $table->string('website')->nullable();
+            $table->text('about')->nullable();
+            $table->integer('founded_year')->nullable();
+            $table->string('location')->nullable();
+            $table->boolean('verified')->default(false);
+            $table->timestamps();
+        });
     }
 
     /**
