@@ -17,7 +17,7 @@ return new class extends Migration
             $table->morphs('reportable');
             $table->string('reason');
             $table->text('details')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('moderation_status')->default('pending');
             $table->timestamps();
         });
     }

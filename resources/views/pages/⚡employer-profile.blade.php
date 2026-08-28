@@ -19,10 +19,12 @@ new class extends Component
     // Files uploads
     public $logo = null;
     public $cover_photo = null;
+    public $avatar = null;
 
     // Existing Files
     public $existing_logo = null;
     public $existing_cover_photo = null;
+    public $existing_avatar = null;
 
     public function mount(): void
     {
@@ -39,6 +41,7 @@ new class extends Component
         // Existing Files
         $this->existing_logo = $employerProfile?->logo;
         $this->existing_cover_photo = $employerProfile?->cover_photo;
+        $this->existing_avatar = Auth::user()->avatar;
     }
 
     public function save(): void
@@ -52,6 +55,7 @@ new class extends Component
             'location' => 'nullable|string|max:255',
             'logo' => 'nullable|image|max:2048',
             'cover_photo' => 'nullable|image|max:2048',
+            'avatar' => 'nullable|image|max:2048',
         ]);
 
         $data = [
@@ -75,10 +79,16 @@ new class extends Component
             $data['cover_photo'] = $this->cover_photo;
         }
 
+        if ($this->avatar) {
+            $this->avatar = $this->avatar->store('avatars', 'public');
+            $this->existing_avatar = $this->avatar;
+            Auth::user()->update(['avatar' => $this->avatar]);
+        }
+
         Auth::user()->employerProfile()->updateOrCreate([], $data);
 
         Flux::toast(variant: 'success', text: 'Profile saved.');
-        $this->reset(['logo', 'cover_photo']);
+        $this->reset(['logo', 'cover_photo', 'avatar']);
     }
 };
 ?>
@@ -112,6 +122,13 @@ new class extends Component
         @if ($existing_cover_photo)
             <div class="mt-2">
                 <img src="{{ Storage::url($existing_cover_photo) }}" alt="Existing Cover Photo" class="h-32 w-full object-cover rounded" />
+            </div>
+        @endif
+
+        <flux:input wire:model="avatar" label="Avatar" type="file" accept="image/*" />
+        @if ($existing_avatar)
+            <div class="mt-2">
+                <img src="{{ Storage::url($existing_avatar) }}" alt="Existing Avatar" class="h-10 w-10 object-cover rounded-full" />
             </div>
         @endif
 

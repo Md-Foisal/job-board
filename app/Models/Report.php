@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use App\Models\User;
 use App\Enums\ReportStatus;
 
-#[Fillable(['user_id', 'reason', 'details', 'status'])]
+#[Fillable(['user_id', 'reason', 'details', 'moderation_status'])]
 class Report extends Model
 {
     protected function casts(): array
     {
         return [
-            'status' => ReportStatus::class,
+            'moderation_status' => ReportStatus::class,
         ];
     }
 
