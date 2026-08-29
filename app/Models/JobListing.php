@@ -17,7 +17,7 @@ use App\Enums\JobListingStatus;
 use App\Enums\ModerationStatus;
 
 
-#[Fillable(['title', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'employment_type', 'work_location', 'employer_profile_id', 'expires_at'])]
+#[Fillable(['title', 'description', 'location', 'salary_min', 'salary_max', 'salary_currency', 'salary_period', 'employment_type', 'workplace_type', 'employer_profile_id', 'expires_at'])]
 class JobListing extends Model
 {
     use HasFactory;

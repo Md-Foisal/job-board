@@ -15,7 +15,7 @@ function validJobListingPayload(): array
         'description' => 'We are looking for a Software Engineer.',
         'location' => 'Remote',
         'employment_type' => 'full-time',
-        'work_location' => 'remote',
+        'workplace_type' => 'remote',
         'categories' => [$category->id],
         'skills' => [
             $skill->id => ['selected' => '1', 'importance' => 'required'],
@@ -57,7 +57,7 @@ test('Employer can create job listing', function () {
     $this->assertDatabaseHas('job_listings', [
         'title' => 'Software Engineer',
         'employment_type' => 'full-time',
-        'work_location' => 'remote',
+        'workplace_type' => 'remote',
     ]);
 });
 
@@ -129,11 +129,11 @@ test('job listing can\'t be created without required fields', function () {
         'description' => '',
         'location' => '',
         'employment_type' => '',
-        'work_location' => '',
+        'workplace_type' => '',
         'categories' => [],
         'skills' => [],
         'expires_at' => '',
     ]);
 
-    $response->assertSessionHasErrors(['title', 'description', 'location', 'employment_type', 'work_location']);
+    $response->assertSessionHasErrors(['title', 'description', 'location', 'employment_type', 'workplace_type']);
 });

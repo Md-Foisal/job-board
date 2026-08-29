@@ -26,7 +26,7 @@ class ApplicationController extends Controller
         ->user()
         ->applications()
         ->with([
-            'jobListing:id,title,location,employment_type,work_location,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
+            'jobListing:id,title,location,employment_type,workplace_type,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
             'jobListing.user:id,name',
             'jobListing.employerProfile:id,name,verified',
         ])
@@ -79,7 +79,7 @@ class ApplicationController extends Controller
         $this->authorize('view', $application);
 
         $application->load([
-            'jobListing:id,title,location,employment_type,work_location,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
+            'jobListing:id,title,location,employment_type,workplace_type,salary_min,salary_max,salary_currency,salary_period,status,created_at,user_id,employer_profile_id',
             'jobListing.user:id,name',
             'jobListing.employerProfile:id,name,verified',
         ]);

@@ -34,7 +34,7 @@ class JobListingFactory extends Factory
             'salary_currency' => $negotiable ? null : $this->faker->randomElement(Currencies::getCurrencyCodes()),
             'salary_period' => $negotiable ? null : $this->faker->randomElement(['hourly', 'weekly', 'monthly', 'yearly', 'contract']),
             'employment_type' => $this->faker->randomElement(['full-time', 'part-time', 'contract', 'internship', 'freelance']),
-            'work_location' => $this->faker->randomElement(['remote', 'onsite', 'hybrid']),
+            'workplace_type' => $this->faker->randomElement(['remote', 'onsite', 'hybrid']),
             'status' => $this->faker->randomElement(['open', 'closed']),
             'expires_at' => $this->faker->dateTimeBetween('+1 day', '+30 days'),
         ];

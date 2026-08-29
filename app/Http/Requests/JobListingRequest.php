@@ -45,7 +45,7 @@ class JobListingRequest extends FormRequest
             'salary_currency' => ['nullable', 'string', Rule::in(Currencies::getCurrencyCodes())],
             'salary_period' => ['nullable', 'string', 'in:hourly,weekly,monthly,yearly,contract'],
             'employment_type' => ['required', 'in:full-time,part-time,contract,internship,freelance'],
-            'work_location' => ['required', 'in:remote,onsite,hybrid'],
+            'workplace_type' => ['required', 'in:remote,onsite,hybrid'],
             'categories' => ['required', 'array'],
             'categories.*' => ['exists:categories,id'],
             'skills' => ['required', 'array'],

@@ -150,7 +150,7 @@
                 @enderror
             </label>
 
-            {{-- employment_type + work_location --}}
+            {{-- employment_type + workplace_type --}}
             <div class="grid grid-cols-2 gap-4">
                 <label for="employment_type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
                     <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Employment Type</h2>
@@ -167,14 +167,14 @@
                     @enderror
                 </label>
 
-                <label for="work_location" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Work Location</h2>
-                    <select name="work_location" id="work_location" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                        <option value="remote" {{ old('work_location', $jobListing->work_location) == 'remote' ? 'selected' : "" }}>Remote</option>
-                        <option value="onsite" {{ old('work_location', $jobListing->work_location) == 'onsite' ? 'selected' : "" }}>Onsite</option>
-                        <option value="hybrid" {{ old('work_location', $jobListing->work_location) == 'hybrid' ? 'selected' : "" }}>Hybrid</option>
+                <label for="workplace_type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Workplace Type</h2>
+                    <select name="workplace_type" id="workplace_type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="remote" {{ old('workplace_type', $jobListing->workplace_type) == 'remote' ? 'selected' : "" }}>Remote</option>
+                        <option value="onsite" {{ old('workplace_type', $jobListing->workplace_type) == 'onsite' ? 'selected' : "" }}>Onsite</option>
+                        <option value="hybrid" {{ old('workplace_type', $jobListing->workplace_type) == 'hybrid' ? 'selected' : "" }}>Hybrid</option>
                     </select>
-                    @error('work_location')
+                    @error('workplace_type')
                         <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
                         </p>
                     @enderror

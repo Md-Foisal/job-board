@@ -7,7 +7,7 @@ use Livewire\Attributes\Computed;
 new class extends Component {
   public string $search = '';
   public string $employmentType = '';
-  public string $workLocation = '';
+  public string $workplaceType = '';
   public string $location = '';
   public string $salaryType = ''; // '', 'range', 'contract'
   public string $salaryCurrency = '';
@@ -39,8 +39,8 @@ new class extends Component {
       ->when($this->employmentType, function ($query) {
         $query->where('employment_type', $this->employmentType);
       })
-      ->when($this->workLocation, function ($query) {
-        $query->where('work_location', $this->workLocation);
+      ->when($this->workplaceType, function ($query) {
+        $query->where('workplace_type', $this->workplaceType);
       })
       ->when($this->location, function ($query) {
         $query->where('location', 'like', '%' . $this->location . '%');
@@ -73,8 +73,8 @@ new class extends Component {
           <option value="freelance">Freelance</option>
         </select>
 
-        <select wire:model.live="workLocation" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
-          <option value="">Work Location</option>
+        <select wire:model.live="workplaceType" class="w-0 grow-1 p-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded hover:border-zinc-400 dark:hover:border-zinc-500 focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-600 transition">
+          <option value="">Workplace Type</option>
           <option value="remote">Remote</option>
           <option value="onsite">Onsite</option>
           <option value="hybrid">Hybrid</option>
@@ -123,12 +123,12 @@ new class extends Component {
           </div>
 
           <div class="flex flex-wrap gap-2 mt-3">
-            {{-- Employment Type + Work Location Badges --}}
+            {{-- Employment Type + Workplace Type Badges --}}
             <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
               {{ ucfirst($job->employment_type) }}
             </span>
             <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-              {{ ucfirst($job->work_location) }}
+              {{ ucfirst($job->workplace_type) }}
             </span>
 
             {{-- salary_min salary_max salary_currency salary_period --}}

@@ -46,14 +46,14 @@
                     </div>
 
                     <div class="flex flex-wrap gap-2 mt-3">
-                        {{-- Employment Type + Work Location Badges --}}
+                        {{-- Employment Type + Workplace Type Badges --}}
                         <span
                             class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                             {{ ucfirst($application->jobListing->employment_type) }}
                         </span>
                         <span
                             class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                            {{ ucfirst($application->jobListing->work_location) }}
+                            {{ ucfirst($application->jobListing->workplace_type) }}
                         </span>
 
                         {{-- Salary --}}

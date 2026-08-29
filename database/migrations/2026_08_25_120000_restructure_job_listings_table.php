@@ -13,7 +13,7 @@ return new class extends Migration
      * Bundles what used to be 4 separate unmerged migrations
      * (employer_profile_id, moderation_status, expires_at, salary) plus new
      * Phase 1 work: splitting the old `type` enum into `employment_type` +
-     * `work_location`, and dropping the free-text `company` column (now
+     * `workplace_type`, and dropping the free-text `company` column (now
      * derived from EmployerProfile::displayName()).
      */
     public function up(): void
@@ -29,18 +29,18 @@ return new class extends Migration
             $table->unsignedInteger('salary_min_monthly')->nullable();
             $table->unsignedInteger('salary_max_monthly')->nullable();
             $table->string('employment_type')->nullable()->after('type');
-            $table->string('work_location')->nullable()->after('employment_type');
+            $table->string('workplace_type')->nullable()->after('employment_type');
         });
 
         // The old `type` column mixed two different axes (employment structure
-        // vs work location) into one enum. Split any existing rows into the
+        // vs workplace type) into one enum. Split any existing rows into the
         // two new columns before dropping it, so no data is silently lost.
         DB::table('job_listings')->where('type', 'remote')->update([
             'employment_type' => 'full-time',
-            'work_location' => 'remote',
+            'workplace_type' => 'remote',
         ]);
         DB::table('job_listings')->where('type', '!=', 'remote')->update([
-            'work_location' => 'onsite',
+            'workplace_type' => 'onsite',
         ]);
         DB::statement("UPDATE job_listings SET employment_type = type WHERE type != 'remote'");
 
@@ -61,7 +61,7 @@ return new class extends Migration
         });
 
         DB::statement("UPDATE job_listings SET type = employment_type");
-        DB::table('job_listings')->where('work_location', 'remote')->update(['type' => 'remote']);
+        DB::table('job_listings')->where('workplace_type', 'remote')->update(['type' => 'remote']);
 
         Schema::table('job_listings', function (Blueprint $table) {
             $table->dropForeign(['employer_profile_id']);
@@ -76,7 +76,7 @@ return new class extends Migration
                 'salary_min_monthly',
                 'salary_max_monthly',
                 'employment_type',
-                'work_location',
+                'workplace_type',
             ]);
         });
     }
