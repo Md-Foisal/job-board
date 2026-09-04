@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Local dev-db viewer config (machine-specific path)
+.devdbrc
