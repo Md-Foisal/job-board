@@ -20,7 +20,7 @@
                         {{ $application->jobListing->title }}
                     </h2>
                     <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        {{ $application->jobListing->company }} ·
+                        {{ $application->jobListing->employerProfile->displayName() }} @if($application->jobListing->employerProfile?->verified)<span title="Verified by JobBoard"><flux:icon.check-badge variant="micro" class="inline text-blue-500 align-text-bottom" /></span>@endif ·
                         {{ $application->jobListing->location }}
                     </p>
                 </div>
@@ -29,20 +29,20 @@
                     {{--Job Post Status Badge --}}
                     <span @class([
                         'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-                        'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->jobListing->status === 'open',
-                        'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $application->jobListing->status === 'closed',
+                        'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->jobListing->status === \App\Enums\JobListingStatus::Open,
+                        'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300' => $application->jobListing->status === \App\Enums\JobListingStatus::Closed,
                     ])>
-                        {{ ucfirst($application->jobListing->status) }}
+                        {{ $application->jobListing->status->label() }}
                     </span>
 
                     {{-- Application Status Badge --}}
                     <span @class([
                         'text-xs font-medium px-2.5 py-1 rounded-full shrink-0',
-                        'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' => $application->status === 'pending',
-                        'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->status === 'accepted',
-                        'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $application->status === 'rejected',
+                        'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300' => $application->status === \App\Enums\ApplicationStatus::Pending,
+                        'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' => $application->status === \App\Enums\ApplicationStatus::Accepted,
+                        'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' => $application->status === \App\Enums\ApplicationStatus::Rejected,
                     ])>
-                        {{ ucfirst($application->status) }}
+                        {{ $application->status->label() }}
                     </span>
                 </div>
             </div>
@@ -71,20 +71,35 @@
                 {{-- Type Badge --}}
                 <span
                     class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    {{ ucfirst($application->jobListing->type) }}
+                    {{ ucfirst($application->jobListing->employment_type) }}
+                </span>
+                <span
+                    class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    {{ ucfirst($application->jobListing->workplace_type) }}
                 </span>
 
                 {{-- Salary --}}
-                @if($application->jobListing->salary)
-                    <span
-                        class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                        {{ $application->jobListing->salary }}
+                @if($application->jobListing->salary_min && $application->jobListing->salary_max)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {{ $application->jobListing->salary_min }} - {{ $application->jobListing->salary_max }} {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @elseif($application->jobListing->salary_min)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        {{ $application->jobListing->salary_min }}+ {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @elseif($application->jobListing->salary_max)
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        Up to {{ $application->jobListing->salary_max }} {{ $application->jobListing->salary_currency }}/{{ $application->jobListing->salary_period }}
+                    </span>
+                @else
+                    <span class="text-xs px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        Salary negotiable
                     </span>
                 @endif
             </div>
 
             <p class="text-xs text-zinc-400 dark:text-zinc-500 mt-3">
-                Posted by {{ $application->jobListing->user->name }} ·
+                Posted by {{ $application->jobListing->user?->name ?? 'Deleted user' }} ·
                 {{ $application->jobListing->created_at->diffForHumans() }}. You applied
                 {{ $application->created_at->diffForHumans() }}
             </p>

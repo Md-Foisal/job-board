@@ -1,6 +1,28 @@
 <?php
 use App\Models\User;
 use App\Models\JobListing;
+use App\Models\EmployerProfile;
+use App\Models\Category;
+use App\Models\Skill;
+
+function validJobListingPayload(): array
+{
+    $category = Category::firstOrCreate(['slug' => 'engineering'], ['name' => 'Engineering']);
+    $skill = Skill::firstOrCreate(['slug' => 'laravel'], ['name' => 'Laravel']);
+
+    return [
+        'title' => 'Software Engineer',
+        'description' => 'We are looking for a Software Engineer.',
+        'location' => 'Remote',
+        'employment_type' => 'full-time',
+        'workplace_type' => 'remote',
+        'categories' => [$category->id],
+        'skills' => [
+            $skill->id => ['selected' => '1', 'importance' => 'required'],
+        ],
+        'expires_at' => now()->addDays(10)->format('Y-m-d'),
+    ];
+}
 
 test('user can see job listings', function () {
     $user = User::factory()->create();
@@ -27,34 +49,22 @@ test('guest can see job listings', function () {
 
 test('Employer can create job listing', function () {
     $employer = userWithRole('employer');
+    EmployerProfile::factory()->for($employer)->create();
 
-    $response = $this->actingAs($employer)->post(route('job-listings.store'), [
-        'title' => 'Software Engineer',
-        'company' => 'Tech Company',
-        'description' => 'We are looking for a Software Engineer.',
-        'location' => 'Remote',
-        'salary' => '$100,000',
-        'type' => 'full-time',
-    ]);
+    $response = $this->actingAs($employer)->post(route('job-listings.store'), validJobListingPayload());
 
     $response->assertRedirect(route('job-listings.index'));
     $this->assertDatabaseHas('job_listings', [
         'title' => 'Software Engineer',
-        'company' => 'Tech Company',
+        'employment_type' => 'full-time',
+        'workplace_type' => 'remote',
     ]);
 });
 
 test('Non-employer can\'t create job listing', function () {
     $candidate = userWithRole('candidate');
 
-    $response = $this->actingAs($candidate)->post(route('job-listings.store'), [
-        'title' => 'Software Engineer',
-        'company' => 'Tech Company',
-        'description' => 'We are looking for a Software Engineer.',
-        'location' => 'Remote',
-        'salary' => '$100,000',
-        'type' => 'full-time',
-    ]);
+    $response = $this->actingAs($candidate)->post(route('job-listings.store'), validJobListingPayload());
 
     $response->assertStatus(403);
 });
@@ -64,14 +74,10 @@ test('Employer can edit job listing, but only their own', function () {
     $jobListing = JobListing::factory()->create(['user_id' => $employer->id]);
 
     // Employer can edit their own job listing
-    $response = $this->actingAs($employer)->put(route('job-listings.update', $jobListing), [
-        'title' => 'Updated Software Engineer',
-        'company' => 'Tech Company',
-        'description' => 'We are looking for a Software Engineer.',
-        'location' => 'Remote',
-        'salary' => '$100,000',
-        'type' => 'full-time',
-    ]);
+    $response = $this->actingAs($employer)->put(
+        route('job-listings.update', $jobListing),
+        ['title' => 'Updated Software Engineer'] + validJobListingPayload()
+    );
 
     $response->assertRedirect(route('job-listings.show', $jobListing));
     $this->assertDatabaseHas('job_listings', [
@@ -84,14 +90,10 @@ test('Employer can edit job listing, but only their own', function () {
     ->for(userWithRole('employer'))
     ->create();
 
-    $response = $this->actingAs($employer)->put(route('job-listings.update', $otherJobListing), [
-        'title' => 'Updated Software Engineer',
-        'company' => 'Tech Company',
-        'description' => 'We are looking for a Software Engineer.',
-        'location' => 'Remote',
-        'salary' => '$100,000',
-        'type' => 'full-time',
-    ]);
+    $response = $this->actingAs($employer)->put(
+        route('job-listings.update', $otherJobListing),
+        ['title' => 'Updated Software Engineer'] + validJobListingPayload()
+    );
 
     $response->assertStatus(403);
 });
@@ -120,15 +122,18 @@ test('Employer can delete job listing, but only their own', function () {
 
 test('job listing can\'t be created without required fields', function () {
     $employer = userWithRole('employer');
+    EmployerProfile::factory()->for($employer)->create();
 
     $response = $this->actingAs($employer)->post(route('job-listings.store'), [
         'title' => '',
-        'company' => '',
         'description' => '',
         'location' => '',
-        'salary' => '',
-        'type' => '',
+        'employment_type' => '',
+        'workplace_type' => '',
+        'categories' => [],
+        'skills' => [],
+        'expires_at' => '',
     ]);
 
-    $response->assertSessionHasErrors(['title', 'company', 'description', 'location', 'type']);
+    $response->assertSessionHasErrors(['title', 'description', 'location', 'employment_type', 'workplace_type']);
 });

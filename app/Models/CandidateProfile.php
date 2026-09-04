@@ -1,0 +1,33 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use App\Models\User;
+use App\Models\Skill;
+use App\Models\Pivots\CandidateProfileSkillPivot;
+
+#[Fillable(['user_id', 'headline', 'bio', 'location', 'experience_years', 'resume', 'cover_photo'])]
+class CandidateProfile extends Model
+{
+    use HasFactory;
+
+    protected function casts(): array
+    {
+        return [
+            'experience_years' => 'integer',
+        ];
+    }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function skills()
+    {
+        return $this->belongsToMany(Skill::class)->withPivot('proficiency')->using(CandidateProfileSkillPivot::class);
+    }
+}

@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 
 use App\Models\Role;
 use App\Models\JobListing;
-use App\Models\User;
+use App\Models\EmployerProfile;
 
 class JobListingSeeder extends Seeder
 {
@@ -17,13 +17,15 @@ class JobListingSeeder extends Seeder
     public function run(): void
     {
         $employerRole = Role::where('name', 'employer')->first();
-        User::factory()
-        ->count(5)
-        ->has(JobListing::factory()
-        ->count(5))
-        ->create()
-        ->each(function ($user) use ($employerRole) {
-            $user->roles()->attach($employerRole->id);
+
+        EmployerProfile::all()->each(function (EmployerProfile $employerProfile) use ($employerRole) {
+            $employerProfile->user->roles()->syncWithoutDetaching($employerRole->id);
+
+            JobListing::factory()
+                ->count(5)
+                ->for($employerProfile->user)
+                ->for($employerProfile)
+                ->create();
         });
     }
 }

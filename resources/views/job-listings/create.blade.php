@@ -22,18 +22,6 @@
                 @enderror
             </label>
 
-            {{-- company --}}
-            <label for="company"
-                class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Company Name</h2>
-                <input type="text" name="company" id="company" value="{{ old('company') }}" placeholder="Company name"
-                    class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                @error('company')
-                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
-                    </p>
-                @enderror
-            </label>
-
             {{-- description --}}
             <label for="description"
                 class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
@@ -56,32 +44,132 @@
                 @enderror
             </label>
 
-            {{-- salary --}}
-            <label for="salary" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary range</h2>
-                <input type="text" name="salary" id="salary" value="{{ old('salary') }}" placeholder="Give salary range" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                @error('salary')
+            {{-- salary_min salary_max salary_currency salary_period --}}
+            <div class="grid grid-cols-2 gap-4">
+                <label for="salary_min" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Min</h2>
+                    <input type="number" name="salary_min" id="salary_min" value="{{ old('salary_min') }}" placeholder="Minimum salary" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_min')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="salary_max" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Max</h2>
+                    <input type="number" name="salary_max" id="salary_max" value="{{ old('salary_max') }}" placeholder="Maximum salary" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_max')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="salary_currency" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Currency</h2>
+                    <input type="text" name="salary_currency" id="salary_currency" value="{{ old('salary_currency') }}" placeholder="Currency (e.g., USD)" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    @error('salary_currency')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+                <label for="salary_period" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Salary Period</h2>
+                    <select name="salary_period" id="salary_period" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="hourly" {{ old('salary_period') == 'hourly' ? 'selected' : "" }}>Hourly</option>
+                        <option value="weekly" {{ old('salary_period') == 'weekly' ? 'selected' : "" }}>Weekly</option>
+                        <option value="monthly" {{ old('salary_period') == 'monthly' ? 'selected' : "" }}>Monthly</option>
+                        <option value="yearly" {{ old('salary_period') == 'yearly' ? 'selected' : "" }}>Yearly</option>
+                        <option value="contract" {{ old('salary_period') == 'contract' ? 'selected' : "" }}>Contract</option>
+                    </select>
+                    @error('salary_period')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+            </div>
+
+            {{-- categories --}}
+            <div class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Categories</h2>
+                @foreach ($categories as $category)
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" name="categories[]" id="category_{{ $category->id }}" value="{{ $category->id }}" {{ in_array($category->id, old('categories', [])) ? 'checked' : '' }} class="w-4 h-4 text-zinc-800 dark:text-zinc-100 bg-zinc-100 border-zinc-300 rounded focus:ring-zinc-200 dark:focus:ring-zinc-700 dark:bg-zinc-800 dark:border-zinc-700">
+                        <label for="category_{{ $category->id }}" class="text-zinc-800 dark:text-zinc-100">{{ $category->name }}</label>
+                    </div>
+                    
+                @endforeach
+                @error('categories')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- skills --}}
+            <div class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Skills</h2>
+                @foreach ($skills as $skill)
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="checkbox" name="skills[{{ $skill->id }}][selected]" id="skill_{{ $skill->id }}" value="1" {{ old('skills.'.$skill->id.'.selected') ? 'checked' : '' }} class="w-4 h-4 text-zinc-800 dark:text-zinc-100 bg-zinc-100 border-zinc-300 rounded focus:ring-zinc-200 dark:focus:ring-zinc-700 dark:bg-zinc-800 dark:border-zinc-700">
+                        <label for="skill_{{ $skill->id }}" class="text-zinc-800 dark:text-zinc-100">{{ $skill->name }}</label>
+                        <select name="skills[{{ $skill->id }}][importance]" class="ml-2 outline-none px-2 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-1 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                            <option value="required" {{ old('skills.'.$skill->id.'.importance') == 'required' ? 'selected' : '' }}>
+                                Required
+                            </option>
+                            <option value="nice-to-have" {{ old('skills.'.$skill->id.'.importance') == 'nice-to-have' ? 'selected' : '' }}>
+                                Nice To Have
+                            </option>
+                        </select>
+                    </div>
+                @endforeach
+                @error('skills')
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+
+            {{-- expires_at --}}
+            <label for="expires_at" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Application Deadline</h2>
+                <input type="date" name="expires_at" id="expires_at" value="{{ old('expires_at') }}" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                @error('expires_at')
                     <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
                     </p>
                 @enderror
             </label>
 
-            {{-- type --}}
-            <label for="type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
-                <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Job Type</h2>
-                <select name="type" id="type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    <option value="full-time" {{ old('type') == 'full-time' ? 'selected' : "" }}>Full Time</option>
-                    <option value="part-time" {{ old('type') == 'part-time' ? 'selected' : "" }}>Part Time</option>
-                    <option value="remote" {{ old('type') == 'remote' ? 'selected' : "" }}>Remote</option>
-                    <option value="contract" {{ old('type') == 'contract' ? 'selected' : "" }}>Contract</option>
-                    <option value="internship" {{ old('type') == 'internship' ? 'selected' : "" }}>internship</option>
-                    <option value="" disabled selected>Select one</option>
-                </select>
-                @error('type')
-                    <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
-                    </p>
-                @enderror
-            </label>
+            {{-- employment_type + workplace_type --}}
+            <div class="grid grid-cols-2 gap-4">
+                <label for="employment_type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Employment Type</h2>
+                    <select name="employment_type" id="employment_type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="" disabled {{ old('employment_type') ? '' : 'selected' }}>Select one</option>
+                        <option value="full-time" {{ old('employment_type') == 'full-time' ? 'selected' : "" }}>Full Time</option>
+                        <option value="part-time" {{ old('employment_type') == 'part-time' ? 'selected' : "" }}>Part Time</option>
+                        <option value="contract" {{ old('employment_type') == 'contract' ? 'selected' : "" }}>Contract</option>
+                        <option value="internship" {{ old('employment_type') == 'internship' ? 'selected' : "" }}>Internship</option>
+                        <option value="freelance" {{ old('employment_type') == 'freelance' ? 'selected' : "" }}>Freelance</option>
+                    </select>
+                    @error('employment_type')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+
+                <label for="workplace_type" class="block p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl hover:border-zinc-400 dark:hover:border-zinc-500 transition cursor-pointer">
+                    <h2 class="test-lg font-semibold text-zinc-800 dark:text-white mb-2">Workplace Type</h2>
+                    <select name="workplace_type" id="workplace_type" class="w-full outline-none px-3 focus:ring focus:ring-zinc-200 dark:focus:ring-zinc-700 py-3 rounded-sm bg-zinc-100 test-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                        <option value="" disabled {{ old('workplace_type') ? '' : 'selected' }}>Select one</option>
+                        <option value="remote" {{ old('workplace_type') == 'remote' ? 'selected' : "" }}>Remote</option>
+                        <option value="onsite" {{ old('workplace_type') == 'onsite' ? 'selected' : "" }}>Onsite</option>
+                        <option value="hybrid" {{ old('workplace_type') == 'hybrid' ? 'selected' : "" }}>Hybrid</option>
+                    </select>
+                    @error('workplace_type')
+                        <p class="text-sm text-zinc-400 dark:text-zinc-500 mt-2">* {{ $message }}
+                        </p>
+                    @enderror
+                </label>
+            </div>
 
             {{-- status --}}
             
