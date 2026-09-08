@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Models\Pivots;
+
+use App\Enums\SkillImportance;
+use Illuminate\Database\Eloquent\Relations\Pivot;
+
+class JobPostingSkillPivot extends Pivot
+{
+    protected function casts(): array
+    {
+        return [
+            'importance' => SkillImportance::class,
+        ];
+    }
+}

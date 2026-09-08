@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 
-use App\Models\JobListing;
+use App\Models\JobPosting;
 
 #[Fillable(['name', 'slug'])]
 class Category extends Model
 {
-    public function jobListings()
+    public function jobPostings()
     {
-        return $this->belongsToMany(JobListing::class);
+        return $this->belongsToMany(JobPosting::class);
     }
 }

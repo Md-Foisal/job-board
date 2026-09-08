@@ -49,10 +49,22 @@ function something()
     // ..
 }
 
-function userWithRole(string $roleName): \App\Models\User
+function candidateUser(): \App\Models\User
 {
     $user = \App\Models\User::factory()->create();
-    $role = \App\Models\Role::firstOrCreate(['name' => $roleName]);
-    $user->roles()->attach($role->id, ['is_active' => true]);
+    \App\Models\CandidateProfile::factory()->for($user)->create();
+
+    return $user;
+}
+
+function employerUser(?\App\Models\Company $company = null, \App\Enums\MembershipRole $role = \App\Enums\MembershipRole::Member): \App\Models\User
+{
+    $user = \App\Models\User::factory()->create();
+
+    \App\Models\Membership::factory()
+        ->for($user)
+        ->for($company ?? \App\Models\Company::factory()->create())
+        ->create(['role' => $role]);
+
     return $user;
 }

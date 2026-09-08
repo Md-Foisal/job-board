@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Models\JobListing;
+use App\Models\JobPosting;
 use App\Models\CandidateProfile;
 
 #[Fillable(['name', 'slug'])]
 class Skill extends Model
 {
-    public function jobListings()
+    public function jobPostings()
     {
-        return $this->belongsToMany(JobListing::class);
+        return $this->belongsToMany(JobPosting::class);
     }
 
     public function candidateProfiles()

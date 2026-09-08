@@ -13,11 +13,16 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Models\Role;
-use App\Models\JobListing;
+use App\Models\Company;
+use App\Models\Membership;
+use App\Models\Invitation;
+use App\Models\JobPosting;
 use App\Models\Application;
-use App\Models\EmployerProfile;
 use App\Models\CandidateProfile;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
+use App\Enums\AccountStatus;
+use App\Enums\StaffRole;
 
 #[Fillable(['name', 'email', 'password', 'avatar'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -36,6 +41,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'account_status' => AccountStatus::class,
+            'staff_role' => StaffRole::class,
         ];
     }
 
@@ -51,38 +58,24 @@ class User extends Authenticatable
             ->implode('');
     }
 
-    public function roles() 
+    public function memberships()
     {
-        return $this->belongsToMany(Role::class)
-            ->withPivot('assigned_at', 'assigned_by', 'expires_at', 'is_active')
-            ->withTimestamps();
+        return $this->hasMany(Membership::class);
     }
 
-    public function hasRole(string $role): bool
+    public function invitationsSent()
     {
-        return $this->roles()
-        ->where('name', $role)
-        ->wherePivot('is_active', true)
-        ->where(function ($query) {
-            $query->whereNull('role_user.expires_at')
-                  ->orWhere('role_user.expires_at', '>', now());
-        })
-        ->exists();
+        return $this->hasMany(Invitation::class, 'invited_by_id');
     }
 
-    public function jobListings()
+    public function jobPostings()
     {
-        return $this->hasMany(JobListing::class);
+        return $this->hasMany(JobPosting::class, 'posted_by_id');
     }
 
     public function applications()
     {
         return $this->hasMany(Application::class);
-    }
-
-    public function employerProfile()
-    {
-    return $this->hasOne(EmployerProfile::class);
     }
 
     public function candidateProfile()
@@ -92,11 +85,58 @@ class User extends Authenticatable
 
     public function savedJobs()
     {
-        return $this->belongsToMany(JobListing::class, 'saved_jobs');
+        return $this->belongsToMany(JobPosting::class, 'saved_jobs');
     }
 
     public function reports()
     {
         return $this->morphMany(Report::class, 'reportable');
+    }
+
+    /**
+     * "Candidate" is not a stored role — the existence of a
+     * CandidateProfile row is what makes this true.
+     */
+    public function isCandidate(): bool
+    {
+        return $this->candidateProfile()->exists();
+    }
+
+    /**
+     * Whether this user is employer-side at all — has at least one
+     * active membership, regardless of which company. Unlike worksAt(),
+     * this doesn't ask about a specific company; useful in contexts
+     * (e.g. middleware) where no company is in scope yet.
+     */
+    public function isEmployer(): bool
+    {
+        return $this->memberships()
+            ->where('status', MembershipStatus::Active)
+            ->exists();
+    }
+
+    /**
+     * Whether this user is actively working at the given company
+     * (in any role).
+     */
+    public function worksAt(Company $company): bool
+    {
+        return $this->memberships()
+            ->where('company_id', $company->id)
+            ->where('status', MembershipStatus::Active)
+            ->exists();
+    }
+
+    /**
+     * Whether this user can make ownership-level decisions for the
+     * given company (owner/manager) — a plain member cannot.
+     */
+    public function canManage(Company $company): bool
+    {
+        return $this->memberships()
+            ->where('company_id', $company->id)
+            ->where('status', MembershipStatus::Active)
+            ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
+            ->exists();
     }
 }

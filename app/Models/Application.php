@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Enums\ApplicationStatus;
 
 
-#[Fillable(['cover_letter', 'resume', 'status', 'job_listing_id'])]
+#[Fillable(['cover_letter', 'resume', 'status', 'job_posting_id'])]
 class Application extends Model
 {
     use HasFactory;
@@ -20,9 +20,9 @@ class Application extends Model
         ];
     }
 
-    public function jobListing()
+    public function jobPosting()
     {
-        return $this->belongsTo(JobListing::class);
+        return $this->belongsTo(JobPosting::class);
     }
 
     public function user()

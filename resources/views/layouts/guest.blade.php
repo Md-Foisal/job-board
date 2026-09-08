@@ -10,8 +10,6 @@
         </a>
     
         <div class="flex items-center gap-4">
-            <a href="{{ route('job-listings.index') }}" class="text-sm text-gray-600 hover:text-blue-600">Find jobs</a>
-        
             @guest
                 <a href="{{ route('register') }}" class="text-sm text-gray-600 hover:text-blue-600">For Employers</a>
                 <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-blue-600">Log in</a>

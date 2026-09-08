@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Enums\ApplicationStatus;
 use App\Models\Application;
-use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\JobPosting;
 use App\Models\User;
-use App\Models\JobListing;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends Factory<Application>
@@ -21,10 +22,10 @@ class ApplicationFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'job_listing_id' => JobListing::factory(),
+            'job_posting_id' => JobPosting::factory(),
             'cover_letter' => $this->faker->paragraphs(2, true),
-            'resume' => 'resumes/dummy_resume.pdf', // You can use a dummy file path for testing
-            'status' => $this->faker->randomElement(['pending', 'accepted', 'rejected']),
+            'resume' => 'resumes/dummy_resume.pdf',
+            'status' => $this->faker->randomElement(ApplicationStatus::cases()),
         ];
     }
 }
