@@ -21,12 +21,11 @@ class SitemapController extends Controller
         $categories = Category::query()->select('id', 'slug')->get();
 
         $xml = view('sitemap', [
-            // Passed in as a variable rather than written literally in the
-            // Blade source: this app's Blade compiler (via a Livewire
-            // precompiler hook) misreads any literal <? ... ?>-shaped text
-            // inside a {!! !!} raw-echo tag as an already-compiled PHP
-            // block and leaves the whole tag uncompiled, so the XML
-            // declaration has to arrive as data, not as source text.
+            // Passed in as a variable rather than written literally in
+            // sitemap.blade.php: this app's Blade compiler mishandles a
+            // literal opening/closing PHP tag pair inside a raw-echo tag
+            // in the Blade source, so the XML declaration has to arrive
+            // as data instead.
             'xmlDeclaration' => '<?xml version="1.0" encoding="UTF-8"?>',
             'jobPostings' => $jobPostings,
             'categories' => $categories,
