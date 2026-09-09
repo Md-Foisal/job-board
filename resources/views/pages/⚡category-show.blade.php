@@ -12,10 +12,10 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
 
     public Category $categoryModel;
 
-    public function mount(Category $category): void
+    public function mount(Category $categoryModel): void
     {
-        $this->categoryModel = $category;
-        $this->category = $category->id;
+        $this->categoryModel = $categoryModel;
+        $this->category = $categoryModel->id;
     }
 
     public function with(): array

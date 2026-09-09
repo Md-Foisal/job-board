@@ -9,7 +9,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
-Route::livewire('/categories/{category:slug}', 'pages::category-show')->name('categories.show');
+Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
 
 Route::middleware(['auth', 'candidate'])->group(function () {
