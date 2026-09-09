@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use \Illuminate\Database\Eloquent\Builder;
+use App\Builders\JobPostingQueryBuilder;
 
 use App\Models\User;
 use App\Models\Company;
@@ -39,6 +40,8 @@ class JobPosting extends Model
             'salary_min' => 'integer',
             'salary_max' => 'integer',
             'min_experience_years' => 'integer',
+            'salary_min_monthly' => 'integer',
+            'salary_max_monthly' => 'integer',
             'salary_negotiable' => 'boolean',
             'employment_type' => EmploymentType::class,
             'workplace_type' => WorkplaceType::class,
@@ -95,6 +98,17 @@ class JobPosting extends Model
         return $query->whereHas('company', function (Builder $q) {
             $q->where('account_status', AccountStatus::Active);
         });
+    }
+
+    /**
+     * Default Eloquent Builder-এর বদলে JobPostingQueryBuilder ব্যবহার হবে,
+     * যাতে JobPosting::query()->skill($id)->salaryBetween($min, $max)...
+     * এভাবে filter/sort chain করা যায় (multi-parameter filtering এখানে,
+     * single-purpose scope মডেলেই থাকছে)।
+     */
+    public function newEloquentBuilder($query): JobPostingQueryBuilder
+    {
+        return new JobPostingQueryBuilder($query);
     }
 
     public function isExpired(): bool
