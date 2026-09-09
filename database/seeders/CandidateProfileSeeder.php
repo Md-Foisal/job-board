@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
+use App\Models\Document;
+use App\Models\EducationRecord;
+use App\Models\ExperienceRecord;
+use Illuminate\Database\Seeder;
 
 class CandidateProfileSeeder extends Seeder
 {
@@ -13,6 +16,11 @@ class CandidateProfileSeeder extends Seeder
      */
     public function run(): void
     {
-        CandidateProfile::factory(10)->create();
+        CandidateProfile::factory(10)
+            ->has(CandidatePreference::factory(), 'preference')
+            ->has(EducationRecord::factory()->count(2))
+            ->has(ExperienceRecord::factory()->count(2))
+            ->has(Document::factory()->count(2))
+            ->create();
     }
 }
