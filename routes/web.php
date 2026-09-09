@@ -9,7 +9,3 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
-
-Route::livewire('/candidate-profile', 'pages::candidate-profile')
-    ->middleware(['auth', 'candidate'])
-    ->name('candidate.profile');

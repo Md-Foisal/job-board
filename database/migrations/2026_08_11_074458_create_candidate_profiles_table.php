@@ -16,10 +16,9 @@ return new class extends Migration
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->string('headline')->nullable();
             $table->text('bio')->nullable();
-            $table->string('location')->nullable();
-            $table->unsignedInteger('experience_years')->nullable();
-            $table->string('resume')->nullable();
-            $table->string('cover_photo')->nullable();
+            $table->string('portfolio_url')->nullable();
+            $table->string('github_url')->nullable();
+            $table->string('linkedin_url')->nullable();
             $table->timestamps();
         });
     }
