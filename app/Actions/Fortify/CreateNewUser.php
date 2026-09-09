@@ -15,9 +15,13 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * Validate and create a newly registered user.
      *
-     * Note: 'role' is validated but intentionally not persisted here — a
-     * user's candidate/employer status is derived from relationships
-     * (CandidateProfile, Membership), not stored directly on the user.
+     * Note: 'role' is validated but not persisted on the user — candidate/
+     * employer status is derived from relationships (CandidateProfile,
+     * Membership), not stored directly. Choosing 'candidate' does create an
+     * empty CandidateProfile here, so that relationship exists from the
+     * moment of registration. Choosing 'employer' does not create a Company
+     * here, since a company needs a name/slug that this form doesn't
+     * collect — that happens in a separate company-creation step.
      *
      * @param  array<string, string>  $input
      */
@@ -29,10 +33,16 @@ class CreateNewUser implements CreatesNewUsers
             'role' => ['required', 'in:candidate,employer'],
         ])->validate();
 
-        return User::create([
+        $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
+
+        if ($input['role'] === 'candidate') {
+            $user->candidateProfile()->create([]);
+        }
+
+        return $user;
     }
 }
