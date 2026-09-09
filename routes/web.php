@@ -13,7 +13,7 @@ Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->nam
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
 
 Route::middleware(['auth', 'candidate'])->group(function () {
-    Route::livewire('/jobs/{job_posting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
+    Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
