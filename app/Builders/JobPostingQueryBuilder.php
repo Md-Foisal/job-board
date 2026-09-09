@@ -46,6 +46,14 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
+     * শিরোনামে (title) free-text keyword খোঁজা -- candidate-facing search box-এর জন্য।
+     */
+    public function keyword(string $term): self
+    {
+        return $this->where('title', 'like', "%{$term}%");
+    }
+
+    /**
      * City name দিয়ে partial-match filter (case-insensitive, DB collation অনুযায়ী)।
      */
     public function location(string $city): self

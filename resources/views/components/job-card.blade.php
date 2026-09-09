@@ -1,4 +1,4 @@
-@props(['jobPosting'])
+@props(['jobPosting', 'matchScore' => null])
 
 <a
     href="{{ route('jobs.show', $jobPosting) }}"
@@ -13,9 +13,16 @@
             @endif
         </div>
         <div class="min-w-0 flex-1">
-            <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
-                {{ $jobPosting->title }}
-            </h3>
+            <div class="flex items-center gap-2">
+                <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
+                    {{ $jobPosting->title }}
+                </h3>
+                @if (!is_null($matchScore))
+                    <span class="shrink-0 rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-success-700 dark:bg-success-950 dark:text-success-300">
+                        {{ $matchScore }}% match
+                    </span>
+                @endif
+            </div>
             <p class="truncate text-sm text-zinc-600 dark:text-zinc-400">{{ $jobPosting->company->name }}</p>
         </div>
     </div>

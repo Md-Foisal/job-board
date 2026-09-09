@@ -4,12 +4,29 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-    <nav class="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <a href="{{ route('home') }}" class="font-display text-lg font-bold text-brand-700 dark:text-brand-400">
+    <nav class="flex items-center justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+        <a href="{{ route('home') }}" class="shrink-0 font-display text-lg font-bold text-brand-700 dark:text-brand-400">
             JobBoard
         </a>
 
-        <div class="flex items-center gap-4">
+        <div class="hidden flex-1 items-center gap-2 md:flex">
+            <form method="GET" action="{{ route('jobs.index') }}" class="w-full max-w-sm">
+                <flux:input type="search" name="q" placeholder="Search jobs..." icon="magnifying-glass" />
+            </form>
+
+            <flux:dropdown>
+                <flux:button variant="ghost" icon:trailing="chevron-down">Categories</flux:button>
+                <flux:menu>
+                    @foreach ($navCategories as $navCategory)
+                        <flux:menu.item href="{{ route('categories.show', $navCategory) }}" wire:navigate>
+                            {{ $navCategory->name }}
+                        </flux:menu.item>
+                    @endforeach
+                </flux:menu>
+            </flux:dropdown>
+        </div>
+
+        <div class="flex shrink-0 items-center gap-4">
             @guest
                 <a href="{{ route('register') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">For Employers</a>
                 <a href="{{ route('login') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log in</a>
