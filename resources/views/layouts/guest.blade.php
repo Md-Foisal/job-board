@@ -3,46 +3,42 @@
 <head>
     @include('partials.head')
 </head>
-<body class="min-h-screen bg-white text-gray-900 antialiased">
-    <nav class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <a href="{{ route('home') }}" class="text-lg font-bold text-blue-600">
+<body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <nav class="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+        <a href="{{ route('home') }}" class="font-display text-lg font-bold text-brand-700 dark:text-brand-400">
             JobBoard
         </a>
-    
+
         <div class="flex items-center gap-4">
             @guest
-                <a href="{{ route('register') }}" class="text-sm text-gray-600 hover:text-blue-600">For Employers</a>
-                <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-blue-600">Log in</a>
-                <a href="{{ route('register') }}" class="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Sign
-                    up</a>
+                <a href="{{ route('register') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">For Employers</a>
+                <a href="{{ route('login') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log in</a>
+                <a href="{{ route('register') }}" class="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
+                    Sign up
+                </a>
             @endguest
-        
+
             @auth
-                <a href="{{ route('dashboard') }}" class="text-sm text-gray-600 hover:text-blue-600">Dashboard</a>
+                <a href="{{ route('dashboard') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Dashboard</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="text-sm text-gray-600 hover:text-blue-600">Log out</button>
+                    <button type="submit" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log out</button>
                 </form>
             @endauth
         </div>
     </nav>
 
-    {{-- Phase 4: session flash messages (e.g. the job-listing / account
-    deletion guards) were being set via redirect()->with('error'/'success', ...)
-    but nothing in this shared guest layout ever rendered them -- so a blocked
-    action silently redirected back with no visible feedback. This renders
-    both on every page that uses this layout. --}}
     @if (session('success'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">
+        <div class="mx-auto mt-4 max-w-4xl px-4">
+            <div class="rounded-md border border-success-300 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-700 dark:bg-success-950 dark:text-success-300">
                 {{ session('success') }}
             </div>
         </div>
     @endif
 
     @if (session('error'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">
+        <div class="mx-auto mt-4 max-w-4xl px-4">
+            <div class="rounded-md border border-danger-300 bg-danger-50 px-4 py-3 text-sm text-danger-700 dark:border-danger-700 dark:bg-danger-950 dark:text-danger-300">
                 {{ session('error') }}
             </div>
         </div>
@@ -51,5 +47,9 @@
     <main>
         {{ $slot }}
     </main>
+
+    <footer class="mt-16 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
+        <p>&copy; {{ now()->year }} JobBoard.</p>
+    </footer>
 </body>
 </html>
