@@ -2,24 +2,23 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use App\Models\User;
 use App\Enums\ReportStatus;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['user_id', 'reason', 'details', 'moderation_status'])]
+#[Fillable(['reporter_id', 'reason', 'review_status'])]
 class Report extends Model
 {
     protected function casts(): array
     {
         return [
-            'moderation_status' => ReportStatus::class,
+            'review_status' => ReportStatus::class,
         ];
     }
 
-    public function user()
+    public function reporter()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'reporter_id');
     }
 
     public function reportable()

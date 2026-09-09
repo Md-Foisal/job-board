@@ -42,4 +42,9 @@ class CandidateProfile extends Model
             ->withPivot('proficiency')
             ->using(\App\Models\Pivots\CandidateProfileSkillPivot::class);
     }
+
+    public function applications()
+    {
+        return $this->hasMany(Application::class);
+    }
 }

@@ -88,9 +88,14 @@ class User extends Authenticatable
         return $this->belongsToMany(JobPosting::class, 'saved_jobs');
     }
 
-    public function reports()
+    /**
+     * Reports this user has filed against a job posting or company --
+     * not reports made against the user (there is no such thing in the
+     * current design; only Job/Company are reportable subjects).
+     */
+    public function reportsFiled()
     {
-        return $this->morphMany(Report::class, 'reportable');
+        return $this->hasMany(Report::class, 'reporter_id');
     }
 
     /**

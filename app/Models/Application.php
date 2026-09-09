@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\ApplicationOutcomeStatus;
+use App\Enums\ApplicationStage;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Enums\ApplicationStatus;
+use Illuminate\Database\Eloquent\Model;
 
-
-#[Fillable(['cover_letter', 'resume', 'status', 'job_posting_id'])]
+#[Fillable([
+    'job_posting_id', 'candidate_profile_id', 'resume_document_id',
+    'cover_letter', 'outcome_status', 'stage',
+])]
 class Application extends Model
 {
     use HasFactory;
@@ -16,7 +19,8 @@ class Application extends Model
     protected function casts(): array
     {
         return [
-            'status' => ApplicationStatus::class,
+            'outcome_status' => ApplicationOutcomeStatus::class,
+            'stage' => ApplicationStage::class,
         ];
     }
 
@@ -25,8 +29,23 @@ class Application extends Model
         return $this->belongsTo(JobPosting::class);
     }
 
-    public function user()
+    public function candidateProfile()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(CandidateProfile::class);
+    }
+
+    public function resumeDocument()
+    {
+        return $this->belongsTo(Document::class, 'resume_document_id');
+    }
+
+    public function screeningAnswers()
+    {
+        return $this->hasMany(ScreeningAnswer::class);
+    }
+
+    public function events()
+    {
+        return $this->hasMany(ApplicationEvent::class)->latest('created_at');
     }
 }

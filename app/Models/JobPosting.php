@@ -162,4 +162,14 @@ class JobPosting extends Model
     {
         return $this->morphMany(Report::class, 'reportable');
     }
+
+    public function screeningQuestions()
+    {
+        return $this->hasMany(ScreeningQuestion::class)->orderBy('display_order');
+    }
+
+    public function jobViews()
+    {
+        return $this->hasMany(JobView::class);
+    }
 }
