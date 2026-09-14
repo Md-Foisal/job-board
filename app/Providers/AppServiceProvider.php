@@ -57,11 +57,19 @@ class AppServiceProvider extends ServiceProvider
      * browsing page) needs the category list regardless of which
      * controller or Livewire page rendered that layout -- a composer
      * keeps that query out of every individual page.
+     *
+     * The layout is rendered through the <x-layouts::guest> component tag,
+     * which Blade resolves under a hashed anonymous-component namespace
+     * rather than the literal "layouts::guest" string, so a composer keyed
+     * on that name never fires. Matching on the compiled view's file path
+     * instead works regardless of which namespace resolved it.
      */
     protected function configureViewComposers(): void
     {
-        View::composer('layouts::guest', function ($view): void {
-            $view->with('navCategories', Category::orderBy('name')->get());
+        View::composer('*', function ($view): void {
+            if (str_ends_with($view->getPath(), 'layouts'.DIRECTORY_SEPARATOR.'guest.blade.php')) {
+                $view->with('navCategories', Category::orderBy('name')->get());
+            }
         });
     }
 }
