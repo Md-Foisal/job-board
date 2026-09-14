@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\SitemapController;
@@ -11,6 +12,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
+Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
 
 Route::middleware(['auth', 'candidate'])->group(function () {
     Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');

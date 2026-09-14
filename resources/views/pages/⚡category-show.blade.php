@@ -31,7 +31,9 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
 
 <div class="mx-auto max-w-6xl px-6 py-10">
     <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-        <a href="{{ route('home') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>Home</a>
+        <a href="{{ route('home') }}" class="inline-flex items-center hover:text-brand-700 dark:hover:text-brand-400" wire:navigate title="Home">
+            <flux:icon.home variant="mini" class="size-4" />
+        </a>
         <span class="mx-1">/</span>
         <span>{{ $categoryModel->name }}</span>
     </nav>

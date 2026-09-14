@@ -83,6 +83,20 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    /* Tailwind v3+ dropped the old preflight rule that gave <button> (and
+       friends) a pointer cursor -- browsers default them to `cursor:
+       default`, unlike <a href>. Restoring it globally here so every
+       button anywhere in the app shows the clickable affordance, instead
+       of patching cursor-pointer onto individual components one at a
+       time. */
+    button:not(:disabled),
+    [type='button']:not(:disabled),
+    [type='reset']:not(:disabled),
+    [type='submit']:not(:disabled),
+    [role='button']:not(:disabled) {
+        cursor: pointer;
+    }
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {

@@ -1,9 +1,16 @@
 @props(['jobPosting', 'matchScore' => null])
 
-<a
-    href="{{ route('jobs.show', $jobPosting) }}"
-    class="group flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-brand-700"
+{{-- A <div> instead of one big <a> -- the company name below needs its own
+     real link to the company profile, and nested <a> tags are invalid HTML
+     with unpredictable click behavior. The "stretched link" pattern below
+     (an invisible full-card <a> underneath, real links layered on top with
+     z-10) makes the whole card clickable to the job while still letting the
+     company name click through to its own destination. --}}
+<div
+    class="group relative flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-brand-700"
 >
+    <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0" aria-label="{{ $jobPosting->title }}"></a>
+
     <div class="flex items-start gap-3">
         <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 text-sm font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
             @if ($jobPosting->company->logo_path)
@@ -23,7 +30,13 @@
                     </span>
                 @endif
             </div>
-            <p class="truncate text-sm text-zinc-600 dark:text-zinc-400">{{ $jobPosting->company->name }}</p>
+            <a
+                href="{{ route('companies.show', $jobPosting->company) }}"
+                wire:navigate
+                class="relative z-10 block w-fit max-w-full truncate text-sm text-zinc-600 hover:text-brand-700 hover:underline dark:text-zinc-400 dark:hover:text-brand-400"
+            >
+                {{ $jobPosting->company->name }}
+            </a>
         </div>
     </div>
 
@@ -49,4 +62,4 @@
             @endif
         </p>
     @endif
-</a>
+</div>

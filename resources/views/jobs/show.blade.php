@@ -1,7 +1,9 @@
 <x-layouts::guest>
     <article class="mx-auto max-w-3xl px-6 py-12">
         <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-            <a href="{{ route('home') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>Home</a>
+            <a href="{{ route('home') }}" class="inline-flex items-center hover:text-brand-700 dark:hover:text-brand-400" wire:navigate title="Home">
+            <flux:icon.home variant="mini" class="size-4" />
+        </a>
             <span class="mx-1">/</span>
             <a href="{{ route('jobs.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>Jobs</a>
             <span class="mx-1">/</span>
@@ -32,7 +34,9 @@
                 </div>
 
                 <p class="mt-1 text-zinc-600 dark:text-zinc-400">
-                    {{ $jobPosting->company->name }}
+                    <a href="{{ route('companies.show', $jobPosting->company) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>
+                        {{ $jobPosting->company->name }}
+                    </a>
                 </p>
                 @if ($jobPosting->company->verified_at)
                     <span class="ml-1 inline-flex items-center text-brand-600 dark:text-brand-400" title="Verified company">
