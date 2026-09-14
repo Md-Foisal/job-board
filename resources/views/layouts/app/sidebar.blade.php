@@ -20,6 +20,37 @@
                     {{ __('Dashboard') }}
                 </flux:sidebar.item>
             </flux:sidebar.group>
+
+            @auth
+                @if (auth()->user()->isCandidate())
+                    <flux:sidebar.group :heading="__('Candidate')" class="grid">
+                        <flux:sidebar.item icon="user" :href="route('candidate.profile.edit')"
+                            :current="request()->routeIs('candidate.profile.*')" wire:navigate>
+                            {{ __('Profile') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="adjustments-horizontal" :href="route('candidate.preferences.edit')"
+                            :current="request()->routeIs('candidate.preferences.*')" wire:navigate>
+                            {{ __('Preferences') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="academic-cap" :href="route('candidate.education.index')"
+                            :current="request()->routeIs('candidate.education.*')" wire:navigate>
+                            {{ __('Education') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="briefcase" :href="route('candidate.experience.index')"
+                            :current="request()->routeIs('candidate.experience.*')" wire:navigate>
+                            {{ __('Experience') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="document-text" :href="route('candidate.documents.index')"
+                            :current="request()->routeIs('candidate.documents.*')" wire:navigate>
+                            {{ __('Documents') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="tag" :href="route('candidate.skills.edit')"
+                            :current="request()->routeIs('candidate.skills.*')" wire:navigate>
+                            {{ __('Skills') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
+            @endauth
         </flux:sidebar.nav>
 
         <flux:spacer />
@@ -89,30 +120,42 @@
 
     {{-- Phase 4: plain (non-Livewire) controllers like JobListingController
     redirect back with session('error'/'success') flash data (e.g. the
-    job-listing deletion guard). This layout's <flux:toast> only reacts to
-    Flux::toast() calls dispatched from within a Livewire request, which a
-    plain controller redirect can't reach -- so those flashes need their own
-    simple banner here instead of silently going nowhere. --}}
+    job-listing deletion guard). Flux::toast() only reaches a <flux:toast>
+    from inside a Livewire request, which a plain controller redirect can't
+    do -- but Flux also ships a standalone JS API (window.Flux.toast) that
+    works anywhere once Alpine has booted, so a flashed message here just
+    calls that instead of falling back to a bespoke banner. --}}
     @if (session('success'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm dark:bg-green-900/30 dark:border-green-700 dark:text-green-300">
-                {{ session('success') }}
-            </div>
-        </div>
+        <script>
+            // alpine:init fires the instant Alpine.start() begins -- BEFORE
+            // Alpine has walked the DOM and wired up the toast host
+            // component's "toast-show" listener. Calling Flux.toast()
+            // synchronously here dispatches the event into the void because
+            // nothing is listening yet. Queuing the call with setTimeout
+            // pushes it to the next tick, by which point Alpine's
+            // (synchronous) DOM walk has finished and the listener exists.
+            document.addEventListener('alpine:init', () => {
+                setTimeout(() => {
+                    Flux.toast({ text: @js(session('success')), variant: 'success' });
+                });
+            });
+        </script>
     @endif
 
     @if (session('error'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm dark:bg-red-900/30 dark:border-red-700 dark:text-red-300">
-                {{ session('error') }}
-            </div>
-        </div>
+        <script>
+            document.addEventListener('alpine:init', () => {
+                setTimeout(() => {
+                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
+                });
+            });
+        </script>
     @endif
 
     {{ $slot }}
 
     @persist('toast')
-    <flux:toast.group>
+    <flux:toast.group position="top end">
         <flux:toast />
     </flux:toast.group>
     @endpersist

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\CandidatePreferenceController;
+use App\Http\Controllers\CandidateProfileController;
+use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobPostingController;
@@ -13,6 +16,39 @@ Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
+
+Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
+    Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('/preferences', [CandidatePreferenceController::class, 'edit'])->name('preferences.edit');
+    Route::patch('/preferences', [CandidatePreferenceController::class, 'update'])->name('preferences.update');
+
+    // Education records: list + add/edit/delete are all Livewire actions
+    // inside this one page component (CRUD-in-modal, claude/14 step 3b) --
+    // no separate store/update/destroy HTTP routes are needed the way a
+    // plain Blade+Controller resource would need them.
+    Route::livewire('/education', 'pages::candidate.education')->name('education.index');
+
+    // Experience records: same CRUD-in-modal pattern as Education (claude/14 step 3b)
+    Route::livewire('/experience', 'pages::candidate.experience')->name('experience.index');
+
+
+    // Document library: same CRUD-in-modal pattern, plus a plain Policy-gated
+    // download route (claude/14 step 7 security fix -- a private-disk file must
+    // be served through an owner-only check, never a guessable public URL).
+    Route::livewire('/documents', 'pages::candidate.documents')->name('documents.index');
+    Route::get('/documents/{document}/download', DocumentDownloadController::class)->name('documents.download');
+
+    // Skill selection: unlike Education/Experience/Documents this is a
+    // singleton "edit your skill set, then Save" page (claude/14 route 17
+    // -- GET/PATCH .edit/.update, "pivot bulk sync"), not incremental
+    // per-item CRUD -- so one Route::livewire() name is enough, matching
+    // Preferences' edit/update naming even though Livewire handles both
+    // verbs through this single route. Still Livewire (not Blade like
+    // Preferences) because the search-as-you-type autocomplete needs it.
+    Route::livewire('/skills', 'pages::candidate.skills')->name('skills.edit');
+});
 
 Route::middleware(['auth', 'candidate'])->group(function () {
     Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
