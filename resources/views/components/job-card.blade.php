@@ -1,4 +1,4 @@
-@props(['jobPosting', 'matchScore' => null])
+@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false])
 
 {{-- A <div> instead of one big <a> -- the company name below needs its own
      real link to the company profile, and nested <a> tags are invalid HTML
@@ -10,6 +10,12 @@
     class="group relative flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-brand-700"
 >
     <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0" aria-label="{{ $jobPosting->title }}"></a>
+
+    @if ($showSaveButton)
+        <div class="absolute right-4 top-4 z-10">
+            <livewire:save-job-button :job-posting="$jobPosting" :key="'save-'.$jobPosting->id" />
+        </div>
+    @endif
 
     <div class="flex items-start gap-3">
         <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 text-sm font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">

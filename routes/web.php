@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidatePreferenceController;
 use App\Http\Controllers\CandidateProfileController;
-use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\SitemapController;
@@ -48,6 +50,12 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // verbs through this single route. Still Livewire (not Blade like
     // Preferences) because the search-as-you-type autocomplete needs it.
     Route::livewire('/skills', 'pages::candidate.skills')->name('skills.edit');
+
+    // Both plain Blade+Controller list pages (claude/14 routes 19 & 21) --
+    // auto-scoped to the signed-in candidate, no filter/sort requirements,
+    // so no Livewire reactivity is needed.
+    Route::get('/applications', [CandidateApplicationController::class, 'index'])->name('applications.index');
+    Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
 });
 
 Route::middleware(['auth', 'candidate'])->group(function () {

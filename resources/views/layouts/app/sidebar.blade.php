@@ -48,6 +48,14 @@
                             :current="request()->routeIs('candidate.skills.*')" wire:navigate>
                             {{ __('Skills') }}
                         </flux:sidebar.item>
+                        <flux:sidebar.item icon="paper-airplane" :href="route('candidate.applications.index')"
+                            :current="request()->routeIs('candidate.applications.*')" wire:navigate>
+                            {{ __('My Applications') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="bookmark" :href="route('candidate.saved-jobs.index')"
+                            :current="request()->routeIs('candidate.saved-jobs.*')" wire:navigate>
+                            {{ __('Saved Jobs') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
             @endauth
