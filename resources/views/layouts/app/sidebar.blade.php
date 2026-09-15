@@ -5,10 +5,10 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+<body class="flex min-h-screen flex-col bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     @include('partials.navbar', ['showSidebarToggle' => true])
 
-    <div class="flex">
+    <div class="flex flex-1">
         <flux:sidebar collapsible="mobile" sticky
             class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:sidebar.nav>
