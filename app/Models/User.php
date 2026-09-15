@@ -158,6 +158,19 @@ class User extends Authenticatable
      * Whether this user can make ownership-level decisions for the
      * given company (owner/manager) — a plain member cannot.
      */
+    /**
+     * This user's role at the given company, or null if they do not
+     * currently work there. Unlike canManage() this answers "what am I",
+     * which is what ranking one person against another needs.
+     */
+    public function roleAt(Company $company): ?MembershipRole
+    {
+        return $this->memberships()
+            ->where('company_id', $company->id)
+            ->where('status', MembershipStatus::Active)
+            ->first()?->role;
+    }
+
     public function canManage(Company $company): bool
     {
         return $this->memberships()
