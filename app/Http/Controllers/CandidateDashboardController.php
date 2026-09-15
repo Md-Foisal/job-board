@@ -30,7 +30,23 @@ class CandidateDashboardController extends Controller
             ->filter(fn (string $field) => filled($candidateProfile->{$field}))
             ->count();
 
-        $profileCompletionPercent = (int) round($filledFieldCount / count(self::PROFILE_FIELDS) * 100);
+        // The scalar fields above are only the identity card -- the things
+        // an employer actually cares about (education, work history,
+        // skills, a CV) live in their own tables. Each of those counts as
+        // one more "field" filled, same weight as headline/bio/links, so a
+        // profile with zero work history and no CV can no longer read as
+        // 100% complete just because the photo and bio are filled in.
+        $sectionPresence = [
+            $candidateProfile->educationRecords()->exists(),
+            $candidateProfile->experienceRecords()->exists(),
+            $candidateProfile->skills()->exists(),
+            $candidateProfile->documents()->exists(),
+        ];
+
+        $filledFieldCount += collect($sectionPresence)->filter()->count();
+        $totalFieldCount = count(self::PROFILE_FIELDS) + count($sectionPresence);
+
+        $profileCompletionPercent = (int) round($filledFieldCount / $totalFieldCount * 100);
 
         $activeApplicationCount = Application::query()
             ->where('candidate_profile_id', $candidateProfile->id)
