@@ -160,11 +160,17 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                     <flux:badge color="yellow">{{ $jobPosting->moderation_status->label() }}</flux:badge>
                                 @endif
                             </td>
-                            <td class="px-5 py-4 text-end tabular-nums text-zinc-700 dark:text-zinc-300">
-                                {{ $jobPosting->applications_count }}
-                                @if ($jobPosting->new_applications_count > 0)
-                                    <span class="text-brand-700 dark:text-brand-400">({{ $jobPosting->new_applications_count }} {{ __('new') }})</span>
-                                @endif
+                            <td class="px-5 py-4 text-end tabular-nums">
+                                <a
+                                    href="{{ route('employer.jobs.applications', ['company' => $this->company, 'job_posting' => $jobPosting]) }}"
+                                    class="text-zinc-700 hover:text-brand-700 hover:underline dark:text-zinc-300 dark:hover:text-brand-400"
+                                    wire:navigate
+                                >
+                                    {{ $jobPosting->applications_count }}
+                                    @if ($jobPosting->new_applications_count > 0)
+                                        <span class="text-brand-700 dark:text-brand-400">({{ $jobPosting->new_applications_count }} {{ __('new') }})</span>
+                                    @endif
+                                </a>
                             </td>
                             <td class="px-5 py-4 text-end">
                                 @can('update', $jobPosting)

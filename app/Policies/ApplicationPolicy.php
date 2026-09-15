@@ -46,6 +46,50 @@ class ApplicationPolicy
     }
 
     /**
+     * The employer side of viewing, deliberately a separate ability
+     * rather than widening view(). That one answers "is this mine?" for
+     * a candidate, and quietly making it mean two things would let a
+     * person who is both a candidate and a recruiter slip between them.
+     *
+     * Reviewing is open to everyone on the hiring team: reading
+     * applications is the work, not a privilege.
+     */
+    public function review(User $user, Application $application): bool
+    {
+        return $user->worksAt($application->jobPosting->company);
+    }
+
+    public function reviewAny(User $user, JobPosting $jobPosting): bool
+    {
+        return $user->worksAt($jobPosting->company);
+    }
+
+    public function updateStage(User $user, Application $application): bool
+    {
+        return $this->review($user, $application);
+    }
+
+    /**
+     * Moving many applications at once is a heavier act than moving one,
+     * and an accidental sweep is hard to undo, so it stays with the
+     * people who answer for the hire.
+     */
+    public function bulkUpdateStage(User $user, JobPosting $jobPosting): bool
+    {
+        return $user->canManage($jobPosting->company);
+    }
+
+    /**
+     * A CV is the most private thing a candidate hands over. It is served
+     * through this check rather than from a guessable public URL, and
+     * only to the company they actually applied to.
+     */
+    public function downloadResume(User $user, Application $application): bool
+    {
+        return $this->review($user, $application);
+    }
+
+    /**
      * Withdraw is only meaningful while the application is still active.
      */
     public function withdraw(User $user, Application $application): bool

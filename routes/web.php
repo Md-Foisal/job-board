@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApplicationResumeDownloadController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
 use App\Http\Controllers\CandidatePreferenceController;
@@ -152,6 +153,10 @@ Route::middleware(['auth', 'company.member'])
         Route::livewire('/jobs', 'pages::employer.job-listings')->name('jobs.index');
         Route::livewire('/jobs/create', 'pages::employer.job-form')->name('jobs.create');
         Route::livewire('/jobs/{job_posting:slug}/edit', 'pages::employer.job-form')->name('jobs.edit');
+        Route::livewire('/jobs/{job_posting:slug}/applications', 'pages::employer.applications')->name('jobs.applications');
+
+        Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
+        Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');
     });
 
 /*
