@@ -26,6 +26,15 @@ Route::view('/terms', 'static.terms')->name('terms');
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
+/*
+ * Registered ahead of the public slug route below: '/companies/create'
+ * would otherwise be read as a company whose slug is "create".
+ */
+Route::middleware('auth')->group(function () {
+    Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+});
+
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
 
 Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
@@ -89,8 +98,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employer/admin have no dashboard of their own yet, so they still get
     // the starter-kit placeholder until that's built.
     Route::get('dashboard', function () {
-        return auth()->user()->isCandidate()
-            ? redirect()->route('candidate.dashboard')
+        $user = auth()->user();
+
+        if ($user->isCandidate()) {
+            return redirect()->route('candidate.dashboard');
+        }
+
+        // Someone who works at a company has a real workspace to land in,
+        // so skip the placeholder. Anyone else -- staff, or an account
+        // with neither side set up yet -- still gets it; a fresh employer
+        // registration is sent straight to company setup at the moment of
+        // registering, where the intent is actually known.
+        $company = $user->activeCompanies()->first();
+
+        return $company
+            ? redirect()->route('employer.dashboard', $company)
             : view('dashboard');
     })->name('dashboard');
 });
