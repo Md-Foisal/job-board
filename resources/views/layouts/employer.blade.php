@@ -55,6 +55,16 @@
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan
+
+                {{-- Outside the Company group on purpose: this one is the
+                     person's own, not the company's, and every member has
+                     it regardless of rank. --}}
+                <flux:sidebar.group :heading="__('You')" class="grid">
+                    <flux:sidebar.item icon="identification" :href="route('employer.recruiter-profile.edit')"
+                        :current="request()->routeIs('employer.recruiter-profile.*')" wire:navigate>
+                        {{ __('Recruiter profile') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             </flux:sidebar.nav>
         </flux:sidebar>
 

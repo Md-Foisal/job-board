@@ -25,7 +25,11 @@ class JobPostingController extends Controller
             // cost both of those.
             'company',
             'skills:id,name',
+            // The recruiter's own face, when they have set one up: the
+            // candidate is deciding whether to apply, and a name with a
+            // person behind it is part of that decision.
             'postedBy:id,name,avatar',
+            'postedBy.recruiterProfile',
             'screeningQuestions',
         ]);
 

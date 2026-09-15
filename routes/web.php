@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -127,6 +128,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
  *
  * Each page inside adds its own route as it is built.
  */
+/*
+ * Deliberately outside the company prefix: a recruiter's public face
+ * belongs to the person, not to any one company, and an agency recruiter
+ * posting for three clients shows the same face to all of them.
+ */
+Route::middleware(['auth', 'employer'])->group(function () {
+    Route::get('/employer/profile', [RecruiterProfileController::class, 'edit'])->name('employer.recruiter-profile.edit');
+    Route::patch('/employer/profile', [RecruiterProfileController::class, 'update'])->name('employer.recruiter-profile.update');
+});
+
 Route::middleware(['auth', 'company.member'])
     ->prefix('companies/{company:slug}')
     ->name('employer.')

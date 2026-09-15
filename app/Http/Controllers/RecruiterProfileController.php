@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Actions\ReplaceUploadedImage;
+use App\Http\Requests\UpdateRecruiterProfileRequest;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
+
+class RecruiterProfileController extends Controller
+{
+    public function edit(Request $request): View
+    {
+        return view('employer.recruiter-profile.edit', [
+            'recruiterProfile' => $request->user()->recruiterProfile,
+            // The page has no company in its URL -- the profile is the same
+            // one whichever company you are posting for -- but it is still
+            // reached from inside a company workspace, so the shell needs a
+            // company to render. Any of theirs is correct here, because
+            // nothing on the page varies by it.
+            'company' => $request->user()->activeCompanies()->first(),
+        ]);
+    }
+
+    public function update(
+        UpdateRecruiterProfileRequest $request,
+        ReplaceUploadedImage $replaceImage,
+    ): RedirectResponse {
+        $user = $request->user();
+        $validated = $request->validated();
+
+        $validated['avatar_path'] = $replaceImage(
+            $request->file('avatar'),
+            $user->recruiterProfile?->avatar_path,
+            'recruiter-avatars',
+        );
+
+        unset($validated['avatar']);
+
+        // Created on first save rather than at registration: it is
+        // optional, and a row full of nulls would claim a face that was
+        // never chosen.
+        $user->recruiterProfile()->updateOrCreate([], $validated);
+
+        return back()->with('success', __('Your recruiter profile is updated.'));
+    }
+}
