@@ -7,6 +7,7 @@ use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobPostingController;
@@ -130,6 +131,9 @@ Route::middleware(['auth', 'company.member'])
     ->name('employer.')
     ->group(function () {
         Route::get('/dashboard', [EmployerDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/edit', [EmployerCompanyController::class, 'edit'])->name('company.edit');
+        Route::patch('/', [EmployerCompanyController::class, 'update'])->name('company.update');
     });
 
 require __DIR__.'/settings.php';

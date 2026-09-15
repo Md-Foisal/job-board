@@ -33,6 +33,15 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @can('update', $company)
+                    <flux:sidebar.group :heading="__('Company')" class="grid">
+                        <flux:sidebar.item icon="building-office" :href="route('employer.company.edit', $company)"
+                            :current="request()->routeIs('employer.company.*')" wire:navigate>
+                            {{ __('Company profile') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endcan
             </flux:sidebar.nav>
         </flux:sidebar>
 
