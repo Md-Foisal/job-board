@@ -3,64 +3,54 @@
 namespace App\Policies;
 
 use App\Models\Application;
+use App\Models\JobPosting;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ApplicationPolicy
 {
     /**
-     * Determine whether the user can view any models.
+     * Whether the user can apply to this job posting: must be a
+     * candidate, the posting must actually be open to applicants, they
+     * must not work at the posting company (self-apply block --
+     * conflict-of-interest), and they must not have already applied.
      */
-    public function viewAny(User $user): bool
+    public function create(User $user, JobPosting $jobPosting): bool
     {
-        return false;
+        if (!$user->isCandidate()) {
+            return false;
+        }
+
+        if (!$jobPosting->isPubliclyVisible()) {
+            return false;
+        }
+
+        if ($user->worksAt($jobPosting->company)) {
+            return false;
+        }
+
+        return !Application::query()
+            ->where('job_posting_id', $jobPosting->id)
+            ->where('candidate_profile_id', $user->candidateProfile->id)
+            ->exists();
     }
 
     /**
-     * Determine whether the user can view the model.
+     * Whether the user can view this application -- only the candidate
+     * who filed it (the employer side of this check is a separate
+     * Membership-based ability, added when the employer-side pages are
+     * built).
      */
     public function view(User $user, Application $application): bool
     {
-        return $user->id === $application->user_id;
+        return $user->candidateProfile?->id === $application->candidate_profile_id;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Withdraw is only meaningful while the application is still active.
      */
-    public function create(User $user): bool
+    public function withdraw(User $user, Application $application): bool
     {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Application $application): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Application $application): bool
-    {
-        return $user->id === $application->user_id;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Application $application): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Application $application): bool
-    {
-        return false;
+        return $this->view($user, $application)
+            && $application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active;
     }
 }

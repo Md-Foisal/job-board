@@ -12,7 +12,7 @@ use App\Models\JobPosting;
 use App\Enums\IdentityType;
 use App\Enums\AccountStatus;
 
-#[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'size', 'industry'])]
+#[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry'])]
 class Company extends Model
 {
     use HasFactory;

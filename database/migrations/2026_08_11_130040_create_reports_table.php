@@ -6,25 +6,18 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('reporter_id')->nullable()->constrained('users')->nullOnDelete();
             $table->morphs('reportable');
-            $table->string('reason');
-            $table->text('details')->nullable();
-            $table->string('moderation_status')->default('pending');
+            $table->text('reason');
+            $table->string('review_status')->default('pending');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('reports');

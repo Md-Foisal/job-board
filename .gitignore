@@ -24,3 +24,8 @@ yarn-error.log
 
 # Local dev-db viewer config (machine-specific path)
 .devdbrc
+
+# Local test-scratch from browser-automation testing sessions (screenshots,
+# throwaway upload fixtures) -- never source, never meant to be committed.
+/Claude outputs/
+/_to_delete/

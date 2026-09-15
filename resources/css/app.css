@@ -10,6 +10,7 @@
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-display: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -23,16 +24,53 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-neutral-800);
-    --color-accent-content: var(--color-neutral-800);
+    /*
+     * Brand scale -- teal (hue 175), chroma tapered: muted at the light/dark
+     * ends, most saturated in the 400-600 range where it is actually used
+     * (buttons, links, active states).
+     */
+    --color-brand-50: oklch(0.98 0.014 175);
+    --color-brand-100: oklch(0.95 0.028 175);
+    --color-brand-200: oklch(0.90 0.045 175);
+    --color-brand-300: oklch(0.82 0.065 175);
+    --color-brand-400: oklch(0.72 0.09 175);
+    --color-brand-500: oklch(0.62 0.11 175);
+    --color-brand-600: oklch(0.52 0.115 175);
+    --color-brand-700: oklch(0.43 0.10 175);
+    --color-brand-800: oklch(0.34 0.075 175);
+    --color-brand-900: oklch(0.27 0.05 175);
+    --color-brand-950: oklch(0.18 0.03 175);
+
+    /* Semantic status colors -- conventional (green=good/red=bad),
+       not a brand-differentiation surface. */
+    --color-success-50: oklch(0.97 0.03 145);
+    --color-success-300: oklch(0.85 0.11 145);
+    --color-success-500: oklch(0.64 0.15 145);
+    --color-success-700: oklch(0.45 0.12 145);
+    --color-success-950: oklch(0.22 0.05 145);
+
+    --color-warning-50: oklch(0.97 0.03 80);
+    --color-warning-300: oklch(0.87 0.11 80);
+    --color-warning-500: oklch(0.78 0.15 80);
+    --color-warning-700: oklch(0.5 0.12 80);
+    --color-warning-950: oklch(0.25 0.05 80);
+
+    --color-danger-50: oklch(0.97 0.02 25);
+    --color-danger-300: oklch(0.82 0.11 25);
+    --color-danger-500: oklch(0.58 0.19 25);
+    --color-danger-700: oklch(0.44 0.16 25);
+    --color-danger-950: oklch(0.24 0.07 25);
+
+    --color-accent: var(--color-brand-600);
+    --color-accent-content: var(--color-brand-600);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-white);
-        --color-accent-content: var(--color-white);
-        --color-accent-foreground: var(--color-neutral-800);
+        --color-accent: var(--color-brand-400);
+        --color-accent-content: var(--color-brand-400);
+        --color-accent-foreground: var(--color-brand-950);
     }
 }
 
@@ -44,6 +82,20 @@
     ::backdrop,
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
+    }
+
+    /* Tailwind v3+ dropped the old preflight rule that gave <button> (and
+       friends) a pointer cursor -- browsers default them to `cursor:
+       default`, unlike <a href>. Restoring it globally here so every
+       button anywhere in the app shows the clickable affordance, instead
+       of patching cursor-pointer onto individual components one at a
+       time. */
+    button:not(:disabled),
+    [type='button']:not(:disabled),
+    [type='reset']:not(:disabled),
+    [type='submit']:not(:disabled),
+    [role='button']:not(:disabled) {
+        cursor: pointer;
     }
 }
 
@@ -60,7 +112,3 @@ textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
-
-/* \[:where(&)\]:size-4 {
-    @apply size-4;
-} */

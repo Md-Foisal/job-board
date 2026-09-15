@@ -3,53 +3,80 @@
 <head>
     @include('partials.head')
 </head>
-<body class="min-h-screen bg-white text-gray-900 antialiased">
-    <nav class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <a href="{{ route('home') }}" class="text-lg font-bold text-blue-600">
-            JobBoard
-        </a>
-    
-        <div class="flex items-center gap-4">
-            @guest
-                <a href="{{ route('register') }}" class="text-sm text-gray-600 hover:text-blue-600">For Employers</a>
-                <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-blue-600">Log in</a>
-                <a href="{{ route('register') }}" class="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Sign
-                    up</a>
-            @endguest
-        
-            @auth
-                <a href="{{ route('dashboard') }}" class="text-sm text-gray-600 hover:text-blue-600">Dashboard</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-sm text-gray-600 hover:text-blue-600">Log out</button>
-                </form>
-            @endauth
-        </div>
-    </nav>
+<body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    @include('partials.navbar')
 
-    {{-- Phase 4: session flash messages (e.g. the job-listing / account
-    deletion guards) were being set via redirect()->with('error'/'success', ...)
-    but nothing in this shared guest layout ever rendered them -- so a blocked
-    action silently redirected back with no visible feedback. This renders
-    both on every page that uses this layout. --}}
+    {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
+         data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
+         request, which a plain controller redirect can't do -- but Flux also
+         ships a standalone JS API (window.Flux.toast) that works anywhere once
+         Alpine has booted, so a flashed message here just calls that instead of
+         a bespoke banner (same fix as layouts/app/sidebar.blade.php). --}}
     @if (session('success'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">
-                {{ session('success') }}
-            </div>
-        </div>
+        <script>
+            // alpine:init fires the instant Alpine.start() begins -- BEFORE
+            // Alpine has walked the DOM and wired up the toast host
+            // component's "toast-show" listener. Calling Flux.toast()
+            // synchronously here dispatches the event into the void because
+            // nothing is listening yet. Queuing the call with setTimeout
+            // pushes it to the next tick, by which point Alpine's
+            // (synchronous) DOM walk has finished and the listener exists.
+            document.addEventListener('alpine:init', () => {
+                setTimeout(() => {
+                    Flux.toast({ text: @js(session('success')), variant: 'success' });
+                });
+            });
+        </script>
     @endif
 
     @if (session('error'))
-        <div class="max-w-4xl mx-auto mt-4 px-4">
-            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">
-                {{ session('error') }}
-            </div>
-        </div>
+        <script>
+            document.addEventListener('alpine:init', () => {
+                setTimeout(() => {
+                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
+                });
+            });
+        </script>
     @endif
 
     <main>
         {{ $slot }}
     </main>
+
+    @persist('toast')
+    <flux:toast.group position="top end">
+        <flux:toast />
+    </flux:toast.group>
+    @endpersist
+
+    {{-- Shell A's footer (claude/14 step ২-ঙ, Supplemental navigation).
+         It is the only place the static pages of route ১০ are reachable
+         from, which is why they are links here and not just a line of
+         copyright. --}}
+    <footer class="mt-16 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
+        <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+            <p>&copy; {{ now()->year }} JobBoard.</p>
+
+            <nav class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <a href="{{ route('jobs.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Browse jobs') }}</a>
+                <a href="{{ route('about') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('About') }}</a>
+                <a href="{{ route('privacy') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Privacy') }}</a>
+                <a href="{{ route('terms') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Terms') }}</a>
+            </nav>
+        </div>
+    </footer>
+
+    {{--
+        @fluxScripts (not @livewireScripts) is what every other layout in
+        this app uses, and it's required here too: it forces Livewire's
+        asset injection so Alpine boots even on pages with zero
+        <livewire:...> components (the plain-controller home page, this
+        layout's own Alpine-driven theme toggle), AND it loads Flux's own
+        JS bundle, which is what actually makes flux:dropdown, flux:menu
+        and flux:modal (Categories menu, the report button, etc.)
+        clickable/interactive -- @livewireScripts alone boots Alpine but
+        never loads that Flux behavior layer.
+    --}}
+    @fluxScripts
 </body>
 </html>

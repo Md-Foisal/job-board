@@ -20,6 +20,21 @@ use Symfony\Component\Intl\Currencies;
 class JobPostingFactory extends Factory
 {
     /**
+     * Realistic pay ranges per period, keyed by SalaryPeriod value -- keeps
+     * seeded numbers plausible (an hourly rate and a yearly salary should
+     * never share the same numeric range), independent of which currency
+     * gets picked.
+     *
+     * @var array<string, array{0: int, 1: int, 2: int}>
+     */
+    private const SALARY_RANGES = [
+        'hourly' => [15, 75, 25],
+        'weekly' => [500, 2500, 500],
+        'monthly' => [2000, 10000, 1500],
+        'yearly' => [30000, 150000, 20000],
+    ];
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -28,7 +43,9 @@ class JobPostingFactory extends Factory
     {
         $title = $this->faker->jobTitle();
         $negotiable = $this->faker->boolean(20);
-        $min = $this->faker->numberBetween(20000, 90000);
+        $period = $this->faker->randomElement(SalaryPeriod::cases());
+        [$rangeMin, $rangeMax, $spread] = self::SALARY_RANGES[$period->value];
+        $min = $this->faker->numberBetween($rangeMin, $rangeMax - $spread);
 
         return [
             'company_id' => Company::factory(),
@@ -42,9 +59,9 @@ class JobPostingFactory extends Factory
             'location_country' => $this->faker->country(),
             'min_experience_years' => $this->faker->numberBetween(0, 10),
             'salary_min' => $negotiable ? null : $min,
-            'salary_max' => $negotiable ? null : $min + $this->faker->numberBetween(5000, 40000),
+            'salary_max' => $negotiable ? null : $min + $this->faker->numberBetween((int) ($spread / 2), $spread),
             'salary_currency' => $negotiable ? null : $this->faker->randomElement(Currencies::getCurrencyCodes()),
-            'salary_period' => $negotiable ? null : $this->faker->randomElement(SalaryPeriod::cases()),
+            'salary_period' => $negotiable ? null : $period,
             'salary_negotiable' => $negotiable,
             'availability_status' => AvailabilityStatus::Active,
             'moderation_status' => ModerationStatus::Approved,

@@ -2,29 +2,23 @@
 
 namespace Database\Factories;
 
-use App\Models\CandidateProfile;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<CandidateProfile>
+ * @extends Factory<\App\Models\CandidateProfile>
  */
 class CandidateProfileFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
             'user_id' => User::factory(),
             'headline' => fake()->jobTitle(),
             'bio' => fake()->paragraph(),
-            'location' => fake()->city(),
-            'experience_years' => fake()->numberBetween(0, 15),
-            'resume' => 'resumes/'.fake()->uuid().'.pdf',
+            'portfolio_url' => fake()->boolean(50) ? fake()->url() : null,
+            'github_url' => fake()->boolean(50) ? 'https://github.com/'.fake()->userName() : null,
+            'linkedin_url' => fake()->boolean(50) ? 'https://linkedin.com/in/'.fake()->userName() : null,
         ];
     }
 }

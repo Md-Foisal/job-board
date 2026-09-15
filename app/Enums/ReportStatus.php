@@ -3,22 +3,20 @@
 namespace App\Enums;
 
 /**
- * Lifecycle of a user-submitted report (polymorphic, on job listings/etc.).
- * Not yet surfaced in any UI — paired with the Report button + Moderation UI
- * backlog item.
+ * Lifecycle of a user-submitted report against a job posting or company.
  */
 enum ReportStatus: string
 {
     case Pending = 'pending';
     case Reviewed = 'reviewed';
-    case Dismissed = 'dismissed';
+    case Actioned = 'actioned';
 
     public function label(): string
     {
         return match ($this) {
             self::Pending => 'Pending',
             self::Reviewed => 'Reviewed',
-            self::Dismissed => 'Dismissed',
+            self::Actioned => 'Actioned',
         };
     }
 }
