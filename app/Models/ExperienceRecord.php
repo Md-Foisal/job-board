@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,6 +15,7 @@ class ExperienceRecord extends Model
     protected function casts(): array
     {
         return [
+            'description' => SanitizedHtml::class,
             'start_date' => 'date',
             'end_date' => 'date',
         ];

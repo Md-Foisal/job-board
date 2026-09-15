@@ -131,7 +131,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
             @endif
         </div>
 
-        <flux:textarea wire:model="coverLetter" label="Cover letter" placeholder="Tell them why you're a good fit (optional)" rows="6" />
+        <x-rich-text-editor wire="coverLetter" :value="$coverLetter" :label="__('Cover letter')" :description="__('Why you are a good fit (optional)')" :headings="false" />
 
         @if ($jobPosting->screeningQuestions->isNotEmpty())
             <div class="space-y-6">

@@ -41,12 +41,11 @@
                 <flux:heading size="lg">{{ __('About') }}</flux:heading>
 
                 <div class="mt-6 flex flex-col gap-6">
-                    <flux:textarea
+                    <x-rich-text-editor
                         name="description"
-                        :label="__('Description')"
-                        rows="8"
                         :value="old('description', $company->description)"
-                        :placeholder="__('What the company does, and what it is like to work there.')"
+                        :label="__('Description')"
+                        :description="__('What the company does, and what it is like to work there.')"
                     />
 
                     <div class="grid gap-6 sm:grid-cols-2">

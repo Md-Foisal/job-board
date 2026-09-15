@@ -88,7 +88,7 @@
 
                     @if ($company->description)
                         <div class="prose prose-zinc mt-6 max-w-3xl dark:prose-invert">
-                            {!! nl2br(e($company->description)) !!}
+                            <div class="prose-content">{!! $company->description !!}</div>
                         </div>
                     @endif
                 </div>

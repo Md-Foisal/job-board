@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +36,7 @@ class JobPosting extends Model
     protected function casts(): array
     {
         return [
+            'description' => SanitizedHtml::class,
             'expires_at' => 'datetime',
             'published_at' => 'datetime',
             'salary_min' => 'integer',

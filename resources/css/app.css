@@ -112,3 +112,48 @@ textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-accent-foreground;
 }
+
+/*
+ * Shared by the editor's writing surface and by every page that renders
+ * what was written, so a job description looks the same while it is being
+ * typed as it does once it is published.
+ */
+.prose-editor,
+.prose-content {
+    @apply text-sm leading-relaxed text-zinc-700 dark:text-zinc-300;
+}
+
+.prose-editor :where(p, ul, ol),
+.prose-content :where(p, ul, ol) {
+    @apply my-2;
+}
+
+.prose-editor :where(h3),
+.prose-content :where(h3) {
+    @apply mt-4 mb-2 font-display text-base font-semibold text-zinc-900 dark:text-zinc-100;
+}
+
+.prose-editor :where(h4),
+.prose-content :where(h4) {
+    @apply mt-3 mb-1 font-display text-sm font-semibold text-zinc-900 dark:text-zinc-100;
+}
+
+.prose-editor :where(ul),
+.prose-content :where(ul) {
+    @apply list-disc ps-5;
+}
+
+.prose-editor :where(ol),
+.prose-content :where(ol) {
+    @apply list-decimal ps-5;
+}
+
+.prose-editor :where(a),
+.prose-content :where(a) {
+    @apply text-brand-700 underline dark:text-brand-400;
+}
+
+.prose-editor :where(strong),
+.prose-content :where(strong) {
+    @apply font-semibold text-zinc-900 dark:text-zinc-100;
+}

@@ -94,7 +94,7 @@
         @endif
 
         <div class="prose prose-zinc mt-6 max-w-none dark:prose-invert">
-            {!! nl2br(e($jobPosting->description)) !!}
+            <div class="prose-content">{!! $jobPosting->description !!}</div>
         </div>
 
         @if ($jobPosting->skills->isNotEmpty())

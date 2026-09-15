@@ -221,7 +221,7 @@ new #[Layout('layouts::employer')] class extends Component {
             <div class="mt-6 flex flex-col gap-6">
                 <flux:input wire:model="title" :label="__('Job title')" required />
 
-                <flux:textarea wire:model="description" :label="__('Description')" rows="10" required />
+                <x-rich-text-editor wire="description" :value="$description" :label="__('Description')" />
 
                 <div class="grid gap-6 sm:grid-cols-2">
                     <flux:select wire:model="employmentType" :label="__('Employment type')">

@@ -195,7 +195,7 @@ new #[Layout('layouts::employer')] class extends Component {
     @if ($this->application->cover_letter)
         <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:heading size="lg">{{ __('Cover letter') }}</flux:heading>
-            <p class="mt-4 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $this->application->cover_letter }}</p>
+            <div class="prose-content mt-4">{!! $this->application->cover_letter !!}</div>
         </div>
     @endif
 

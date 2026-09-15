@@ -133,7 +133,7 @@ new #[Layout('layouts::app')] #[Title('Experience')] class extends Component {
                         </p>
 
                         @if ($record->description)
-                            <p class="mt-2 text-sm whitespace-pre-line text-zinc-600 dark:text-zinc-400">{{ $record->description }}</p>
+                            <div class="prose-content mt-2">{!! $record->description !!}</div>
                         @endif
                     </div>
                 </div>
@@ -159,7 +159,7 @@ new #[Layout('layouts::app')] #[Title('Experience')] class extends Component {
                 <flux:input wire:model="companyName" :label="__('Company')" placeholder="Acme Inc." />
             </div>
 
-            <flux:textarea wire:model="description" :label="__('Description')" :description="__('What did you work on? (optional)')" rows="3">{{ $description }}</flux:textarea>
+            <x-rich-text-editor wire="description" :value="$description" :label="__('Description')" :description="__('What did you work on? (optional)')" :headings="false" />
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <flux:input type="date" wire:model="startDate" :label="__('Start date')" />

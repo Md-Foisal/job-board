@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,6 +20,7 @@ class Application extends Model
     protected function casts(): array
     {
         return [
+            'cover_letter' => SanitizedHtml::class,
             'outcome_status' => ApplicationOutcomeStatus::class,
             'stage' => ApplicationStage::class,
         ];
