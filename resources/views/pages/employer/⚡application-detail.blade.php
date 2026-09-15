@@ -117,7 +117,9 @@ new #[Layout('layouts::employer')] class extends Component {
 }; ?>
 
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
-    @php($candidate = $this->application->candidateProfile)
+    @php
+        $candidate = $this->application->candidateProfile;
+    @endphp
 
     <div>
         <x-breadcrumb :items="[

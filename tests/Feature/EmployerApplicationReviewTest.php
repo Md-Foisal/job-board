@@ -68,8 +68,8 @@ test('applicants are ranked by how well they match', function () {
 
     $strong = applicationFor($company, $job);
     $strong->candidateProfile->skills()->attach([
-        $laravel->id => ['proficiency' => 'expert'],
-        $vue->id => ['proficiency' => 'expert'],
+        $laravel->id => ['proficiency' => 'advanced'],
+        $vue->id => ['proficiency' => 'advanced'],
     ]);
 
     $weak = applicationFor($company, $job);

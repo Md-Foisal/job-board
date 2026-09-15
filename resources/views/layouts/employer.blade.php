@@ -20,7 +20,12 @@
      behind the {company:slug} prefix and the membership guard, so the URL
      is already the authority on which company this is -- and the layout
      only renders on the first load, never on a Livewire update. --}}
-@php($company ??= request()->route('company'))
+@php
+    // Block form on purpose: the inline @php(...) directive compiles to an
+    // unterminated <?php( ... ) when this layout is rendered through
+    // Livewire's #[Layout] path, which then swallows the markup after it.
+    $company ??= request()->route('company');
+@endphp
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
