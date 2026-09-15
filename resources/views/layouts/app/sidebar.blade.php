@@ -1,147 +1,78 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky collapsible="mobile"
-        class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-        <flux:sidebar.header>
-            <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-            <flux:sidebar.collapse class="lg:hidden" />
-        </flux:sidebar.header>
+<body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    @include('partials.navbar', ['showSidebarToggle' => true])
 
-        <flux:sidebar.nav>
-            <flux:sidebar.group :heading="__('Platform')" class="grid">
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    wire:navigate>
-                    {{ __('Dashboard') }}
-                </flux:sidebar.item>
-            </flux:sidebar.group>
+    <div class="flex">
+        <flux:sidebar collapsible="mobile" sticky
+            class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+            <flux:sidebar.nav>
+                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                        wire:navigate>
+                        {{ __('Dashboard') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
 
-            @auth
-                @if (auth()->user()->isCandidate())
-                    <flux:sidebar.group :heading="__('Candidate')" class="grid">
-                        <flux:sidebar.item icon="user" :href="route('candidate.profile.edit')"
-                            :current="request()->routeIs('candidate.profile.*')" wire:navigate>
-                            {{ __('Profile') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="adjustments-horizontal" :href="route('candidate.preferences.edit')"
-                            :current="request()->routeIs('candidate.preferences.*')" wire:navigate>
-                            {{ __('Preferences') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="academic-cap" :href="route('candidate.education.index')"
-                            :current="request()->routeIs('candidate.education.*')" wire:navigate>
-                            {{ __('Education') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="briefcase" :href="route('candidate.experience.index')"
-                            :current="request()->routeIs('candidate.experience.*')" wire:navigate>
-                            {{ __('Experience') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="document-text" :href="route('candidate.documents.index')"
-                            :current="request()->routeIs('candidate.documents.*')" wire:navigate>
-                            {{ __('Documents') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="tag" :href="route('candidate.skills.edit')"
-                            :current="request()->routeIs('candidate.skills.*')" wire:navigate>
-                            {{ __('Skills') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="paper-airplane" :href="route('candidate.applications.index')"
-                            :current="request()->routeIs('candidate.applications.*')" wire:navigate>
-                            {{ __('My Applications') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="bookmark" :href="route('candidate.saved-jobs.index')"
-                            :current="request()->routeIs('candidate.saved-jobs.*')" wire:navigate>
-                            {{ __('Saved Jobs') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
-                @endif
-            @endauth
-        </flux:sidebar.nav>
+                @auth
+                    @if (auth()->user()->isCandidate())
+                        <flux:sidebar.group :heading="__('Candidate')" class="grid">
+                            <flux:sidebar.item icon="user" :href="route('candidate.profile.edit')"
+                                :current="request()->routeIs('candidate.profile.*')" wire:navigate>
+                                {{ __('Profile') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="adjustments-horizontal" :href="route('candidate.preferences.edit')"
+                                :current="request()->routeIs('candidate.preferences.*')" wire:navigate>
+                                {{ __('Preferences') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="academic-cap" :href="route('candidate.education.index')"
+                                :current="request()->routeIs('candidate.education.*')" wire:navigate>
+                                {{ __('Education') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="briefcase" :href="route('candidate.experience.index')"
+                                :current="request()->routeIs('candidate.experience.*')" wire:navigate>
+                                {{ __('Experience') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="document-text" :href="route('candidate.documents.index')"
+                                :current="request()->routeIs('candidate.documents.*')" wire:navigate>
+                                {{ __('Documents') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="tag" :href="route('candidate.skills.edit')"
+                                :current="request()->routeIs('candidate.skills.*')" wire:navigate>
+                                {{ __('Skills') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="paper-airplane" :href="route('candidate.applications.index')"
+                                :current="request()->routeIs('candidate.applications.*')" wire:navigate>
+                                {{ __('My Applications') }}
+                            </flux:sidebar.item>
+                            <flux:sidebar.item icon="bookmark" :href="route('candidate.saved-jobs.index')"
+                                :current="request()->routeIs('candidate.saved-jobs.*')" wire:navigate>
+                                {{ __('Saved Jobs') }}
+                            </flux:sidebar.item>
+                        </flux:sidebar.group>
+                    @endif
+                @endauth
+            </flux:sidebar.nav>
+        </flux:sidebar>
 
-        <flux:spacer />
+        <main class="min-w-0 flex-1 p-6 lg:p-8">
+            {{ $slot }}
+        </main>
+    </div>
 
-        <flux:sidebar.nav>
-            <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit"
-                target="_blank">
-                {{ __('Repository') }}
-            </flux:sidebar.item>
-
-            <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire"
-                target="_blank">
-                {{ __('Documentation') }}
-            </flux:sidebar.item>
-        </flux:sidebar.nav>
-
-        @auth
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
-        @endauth
-    </flux:sidebar>
-
-    <!-- Mobile User Menu -->
-    <flux:header class="lg:hidden">
-        <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
-
-        <flux:spacer />
-
-        @auth
-            <flux:dropdown position="top" align="end">
-                <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down" />
-
-                <flux:menu>
-                    <flux:menu.radio.group>
-                        <div class="p-0 text-sm font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar :name="auth()->user()->name" :initials="auth()->user()->initials()" />
-
-                                <div class="grid flex-1 text-start text-sm leading-tight">
-                                    <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
-                                    <flux:text class="truncate">{{ auth()->user()->email }}</flux:text>
-                                </div>
-                            </div>
-                        </div>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
-                            {{ __('Settings') }}
-                        </flux:menu.item>
-                    </flux:menu.radio.group>
-
-                    <flux:menu.separator />
-
-                    <form method="POST" action="{{ route('logout') }}" class="w-full">
-                        @csrf
-                        <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
-                            class="w-full cursor-pointer" data-test="logout-button">
-                            {{ __('Log out') }}
-                        </flux:menu.item>
-                    </form>
-                </flux:menu>
-            </flux:dropdown>
-        @endauth
-    </flux:header>
-
-    {{-- Phase 4: plain (non-Livewire) controllers like JobListingController
-    redirect back with session('error'/'success') flash data (e.g. the
-    job-listing deletion guard). Flux::toast() only reaches a <flux:toast>
-    from inside a Livewire request, which a plain controller redirect can't
-    do -- but Flux also ships a standalone JS API (window.Flux.toast) that
-    works anywhere once Alpine has booted, so a flashed message here just
-    calls that instead of falling back to a bespoke banner. --}}
+    {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
+         data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
+         request, which a plain controller redirect can't do -- but Flux also
+         ships a standalone JS API (window.Flux.toast) that works anywhere once
+         Alpine has booted, so a flashed message here just calls that instead of
+         a bespoke banner (same fix as layouts/guest.blade.php). --}}
     @if (session('success'))
         <script>
-            // alpine:init fires the instant Alpine.start() begins -- BEFORE
-            // Alpine has walked the DOM and wired up the toast host
-            // component's "toast-show" listener. Calling Flux.toast()
-            // synchronously here dispatches the event into the void because
-            // nothing is listening yet. Queuing the call with setTimeout
-            // pushes it to the next tick, by which point Alpine's
-            // (synchronous) DOM walk has finished and the listener exists.
             document.addEventListener('alpine:init', () => {
                 setTimeout(() => {
                     Flux.toast({ text: @js(session('success')), variant: 'success' });
@@ -159,8 +90,6 @@
             });
         </script>
     @endif
-
-    {{ $slot }}
 
     @persist('toast')
     <flux:toast.group position="top end">

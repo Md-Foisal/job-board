@@ -4,50 +4,7 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-    <nav class="flex items-center justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <a href="{{ route('home') }}" class="shrink-0 font-display text-lg font-bold text-brand-700 dark:text-brand-400">
-            JobBoard
-        </a>
-
-        <div class="hidden flex-1 items-center gap-2 md:flex">
-            {{-- The homepage carries its own large hero search right below
-                 this nav, so repeating it here would just be noise --}}
-            @unless (request()->routeIs('home'))
-                <livewire:job-search-autocomplete variant="compact" />
-            @endunless
-
-            <flux:dropdown>
-                <flux:button variant="ghost" icon:trailing="chevron-down">Categories</flux:button>
-                <flux:menu>
-                    @foreach ($navCategories as $navCategory)
-                        <flux:menu.item href="{{ route('categories.show', $navCategory) }}" wire:navigate>
-                            {{ $navCategory->name }}
-                        </flux:menu.item>
-                    @endforeach
-                </flux:menu>
-            </flux:dropdown>
-        </div>
-
-        <div class="flex shrink-0 items-center gap-4">
-            <x-theme-toggle />
-
-            @guest
-                <a href="{{ route('register') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">For Employers</a>
-                <a href="{{ route('login') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log in</a>
-                <a href="{{ route('register') }}" class="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
-                    Sign up
-                </a>
-            @endguest
-
-            @auth
-                <a href="{{ route('dashboard') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Dashboard</a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log out</button>
-                </form>
-            @endauth
-        </div>
-    </nav>
+    @include('partials.navbar')
 
     {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
          data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
