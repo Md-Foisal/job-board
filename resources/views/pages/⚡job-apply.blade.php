@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\DocumentType;
+use App\Events\ApplicationSubmitted;
 use App\Models\Application;
 use App\Models\JobPosting;
 use Illuminate\Support\Collection;
@@ -97,6 +98,11 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
                 ]);
             }
         }
+
+        // Announced only once everything the application is made of exists:
+        // the screening answers are part of what the hiring team is about
+        // to be told to go and read.
+        ApplicationSubmitted::dispatch($application);
 
         session()->flash('success', 'Application submitted — good luck!');
 

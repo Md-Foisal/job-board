@@ -6,6 +6,7 @@ use App\Enums\ApplicationStage;
 use App\Models\Application;
 use App\Models\ApplicationEvent;
 use App\Models\User;
+use App\Notifications\ApplicationStageChanged;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,7 +29,7 @@ class ChangeApplicationStage
             return null;
         }
 
-        return DB::transaction(function () use ($application, $changedBy, $from, $to) {
+        $event = DB::transaction(function () use ($application, $changedBy, $from, $to) {
             $application->stage = $to;
             $application->save();
 
@@ -41,5 +42,13 @@ class ChangeApplicationStage
                 'to_stage' => $to->value,
             ]);
         });
+
+        // Sent after the transaction commits, never inside it: a mail that
+        // goes out for a change that then rolls back cannot be recalled.
+        // One known recipient, so it goes directly rather than through an
+        // event -- there is no fan-out here to work out.
+        $application->candidateProfile->user->notify(new ApplicationStageChanged($application));
+
+        return $event;
     }
 }
