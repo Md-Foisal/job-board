@@ -148,6 +148,10 @@ Route::middleware(['auth', 'company.member'])
         Route::patch('/', [EmployerCompanyController::class, 'update'])->name('company.update');
 
         Route::livewire('/team', 'pages::employer.team')->name('team.index');
+
+        Route::livewire('/jobs', 'pages::employer.job-listings')->name('jobs.index');
+        Route::livewire('/jobs/create', 'pages::employer.job-form')->name('jobs.create');
+        Route::livewire('/jobs/{job_posting:slug}/edit', 'pages::employer.job-form')->name('jobs.edit');
     });
 
 /*

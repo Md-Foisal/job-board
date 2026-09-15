@@ -56,6 +56,13 @@
                     </flux:sidebar.group>
                 @endcan
 
+                <flux:sidebar.group :heading="__('Hiring')" class="grid">
+                    <flux:sidebar.item icon="briefcase" :href="route('employer.jobs.index', $company)"
+                        :current="request()->routeIs('employer.jobs.*')" wire:navigate>
+                        {{ __('Job postings') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
                 {{-- Outside the Company group on purpose: this one is the
                      person's own, not the company's, and every member has
                      it regardless of rank. --}}
