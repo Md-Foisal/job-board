@@ -11,9 +11,22 @@ class CandidateProfileController extends Controller
 {
     public function edit(Request $request): View
     {
+        $candidateProfile = $request->user()->candidateProfile;
+
+        // The profile page bills itself as "what companies see when they
+        // look you up", so it needs read-only summaries of every section a
+        // real candidate profile has -- not just the identity card fields
+        // that live directly on CandidateProfile. Education/Experience/
+        // Documents/Skills each already have their own dedicated CRUD page
+        // (claude/14 step 3b) and stay that way here; this view only reads
+        // them, it never edits them.
         return view('candidate.profile.edit', [
             'user' => $request->user(),
-            'candidateProfile' => $request->user()->candidateProfile,
+            'candidateProfile' => $candidateProfile,
+            'educationRecords' => $candidateProfile->educationRecords()->orderByDesc('start_date')->get(),
+            'experienceRecords' => $candidateProfile->experienceRecords()->orderByDesc('start_date')->get(),
+            'skills' => $candidateProfile->skills()->orderBy('name')->get(),
+            'documents' => $candidateProfile->documents()->latest()->get(),
         ]);
     }
 

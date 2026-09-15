@@ -1,5 +1,5 @@
 <x-layouts::app :title="__('Your profile')">
-    <div class="mx-auto max-w-2xl">
+    <div class="mx-auto max-w-3xl">
         <flux:heading size="xl" level="1">{{ __('Your profile') }}</flux:heading>
         <flux:subheading size="lg" class="mb-6">{{ __('This is what companies see when they look you up.') }}</flux:subheading>
 
@@ -276,6 +276,162 @@
                     <span class="text-xs text-zinc-500 dark:text-zinc-500">{{ __('Saves everything above at once.') }}</span>
                 </div>
             </form>
+        </div>
+
+        {{-- Everything below is read-only here on purpose: Education,
+             Experience, Skills and Documents each already have their own
+             dedicated CRUD page (claude/14 step 3b -- modal-based add/edit/
+             delete). Duplicating that editing UI here would just be a
+             second, out-of-sync place to do the same thing. This page's
+             job is to show the candidate the same complete picture a
+             company sees, with a "Manage" link into the real editor for
+             each section. --}}
+
+        {{-- Education --}}
+        <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex items-center justify-between gap-4 px-6 py-5 sm:px-8">
+                <flux:subheading>{{ __('Education') }}</flux:subheading>
+                <a href="{{ route('candidate.education.index') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                    {{ __('Manage') }}
+                </a>
+            </div>
+
+            @if ($educationRecords->isEmpty())
+                <div class="border-t border-zinc-100 px-6 py-6 text-center dark:border-zinc-800 sm:px-8">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any education yet.") }}</p>
+                    <a href="{{ route('candidate.education.index') }}" wire:navigate class="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('+ Add education') }}
+                    </a>
+                </div>
+            @else
+                <ul class="divide-y divide-zinc-100 border-t border-zinc-100 dark:divide-zinc-800 dark:border-zinc-800">
+                    @foreach ($educationRecords as $record)
+                        <li class="flex gap-4 px-6 py-4 sm:px-8">
+                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                                <flux:icon name="academic-cap" variant="mini" />
+                            </div>
+                            <div>
+                                <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $record->institution_name }}</p>
+                                @if ($record->degree || $record->field_of_study)
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                                        {{ collect([$record->degree, $record->field_of_study])->filter()->join(', ') }}
+                                    </p>
+                                @endif
+                                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+                                    {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
+                                </p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+        {{-- Experience --}}
+        <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex items-center justify-between gap-4 px-6 py-5 sm:px-8">
+                <flux:subheading>{{ __('Experience') }}</flux:subheading>
+                <a href="{{ route('candidate.experience.index') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                    {{ __('Manage') }}
+                </a>
+            </div>
+
+            @if ($experienceRecords->isEmpty())
+                <div class="border-t border-zinc-100 px-6 py-6 text-center dark:border-zinc-800 sm:px-8">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any experience yet.") }}</p>
+                    <a href="{{ route('candidate.experience.index') }}" wire:navigate class="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('+ Add experience') }}
+                    </a>
+                </div>
+            @else
+                <ul class="divide-y divide-zinc-100 border-t border-zinc-100 dark:divide-zinc-800 dark:border-zinc-800">
+                    @foreach ($experienceRecords as $record)
+                        <li class="flex gap-4 px-6 py-4 sm:px-8">
+                            <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                                <flux:icon name="briefcase" variant="mini" />
+                            </div>
+                            <div>
+                                <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $record->job_title }}</p>
+                                <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $record->company_name }}</p>
+                                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+                                    {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
+                                </p>
+                                @if ($record->description)
+                                    <p class="mt-2 whitespace-pre-line text-sm text-zinc-600 dark:text-zinc-400">{{ $record->description }}</p>
+                                @endif
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+        {{-- Skills --}}
+        <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex items-center justify-between gap-4 px-6 py-5 sm:px-8">
+                <flux:subheading>{{ __('Skills') }}</flux:subheading>
+                <a href="{{ route('candidate.skills.edit') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                    {{ __('Manage') }}
+                </a>
+            </div>
+
+            <div class="border-t border-zinc-100 px-6 py-5 dark:border-zinc-800 sm:px-8">
+                @if ($skills->isEmpty())
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any skills yet.") }}</p>
+                    <a href="{{ route('candidate.skills.edit') }}" wire:navigate class="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('+ Add skills') }}
+                    </a>
+                @else
+                    <div class="flex flex-wrap gap-2">
+                        @foreach ($skills as $skill)
+                            <span class="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                                {{ $skill->name }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Documents --}}
+        <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="flex items-center justify-between gap-4 px-6 py-5 sm:px-8">
+                <flux:subheading>{{ __('Documents') }}</flux:subheading>
+                <a href="{{ route('candidate.documents.index') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                    {{ __('Manage') }}
+                </a>
+            </div>
+
+            @if ($documents->isEmpty())
+                <div class="border-t border-zinc-100 px-6 py-6 text-center dark:border-zinc-800 sm:px-8">
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added a CV or any documents yet.") }}</p>
+                    <a href="{{ route('candidate.documents.index') }}" wire:navigate class="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('+ Add a document') }}
+                    </a>
+                </div>
+            @else
+                <ul class="divide-y divide-zinc-100 border-t border-zinc-100 dark:divide-zinc-800 dark:border-zinc-800">
+                    @foreach ($documents as $document)
+                        <li class="flex items-center justify-between gap-4 px-6 py-4 sm:px-8">
+                            <div class="flex items-center gap-4">
+                                <div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                                    <flux:icon :name="match ($document->document_type) {
+                                        \App\Enums\DocumentType::Cv => 'document-text',
+                                        \App\Enums\DocumentType::WorkSample => 'folder',
+                                        \App\Enums\DocumentType::Certificate => 'shield-check',
+                                    }" variant="mini" />
+                                </div>
+                                <div>
+                                    <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->original_filename }}</p>
+                                    <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $document->document_type->label() }}</p>
+                                </div>
+                            </div>
+
+                            <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
     </div>
 </x-layouts::app>
