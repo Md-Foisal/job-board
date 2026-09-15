@@ -4,7 +4,7 @@
         <flux:subheading size="lg" class="mb-6">{{ __('Helps us and employers match you to the right roles.') }}</flux:subheading>
         <flux:separator variant="subtle" class="mb-6" />
 
-        <form method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6">
+        <form method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             @csrf
             @method('PATCH')
 
