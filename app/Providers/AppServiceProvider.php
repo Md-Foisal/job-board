@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Services\MatchScoreCalculator;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +34,18 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // Outside production, turn Eloquent's two silent-wrong-data behaviors
+        // into loud ones: assigning an attribute that is not fillable, and
+        // reading a column that was never loaded because the query selected a
+        // subset. Both otherwise fail by quietly producing null, which reads
+        // as real data everywhere downstream.
+        //
+        // Lazy loading is deliberately left enabled: it is a query-count
+        // concern, not a correctness one, and turning it off here would make
+        // every policy that reaches for its record's parent throw.
+        Model::preventSilentlyDiscardingAttributes(! app()->isProduction());
+        Model::preventAccessingMissingAttributes(! app()->isProduction());
 
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
