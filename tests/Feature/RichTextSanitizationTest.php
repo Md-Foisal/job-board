@@ -50,7 +50,14 @@ test('the formatting people actually use is kept', function () {
 test('an untouched editor saves nothing rather than an empty paragraph', function () {
     $job = JobPosting::factory()->create(['description' => '<p></p>']);
 
-    expect($job->fresh()->description)->toBeNull();
+    // Empty, but not null: job_postings.description is NOT NULL, and a cast
+    // that invented a null there would turn a blank field into a database
+    // error instead of the validation message the person should see.
+    expect($job->fresh()->description)->toBe('');
+
+    // A column that does allow null still gets one when given one.
+    $company = Company::factory()->create(['description' => null]);
+    expect($company->fresh()->description)->toBeNull();
 });
 
 test('cleaning applies to every field that takes formatted text', function () {

@@ -109,9 +109,25 @@ test('a draft preview does not tell Google the job is live', function () {
     $response->assertDontSee('application/ld+json', false);
 });
 
-test('a description containing a closing script tag cannot break out of the tag', function () {
-    $description = 'Great role. </script><script>alert(1)</script>';
-    $job = JobPosting::factory()->create(['description' => $description]);
+test('a script tag in a description never reaches the markup', function () {
+    $job = JobPosting::factory()->create([
+        'description' => 'Great role. </script><script>alert(1)</script>',
+    ]);
+
+    $json = app(JobPostingStructuredData::class)->toJson($job);
+
+    // Two defences, and this is the outer one: the payload is stripped as it
+    // is stored, so there is nothing left to escape by the time it gets here.
+    expect($json)->not->toContain('alert(1)');
+});
+
+test('legitimate formatting still cannot break out of the script tag', function () {
+    // Descriptions are rich text now, so real ones genuinely contain angle
+    // brackets -- which is exactly why the escaping defence still matters
+    // underneath the sanitizing one.
+    $job = JobPosting::factory()->create([
+        'description' => '<p>You will <strong>build</strong> things.</p>',
+    ]);
 
     $json = app(JobPostingStructuredData::class)->toJson($job);
 
@@ -122,6 +138,6 @@ test('a description containing a closing script tag cannot break out of the tag'
     expect($json)->not->toContain('<');
     expect($json)->not->toContain('>');
 
-    // And the text is escaped, not discarded: decoding returns it intact.
-    expect(json_decode($json, true)['description'])->toBe($description);
+    // Escaped, not discarded: decoding returns the markup intact.
+    expect(json_decode($json, true)['description'])->toContain('<strong>build</strong>');
 });

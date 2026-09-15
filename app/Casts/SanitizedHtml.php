@@ -27,14 +27,18 @@ class SanitizedHtml implements CastsAttributes
 
     public function set(Model $model, string $key, mixed $value, array $attributes): ?string
     {
-        if (blank($value)) {
+        if ($value === null) {
             return null;
         }
 
         $clean = Purifier::clean($value, 'richtext');
 
-        // An editor left untouched still serialises an empty paragraph;
-        // storing that would make a "required" field look filled in.
-        return blank(strip_tags($clean)) ? null : $clean;
+        // An editor left untouched still serialises an empty paragraph, and
+        // storing that would make a required field look filled in. It
+        // collapses to an empty string rather than to null, because some of
+        // these columns are NOT NULL: emptiness is the same either way to
+        // every reader, but inventing a null here would turn "you left it
+        // blank" into a database error instead of a validation message.
+        return blank(strip_tags($clean)) ? '' : $clean;
     }
 }
