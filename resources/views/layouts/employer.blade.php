@@ -11,7 +11,16 @@
     the company, so it is reached from the job listing rather than from a
     permanent nav entry.
 --}}
-@props(['company', 'title' => null])
+@props(['company' => null, 'title' => null])
+
+{{-- Blade pages hand the company in explicitly, which keeps the dependency
+     visible at the call site. A Livewire full-page component cannot: its
+     #[Layout] attribute only takes constants. Falling back to the route
+     parameter costs nothing in correctness -- every page in this shell is
+     behind the {company:slug} prefix and the membership guard, so the URL
+     is already the authority on which company this is -- and the layout
+     only renders on the first load, never on a Livewire update. --}}
+@php($company ??= request()->route('company'))
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -39,6 +48,10 @@
                         <flux:sidebar.item icon="building-office" :href="route('employer.company.edit', $company)"
                             :current="request()->routeIs('employer.company.*')" wire:navigate>
                             {{ __('Company profile') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="users" :href="route('employer.team.index', $company)"
+                            :current="request()->routeIs('employer.team.*')" wire:navigate>
+                            {{ __('Team') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endcan

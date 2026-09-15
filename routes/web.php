@@ -10,6 +10,7 @@ use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
@@ -134,6 +135,17 @@ Route::middleware(['auth', 'company.member'])
 
         Route::get('/edit', [EmployerCompanyController::class, 'edit'])->name('company.edit');
         Route::patch('/', [EmployerCompanyController::class, 'update'])->name('company.update');
+
+        Route::livewire('/team', 'pages::employer.team')->name('team.index');
     });
+
+/*
+ * Reachable without signing in: the whole point of an invitation is that
+ * it may arrive before the recipient has an account. Accepting still
+ * requires being signed in as the invited address -- the controller
+ * sends a guest through login and back.
+ */
+Route::get('/invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
 
 require __DIR__.'/settings.php';
