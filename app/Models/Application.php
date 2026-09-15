@@ -48,4 +48,14 @@ class Application extends Model
     {
         return $this->hasMany(ApplicationEvent::class)->latest('created_at');
     }
+
+    /**
+     * Private hiring-side commentary. Newest first: a reviewer opening an
+     * application wants the most recent read on the candidate, not the
+     * first one written weeks ago.
+     */
+    public function notes()
+    {
+        return $this->hasMany(ApplicationNote::class)->latest();
+    }
 }

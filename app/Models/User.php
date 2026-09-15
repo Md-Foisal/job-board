@@ -83,6 +83,15 @@ class User extends Authenticatable
         return $this->hasOne(CandidateProfile::class);
     }
 
+    /**
+     * The optional public face this user shows candidates when they post
+     * jobs. Company-independent -- see RecruiterProfile.
+     */
+    public function recruiterProfile()
+    {
+        return $this->hasOne(RecruiterProfile::class);
+    }
+
     public function savedJobs()
     {
         return $this->belongsToMany(JobPosting::class, 'saved_jobs');
