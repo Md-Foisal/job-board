@@ -92,6 +92,19 @@ class User extends Authenticatable
         return $this->hasOne(RecruiterProfile::class);
     }
 
+    /**
+     * The companies this user currently works for. "Currently" is the
+     * whole point: an ended membership leaves its row behind for
+     * attribution but stops granting access, so anything that asks
+     * "which companies are mine" has to filter on it.
+     */
+    public function activeCompanies()
+    {
+        return $this->belongsToMany(Company::class, 'memberships')
+            ->wherePivot('status', MembershipStatus::Active)
+            ->withPivot('role');
+    }
+
     public function savedJobs()
     {
         return $this->belongsToMany(JobPosting::class, 'saved_jobs');

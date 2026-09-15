@@ -1,3 +1,9 @@
+{{-- An anonymous component only receives passed data as variables when it
+     declares them, so without this the :title layouts/app.blade.php passes
+     in never reached partials.head and every page fell back to the bare
+     app name in the browser tab. --}}
+@props(['title' => null])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 

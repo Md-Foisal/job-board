@@ -7,6 +7,7 @@ use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\SitemapController;
@@ -93,5 +94,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             : view('dashboard');
     })->name('dashboard');
 });
+
+/*
+ * The company workspace (Shell C). The company is a URL segment rather
+ * than a session value so these pages can be linked, bookmarked and kept
+ * open side by side for two different companies; 'company.member' is what
+ * turns that URL into an entitlement check on every single request.
+ *
+ * Each page inside adds its own route as it is built.
+ */
+Route::middleware(['auth', 'company.member'])
+    ->prefix('companies/{company:slug}')
+    ->name('employer.')
+    ->group(function () {
+        Route::get('/dashboard', [EmployerDashboardController::class, 'index'])->name('dashboard');
+    });
 
 require __DIR__.'/settings.php';
