@@ -1,9 +1,14 @@
 <?php
 
 use App\Enums\ApplicationOutcomeStatus;
+use App\Enums\DocumentType;
 use App\Models\Application;
+use App\Models\Document;
+use App\Models\EducationRecord;
+use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
 use App\Models\JobView;
+use App\Models\Skill;
 
 test('guest is redirected to login', function () {
     $response = $this->get(route('candidate.dashboard'));
@@ -27,9 +32,11 @@ test('the generic /dashboard route sends a candidate straight to their own dashb
     $response->assertRedirect(route('candidate.dashboard'));
 });
 
-test('profile completion percent counts only the filled candidateProfile fields', function () {
+test('profile completion percent counts the filled candidateProfile fields', function () {
     $candidate = candidateUser();
-    // 2 of the 6 tracked fields filled (headline, bio) -> round(2/6*100) = 33%.
+    // 2 of the 10 tracked items filled (headline, bio) -> round(2/10*100) = 20%.
+    // The other 8 are the four empty scalar fields below plus education,
+    // experience, skills and documents, which this candidate has none of.
     $candidate->candidateProfile->update([
         'headline' => 'Backend Developer',
         'bio' => 'Building things.',
@@ -42,7 +49,76 @@ test('profile completion percent counts only the filled candidateProfile fields'
     $response = $this->actingAs($candidate)->get(route('candidate.dashboard'));
 
     $response->assertOk();
-    $response->assertSee('33%');
+    $response->assertSee('20%');
+});
+
+test('profile completion percent also counts education, experience, skills and documents', function () {
+    $candidate = candidateUser();
+    $profile = $candidate->candidateProfile;
+    $profile->update([
+        'headline' => 'Backend Developer',
+        'bio' => 'Building things.',
+        'cover_photo_path' => null,
+        'portfolio_url' => null,
+        'github_url' => null,
+        'linkedin_url' => null,
+    ]);
+
+    // Same two scalar fields as the test above, but all four sections filled:
+    // 6 of 10 -> 60%. If the sections were not counted this would read 20%.
+    EducationRecord::factory()->for($profile)->create();
+    ExperienceRecord::factory()->for($profile)->create();
+    Document::factory()->for($profile)->create(['document_type' => DocumentType::Cv]);
+    $profile->skills()->attach(Skill::create(['name' => 'Laravel', 'slug' => 'laravel'])->id);
+
+    $response = $this->actingAs($candidate)->get(route('candidate.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('60%');
+});
+
+test('a profile with every field and section filled reads 100 percent', function () {
+    $candidate = candidateUser();
+    $profile = $candidate->candidateProfile;
+    $profile->update([
+        'headline' => 'Backend Developer',
+        'bio' => 'Building things.',
+        'cover_photo_path' => 'covers/candidate.jpg',
+        'portfolio_url' => 'https://example.test',
+        'github_url' => 'https://github.com/example',
+        'linkedin_url' => 'https://linkedin.com/in/example',
+    ]);
+
+    EducationRecord::factory()->for($profile)->create();
+    ExperienceRecord::factory()->for($profile)->create();
+    Document::factory()->for($profile)->create(['document_type' => DocumentType::Cv]);
+    $profile->skills()->attach(Skill::create(['name' => 'Laravel', 'slug' => 'laravel'])->id);
+
+    $response = $this->actingAs($candidate)->get(route('candidate.dashboard'));
+
+    $response->assertOk();
+    $response->assertSee('100%');
+});
+
+test('the completion card names the missing items, not just the percentage', function () {
+    $candidate = candidateUser();
+    $candidate->candidateProfile->update([
+        'headline' => 'Backend Developer',
+        'bio' => 'Building things.',
+        'cover_photo_path' => null,
+        'portfolio_url' => null,
+        'github_url' => null,
+        'linkedin_url' => null,
+    ]);
+
+    $response = $this->actingAs($candidate)->get(route('candidate.dashboard'));
+
+    $response->assertOk();
+    // 8 items are missing: the card names the first three and counts the rest.
+    $response->assertSee('Cover photo');
+    $response->assertSee('Portfolio link');
+    $response->assertSee('GitHub link');
+    $response->assertSee('+5 more');
 });
 
 test('active application count only counts active outcomes', function () {
