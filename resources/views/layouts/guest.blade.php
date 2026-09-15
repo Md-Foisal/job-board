@@ -49,8 +49,21 @@
     </flux:toast.group>
     @endpersist
 
+    {{-- Shell A's footer (claude/14 step ২-ঙ, Supplemental navigation).
+         It is the only place the static pages of route ১০ are reachable
+         from, which is why they are links here and not just a line of
+         copyright. --}}
     <footer class="mt-16 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
-        <p>&copy; {{ now()->year }} JobBoard.</p>
+        <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+            <p>&copy; {{ now()->year }} JobBoard.</p>
+
+            <nav class="flex flex-wrap items-center gap-x-6 gap-y-2">
+                <a href="{{ route('jobs.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Browse jobs') }}</a>
+                <a href="{{ route('about') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('About') }}</a>
+                <a href="{{ route('privacy') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Privacy') }}</a>
+                <a href="{{ route('terms') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Terms') }}</a>
+            </nav>
+        </div>
     </footer>
 
     {{--

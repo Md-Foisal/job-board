@@ -1,14 +1,16 @@
-<x-layouts::guest>
+<x-layouts::guest :title="$jobPosting->title.' at '.$jobPosting->company->name">
+    {{-- Google-for-Jobs structured data (claude/14 step 5: no route of its
+         own, emitted inside this page's HTML). Built and safely encoded in
+         App\Services\JobPostingStructuredData. --}}
+    @if ($structuredData)
+        <script type="application/ld+json">{!! $structuredData !!}</script>
+    @endif
+
     <article class="mx-auto max-w-3xl px-6 py-12">
-        <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-            <a href="{{ route('home') }}" class="inline-flex items-center hover:text-brand-700 dark:hover:text-brand-400" wire:navigate title="Home">
-            <flux:icon.home variant="mini" class="size-4" />
-        </a>
-            <span class="mx-1">/</span>
-            <a href="{{ route('jobs.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>Jobs</a>
-            <span class="mx-1">/</span>
-            <span class="text-zinc-700 dark:text-zinc-300">{{ $jobPosting->title }}</span>
-        </nav>
+        <x-breadcrumb :items="[
+            ['label' => __('Jobs'), 'url' => route('jobs.index')],
+            ['label' => $jobPosting->title],
+        ]" />
 
         <header class="mt-4 flex items-start gap-4 border-b border-zinc-200 pb-6 dark:border-zinc-800">
             <div class="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-brand-50 text-lg font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">

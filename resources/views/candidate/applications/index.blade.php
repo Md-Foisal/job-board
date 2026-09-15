@@ -15,7 +15,7 @@
             <div class="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
                 @foreach ($applications as $application)
                     <a
-                        href="{{ route('jobs.show', $application->jobPosting) }}"
+                        href="{{ route('candidate.applications.show', $application) }}"
                         wire:navigate
                         class="flex items-center justify-between gap-4 p-5 transition hover:bg-zinc-50 dark:hover:bg-zinc-900"
                     >
@@ -31,20 +31,7 @@
                         </div>
 
                         <div class="flex shrink-0 items-center gap-2">
-                            <flux:badge :color="match ($application->outcome_status) {
-                                \App\Enums\ApplicationOutcomeStatus::Active => 'blue',
-                                \App\Enums\ApplicationOutcomeStatus::Hired => 'green',
-                                \App\Enums\ApplicationOutcomeStatus::Rejected => 'red',
-                                \App\Enums\ApplicationOutcomeStatus::Withdrawn => 'zinc',
-                            }">
-                                {{ $application->outcome_status->label() }}
-                            </flux:badge>
-
-                            @if ($application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active)
-                                <flux:badge color="zinc" variant="pill">
-                                    {{ $application->stage->label() }}
-                                </flux:badge>
-                            @endif
+                            <x-application-status :application="$application" />
                         </div>
                     </a>
                 @endforeach

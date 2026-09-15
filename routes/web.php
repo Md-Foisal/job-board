@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+// Static guest pages (claude/14 route ১০). Route::view, not a
+// controller: there is no data to fetch, and they are linked from
+// Shell A's footer and listed in the sitemap.
+Route::view('/about', 'static.about')->name('about');
+Route::view('/privacy', 'static.privacy')->name('privacy');
+Route::view('/terms', 'static.terms')->name('terms');
+
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
@@ -58,6 +65,13 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // auto-scoped to the signed-in candidate, no filter/sort requirements,
     // so no Livewire reactivity is needed.
     Route::get('/applications', [CandidateApplicationController::class, 'index'])->name('applications.index');
+
+    // The application's own timeline (claude/14 route ২০) -- the
+    // ghosting-killer page. withdraw is a PATCH on the same record
+    // rather than its own resource: it flips one field on the
+    // application and appends an ApplicationEvent.
+    Route::get('/applications/{application}', [CandidateApplicationController::class, 'show'])->name('applications.show');
+    Route::patch('/applications/{application}/withdraw', [CandidateApplicationController::class, 'withdraw'])->name('applications.withdraw');
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
 });
 

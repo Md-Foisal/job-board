@@ -10,11 +10,26 @@
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
+    @foreach (['about', 'privacy', 'terms'] as $staticPage)
+    <url>
+        <loc>{{ route($staticPage) }}</loc>
+        <changefreq>yearly</changefreq>
+        <priority>0.3</priority>
+    </url>
+    @endforeach
     @foreach ($categories as $category)
     <url>
         <loc>{{ route('categories.show', $category) }}</loc>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>
+    </url>
+    @endforeach
+    @foreach ($companies as $company)
+    <url>
+        <loc>{{ route('companies.show', $company) }}</loc>
+        <lastmod>{{ $company->updated_at->toAtomString() }}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
     </url>
     @endforeach
     @foreach ($jobPostings as $jobPosting)
