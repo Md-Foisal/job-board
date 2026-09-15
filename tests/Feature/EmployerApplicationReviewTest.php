@@ -28,7 +28,7 @@ test('someone from another company cannot review applications', function () {
     $this->actingAs(employerUser())
         ->get(route('employer.jobs.applications', [
             'company' => $company,
-            'job_posting' => $application->jobPosting,
+            'jobPosting' => $application->jobPosting,
         ]))
         ->assertForbidden();
 });
@@ -50,7 +50,7 @@ test('every member of the hiring team can review, not just managers', function (
     $this->actingAs(employerUser($company, MembershipRole::Member))
         ->get(route('employer.jobs.applications', [
             'company' => $company,
-            'job_posting' => $application->jobPosting,
+            'jobPosting' => $application->jobPosting,
         ]))
         ->assertOk()
         ->assertSee($application->candidateProfile->user->name);

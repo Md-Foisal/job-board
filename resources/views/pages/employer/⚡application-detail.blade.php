@@ -124,7 +124,7 @@ new #[Layout('layouts::employer')] class extends Component {
     <div>
         <x-breadcrumb :items="[
             ['label' => __('Job postings'), 'url' => route('employer.jobs.index', $this->company)],
-            ['label' => $this->application->jobPosting->title, 'url' => route('employer.jobs.applications', ['company' => $this->company, 'job_posting' => $this->application->jobPosting])],
+            ['label' => $this->application->jobPosting->title, 'url' => route('employer.jobs.applications', ['company' => $this->company, 'jobPosting' => $this->application->jobPosting])],
             ['label' => $candidate->user->name],
         ]" />
 

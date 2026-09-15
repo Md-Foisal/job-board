@@ -95,7 +95,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
 
         $this->redirectRoute('employer.jobs.edit', [
             'company' => $this->company,
-            'job_posting' => $copy,
+            'jobPosting' => $copy,
         ], navigate: true);
     }
 
@@ -162,7 +162,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                             </td>
                             <td class="px-5 py-4 text-end tabular-nums">
                                 <a
-                                    href="{{ route('employer.jobs.applications', ['company' => $this->company, 'job_posting' => $jobPosting]) }}"
+                                    href="{{ route('employer.jobs.applications', ['company' => $this->company, 'jobPosting' => $jobPosting]) }}"
                                     class="text-zinc-700 hover:text-brand-700 hover:underline dark:text-zinc-300 dark:hover:text-brand-400"
                                     wire:navigate
                                 >
@@ -178,7 +178,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                         <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" :aria-label="__('Actions for :title', ['title' => $jobPosting->title])" />
 
                                         <flux:menu>
-                                            <flux:menu.item icon="pencil" :href="route('employer.jobs.edit', ['company' => $this->company, 'job_posting' => $jobPosting])" wire:navigate>
+                                            <flux:menu.item icon="pencil" :href="route('employer.jobs.edit', ['company' => $this->company, 'jobPosting' => $jobPosting])" wire:navigate>
                                                 {{ __('Edit') }}
                                             </flux:menu.item>
 

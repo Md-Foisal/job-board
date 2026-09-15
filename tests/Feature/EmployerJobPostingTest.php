@@ -131,7 +131,7 @@ test('someone from another company cannot edit a posting', function () {
     $job = JobPosting::factory()->for($company)->create();
 
     $this->actingAs(employerUser())
-        ->get(route('employer.jobs.edit', ['company' => $company, 'job_posting' => $job]))
+        ->get(route('employer.jobs.edit', ['company' => $company, 'jobPosting' => $job]))
         ->assertForbidden();
 });
 
