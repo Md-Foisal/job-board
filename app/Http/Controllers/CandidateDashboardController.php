@@ -16,19 +16,27 @@ class CandidateDashboardController extends Controller
      * request rather than stored (claude/13's decision -- there is no
      * "completion" column to go stale the moment a field changes). This
      * mirrors the model's #[Fillable(...)] set exactly, so a future field
-     * added there is a one-line addition here too.
+     * added there is a one-line addition here too. Labeled (not a bare
+     * list) because the dashboard names the specific missing items, not
+     * just a percentage -- a number alone gives no next action.
      */
-    private const PROFILE_FIELDS = [
-        'headline', 'bio', 'cover_photo_path', 'portfolio_url', 'github_url', 'linkedin_url',
+    private const PROFILE_FIELD_LABELS = [
+        'headline' => 'Headline',
+        'bio' => 'Bio',
+        'cover_photo_path' => 'Cover photo',
+        'portfolio_url' => 'Portfolio link',
+        'github_url' => 'GitHub link',
+        'linkedin_url' => 'LinkedIn link',
     ];
 
     public function index(Request $request): View
     {
         $candidateProfile = $request->user()->candidateProfile;
 
-        $filledFieldCount = collect(self::PROFILE_FIELDS)
-            ->filter(fn (string $field) => filled($candidateProfile->{$field}))
-            ->count();
+        $fieldChecks = collect(self::PROFILE_FIELD_LABELS)
+            ->mapWithKeys(fn (string $label, string $field) => [
+                $label => filled($candidateProfile->{$field}),
+            ]);
 
         // The scalar fields above are only the identity card -- the things
         // an employer actually cares about (education, work history,
@@ -36,17 +44,23 @@ class CandidateDashboardController extends Controller
         // one more "field" filled, same weight as headline/bio/links, so a
         // profile with zero work history and no CV can no longer read as
         // 100% complete just because the photo and bio are filled in.
-        $sectionPresence = [
-            $candidateProfile->educationRecords()->exists(),
-            $candidateProfile->experienceRecords()->exists(),
-            $candidateProfile->skills()->exists(),
-            $candidateProfile->documents()->exists(),
-        ];
+        $sectionChecks = collect([
+            'Education' => $candidateProfile->educationRecords()->exists(),
+            'Experience' => $candidateProfile->experienceRecords()->exists(),
+            'Skills' => $candidateProfile->skills()->exists(),
+            'A document (CV)' => $candidateProfile->documents()->exists(),
+        ]);
 
-        $filledFieldCount += collect($sectionPresence)->filter()->count();
-        $totalFieldCount = count(self::PROFILE_FIELDS) + count($sectionPresence);
+        $allChecks = $fieldChecks->merge($sectionChecks);
 
-        $profileCompletionPercent = (int) round($filledFieldCount / $totalFieldCount * 100);
+        $profileCompletionPercent = (int) round(
+            $allChecks->filter()->count() / $allChecks->count() * 100
+        );
+
+        // Named, not just counted: a bare percentage gives no next action --
+        // real profile-completion UX (LinkedIn and friends) always names the
+        // specific missing piece, not just a number.
+        $missingProfileItems = $allChecks->reject(fn (bool $filled) => $filled)->keys()->values();
 
         $activeApplicationCount = Application::query()
             ->where('candidate_profile_id', $candidateProfile->id)
@@ -66,6 +80,7 @@ class CandidateDashboardController extends Controller
 
         return view('candidate.dashboard', [
             'profileCompletionPercent' => $profileCompletionPercent,
+            'missingProfileItems' => $missingProfileItems,
             'activeApplicationCount' => $activeApplicationCount,
             'recentlyViewedJobs' => $recentlyViewedJobs,
         ]);

@@ -14,7 +14,17 @@
                 </div>
 
                 @if ($profileCompletionPercent < 100)
-                    <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="mt-3 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
+                    {{-- Naming what's missing (not just the %) gives an actual
+                         next action -- a bare number tells you how far but not
+                         what to do about it. --}}
+                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-500">
+                        {{ __('Missing:') }}
+                        {{ $missingProfileItems->take(3)->join(', ') }}
+                        @if ($missingProfileItems->count() > 3)
+                            {{ __('+:count more', ['count' => $missingProfileItems->count() - 3]) }}
+                        @endif
+                    </p>
+                    <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="mt-1 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
                         {{ __('Complete your profile') }} &rarr;
                     </a>
                 @else
