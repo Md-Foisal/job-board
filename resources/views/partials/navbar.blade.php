@@ -7,7 +7,7 @@
 --}}
 @php($showSidebarToggle ??= false)
 
-<nav class="flex items-center justify-between gap-4 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+<nav class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-zinc-200 bg-white px-6 py-4 dark:border-zinc-800 dark:bg-zinc-950">
     <div class="flex shrink-0 items-center gap-3">
         @if ($showSidebarToggle)
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
@@ -21,20 +21,13 @@
     <div class="hidden flex-1 items-center gap-2 md:flex">
         {{-- The homepage carries its own large hero search right below
              this nav, so repeating it here would just be noise --}}
+        {{-- No standalone categories menu here by design: real job boards keep
+             the navbar search-first and treat category browsing as secondary.
+             Category access still exists via the homepage "browse by category"
+             grid and as an in-search filter (FiltersJobPostings::$category). --}}
         @unless (request()->routeIs('home'))
             <livewire:job-search-autocomplete variant="compact" />
         @endunless
-
-        <flux:dropdown>
-            <flux:button variant="ghost" icon:trailing="chevron-down">Categories</flux:button>
-            <flux:menu>
-                @foreach ($navCategories as $navCategory)
-                    <flux:menu.item href="{{ route('categories.show', $navCategory) }}" wire:navigate>
-                        {{ $navCategory->name }}
-                    </flux:menu.item>
-                @endforeach
-            </flux:menu>
-        </flux:dropdown>
     </div>
 
     <div class="flex shrink-0 items-center gap-4">
@@ -71,6 +64,12 @@
                     </div>
 
                     <flux:menu.separator />
+
+                    @if (auth()->user()->isCandidate())
+                        <flux:menu.item :href="route('candidate.profile.edit')" icon="user" wire:navigate>
+                            {{ __('My profile') }}
+                        </flux:menu.item>
+                    @endif
 
                     <flux:menu.item :href="route('profile.edit')" icon="cog" wire:navigate>
                         {{ __('Settings') }}
