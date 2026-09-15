@@ -13,7 +13,12 @@
             class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:sidebar.nav>
                 <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                    {{-- Candidates land on their real dashboard directly rather than
+                         bouncing through the generic /dashboard redirect dispatcher
+                         (routes/web.php) -- same destination, one less hop. --}}
+                    <flux:sidebar.item icon="home"
+                        :href="auth()->check() && auth()->user()->isCandidate() ? route('candidate.dashboard') : route('dashboard')"
+                        :current="request()->routeIs('dashboard') || request()->routeIs('candidate.dashboard')"
                         wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>

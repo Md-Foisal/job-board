@@ -17,7 +17,11 @@
         </div>
     @endif
 
-    <div class="flex items-start gap-3">
+    {{-- Reserve room for the absolute Save button (below) when it's shown --
+         truncate on the title needs the button's width excluded from its
+         available space, or long titles render underneath the button
+         instead of stopping short of it. --}}
+    <div class="flex items-start gap-3 {{ $showSaveButton ? 'pr-28' : '' }}">
         <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 text-sm font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
             @if ($jobPosting->company->logo_path)
                 <img src="{{ \Illuminate\Support\Facades\Storage::url($jobPosting->company->logo_path) }}" alt="{{ $jobPosting->company->name }}" class="size-full object-cover">

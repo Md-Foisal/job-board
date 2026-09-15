@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CandidateApplicationController;
+use App\Http\Controllers\CandidateDashboardController;
 use App\Http\Controllers\CandidatePreferenceController;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
@@ -20,6 +21,8 @@ Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->n
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
 
 Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
+    Route::get('/dashboard', [CandidateDashboardController::class, 'index'])->name('dashboard');
+
     Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
 
@@ -63,7 +66,18 @@ Route::middleware(['auth', 'candidate'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    // Candidates have a real dashboard at candidate.dashboard (claude/14
+    // route ১১); this generic /dashboard stays the Fortify post-login
+    // 'home' target (config/fortify.php) and the target every existing
+    // "Dashboard" link (navbar, sidebar Platform group) already points at,
+    // so it dispatches instead of duplicating those links per role.
+    // Employer/admin have no dashboard of their own yet, so they still get
+    // the starter-kit placeholder until that's built.
+    Route::get('dashboard', function () {
+        return auth()->user()->isCandidate()
+            ? redirect()->route('candidate.dashboard')
+            : view('dashboard');
+    })->name('dashboard');
 });
 
 require __DIR__.'/settings.php';

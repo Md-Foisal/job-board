@@ -49,7 +49,10 @@
         @endguest
 
         @auth
-            <a href="{{ route('dashboard') }}" class="hidden text-sm text-zinc-600 hover:text-brand-700 sm:inline dark:text-zinc-400 dark:hover:text-brand-400" wire:navigate>
+            {{-- Same direct-link optimization as the candidate sidebar's Platform
+                 group: skip the /dashboard redirect dispatcher (routes/web.php)
+                 when we already know where a candidate is headed. --}}
+            <a href="{{ auth()->user()->isCandidate() ? route('candidate.dashboard') : route('dashboard') }}" class="hidden text-sm text-zinc-600 hover:text-brand-700 sm:inline dark:text-zinc-400 dark:hover:text-brand-400" wire:navigate>
                 Dashboard
             </a>
 
