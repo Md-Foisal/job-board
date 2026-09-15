@@ -305,6 +305,10 @@ new #[Layout('layouts::employer')] class extends Component {
                 <div>
                     <flux:input wire:model.live.debounce.300ms="skillSearch" :label="__('Add a skill')" :placeholder="__('Start typing...')" />
 
+                    <flux:text size="sm" class="mt-2" wire:loading wire:target="skillSearch">
+                        {{ __('Searching...') }}
+                    </flux:text>
+
                     @if ($this->skillMatches->isNotEmpty())
                         <div class="mt-2 flex flex-wrap gap-2">
                             @foreach ($this->skillMatches as $skill)
@@ -360,9 +364,12 @@ new #[Layout('layouts::employer')] class extends Component {
         </div>
 
         <div class="flex flex-wrap justify-end gap-2">
-            <flux:button variant="ghost" type="button" wire:click="save">{{ __('Save as draft') }}</flux:button>
-            <flux:button variant="primary" type="submit">
-                {{ $jobPosting ? __('Save and publish') : __('Publish') }}
+            <flux:button variant="ghost" type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save">
+                {{ __('Save as draft') }}
+            </flux:button>
+            <flux:button variant="primary" type="submit" wire:loading.attr="disabled" wire:target="saveAndPublish">
+                <span wire:loading.remove wire:target="saveAndPublish">{{ $jobPosting ? __('Save and publish') : __('Publish') }}</span>
+                <span wire:loading wire:target="saveAndPublish">{{ __('Saving...') }}</span>
             </flux:button>
         </div>
     </form>

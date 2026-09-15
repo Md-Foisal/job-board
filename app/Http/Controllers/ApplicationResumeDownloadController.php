@@ -17,6 +17,12 @@ class ApplicationResumeDownloadController extends Controller
 {
     public function __invoke(Company $company, Application $application)
     {
+        // Same hand-written binding as the detail page: {application} has no
+        // custom route key, so Laravel does not scope it to the company in
+        // the URL, and somebody who works at two companies could otherwise
+        // pull one company's CV through the other's address.
+        abort_unless($application->jobPosting->company_id === $company->id, 404);
+
         $this->authorize('downloadResume', $application);
 
         $document = $application->resumeDocument;

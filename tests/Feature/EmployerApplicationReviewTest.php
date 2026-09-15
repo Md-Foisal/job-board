@@ -193,6 +193,29 @@ test('the candidate never sees the notes written about them', function () {
         ->assertDontSee('Private hiring commentary.');
 });
 
+test('one company\'s URL never shows another company\'s applicant', function () {
+    // Salma works at both agencies, so neither company's application is
+    // forbidden to her -- which is exactly why the page has to insist on
+    // the one its own URL names.
+    $first = Company::factory()->create();
+    $second = Company::factory()->create();
+
+    $salma = employerUser($first, MembershipRole::Manager);
+    \App\Models\Membership::factory()->for($salma)->for($second)->create([
+        'role' => MembershipRole::Manager,
+    ]);
+
+    $atSecond = applicationFor($second);
+
+    $this->actingAs($salma)
+        ->get(route('employer.applications.show', ['company' => $first, 'application' => $atSecond]))
+        ->assertNotFound();
+
+    $this->actingAs($salma)
+        ->get(route('employer.applications.show', ['company' => $second, 'application' => $atSecond]))
+        ->assertOk();
+});
+
 test('a CV is served only to the company that received the application', function () {
     $company = Company::factory()->create();
     $application = applicationFor($company);

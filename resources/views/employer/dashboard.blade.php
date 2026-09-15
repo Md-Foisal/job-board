@@ -42,7 +42,13 @@
                         <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
                             @foreach ($jobPostings as $jobPosting)
                                 <tr>
-                                    <td class="px-5 py-4 font-medium text-zinc-900 dark:text-zinc-100">{{ $jobPosting->title }}</td>
+                                    <td class="px-5 py-4">
+                                        <a
+                                            href="{{ route('employer.jobs.applications', ['company' => $company, 'jobPosting' => $jobPosting]) }}"
+                                            class="font-medium text-zinc-900 hover:text-brand-700 hover:underline dark:text-zinc-100 dark:hover:text-brand-400"
+                                            wire:navigate
+                                        >{{ $jobPosting->title }}</a>
+                                    </td>
                                     <td class="px-5 py-4">
                                         <flux:badge :color="$jobPosting->availability_status === \App\Enums\AvailabilityStatus::Active ? 'green' : 'zinc'">
                                             {{ $jobPosting->availability_status->label() }}

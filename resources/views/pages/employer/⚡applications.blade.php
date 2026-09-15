@@ -118,7 +118,10 @@ new #[Layout('layouts::employer')] class extends Component {
                     <flux:text size="sm">{{ trans_choice('{1} :count selected|[2,*] :count selected', count($selected), ['count' => count($selected)]) }}</flux:text>
 
                     <flux:dropdown position="bottom" align="end">
-                        <flux:button size="sm" variant="primary" icon:trailing="chevron-down">{{ __('Move to') }}</flux:button>
+                        <flux:button size="sm" variant="primary" icon:trailing="chevron-down" wire:loading.attr="disabled" wire:target="moveSelected">
+                            <span wire:loading.remove wire:target="moveSelected">{{ __('Move to') }}</span>
+                            <span wire:loading wire:target="moveSelected">{{ __('Moving...') }}</span>
+                        </flux:button>
 
                         <flux:menu>
                             @foreach (ApplicationStage::cases() as $stage)

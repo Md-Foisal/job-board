@@ -25,6 +25,14 @@ new #[Layout('layouts::employer')] class extends Component {
 
     public function mount(Company $company, Application $application): void
     {
+        // Laravel scopes a child binding to its parent only when the child
+        // carries a custom key, which {application} does not -- so this is
+        // checked by hand. Without it, somebody who works at two companies
+        // could open one company's URL and be shown the other's applicant:
+        // not a leak, since they are entitled to both, but a page whose
+        // heading and contents disagree about whose it is.
+        abort_unless($application->jobPosting->company_id === $company->id, 404);
+
         $this->authorize('review', $application);
 
         $this->company = $company;
