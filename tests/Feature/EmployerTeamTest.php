@@ -193,3 +193,52 @@ test('someone who left and is invited back reuses their old row', function () {
     expect($company->memberships()->where('user_id', $returning->id)->count())->toBe(1);
     expect($membership->fresh()->status)->toBe(MembershipStatus::Active);
 });
+
+test('signing out to switch accounts keeps hold of the invitation', function () {
+    $company = Company::factory()->create();
+    $invitation = Invitation::factory()->for($company)->create(['email' => 'nadia@example.com']);
+    $someoneElse = User::factory()->create(['email' => 'stranger@example.com']);
+
+    $this->actingAs($someoneElse)
+        ->post(route('invitations.switch-account', $invitation->token))
+        ->assertRedirect(route('login'));
+
+    $this->assertGuest();
+
+    // The point of the detour: after signing in as the invited address
+    // they land back on the invitation, not on the homepage with the
+    // email to find all over again.
+    expect(session('url.intended'))->toBe(route('invitations.show', $invitation->token));
+});
+
+test('an invitation that is no longer open cannot be used to sign someone out', function () {
+    $company = Company::factory()->create();
+    $invitation = Invitation::factory()->for($company)->create([
+        'status' => InvitationStatus::Revoked,
+    ]);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post(route('invitations.switch-account', $invitation->token))
+        ->assertNotFound();
+
+    $this->assertAuthenticated();
+});
+
+test('registering from an invitation lands on the invitation, not on company setup', function () {
+    $company = Company::factory()->create();
+    $invitation = Invitation::factory()->for($company)->create(['email' => 'nadia@example.com']);
+
+    // What the guest path stashes before sending someone to sign in.
+    session(['url.intended' => route('invitations.show', $invitation->token)]);
+
+    $this->post(route('register'), [
+        'name' => 'Nadia',
+        'email' => 'nadia@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        // The radio says "I am here to hire", which on its own would send
+        // them off to name a company they were invited to join.
+        'role' => 'employer',
+    ])->assertRedirect(route('invitations.show', $invitation->token));
+});

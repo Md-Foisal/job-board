@@ -50,6 +50,30 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         );
     }
 
+    /**
+     * Which of the posting's skills this candidate has, and which they do
+     * not. The percentage at the top of the page is a number with no
+     * working shown -- "86%" does not say whether the missing 14% is the
+     * one thing the role is actually about. These two lists are the
+     * working, and they are what a reviewer reads before deciding whether
+     * to trust the score at all.
+     */
+    #[Computed]
+    public function wantedSkillIds()
+    {
+        return $this->application->jobPosting->skills->pluck('id');
+    }
+
+    #[Computed]
+    public function missingSkills()
+    {
+        $theyHave = $this->application->candidateProfile->skills->pluck('id');
+
+        return $this->application->jobPosting->skills
+            ->reject(fn ($skill) => $theyHave->contains($skill->id))
+            ->values();
+    }
+
     #[Computed]
     public function notes()
     {
@@ -189,12 +213,48 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             @endif
 
             @if ($candidate->skills->isNotEmpty())
-                <div class="flex flex-wrap gap-2">
-                    @foreach ($candidate->skills as $skill)
-                        <span class="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                            {{ $skill->name }}
-                        </span>
-                    @endforeach
+                <div>
+                    <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {{ __('Their skills') }}
+                        @if ($this->wantedSkillIds->isNotEmpty())
+                            <span class="font-normal">{{ __('(highlighted ones are what this posting asks for)') }}</span>
+                        @endif
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($candidate->skills as $skill)
+                            <span @class([
+                                'rounded-full px-2.5 py-1 text-xs font-medium',
+                                'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-300' => $this->wantedSkillIds->contains($skill->id),
+                                'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' => ! $this->wantedSkillIds->contains($skill->id),
+                            ])>
+                                {{ $skill->name }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($this->missingSkills->isNotEmpty())
+                <div>
+                    <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                        {{ __('Asked for, not on their profile') }}
+                    </div>
+
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($this->missingSkills as $skill)
+                            <span @class([
+                                'rounded-full border border-dashed px-2.5 py-1 text-xs font-medium',
+                                'border-warning-300 text-warning-700 dark:border-warning-700 dark:text-warning-300' => $skill->pivot->importance === \App\Enums\SkillImportance::Required,
+                                'border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400' => $skill->pivot->importance !== \App\Enums\SkillImportance::Required,
+                            ])>
+                                {{ $skill->name }}
+                                @if ($skill->pivot->importance === \App\Enums\SkillImportance::Required)
+                                    <span class="font-normal">{{ __('(required)') }}</span>
+                                @endif
+                            </span>
+                        @endforeach
+                    </div>
                 </div>
             @endif
         </div>
@@ -272,6 +332,10 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
 
     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <flux:heading size="lg">{{ __('History') }}</flux:heading>
+
+        @if ($this->timeline->isEmpty())
+            <flux:text class="mt-2">{{ __('Nothing yet. Stage changes show up here, with who made them.') }}</flux:text>
+        @endif
 
         <ul class="mt-4 flex flex-col gap-3 text-sm">
             @foreach ($this->timeline as $event)

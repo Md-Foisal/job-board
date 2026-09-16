@@ -41,6 +41,17 @@ class FortifyServiceProvider extends ServiceProvider
         {
             public function toResponse($request)
             {
+                // An invitation has already decided where this person is
+                // going: they were asked to join a company that exists,
+                // not to start one. That stashed destination outranks the
+                // "what brings you here" radio -- otherwise the most
+                // common invitation case, someone with no account at all,
+                // follows the link, registers, and is handed a "name your
+                // company" form instead of the invitation they came for.
+                if ($request->session()->has('url.intended')) {
+                    return redirect()->intended(config('fortify.home'));
+                }
+
                 return $request->input('role') === 'employer'
                     ? redirect()->route('companies.create')
                     : redirect()->intended(config('fortify.home'));

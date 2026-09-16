@@ -173,5 +173,6 @@ Route::middleware(['auth', 'company.member'])
  */
 Route::get('/invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
 Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
+Route::post('/invitations/{token}/switch-account', [InvitationController::class, 'switchAccount'])->name('invitations.switch-account');
 
 require __DIR__.'/settings.php';

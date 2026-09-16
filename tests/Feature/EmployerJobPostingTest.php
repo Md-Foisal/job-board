@@ -224,3 +224,73 @@ test('a duplicate starts as an unapproved draft', function () {
     expect($copy->skills)->toHaveCount(1);
     expect($copy->screeningQuestions)->toHaveCount(1);
 });
+
+test('a draft can be parked with nothing but a title', function () {
+    $company = Company::factory()->create();
+
+    Livewire::actingAs(employerUser($company, MembershipRole::Owner))
+        ->test('pages::employer.job-form', ['company' => $company])
+        ->set('title', 'Something I have not finished')
+        ->set('description', '')
+        ->set('locationCountry', null)
+        ->set('expiresAt', '')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $draft = $company->jobPostings()->sole();
+
+    expect($draft->availability_status)->toBe(AvailabilityStatus::Draft);
+    expect($draft->title)->toBe('Something I have not finished');
+    // The column will not take a null, so an unfinished draft gets the
+    // same default the form starts with. Publishing re-checks it.
+    expect($draft->expires_at)->not->toBeNull();
+});
+
+test('a draft still cannot hold a value that would fail on the way out', function () {
+    $company = Company::factory()->create();
+
+    Livewire::actingAs(employerUser($company, MembershipRole::Owner))
+        ->test('pages::employer.job-form', ['company' => $company])
+        ->set('title', 'Half an idea')
+        ->set('minExperienceYears', 'not a number')
+        ->call('save')
+        ->assertHasErrors('minExperienceYears');
+});
+
+test('publishing still asks for everything a candidate needs', function () {
+    $company = Company::factory()->create();
+
+    Livewire::actingAs(employerUser($company, MembershipRole::Owner))
+        ->test('pages::employer.job-form', ['company' => $company])
+        ->set('title', 'Half an idea')
+        ->set('description', '')
+        ->set('locationCountry', null)
+        ->call('saveAndPublish')
+        ->assertHasErrors(['description', 'locationCountry']);
+
+    expect($company->jobPostings()->count())->toBe(0);
+});
+
+test('a refused save tells the page, so it can take the user to the problem', function () {
+    $company = Company::factory()->create();
+
+    Livewire::actingAs(employerUser($company, MembershipRole::Owner))
+        ->test('pages::employer.job-form', ['company' => $company])
+        ->set('title', '')
+        ->call('saveAndPublish')
+        ->assertDispatched('form-invalid');
+});
+
+test('validation messages name the field on the form, not the column', function () {
+    $company = Company::factory()->create();
+
+    $component = Livewire::actingAs(employerUser($company, MembershipRole::Owner))
+        ->test('pages::employer.job-form', ['company' => $company])
+        ->set('title', 'A role')
+        ->set('locationCountry', null)
+        ->call('saveAndPublish');
+
+    expect($component->errors()->first('locationCountry'))
+        ->toContain('country')
+        ->not->toContain('location country');
+});

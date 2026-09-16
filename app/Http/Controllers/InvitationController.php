@@ -46,6 +46,27 @@ class InvitationController extends Controller
     }
 
     /**
+     * Signed in as the wrong person. Logging out and being dropped on the
+     * homepage means going back to find the email again, so the
+     * invitation is handed forward through the new session the same way
+     * the guest path already does it: sign in with the invited address
+     * and land back on this invitation.
+     */
+    public function switchAccount(Request $request, string $token): RedirectResponse
+    {
+        $invitation = $this->openInvitation($token);
+
+        auth()->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        $request->session()->put('url.intended', route('invitations.show', $invitation->token));
+
+        return redirect()->route('login');
+    }
+
+    /**
      * An invitation is only open while it is still pending and still in
      * date. Anything else -- revoked, already used, or past its week --
      * is gone, and says so with a 404 rather than hinting that a valid

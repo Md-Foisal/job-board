@@ -224,3 +224,39 @@ test('a CV is served only to the company that received the application', functio
         ->get(route('employer.applications.resume', ['company' => $company, 'application' => $application]))
         ->assertForbidden();
 });
+
+test('a candidate who has listed no skills is not scored at all', function () {
+    $company = Company::factory()->create();
+    $job = JobPosting::factory()->for($company)->create();
+    $laravel = Skill::create(['name' => 'Laravel', 'slug' => 'laravel']);
+    $job->skills()->attach([$laravel->id => ['importance' => SkillImportance::Required]]);
+
+    $application = applicationFor($company, $job);
+
+    $applications = Livewire::actingAs(employerUser($company))
+        ->test('pages::employer.applications', ['company' => $company, 'jobPosting' => $job])
+        ->get('applications');
+
+    // Not zero. Zero reads as a verdict; there was nothing to compare.
+    expect($applications->first()->match_score)->toBeNull();
+});
+
+test('the application page shows which of the posting skills are missing', function () {
+    $company = Company::factory()->create();
+    $job = JobPosting::factory()->for($company)->create();
+    $laravel = Skill::create(['name' => 'Laravel', 'slug' => 'laravel']);
+    $vue = Skill::create(['name' => 'Vue', 'slug' => 'vue']);
+    $job->skills()->attach([
+        $laravel->id => ['importance' => SkillImportance::Required],
+        $vue->id => ['importance' => SkillImportance::NiceToHave],
+    ]);
+
+    $application = applicationFor($company, $job);
+    $application->candidateProfile->skills()->attach([$laravel->id => ['proficiency' => 'advanced']]);
+
+    $component = Livewire::actingAs(employerUser($company))
+        ->test('pages::employer.application-detail', ['company' => $company, 'application' => $application]);
+
+    expect($component->get('wantedSkillIds')->all())->toEqualCanonicalizing([$laravel->id, $vue->id]);
+    expect($component->get('missingSkills')->pluck('id')->all())->toBe([$vue->id]);
+});

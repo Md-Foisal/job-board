@@ -14,7 +14,10 @@
         </div>
 
         @guest
-            <flux:text>{{ __('Sign in with that address to accept.') }}</flux:text>
+            {{-- Most people following an invitation have never used the
+                 site: telling them only to "sign in" leaves the commonest
+                 case unaddressed. --}}
+            <flux:text>{{ __('Sign in with that address to accept, or create an account with it.') }}</flux:text>
 
             <form method="POST" action="{{ route('invitations.accept', $invitation->token) }}">
                 @csrf
@@ -40,9 +43,13 @@
                     ]) }}
                 </flux:callout>
 
-                <form method="POST" action="{{ route('logout') }}">
+                {{-- Drawn as a real control, not subtle text: it is the
+                     only way forward on this screen, and it carries the
+                     invitation through the sign-in rather than dropping
+                     the person on the homepage to find the email again. --}}
+                <form method="POST" action="{{ route('invitations.switch-account', $invitation->token) }}">
                     @csrf
-                    <flux:button variant="subtle" type="submit" class="w-full">
+                    <flux:button variant="filled" type="submit" class="w-full">
                         {{ __('Sign in as :email', ['email' => $invitation->email]) }}
                     </flux:button>
                 </form>
