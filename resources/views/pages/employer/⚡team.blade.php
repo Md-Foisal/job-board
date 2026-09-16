@@ -230,9 +230,9 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
             <flux:input wire:model="inviteEmail" type="email" :label="__('Email address')" required />
 
             <flux:select wire:model="inviteRole" :label="__('Role')">
-                <flux:select.option value="member">{{ __('Member -- review applicants') }}</flux:select.option>
-                <flux:select.option value="manager">{{ __('Manager -- also post jobs and manage the team') }}</flux:select.option>
-                <flux:select.option value="owner">{{ __('Owner -- full control of the company') }}</flux:select.option>
+                <flux:select.option value="member">{{ __('Member — review applicants') }}</flux:select.option>
+                <flux:select.option value="manager">{{ __('Manager — also post jobs and manage the team') }}</flux:select.option>
+                <flux:select.option value="owner">{{ __('Owner — full control of the company') }}</flux:select.option>
             </flux:select>
 
             <div class="flex justify-end gap-2">

@@ -110,7 +110,7 @@ new #[Layout('layouts::app')] #[Title('Education')] class extends Component {
     <div class="flex items-center justify-between gap-4">
         <div>
             <flux:heading size="xl">{{ __('Education') }}</flux:heading>
-            <flux:subheading>{{ __('Schools, degrees and what you studied -- shown on your public profile.') }}</flux:subheading>
+            <flux:subheading>{{ __('Schools, degrees and what you studied — shown on your public profile.') }}</flux:subheading>
         </div>
 
         <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>

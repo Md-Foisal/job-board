@@ -156,7 +156,14 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                     {{ $jobPosting->availability_status->label() }}
                                 </flux:badge>
 
-                                @if ($jobPosting->moderation_status !== \App\Enums\ModerationStatus::Approved)
+                                {{-- Not on a draft. Moderation starts when a
+                                     posting is submitted, so telling someone
+                                     their unpublished draft is "pending
+                                     review" claims a queue it was never put
+                                     in, and makes the wait look longer than
+                                     it is. --}}
+                                @if ($jobPosting->availability_status !== AvailabilityStatus::Draft
+                                    && $jobPosting->moderation_status !== \App\Enums\ModerationStatus::Approved)
                                     <flux:badge color="yellow">{{ $jobPosting->moderation_status->label() }}</flux:badge>
                                 @endif
                             </td>

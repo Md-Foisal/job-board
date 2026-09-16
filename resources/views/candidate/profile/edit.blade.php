@@ -155,7 +155,7 @@
                             x-ref="headlineInput"
                             @blur="editingHeadline = false"
                             name="headline"
-                            :description="__('e.g. Senior Laravel Developer -- shown right under your name')"
+                            :description="__('e.g. Senior Laravel Developer — shown right under your name')"
                             :value="old('headline', $candidateProfile->headline)"
                             maxlength="255"
                     />

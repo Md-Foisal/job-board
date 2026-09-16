@@ -76,31 +76,7 @@
         </main>
     </div>
 
-    {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
-         data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
-         request, which a plain controller redirect can't do -- but Flux also
-         ships a standalone JS API (window.Flux.toast) that works anywhere once
-         Alpine has booted, so a flashed message here just calls that instead of
-         a bespoke banner (same fix as layouts/guest.blade.php). --}}
-    @if (session('success'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('success')), variant: 'success' });
-                });
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
-                });
-            });
-        </script>
-    @endif
+    @include('partials.flash-toasts')
 
     @persist('toast')
     <flux:toast.group position="top end">

@@ -12,15 +12,27 @@ import Link from '@tiptap/extension-link'
  * property when there is one, otherwise a hidden input so ordinary forms
  * work unchanged. What comes out is never trusted: the server sanitizes it
  * on the way in regardless.
+ *
+ * The Editor instance lives in this closure and NOT on the returned data
+ * object, which is deliberate and load-bearing. Alpine wraps everything it
+ * is handed in a reactive Proxy; reached through that Proxy, every
+ * ProseMirror object comes back as a different identity than the one the
+ * editor holds internally. ProseMirror compares a transaction's starting
+ * document against its own by identity, so a proxied editor throws
+ * "Applying a mismatched transaction" on every single command and the
+ * whole toolbar dies. Vue solves this with markRaw; Alpine has no such
+ * escape hatch, so the instance simply never enters the reactive graph.
+ * Only `html` and `active` -- plain values the template binds to -- do.
  */
 export default function richTextEditor({ content = '', wireModel = null, headings = true }) {
+    let editor = null
+
     return {
-        editor: null,
         html: content,
         active: {},
 
         init() {
-            this.editor = new Editor({
+            editor = new Editor({
                 element: this.$refs.surface,
                 extensions: [
                     StarterKit.configure({
@@ -39,7 +51,7 @@ export default function richTextEditor({ content = '', wireModel = null, heading
                         class: 'prose-editor focus:outline-none min-h-40 px-3 py-2',
                     },
                 },
-                onUpdate: ({ editor }) => this.push(editor.getHTML()),
+                onUpdate: ({ editor: instance }) => this.push(instance.getHTML()),
                 onSelectionUpdate: () => this.refreshActive(),
                 onTransaction: () => this.refreshActive(),
             })
@@ -48,7 +60,8 @@ export default function richTextEditor({ content = '', wireModel = null, heading
         },
 
         destroy() {
-            this.editor?.destroy()
+            editor?.destroy()
+            editor = null
         },
 
         /**
@@ -56,7 +69,7 @@ export default function richTextEditor({ content = '', wireModel = null, heading
          * as content and defeat a "required" rule on the field.
          */
         push(html) {
-            this.html = this.editor?.isEmpty ? '' : html
+            this.html = editor?.isEmpty ? '' : html
 
             if (wireModel) {
                 this.$wire.set(wireModel, this.html, false)
@@ -64,29 +77,36 @@ export default function richTextEditor({ content = '', wireModel = null, heading
         },
 
         refreshActive() {
-            if (!this.editor) return
+            if (!editor) return
 
             this.active = {
-                bold: this.editor.isActive('bold'),
-                italic: this.editor.isActive('italic'),
-                bulletList: this.editor.isActive('bulletList'),
-                orderedList: this.editor.isActive('orderedList'),
-                h3: this.editor.isActive('heading', { level: 3 }),
-                h4: this.editor.isActive('heading', { level: 4 }),
+                bold: editor.isActive('bold'),
+                italic: editor.isActive('italic'),
+                bulletList: editor.isActive('bulletList'),
+                orderedList: editor.isActive('orderedList'),
+                h3: editor.isActive('heading', { level: 3 }),
+                h4: editor.isActive('heading', { level: 4 }),
             }
         },
 
         run(command) {
-            const chain = this.editor.chain().focus()
+            if (!editor) return
 
-            ({
+            const chain = editor.chain().focus()
+
+            // Named map, not a bare parenthesised object on the next line:
+            // automatic semicolon insertion would glue `({...})` onto the
+            // statement above and call its result, killing every button.
+            const commands = {
                 bold: () => chain.toggleBold().run(),
                 italic: () => chain.toggleItalic().run(),
                 bulletList: () => chain.toggleBulletList().run(),
                 orderedList: () => chain.toggleOrderedList().run(),
                 h3: () => chain.toggleHeading({ level: 3 }).run(),
                 h4: () => chain.toggleHeading({ level: 4 }).run(),
-            })[command]?.()
+            }
+
+            commands[command]?.()
         },
     }
 }

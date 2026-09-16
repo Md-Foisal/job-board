@@ -10,11 +10,13 @@ use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Skill;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('layouts::employer')] class extends Component {
+new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Component {
     public Company $company;
 
     public ?JobPosting $jobPosting = null;
@@ -140,42 +142,100 @@ new #[Layout('layouts::employer')] class extends Component {
         $this->screeningQuestions = array_values($this->screeningQuestions);
     }
 
-    public function save(SaveJobPosting $saveJobPosting, bool $publish = false): void
+    /**
+     * Without these, Laravel builds the message out of the property name
+     * and tells the employer "the location country field is required",
+     * which is the database talking, not the form they are looking at.
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
     {
-        $this->jobPosting
-            ? $this->authorize('update', $this->jobPosting)
-            : $this->authorize('create', [JobPosting::class, $this->company]);
+        return [
+            'title' => __('job title'),
+            'description' => __('description'),
+            'employmentType' => __('employment type'),
+            'workplaceType' => __('workplace'),
+            'locationCountry' => __('country'),
+            'locationCity' => __('city'),
+            'minExperienceYears' => __('minimum experience'),
+            'salaryMin' => __('salary from'),
+            'salaryMax' => __('salary to'),
+            'salaryCurrency' => __('currency'),
+            'salaryPeriod' => __('salary period'),
+            'expiresAt' => __('closing date'),
+            'screeningQuestions.*' => __('screening question'),
+        ];
+    }
 
-        $validated = $this->validate([
+    /**
+     * Two sets, not one. A draft is where an unfinished posting is parked --
+     * the whole reason the state exists -- so demanding every published-post
+     * field before it can be saved would make the button a lie. Everything
+     * that is filled in is still shape-checked (lengths, integers, enums,
+     * foreign keys), so a draft can never hold a value that would fail on
+     * the way out; only the "you must decide this" rules wait for publish.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    protected function rulesFor(bool $publish): array
+    {
+        $required = fn (array $rules) => $publish
+            ? ['required', ...$rules]
+            : ['nullable', ...$rules];
+
+        return [
+            // Even a draft needs this: it is how the posting is told apart
+            // from the others in the list you come back to.
             'title' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:20000'],
-            'employmentType' => ['required', Rule::enum(EmploymentType::class)],
-            'workplaceType' => ['required', Rule::enum(WorkplaceType::class)],
+            'description' => $required(['string', 'max:20000']),
+            'employmentType' => $required([Rule::enum(EmploymentType::class)]),
+            'workplaceType' => $required([Rule::enum(WorkplaceType::class)]),
             // A remote role still says where someone may work from, which is
             // the difference between an honest listing and the one that
             // reveals "US only" ten minutes into reading it.
-            'locationCountry' => ['required', 'string', 'max:255'],
+            'locationCountry' => $required(['string', 'max:255']),
             'locationCity' => ['nullable', 'string', 'max:255'],
             'minExperienceYears' => ['nullable', 'integer', 'min:0', 'max:50'],
             'salaryMin' => ['nullable', 'integer', 'min:0'],
             'salaryMax' => ['nullable', 'integer', 'min:0', 'gte:salaryMin'],
             'salaryCurrency' => ['nullable', 'string', 'size:3'],
             'salaryPeriod' => ['nullable', Rule::enum(SalaryPeriod::class)],
-            'expiresAt' => ['required', 'date', 'after:today'],
+            'expiresAt' => $publish
+                ? ['required', 'date', 'after:today']
+                : ['nullable', 'date'],
             'categories' => ['array'],
             'categories.*' => ['integer', 'exists:categories,id'],
             'skills' => ['array'],
             'skills.*' => [Rule::enum(SkillImportance::class)],
             'screeningQuestions' => ['array', 'max:10'],
             'screeningQuestions.*' => ['nullable', 'string', 'max:500'],
-        ]);
+        ];
+    }
+
+    public function save(SaveJobPosting $saveJobPosting, bool $publish = false): void
+    {
+        $this->jobPosting
+            ? $this->authorize('update', $this->jobPosting)
+            : $this->authorize('create', [JobPosting::class, $this->company]);
+
+        try {
+            $validated = $this->validate($this->rulesFor($publish));
+        } catch (ValidationException $e) {
+            // The buttons are at the bottom of a form several screens tall,
+            // so an error rendered next to a field two screens up is an
+            // error nobody sees: pressing the button appears to do nothing.
+            $this->dispatch('form-invalid');
+
+            throw $e;
+        }
 
         $jobPosting = $saveJobPosting(
             $this->company,
             auth()->user(),
             [
                 'title' => $validated['title'],
-                'description' => $validated['description'],
+                'description' => $validated['description'] ?? '',
                 'employment_type' => $validated['employmentType'],
                 'workplace_type' => $validated['workplaceType'],
                 'location_city' => $validated['locationCity'] ?? null,
@@ -186,7 +246,10 @@ new #[Layout('layouts::employer')] class extends Component {
                 'salary_currency' => $validated['salaryCurrency'] ?? null,
                 'salary_period' => $validated['salaryPeriod'] ?? null,
                 'salary_negotiable' => $this->salaryNegotiable,
-                'expires_at' => $validated['expiresAt'],
+                // A draft nobody can see still needs a closing date in the
+                // column, so an unfinished one gets the same month-out
+                // default the form starts with. Publishing re-checks it.
+                'expires_at' => $validated['expiresAt'] ?: now()->addMonth()->toDateString(),
                 'categories' => $validated['categories'] ?? [],
                 'skills' => $validated['skills'] ?? [],
                 'screening_questions' => $validated['screeningQuestions'] ?? [],
@@ -194,6 +257,14 @@ new #[Layout('layouts::employer')] class extends Component {
             ],
             $this->jobPosting,
         );
+
+        // Every other action in this shell says so when it worked --
+        // closing a posting, moving a stage, inviting someone -- and this
+        // is the largest of them; landing back on the list with a new row
+        // and no word about it is the odd one out.
+        session()->flash('success', $publish
+            ? __('Job posting published.')
+            : __('Draft saved.'));
 
         $this->redirectRoute('employer.jobs.index', $this->company, navigate: true);
     }
@@ -214,7 +285,13 @@ new #[Layout('layouts::employer')] class extends Component {
         </flux:text>
     </div>
 
-    <form wire:submit="saveAndPublish" class="flex flex-col gap-8">
+    {{-- novalidate: the browser's own bubble fires before Livewire ever
+         runs, so it wins the race with an unstyled, untranslated message
+         that points at a field the user cannot see, and it blocks the
+         draft path for fields a draft is allowed to leave empty. The
+         required attributes stay for the asterisk and for screen readers;
+         what people read is the app's own inline error. --}}
+    <form wire:submit="saveAndPublish" novalidate class="flex flex-col gap-8">
         <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:heading size="lg">{{ __('The role') }}</flux:heading>
 
@@ -245,13 +322,22 @@ new #[Layout('layouts::employer')] class extends Component {
                     @endforeach
                 </flux:select>
 
-                <div class="grid gap-6 sm:grid-cols-2">
-                    <flux:input wire:model="locationCity" :label="__('City')" :description="__('Optional')" />
+                {{-- Help text hangs below the inputs, not above them: a
+                     leading description is part of the field box, so two
+                     fields side by side whose descriptions are one line and
+                     two lines long end up with their inputs on different
+                     baselines. "(optional)" goes in the label itself rather
+                     than in a badge -- a badge is taller than plain label
+                     text and knocks the row out of line again, and the
+                     GOV.UK pattern of naming it in the label is the one
+                     that survives being read aloud. --}}
+                <div class="grid items-start gap-6 sm:grid-cols-2">
+                    <flux:input wire:model="locationCity" :label="__('City (optional)')" />
                     <flux:input
                         wire:model="locationCountry"
                         :label="__('Country')"
                         required
-                        :description="__('Where someone must be able to work from, remote roles included.')"
+                        description:trailing="{{ __('Where someone must be able to work from, remote roles included.') }}"
                     />
                 </div>
             </div>
@@ -262,7 +348,7 @@ new #[Layout('layouts::employer')] class extends Component {
             <flux:text class="mt-1">{{ __('Most candidates will not apply without it.') }}</flux:text>
 
             <div class="mt-6 flex flex-col gap-6">
-                <flux:checkbox wire:model.live="salaryNegotiable" :label="__('Negotiable -- no range given')" />
+                <flux:checkbox wire:model.live="salaryNegotiable" :label="__('Negotiable — no range given')" />
 
                 @unless ($salaryNegotiable)
                     <div class="grid gap-6 sm:grid-cols-2">

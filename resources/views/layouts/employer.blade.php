@@ -85,28 +85,7 @@
         </main>
     </div>
 
-    {{-- Same flashed-message bridge as the candidate shell: a plain
-         controller redirect cannot reach <flux:toast> through Livewire,
-         so it goes through Flux's standalone JS API instead. --}}
-    @if (session('success'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('success')), variant: 'success' });
-                });
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
-                });
-            });
-        </script>
-    @endif
+    @include('partials.flash-toasts')
 
     @persist('toast')
     <flux:toast.group position="top end">

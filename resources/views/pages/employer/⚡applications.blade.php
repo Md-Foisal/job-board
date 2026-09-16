@@ -9,9 +9,10 @@ use App\Models\JobPosting;
 use App\Services\MatchScoreCalculator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
-new #[Layout('layouts::employer')] class extends Component {
+new #[Layout('layouts::employer')] #[Title('Applications')] class extends Component {
     public Company $company;
 
     public JobPosting $jobPosting;
