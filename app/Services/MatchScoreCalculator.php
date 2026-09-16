@@ -25,7 +25,13 @@ class MatchScoreCalculator
     {
         $jobSkills = $jobPosting->skills;
 
-        if ($jobSkills->isEmpty()) {
+        // No score rather than a zero, on either side. A candidate who has
+        // never listed a skill is not a 0% fit -- there is simply nothing
+        // to compare -- and "0% match" beside their name reads as a
+        // verdict an employer would act on. The candidate-facing side
+        // already declines to score in this case; this is the same rule
+        // from the other direction.
+        if ($jobSkills->isEmpty() || $candidateSkillIds->isEmpty()) {
             return null;
         }
 

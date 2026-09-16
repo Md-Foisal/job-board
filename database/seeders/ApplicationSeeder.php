@@ -8,10 +8,13 @@ use App\Models\CandidateProfile;
 use App\Models\Document;
 use App\Models\JobPosting;
 use App\Models\User;
+use Database\Seeders\Concerns\SeedsCandidateSkills;
 use Illuminate\Database\Seeder;
 
 class ApplicationSeeder extends Seeder
 {
+    use SeedsCandidateSkills;
+
     /**
      * Run the database seeds.
      */
@@ -25,6 +28,8 @@ class ApplicationSeeder extends Seeder
             ->create()
             ->each(function (User $candidate) use ($jobs) {
                 $candidateProfile = $candidate->candidateProfile;
+
+                $this->attachSkills($candidateProfile);
 
                 $resume = Document::factory()->create([
                     'candidate_profile_id' => $candidateProfile->id,

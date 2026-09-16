@@ -63,6 +63,22 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
         };
     }
 
+    /**
+     * Ticking each of forty applicants by hand is not a workflow, and the
+     * bulk actions above are useless without it. Driven from the server
+     * rather than from Alpine scanning the DOM, so it selects exactly what
+     * the current stage filter is showing -- which is what someone who
+     * filtered to "New" and pressed select-all means.
+     */
+    public function toggleAll(): void
+    {
+        $visible = $this->applications->pluck('id')->all();
+
+        $this->selected = count($this->selected) === count($visible) && $visible !== []
+            ? []
+            : $visible;
+    }
+
     public function moveSelected(ChangeApplicationStage $changeStage, string $stage): void
     {
         $this->authorize('bulkUpdateStage', [Application::class, $this->jobPosting]);
@@ -94,7 +110,11 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
         ]" />
 
         <flux:heading size="xl" class="mt-4 font-display">{{ __('Applications') }}</flux:heading>
-        <flux:text class="mt-1">{{ $this->jobPosting->title }}</flux:text>
+        <flux:text class="mt-1">
+            {{ $this->jobPosting->title }}
+            &middot;
+            {{ trans_choice('{0} No applicants yet|{1} :count applicant|[2,*] :count applicants', $this->applications->count(), ['count' => $this->applications->count()]) }}
+        </flux:text>
     </div>
 
     <div class="flex flex-wrap items-end justify-between gap-4">
@@ -141,6 +161,18 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
         </div>
     @else
         <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+            @can('bulkUpdateStage', [\App\Models\Application::class, $this->jobPosting])
+                <div class="flex items-center gap-4 border-b border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+                    <flux:checkbox
+                        wire:click="toggleAll"
+                        :checked="count($selected) === $this->applications->count()"
+                        :indeterminate="count($selected) > 0 && count($selected) < $this->applications->count()"
+                        :aria-label="__('Select all applicants')"
+                    />
+                    <flux:text size="sm">{{ __('Select all') }}</flux:text>
+                </div>
+            @endcan
+
             <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
                 @foreach ($this->applications as $application)
                     <li wire:key="application-{{ $application->id }}" class="flex flex-wrap items-center gap-4 px-5 py-4">
@@ -165,11 +197,7 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
                             </div>
                         </div>
 
-                        @if ($application->match_score !== null)
-                            <span class="shrink-0 rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-success-700 dark:bg-success-950 dark:text-success-300">
-                                {{ $application->match_score }}% {{ __('match') }}
-                            </span>
-                        @endif
+                        <x-match-score :score="$application->match_score" />
 
                         <x-application-status :application="$application" />
                     </li>

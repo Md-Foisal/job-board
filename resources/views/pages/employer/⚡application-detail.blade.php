@@ -146,11 +146,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             </div>
 
             <div class="flex items-center gap-2">
-                @if ($this->matchScore !== null)
-                    <span class="rounded-full bg-success-50 px-2.5 py-1 text-xs font-semibold tabular-nums text-success-700 dark:bg-success-950 dark:text-success-300">
-                        {{ $this->matchScore }}% {{ __('match') }}
-                    </span>
-                @endif
+                <x-match-score :score="$this->matchScore" size="md" />
                 <x-application-status :application="$this->application" />
             </div>
         </div>

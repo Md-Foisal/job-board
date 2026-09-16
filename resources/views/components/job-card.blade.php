@@ -34,11 +34,7 @@
                 <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
                     {{ $jobPosting->title }}
                 </h3>
-                @if (!is_null($matchScore))
-                    <span class="shrink-0 rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-success-700 dark:bg-success-950 dark:text-success-300">
-                        {{ $matchScore }}% match
-                    </span>
-                @endif
+                <x-match-score :score="$matchScore" />
             </div>
             <a
                 href="{{ route('companies.show', $jobPosting->company) }}"
