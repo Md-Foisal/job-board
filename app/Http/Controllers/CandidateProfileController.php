@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\ReplaceUploadedImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class CandidateProfileController extends Controller
@@ -30,7 +30,7 @@ class CandidateProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, ReplaceUploadedImage $replaceImage): RedirectResponse
     {
         $validated = $request->validate([
             'avatar' => ['nullable', 'image', 'max:2048'],
@@ -48,25 +48,18 @@ class CandidateProfileController extends Controller
         // Avatar lives on the User model (shared by every role), not on
         // CandidateProfile -- the starter kit already has this column,
         // it just had no upload UI anywhere yet.
-        if ($request->hasFile('avatar')) {
-            if ($user->avatar) {
-                Storage::disk('public')->delete($user->avatar);
-            }
+        $avatarPath = $replaceImage($request->file('avatar'), $user->avatar, 'avatars');
 
-            $user->avatar = $request->file('avatar')->store('avatars', 'public');
+        if ($avatarPath !== $user->avatar) {
+            $user->avatar = $avatarPath;
             $user->save();
         }
 
-        // Cover photo lives on CandidateProfile -- same idiom as
-        // Company::cover_photo_path, so any future generic "replace one
-        // image" helper can serve both.
-        if ($request->hasFile('cover_photo')) {
-            if ($candidateProfile->cover_photo_path) {
-                Storage::disk('public')->delete($candidateProfile->cover_photo_path);
-            }
-
-            $validated['cover_photo_path'] = $request->file('cover_photo')->store('candidate-covers', 'public');
-        }
+        $validated['cover_photo_path'] = $replaceImage(
+            $request->file('cover_photo'),
+            $candidateProfile->cover_photo_path,
+            'candidate-covers',
+        );
 
         unset($validated['avatar'], $validated['cover_photo']);
 

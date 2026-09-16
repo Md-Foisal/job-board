@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\DocumentType;
+use App\Events\ApplicationSubmitted;
 use App\Models\Application;
 use App\Models\JobPosting;
 use Illuminate\Support\Collection;
@@ -98,6 +99,11 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
             }
         }
 
+        // Announced only once everything the application is made of exists:
+        // the screening answers are part of what the hiring team is about
+        // to be told to go and read.
+        ApplicationSubmitted::dispatch($application);
+
         session()->flash('success', 'Application submitted — good luck!');
 
         $this->redirectRoute('jobs.show', $this->jobPosting, navigate: true);
@@ -131,7 +137,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
             @endif
         </div>
 
-        <flux:textarea wire:model="coverLetter" label="Cover letter" placeholder="Tell them why you're a good fit (optional)" rows="6" />
+        <x-rich-text-editor wire="coverLetter" :value="$coverLetter" :label="__('Cover letter')" :description="__('Why you are a good fit (optional)')" :headings="false" />
 
         @if ($jobPosting->screeningQuestions->isNotEmpty())
             <div class="space-y-6">

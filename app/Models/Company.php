@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ class Company extends Model
     protected function casts(): array
     {
         return [
+            'description' => SanitizedHtml::class,
             'identity_type' => IdentityType::class,
             'account_status' => AccountStatus::class,
             'verified_at' => 'datetime',

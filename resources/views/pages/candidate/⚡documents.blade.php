@@ -118,7 +118,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
     <div class="flex items-center justify-between gap-4">
         <div>
             <flux:heading size="xl">{{ __('Documents') }}</flux:heading>
-            <flux:subheading>{{ __('Your CV, work samples and certificates -- used when you apply.') }}</flux:subheading>
+            <flux:subheading>{{ __('Your CV, work samples and certificates — used when you apply.') }}</flux:subheading>
         </div>
 
         <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>

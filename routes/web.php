@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApplicationResumeDownloadController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
 use App\Http\Controllers\CandidatePreferenceController;
@@ -7,8 +8,12 @@ use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\EmployerCompanyController;
+use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +30,15 @@ Route::view('/terms', 'static.terms')->name('terms');
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
+/*
+ * Registered ahead of the public slug route below: '/companies/create'
+ * would otherwise be read as a company whose slug is "create".
+ */
+Route::middleware('auth')->group(function () {
+    Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
+});
+
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
 
 Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
@@ -88,10 +102,77 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Employer/admin have no dashboard of their own yet, so they still get
     // the starter-kit placeholder until that's built.
     Route::get('dashboard', function () {
-        return auth()->user()->isCandidate()
-            ? redirect()->route('candidate.dashboard')
+        $user = auth()->user();
+
+        if ($user->isCandidate()) {
+            return redirect()->route('candidate.dashboard');
+        }
+
+        // Someone who works at a company has a real workspace to land in,
+        // so skip the placeholder. Anyone else -- staff, or an account
+        // with neither side set up yet -- still gets it; a fresh employer
+        // registration is sent straight to company setup at the moment of
+        // registering, where the intent is actually known.
+        $company = $user->activeCompanies()->first();
+
+        return $company
+            ? redirect()->route('employer.dashboard', $company)
             : view('dashboard');
     })->name('dashboard');
 });
+
+/*
+ * The company workspace (Shell C). The company is a URL segment rather
+ * than a session value so these pages can be linked, bookmarked and kept
+ * open side by side for two different companies; 'company.member' is what
+ * turns that URL into an entitlement check on every single request.
+ *
+ * Each page inside adds its own route as it is built.
+ */
+/*
+ * Deliberately outside the company prefix: a recruiter's public face
+ * belongs to the person, not to any one company, and an agency recruiter
+ * posting for three clients shows the same face to all of them.
+ */
+Route::middleware(['auth', 'employer'])->group(function () {
+    Route::get('/employer/profile', [RecruiterProfileController::class, 'edit'])->name('employer.recruiter-profile.edit');
+    Route::patch('/employer/profile', [RecruiterProfileController::class, 'update'])->name('employer.recruiter-profile.update');
+});
+
+Route::middleware(['auth', 'company.member'])
+    ->prefix('companies/{company:slug}')
+    ->name('employer.')
+    ->group(function () {
+        Route::get('/dashboard', [EmployerDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/edit', [EmployerCompanyController::class, 'edit'])->name('company.edit');
+        Route::patch('/', [EmployerCompanyController::class, 'update'])->name('company.update');
+
+        Route::livewire('/team', 'pages::employer.team')->name('team.index');
+
+        Route::livewire('/jobs', 'pages::employer.job-listings')->name('jobs.index');
+        Route::livewire('/jobs/create', 'pages::employer.job-form')->name('jobs.create');
+        /*
+         * camelCase parameter names, unlike the public controller routes
+         * above: Livewire matches a route parameter to a mount() argument by
+         * exact name, and on a mismatch quietly resolves an empty model out
+         * of the container instead of failing.
+         */
+        Route::livewire('/jobs/{jobPosting:slug}/edit', 'pages::employer.job-form')->name('jobs.edit');
+        Route::livewire('/jobs/{jobPosting:slug}/applications', 'pages::employer.applications')->name('jobs.applications');
+
+        Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
+        Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');
+    });
+
+/*
+ * Reachable without signing in: the whole point of an invitation is that
+ * it may arrive before the recipient has an account. Accepting still
+ * requires being signed in as the invited address -- the controller
+ * sends a guest through login and back.
+ */
+Route::get('/invitations/{token}', [InvitationController::class, 'show'])->name('invitations.show');
+Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept'])->name('invitations.accept');
+Route::post('/invitations/{token}/switch-account', [InvitationController::class, 'switchAccount'])->name('invitations.switch-account');
 
 require __DIR__.'/settings.php';

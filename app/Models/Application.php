@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\SanitizedHtml;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -19,6 +20,7 @@ class Application extends Model
     protected function casts(): array
     {
         return [
+            'cover_letter' => SanitizedHtml::class,
             'outcome_status' => ApplicationOutcomeStatus::class,
             'stage' => ApplicationStage::class,
         ];
@@ -47,5 +49,15 @@ class Application extends Model
     public function events()
     {
         return $this->hasMany(ApplicationEvent::class)->latest('created_at');
+    }
+
+    /**
+     * Private hiring-side commentary. Newest first: a reviewer opening an
+     * application wants the most recent read on the candidate, not the
+     * first one written weeks ago.
+     */
+    public function notes()
+    {
+        return $this->hasMany(ApplicationNote::class)->latest();
     }
 }

@@ -6,38 +6,7 @@
 <body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     @include('partials.navbar')
 
-    {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
-         data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
-         request, which a plain controller redirect can't do -- but Flux also
-         ships a standalone JS API (window.Flux.toast) that works anywhere once
-         Alpine has booted, so a flashed message here just calls that instead of
-         a bespoke banner (same fix as layouts/app/sidebar.blade.php). --}}
-    @if (session('success'))
-        <script>
-            // alpine:init fires the instant Alpine.start() begins -- BEFORE
-            // Alpine has walked the DOM and wired up the toast host
-            // component's "toast-show" listener. Calling Flux.toast()
-            // synchronously here dispatches the event into the void because
-            // nothing is listening yet. Queuing the call with setTimeout
-            // pushes it to the next tick, by which point Alpine's
-            // (synchronous) DOM walk has finished and the listener exists.
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('success')), variant: 'success' });
-                });
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
-                });
-            });
-        </script>
-    @endif
+    @include('partials.flash-toasts')
 
     <main>
         {{ $slot }}

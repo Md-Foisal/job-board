@@ -1,3 +1,9 @@
+{{-- An anonymous component only receives passed data as variables when it
+     declares them, so without this the :title layouts/app.blade.php passes
+     in never reached partials.head and every page fell back to the bare
+     app name in the browser tab. --}}
+@props(['title' => null])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -70,31 +76,7 @@
         </main>
     </div>
 
-    {{-- Plain (non-Livewire) controller redirects flash session('success'/'error')
-         data. Flux::toast() only reaches a <flux:toast> from inside a Livewire
-         request, which a plain controller redirect can't do -- but Flux also
-         ships a standalone JS API (window.Flux.toast) that works anywhere once
-         Alpine has booted, so a flashed message here just calls that instead of
-         a bespoke banner (same fix as layouts/guest.blade.php). --}}
-    @if (session('success'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('success')), variant: 'success' });
-                });
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            document.addEventListener('alpine:init', () => {
-                setTimeout(() => {
-                    Flux.toast({ text: @js(session('error')), variant: 'danger' });
-                });
-            });
-        </script>
-    @endif
+    @include('partials.flash-toasts')
 
     @persist('toast')
     <flux:toast.group position="top end">

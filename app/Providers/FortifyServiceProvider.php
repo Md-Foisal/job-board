@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -18,7 +19,44 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->bindRegisterResponse();
+    }
+
+    /**
+     * The register form's "what brings you here" choice is not stored on
+     * the user -- candidate and employer are both derived from
+     * relationships rather than from a column. What it does decide is
+     * which relationship gets created first, and registering to hire
+     * creates nothing at all, because a company needs a name the signup
+     * form never asked for.
+     *
+     * So the choice has to be acted on at the only moment it is known:
+     * the redirect out of registration. Afterwards there is no way to
+     * tell a new employer apart from any other account with nothing set
+     * up yet, which is exactly why /dashboard cannot make this decision.
+     */
+    private function bindRegisterResponse(): void
+    {
+        $this->app->singleton(RegisterResponse::class, fn () => new class implements RegisterResponse
+        {
+            public function toResponse($request)
+            {
+                // An invitation has already decided where this person is
+                // going: they were asked to join a company that exists,
+                // not to start one. That stashed destination outranks the
+                // "what brings you here" radio -- otherwise the most
+                // common invitation case, someone with no account at all,
+                // follows the link, registers, and is handed a "name your
+                // company" form instead of the invitation they came for.
+                if ($request->session()->has('url.intended')) {
+                    return redirect()->intended(config('fortify.home'));
+                }
+
+                return $request->input('role') === 'employer'
+                    ? redirect()->route('companies.create')
+                    : redirect()->intended(config('fortify.home'));
+            }
+        });
     }
 
     /**

@@ -94,7 +94,7 @@
         @endif
 
         <div class="prose prose-zinc mt-6 max-w-none dark:prose-invert">
-            {!! nl2br(e($jobPosting->description)) !!}
+            <div class="prose-content">{!! $jobPosting->description !!}</div>
         </div>
 
         @if ($jobPosting->skills->isNotEmpty())
@@ -108,17 +108,26 @@
         @endif
 
         @if ($jobPosting->postedBy)
-            <div class="mt-10 flex items-center gap-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
+            @php
+                $recruiter = $jobPosting->postedBy->recruiterProfile;
+                $recruiterName = $recruiter?->display_name ?: $jobPosting->postedBy->name;
+                $recruiterPhoto = $recruiter?->avatar_path ?: $jobPosting->postedBy->avatar;
+            @endphp
+
+            <div class="mt-10 flex items-start gap-3 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
                 <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 text-sm font-semibold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    @if ($jobPosting->postedBy->avatar)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($jobPosting->postedBy->avatar) }}" alt="{{ $jobPosting->postedBy->name }}" class="size-full object-cover">
+                    @if ($recruiterPhoto)
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($recruiterPhoto) }}" alt="{{ $recruiterName }}" class="size-full object-cover">
                     @else
                         {{ $jobPosting->postedBy->initials() }}
                     @endif
                 </div>
                 <div class="text-sm">
                     <p class="text-zinc-500 dark:text-zinc-500">Posted by</p>
-                    <p class="font-medium text-zinc-800 dark:text-zinc-200">{{ $jobPosting->postedBy->name }}</p>
+                    <p class="font-medium text-zinc-800 dark:text-zinc-200">{{ $recruiterName }}</p>
+                    @if ($recruiter?->bio)
+                        <p class="mt-1 text-zinc-600 dark:text-zinc-400">{{ $recruiter->bio }}</p>
+                    @endif
                 </div>
             </div>
         @endif

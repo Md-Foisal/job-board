@@ -33,4 +33,24 @@ class Membership extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+    /**
+     * Whether removing or demoting this membership would leave its
+     * company with nobody in charge. Ownership is transferred by
+     * promoting someone else first, never by vacating the seat -- the
+     * same continuity rule Slack enforces by refusing to demote a
+     * primary owner, and that GitHub warns about by recommending every
+     * organization keep more than one.
+     */
+    public function isLastActiveOwner(): bool
+    {
+        if ($this->role !== MembershipRole::Owner || $this->status !== MembershipStatus::Active) {
+            return false;
+        }
+
+        return $this->company->memberships()
+            ->where('role', MembershipRole::Owner)
+            ->where('status', MembershipStatus::Active)
+            ->count() === 1;
+    }
 }

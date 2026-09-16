@@ -30,16 +30,14 @@
             @endif
         </div>
         <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-                <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
-                    {{ $jobPosting->title }}
-                </h3>
-                @if (!is_null($matchScore))
-                    <span class="shrink-0 rounded-full bg-success-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-success-700 dark:bg-success-950 dark:text-success-300">
-                        {{ $matchScore }}% match
-                    </span>
-                @endif
-            </div>
+            {{-- The title gets the whole line. The match badge used to sit
+                 beside it and squeezed titles into "Police and Sheriffs
+                 Patrol ..." -- the one thing on the card people scan for,
+                 cut short to make room for a secondary number. It sits
+                 with the other tags below instead. --}}
+            <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
+                {{ $jobPosting->title }}
+            </h3>
             <a
                 href="{{ route('companies.show', $jobPosting->company) }}"
                 wire:navigate
@@ -51,6 +49,8 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2 text-xs">
+        <x-match-score :score="$matchScore" size="md" />
+
         <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
             {{ $jobPosting->workplace_type->label() }}
         </span>

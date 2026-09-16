@@ -7,10 +7,13 @@ use App\Models\CandidateProfile;
 use App\Models\Document;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
+use Database\Seeders\Concerns\SeedsCandidateSkills;
 use Illuminate\Database\Seeder;
 
 class CandidateProfileSeeder extends Seeder
 {
+    use SeedsCandidateSkills;
+
     /**
      * Run the database seeds.
      */
@@ -21,6 +24,7 @@ class CandidateProfileSeeder extends Seeder
             ->has(EducationRecord::factory()->count(2))
             ->has(ExperienceRecord::factory()->count(2))
             ->has(Document::factory()->count(2))
-            ->create();
+            ->create()
+            ->each(fn (CandidateProfile $profile) => $this->attachSkills($profile));
     }
 }

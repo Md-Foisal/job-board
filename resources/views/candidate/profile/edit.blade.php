@@ -155,7 +155,7 @@
                             x-ref="headlineInput"
                             @blur="editingHeadline = false"
                             name="headline"
-                            :description="__('e.g. Senior Laravel Developer -- shown right under your name')"
+                            :description="__('e.g. Senior Laravel Developer — shown right under your name')"
                             :value="old('headline', $candidateProfile->headline)"
                             maxlength="255"
                     />
@@ -357,7 +357,7 @@
                                     {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
                                 </p>
                                 @if ($record->description)
-                                    <p class="mt-2 whitespace-pre-line text-sm text-zinc-600 dark:text-zinc-400">{{ $record->description }}</p>
+                                    <div class="prose-content mt-2">{!! $record->description !!}</div>
                                 @endif
                             </div>
                         </li>

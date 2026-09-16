@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\EnsureUserIsEmployer;
 use App\Http\Middleware\EnsureUserIsCandidate;
+use App\Http\Middleware\EnsureActiveMembership;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'employer' => EnsureUserIsEmployer::class,
             'candidate' => EnsureUserIsCandidate::class,
+            'company.member' => EnsureActiveMembership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
