@@ -38,4 +38,21 @@ class Company extends Model
     {
         return $this->hasMany(JobPosting::class);
     }
+
+    /**
+     * Reports filed against this company. Job postings carry the same
+     * relation -- those are the two things a user can report.
+     */
+    public function reports()
+    {
+        return $this->morphMany(Report::class, 'reportable');
+    }
+
+    /**
+     * Moderation decisions taken against this record.
+     */
+    public function moderationEvents()
+    {
+        return $this->morphMany(ModerationEvent::class, 'subject');
+    }
 }

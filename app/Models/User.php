@@ -195,4 +195,22 @@ class User extends Authenticatable implements FilamentUser
         return $this->isStaff()
             && $this->account_status === AccountStatus::Active;
     }
+
+    /**
+     * Moderation decisions taken against this user (suspension and the
+     * like) -- not the ones they took as staff, which is
+     * moderationActionsTaken().
+     */
+    public function moderationEvents()
+    {
+        return $this->morphMany(ModerationEvent::class, 'subject');
+    }
+
+    /**
+     * Moderation decisions this user took while acting as staff.
+     */
+    public function moderationActionsTaken()
+    {
+        return $this->hasMany(ModerationEvent::class, 'admin_id');
+    }
 }

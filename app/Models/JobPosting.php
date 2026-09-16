@@ -167,4 +167,12 @@ class JobPosting extends Model
     {
         return $this->hasMany(JobView::class);
     }
+
+    /**
+     * Moderation decisions taken against this record.
+     */
+    public function moderationEvents()
+    {
+        return $this->morphMany(ModerationEvent::class, 'subject');
+    }
 }
