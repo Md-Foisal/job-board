@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\MembershipRole;
+use App\Enums\StaffRole;
 use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\Membership;
@@ -72,4 +73,9 @@ function employerUser(?Company $company = null, MembershipRole $role = Membershi
         ->create(['role' => $role]);
 
     return $user;
+}
+
+function staffUser(StaffRole $role = StaffRole::Moderator): User
+{
+    return User::factory()->create(['staff_role' => $role]);
 }

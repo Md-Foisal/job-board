@@ -14,6 +14,17 @@ class Company extends Model
 {
     use HasFactory;
 
+    /**
+     * Mirrors the database defaults so a freshly created record already
+     * knows them. Without this the column is simply absent until the row
+     * is read back, and every check against it quietly sees null --
+     * a gap preventAccessingMissingAttributes does not close, because it
+     * deliberately stays silent on recently created models.
+     */
+    protected $attributes = [
+        'account_status' => AccountStatus::Active->value,
+    ];
+
     protected function casts(): array
     {
         return [

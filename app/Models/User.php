@@ -27,6 +27,17 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
+     * Mirrors the database defaults so a freshly created record already
+     * knows them. Without this the column is simply absent until the row
+     * is read back, and every check against it quietly sees null --
+     * a gap preventAccessingMissingAttributes does not close, because it
+     * deliberately stays silent on recently created models.
+     */
+    protected $attributes = [
+        'account_status' => AccountStatus::Active->value,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -185,15 +196,29 @@ class User extends Authenticatable implements FilamentUser
         return $this->staff_role !== null;
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->staff_role === StaffRole::SuperAdmin;
+    }
+
     /**
-     * Gate for the Filament admin panel. Staff standing alone is not
-     * enough: a suspended account loses panel access immediately,
-     * without its staff_role having to be cleared as well.
+     * Staff standing alone is not enough to act: a suspended account
+     * loses its platform powers immediately, without its staff_role
+     * having to be cleared as well. Every moderation policy asks this
+     * question, so it is defined once, here.
      */
-    public function canAccessPanel(Panel $panel): bool
+    public function isActiveStaff(): bool
     {
         return $this->isStaff()
             && $this->account_status === AccountStatus::Active;
+    }
+
+    /**
+     * Gate for the Filament admin panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isActiveStaff();
     }
 
     /**
