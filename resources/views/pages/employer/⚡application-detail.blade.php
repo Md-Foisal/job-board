@@ -160,7 +160,10 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 @endforeach
             </flux:select>
 
-            <flux:button variant="primary" wire:click="updateStage">{{ __('Update') }}</flux:button>
+            <flux:button variant="primary" wire:click="updateStage" wire:loading.attr="disabled" wire:target="updateStage">
+                <span wire:loading.remove wire:target="updateStage">{{ __('Update') }}</span>
+                <span wire:loading wire:target="updateStage">{{ __('Updating...') }}</span>
+            </flux:button>
 
             @if ($this->application->resumeDocument)
                 <flux:button
@@ -226,7 +229,10 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         <form wire:submit="addNote" class="mt-4 flex flex-col gap-3">
             <flux:textarea wire:model="newNote" rows="3" :label="__('Add a note')" :placeholder="__('What stood out, what to ask next...')" />
             <div class="flex justify-end">
-                <flux:button size="sm" variant="primary" type="submit">{{ __('Add note') }}</flux:button>
+                <flux:button size="sm" variant="primary" type="submit" wire:loading.attr="disabled" wire:target="addNote">
+                    <span wire:loading.remove wire:target="addNote">{{ __('Add note') }}</span>
+                    <span wire:loading wire:target="addNote">{{ __('Adding...') }}</span>
+                </flux:button>
             </div>
         </form>
 
@@ -239,7 +245,10 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                                 <flux:textarea wire:model="editingNoteBody" rows="3" :aria-label="__('Edit note')" />
                                 <div class="flex justify-end gap-2">
                                     <flux:button size="sm" variant="ghost" type="button" wire:click="$set('editingNoteId', null)">{{ __('Cancel') }}</flux:button>
-                                    <flux:button size="sm" variant="primary" type="submit">{{ __('Save') }}</flux:button>
+                                    <flux:button size="sm" variant="primary" type="submit" wire:loading.attr="disabled" wire:target="saveNote">
+                                        <span wire:loading.remove wire:target="saveNote">{{ __('Save') }}</span>
+                                        <span wire:loading wire:target="saveNote">{{ __('Saving...') }}</span>
+                                    </flux:button>
                                 </div>
                             </form>
                         @else

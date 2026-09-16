@@ -210,7 +210,13 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                                 </div>
                             </div>
 
-                            <flux:button size="sm" variant="subtle" wire:click="revokeInvitation({{ $invitation->id }})">
+                            <flux:button
+                                size="sm"
+                                variant="subtle"
+                                wire:click="revokeInvitation({{ $invitation->id }})"
+                                wire:loading.attr="disabled"
+                                wire:target="revokeInvitation({{ $invitation->id }})"
+                            >
                                 {{ __('Revoke') }}
                             </flux:button>
                         </li>
@@ -239,7 +245,10 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                 <flux:modal.close>
                     <flux:button variant="ghost" type="button">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button variant="primary" type="submit">{{ __('Send invitation') }}</flux:button>
+                <flux:button variant="primary" type="submit" wire:loading.attr="disabled" wire:target="invite">
+                    <span wire:loading.remove wire:target="invite">{{ __('Send invitation') }}</span>
+                    <span wire:loading wire:target="invite">{{ __('Sending...') }}</span>
+                </flux:button>
             </div>
         </form>
     </flux:modal>
