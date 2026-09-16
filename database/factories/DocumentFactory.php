@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\DocumentType;
 use App\Models\CandidateProfile;
+use App\Models\Document;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Document>
+ * @extends Factory<Document>
  */
 class DocumentFactory extends Factory
 {

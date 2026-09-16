@@ -6,8 +6,6 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\JobPosting;
-use App\Models\CandidateProfile;
 
 #[Fillable(['name', 'slug'])]
 class Skill extends Model

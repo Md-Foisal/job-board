@@ -85,4 +85,19 @@ class JobPostingPolicy
     {
         return $user->canManage($jobPosting->company);
     }
+
+    /**
+     * Platform-side review of a posting: approve or reject it.
+     *
+     * Staff recuse themselves from their own employer's postings. This is
+     * the admin-side twin of the self-apply block -- the same conflict of
+     * interest, seen from the other end. Recusal is not a formality here:
+     * a moderator who works for a company could wave its postings past
+     * the queue that exists to catch them.
+     */
+    public function moderate(User $user, JobPosting $jobPosting): bool
+    {
+        return $user->isActiveStaff()
+            && ! $user->worksAt($jobPosting->company);
+    }
 }

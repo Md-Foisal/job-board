@@ -1,6 +1,10 @@
 <?php
 
+use App\Enums\ApplicationOutcomeStatus;
+use App\Enums\ApplicationStage;
 use App\Enums\DocumentType;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
 use App\Models\Application;
 use App\Models\Document;
 use App\Models\JobPosting;
@@ -37,8 +41,8 @@ test('a candidate cannot apply to a job at a company they work at', function () 
     $job = JobPosting::factory()->create();
     $job->company->memberships()->create([
         'user_id' => $candidate->id,
-        'role' => \App\Enums\MembershipRole::Member,
-        'status' => \App\Enums\MembershipStatus::Active,
+        'role' => MembershipRole::Member,
+        'status' => MembershipStatus::Active,
     ]);
 
     $response = $this->actingAs($candidate)->get(route('jobs.apply', $job));
@@ -89,6 +93,6 @@ test('a candidate can submit an application using an existing CV', function () {
     expect($application)->not->toBeNull();
     expect($application->resume_document_id)->toBe($cv->id);
     expect($application->cover_letter)->toBe('I would love to join your team.');
-    expect($application->outcome_status)->toBe(\App\Enums\ApplicationOutcomeStatus::Active);
-    expect($application->stage)->toBe(\App\Enums\ApplicationStage::New);
+    expect($application->outcome_status)->toBe(ApplicationOutcomeStatus::Active);
+    expect($application->stage)->toBe(ApplicationStage::New);
 });

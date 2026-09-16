@@ -103,7 +103,7 @@ trait FiltersJobPostings
     {
         $user = auth()->user();
 
-        if (!$user || !$user->isCandidate()) {
+        if (! $user || ! $user->isCandidate()) {
             return collect();
         }
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class JobView extends Model
 {
     const CREATED_AT = null;
+
     const UPDATED_AT = null;
 
     protected function casts(): array

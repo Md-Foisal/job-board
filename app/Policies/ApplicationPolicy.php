@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\ApplicationOutcomeStatus;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\User;
@@ -16,11 +17,11 @@ class ApplicationPolicy
      */
     public function create(User $user, JobPosting $jobPosting): bool
     {
-        if (!$user->isCandidate()) {
+        if (! $user->isCandidate()) {
             return false;
         }
 
-        if (!$jobPosting->isPubliclyVisible()) {
+        if (! $jobPosting->isPubliclyVisible()) {
             return false;
         }
 
@@ -28,7 +29,7 @@ class ApplicationPolicy
             return false;
         }
 
-        return !Application::query()
+        return ! Application::query()
             ->where('job_posting_id', $jobPosting->id)
             ->where('candidate_profile_id', $user->candidateProfile->id)
             ->exists();
@@ -95,6 +96,6 @@ class ApplicationPolicy
     public function withdraw(User $user, Application $application): bool
     {
         return $this->view($user, $application)
-            && $application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active;
+            && $application->outcome_status === ApplicationOutcomeStatus::Active;
     }
 }

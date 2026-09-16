@@ -4,12 +4,13 @@ namespace Database\Factories;
 
 use App\Enums\EmploymentType;
 use App\Enums\WorkplaceType;
+use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Symfony\Component\Intl\Currencies;
 
 /**
- * @extends Factory<\App\Models\CandidatePreference>
+ * @extends Factory<CandidatePreference>
  */
 class CandidatePreferenceFactory extends Factory
 {

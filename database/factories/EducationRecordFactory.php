@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\CandidateProfile;
+use App\Models\EducationRecord;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\EducationRecord>
+ * @extends Factory<EducationRecord>
  */
 class EducationRecordFactory extends Factory
 {

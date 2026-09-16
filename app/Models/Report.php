@@ -25,4 +25,20 @@ class Report extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * The company a report ultimately concerns -- itself if the subject
+     * is a company, its owner if the subject is a job posting. Staff use
+     * this to recuse themselves from reports about their own employer.
+     */
+    public function subjectCompany(): ?Company
+    {
+        $subject = $this->reportable;
+
+        return match (true) {
+            $subject instanceof Company => $subject,
+            $subject instanceof JobPosting => $subject->company,
+            default => null,
+        };
+    }
 }

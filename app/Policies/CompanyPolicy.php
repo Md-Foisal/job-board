@@ -17,4 +17,17 @@ class CompanyPolicy
     {
         return $user->canManage($company);
     }
+
+    /**
+     * Platform-side decisions about a company: verify it, ask it for
+     * documents, ban it, or undo any of those. One ability covers all of
+     * them because they sit at the same level of trust -- nothing in the
+     * design splits them further -- and because the disqualifying fact is
+     * the same for each: staff cannot rule on a company they work for.
+     */
+    public function moderate(User $user, Company $company): bool
+    {
+        return $user->isActiveStaff()
+            && ! $user->worksAt($company);
+    }
 }
