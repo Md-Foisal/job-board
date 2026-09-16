@@ -2,26 +2,19 @@
 
 namespace App\Models;
 
-use App\Casts\SanitizedHtml;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use \Illuminate\Database\Eloquent\Builder;
 use App\Builders\JobPostingQueryBuilder;
-
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Application;
-use App\Models\Category;
-use App\Models\Skill;
-use App\Models\Pivots\JobPostingSkillPivot;
-use App\Enums\EmploymentType;
-use App\Enums\WorkplaceType;
-use App\Enums\SalaryPeriod;
-use App\Enums\AvailabilityStatus;
-use App\Enums\ModerationStatus;
+use App\Casts\SanitizedHtml;
 use App\Enums\AccountStatus;
-
+use App\Enums\AvailabilityStatus;
+use App\Enums\EmploymentType;
+use App\Enums\ModerationStatus;
+use App\Enums\SalaryPeriod;
+use App\Enums\WorkplaceType;
+use App\Models\Pivots\JobPostingSkillPivot;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'company_id', 'posted_by_id', 'title', 'slug', 'description',
@@ -120,7 +113,7 @@ class JobPosting extends Model
 
     public function isOpen(): bool
     {
-        return $this->availability_status === AvailabilityStatus::Active && !$this->isExpired();
+        return $this->availability_status === AvailabilityStatus::Active && ! $this->isExpired();
     }
 
     /**

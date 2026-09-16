@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Models\Application;
+use App\Models\ApplicationNote;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ApplicationNote>
+ * @extends Factory<ApplicationNote>
  */
 class ApplicationNoteFactory extends Factory
 {

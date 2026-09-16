@@ -3,15 +3,11 @@
 namespace App\Models;
 
 use App\Casts\SanitizedHtml;
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\AccountStatus;
+use App\Enums\IdentityType;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-use App\Models\Membership;
-use App\Models\Invitation;
-use App\Models\JobPosting;
-use App\Enums\IdentityType;
-use App\Enums\AccountStatus;
+use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry'])]
 class Company extends Model

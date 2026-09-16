@@ -3,33 +3,28 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\AccountStatus;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
+use App\Enums\StaffRole;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-use App\Models\Company;
-use App\Models\Membership;
-use App\Models\Invitation;
-use App\Models\JobPosting;
-use App\Models\Application;
-use App\Models\CandidateProfile;
-use App\Enums\MembershipRole;
-use App\Enums\MembershipStatus;
-use App\Enums\AccountStatus;
-use App\Enums\StaffRole;
 
 #[Fillable(['name', 'email', 'password', 'avatar'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -155,10 +150,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Whether this user can make ownership-level decisions for the
-     * given company (owner/manager) — a plain member cannot.
-     */
-    /**
      * This user's role at the given company, or null if they do not
      * currently work there. Unlike canManage() this answers "what am I",
      * which is what ranking one person against another needs.
@@ -171,6 +162,10 @@ class User extends Authenticatable
             ->first()?->role;
     }
 
+    /**
+     * Whether this user can make ownership-level decisions for the
+     * given company (owner/manager) — a plain member cannot.
+     */
     public function canManage(Company $company): bool
     {
         return $this->memberships()
@@ -178,5 +173,26 @@ class User extends Authenticatable
             ->where('status', MembershipStatus::Active)
             ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
             ->exists();
+    }
+
+    /**
+     * Unlike "candidate" and "employer", staff standing is stored rather
+     * than derived: it is granted by the platform, not by anything the
+     * user does. A null staff_role means no platform role at all.
+     */
+    public function isStaff(): bool
+    {
+        return $this->staff_role !== null;
+    }
+
+    /**
+     * Gate for the Filament admin panel. Staff standing alone is not
+     * enough: a suspended account loses panel access immediately,
+     * without its staff_role having to be cleared as well.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isStaff()
+            && $this->account_status === AccountStatus::Active;
     }
 }

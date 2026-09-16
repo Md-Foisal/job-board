@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MembershipStatus;
 use App\Models\Company;
 use App\Models\Membership;
 use App\Models\User;
@@ -63,7 +64,7 @@ test('an ended membership drops out of the switcher', function () {
     $user = candidateUser();
     Membership::factory()->for($user)->for($kept)->create();
     $old = Membership::factory()->for($user)->for($left)->create();
-    $old->update(['status' => \App\Enums\MembershipStatus::Inactive]);
+    $old->update(['status' => MembershipStatus::Inactive]);
 
     $response = $this->actingAs($user)->get(route('employer.dashboard', $kept));
 

@@ -1,10 +1,10 @@
 <?php
 
 use App\Enums\EmploymentType;
+use App\Enums\SalaryPeriod;
 use App\Enums\WorkplaceType;
 use App\Models\Category;
 use App\Models\JobPosting;
-use App\Enums\SalaryPeriod;
 use App\Models\Skill;
 
 test('skill filters postings that require the given skill', function () {

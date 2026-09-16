@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\CandidateProfile;
+use App\Models\ExperienceRecord;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ExperienceRecord>
+ * @extends Factory<ExperienceRecord>
  */
 class ExperienceRecordFactory extends Factory
 {

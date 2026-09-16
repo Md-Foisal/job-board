@@ -32,7 +32,7 @@ class SaveJobButton extends Component
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             $this->redirectRoute('login');
 
             return;
@@ -44,7 +44,7 @@ class SaveJobButton extends Component
             $user->savedJobs()->syncWithoutDetaching([$this->jobPosting->id]);
         }
 
-        $this->saved = !$this->saved;
+        $this->saved = ! $this->saved;
     }
 
     public function render()

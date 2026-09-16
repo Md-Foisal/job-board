@@ -2,8 +2,12 @@
 
 use App\Actions\ChangeApplicationStage;
 use App\Enums\ApplicationStage;
+use App\Enums\AvailabilityStatus;
+use App\Enums\DocumentType;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\ModerationStatus;
+use App\Events\ApplicationSubmitted;
 use App\Models\Application;
 use App\Models\Company;
 use App\Models\JobPosting;
@@ -61,13 +65,13 @@ test('a new application reaches the people who can act on it', function () {
     $outsider = employerUser();
 
     $job = JobPosting::factory()->for($company)->create([
-        'availability_status' => \App\Enums\AvailabilityStatus::Active,
-        'moderation_status' => \App\Enums\ModerationStatus::Approved,
+        'availability_status' => AvailabilityStatus::Active,
+        'moderation_status' => ModerationStatus::Approved,
     ]);
 
     $candidate = candidateUser();
     $candidate->candidateProfile->documents()->create([
-        'document_type' => \App\Enums\DocumentType::Cv,
+        'document_type' => DocumentType::Cv,
         'file_path' => 'resumes/cv.pdf',
         'original_filename' => 'cv.pdf',
     ]);
@@ -103,7 +107,7 @@ test('someone who has left the company is not told', function () {
         'candidate_profile_id' => $candidate->candidateProfile->id,
     ]);
 
-    event(new \App\Events\ApplicationSubmitted($application));
+    event(new ApplicationSubmitted($application));
 
     Notification::assertNotSentTo($formerOwner, NewApplicationReceived::class);
 });

@@ -7,6 +7,7 @@ use App\Models\Application;
 use App\Models\ApplicationNote;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Models\Membership;
 use App\Models\Skill;
 use Livewire\Livewire;
 
@@ -201,7 +202,7 @@ test('one company\'s URL never shows another company\'s applicant', function () 
     $second = Company::factory()->create();
 
     $salma = employerUser($first, MembershipRole::Manager);
-    \App\Models\Membership::factory()->for($salma)->for($second)->create([
+    Membership::factory()->for($salma)->for($second)->create([
         'role' => MembershipRole::Manager,
     ]);
 

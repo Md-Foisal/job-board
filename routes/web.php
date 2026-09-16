@@ -59,7 +59,6 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // Experience records: same CRUD-in-modal pattern as Education (claude/14 step 3b)
     Route::livewire('/experience', 'pages::candidate.experience')->name('experience.index');
 
-
     // Document library: same CRUD-in-modal pattern, plus a plain Policy-gated
     // download route (claude/14 step 7 security fix -- a private-disk file must
     // be served through an owner-only check, never a guessable public URL).

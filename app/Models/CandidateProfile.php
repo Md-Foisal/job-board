@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Pivots\CandidateProfileSkillPivot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,7 +41,7 @@ class CandidateProfile extends Model
     {
         return $this->belongsToMany(Skill::class)
             ->withPivot('proficiency')
-            ->using(\App\Models\Pivots\CandidateProfileSkillPivot::class);
+            ->using(CandidateProfileSkillPivot::class);
     }
 
     public function applications()

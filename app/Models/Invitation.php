@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\InvitationStatus;
+use App\Enums\MembershipRole;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
-use App\Models\User;
-use App\Models\Company;
-use App\Enums\MembershipRole;
-use App\Enums\InvitationStatus;
+use Illuminate\Database\Eloquent\Model;
 
 #[Fillable(['company_id', 'invited_by_id', 'email', 'role', 'token', 'status', 'expires_at'])]
 class Invitation extends Model
