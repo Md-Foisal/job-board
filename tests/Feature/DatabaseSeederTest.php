@@ -21,6 +21,8 @@ test('a fresh seed can be looked at from every side', function () {
     expect($superAdmin->isSuperAdmin())->toBeTrue()
         ->and($moderator->canAccessPanel(filament()->getPanel('admin')))->toBeTrue()
         ->and($candidate->candidateProfile->skills)->not->toBeEmpty()
+        ->and($candidate->candidateProfile->applications()->count())->toBe(3)
+        ->and($candidate->savedJobs()->count())->toBe(2)
         ->and($candidate->account_status)->toBe(AccountStatus::Active);
 
     expect(JobPosting::query()->where('moderation_status', ModerationStatus::Pending)->count())->toBeGreaterThanOrEqual(5)

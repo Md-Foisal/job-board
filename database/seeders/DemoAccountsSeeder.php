@@ -2,10 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Actions\ChangeApplicationStage;
+use App\Enums\ApplicationStage;
+use App\Enums\DocumentType;
 use App\Enums\StaffRole;
+use App\Models\Application;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\Company;
+use App\Models\Document;
+use App\Models\JobPosting;
+use App\Models\JobView;
 use App\Models\Membership;
 use App\Models\User;
 use Database\Seeders\Concerns\SeedsCandidateSkills;
@@ -70,6 +77,7 @@ class DemoAccountsSeeder extends Seeder
             ->has(CandidatePreference::factory(), 'preference')
             ->create();
         $this->attachSkills($profile, 5, 8);
+        $this->seedCandidateActivity($candidate, $profile);
 
         $this->command?->table(['Role', 'Email', 'Password'], [
             ['Super admin', 'superadmin@jobboard.test', self::PASSWORD],
@@ -78,6 +86,49 @@ class DemoAccountsSeeder extends Seeder
             ['Candidate', 'candidate@jobboard.test', self::PASSWORD],
         ]);
         $this->command?->line('Staff two-factor secret: '.self::TWO_FACTOR_SECRET.' (or a recovery code, demo-recovery-code-1 to -8)');
+    }
+
+    /**
+     * A candidate with no history shows empty lists on every page they
+     * own, which makes the candidate side look unfinished in every fresh
+     * database. The demo one gets applications at different stages, with
+     * the timeline entries a real review leaves, plus saved and viewed jobs.
+     */
+    private function seedCandidateActivity(User $candidate, CandidateProfile $profile): void
+    {
+        $postings = JobPosting::query()->active()->with('company')->inRandomOrder()->limit(8)->get();
+
+        if ($postings->count() < 8) {
+            return;
+        }
+
+        $resume = Document::factory()->create([
+            'candidate_profile_id' => $profile->id,
+            'document_type' => DocumentType::Cv,
+        ]);
+
+        foreach ([ApplicationStage::New, ApplicationStage::Shortlisted, ApplicationStage::Interview] as $index => $stage) {
+            $posting = $postings[$index];
+            $application = Application::factory()->create([
+                'job_posting_id' => $posting->id,
+                'candidate_profile_id' => $profile->id,
+                'resume_document_id' => $resume->id,
+            ]);
+
+            $reviewer = $posting->company->decisionMakers()->first();
+
+            if ($stage !== ApplicationStage::New && $reviewer) {
+                app(ChangeApplicationStage::class)($application, $reviewer, $stage);
+            }
+        }
+
+        $candidate->savedJobs()->attach($postings->slice(3, 2)->pluck('id'));
+
+        $postings->slice(5, 3)->values()->each(fn (JobPosting $posting, int $hoursAgo) => JobView::create([
+            'user_id' => $candidate->id,
+            'job_posting_id' => $posting->id,
+            'viewed_at' => now()->subHours($hoursAgo + 1),
+        ]));
     }
 
     private function staff(string $name, string $email, StaffRole $role): User
