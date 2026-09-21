@@ -68,7 +68,29 @@ class JobPostingFactory extends Factory
             'availability_status' => AvailabilityStatus::Active,
             'moderation_status' => ModerationStatus::Approved,
             'expires_at' => $this->faker->dateTimeBetween('+1 day', '+30 days'),
+            // Set when a posting is first published, so anything past draft
+            // has one -- job alerts and the structured data both read it.
+            'published_at' => fn (array $attributes) => in_array($attributes['availability_status'], [AvailabilityStatus::Draft, AvailabilityStatus::Draft->value], true)
+                ? null
+                : now(),
         ];
+    }
+
+    /**
+     * Past its closing date and swept to expired, the way the scheduled
+     * job-postings:expire leaves it.
+     */
+    public function expired(): static
+    {
+        return $this->state([
+            'availability_status' => AvailabilityStatus::Expired,
+            'expires_at' => now()->subDays(3),
+        ]);
+    }
+
+    public function closed(): static
+    {
+        return $this->state(['availability_status' => AvailabilityStatus::Closed]);
     }
 
     public function draft(): static
