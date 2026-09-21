@@ -65,3 +65,15 @@ test('the recruiter profile keeps the workspace it was opened from', function ()
         ->assertOk()
         ->assertDontSee(route('employer.jobs.index', $stranger));
 });
+
+test('each empty tab says what it is empty of', function () {
+    $this->actingAs(staffWithTwoFactor());
+
+    Livewire::test(ManageJobPostings::class)
+        ->assertSee('Nothing is waiting')
+        ->set('activeTab', 'approved')
+        ->assertSee('Nothing approved yet')
+        ->assertDontSee('Nothing is waiting')
+        ->set('activeTab', 'not_open')
+        ->assertSee('No closed or lapsed posting is waiting');
+});

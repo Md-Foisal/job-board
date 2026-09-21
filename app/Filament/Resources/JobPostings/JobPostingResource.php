@@ -244,8 +244,19 @@ class JobPostingResource extends Resource
                     ->since()
                     ->sortable(),
             ])
-            ->emptyStateHeading('Nothing is waiting')
-            ->emptyStateDescription('Postings appear here when an employer publishes them.')
+            // One table behind four tabs: "Nothing is waiting" on an empty
+            // Approved tab would say the opposite of what it shows.
+            ->emptyStateHeading(fn ($livewire) => match ($livewire->activeTab ?? null) {
+                ModerationStatus::Approved->value => 'Nothing approved yet',
+                ModerationStatus::Rejected->value => 'Nothing rejected',
+                'not_open' => 'No closed or lapsed posting is waiting',
+                default => 'Nothing is waiting',
+            })
+            ->emptyStateDescription(fn ($livewire) => match ($livewire->activeTab ?? null) {
+                ModerationStatus::Approved->value, ModerationStatus::Rejected->value => null,
+                'not_open' => 'A pending posting lands here if its company closes it or it runs out while waiting, and goes back to Waiting when reopened or extended.',
+                default => 'Postings appear here when an employer publishes them.',
+            })
             ->recordActions([
                 ViewAction::make(),
                 static::approveAction(),
