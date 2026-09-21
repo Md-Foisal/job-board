@@ -85,6 +85,32 @@ class JobPosting extends Model
     }
 
     /**
+     * The moderation queue: submitted, not yet decided, and still open --
+     * a posting its company has closed, or that ran out while waiting, is
+     * not worth a moderator's time until it is reopened or extended, at
+     * which point it is back here on its own. Shared by the queue tab, the
+     * sidebar badge and the dashboard's oldest-wait figure so the three
+     * never disagree.
+     */
+    public function scopeAwaitingReview(Builder $query)
+    {
+        return $query->where('moderation_status', ModerationStatus::Pending)
+            ->where('availability_status', AvailabilityStatus::Active)
+            ->where('expires_at', '>', now());
+    }
+
+    /**
+     * Pending, but closed or lapsed: out of the queue, still findable.
+     */
+    public function scopeAwaitingReviewButNotOpen(Builder $query)
+    {
+        return $query->where('moderation_status', ModerationStatus::Pending)
+            ->where(fn (Builder $query) => $query
+                ->where('availability_status', '!=', AvailabilityStatus::Active)
+                ->orWhere('expires_at', '<=', now()));
+    }
+
+    /**
      * Publicly visible: availability_status active, moderation approved,
      * not expired, not held back by open reports, and from a company the
      * public can see.

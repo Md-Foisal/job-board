@@ -75,9 +75,7 @@ class JobPostingResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $waiting = static::getEloquentQuery()
-            ->where('moderation_status', ModerationStatus::Pending->value)
-            ->count();
+        $waiting = static::getEloquentQuery()->awaitingReview()->count();
 
         return $waiting > 0 ? (string) $waiting : null;
     }

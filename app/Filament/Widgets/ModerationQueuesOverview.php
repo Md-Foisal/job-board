@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\AccountStatus;
-use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
@@ -37,8 +36,7 @@ class ModerationQueuesOverview extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $postings = JobPostingResource::getEloquentQuery()
-            ->where('moderation_status', ModerationStatus::Pending->value);
+        $postings = JobPostingResource::getEloquentQuery()->awaitingReview();
 
         $companies = Company::query()
             ->whereNull('verified_at')
