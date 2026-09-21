@@ -78,9 +78,12 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                 // Someone already on the roster does not need inviting, and a
                 // second open invitation to the same address would just make
                 // two links that both work.
+                // A lapsed one does not count, even in the minute before
+                // invitations:expire marks it: it is no longer on the list.
                 Rule::unique('invitations', 'email')
                     ->where('company_id', $this->company->id)
-                    ->where('status', InvitationStatus::Pending->value),
+                    ->where('status', InvitationStatus::Pending->value)
+                    ->where(fn ($query) => $query->where('expires_at', '>', now())),
             ],
             'inviteRole' => ['required', Rule::enum(MembershipRole::class)],
         ], [
