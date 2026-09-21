@@ -1,6 +1,5 @@
 import { Editor } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
 
 /**
  * A headless editor rather than a ready-made one: TipTap ships behaviour
@@ -37,13 +36,17 @@ export default function richTextEditor({ content = '', wireModel = null, heading
                 extensions: [
                     StarterKit.configure({
                         heading: headings ? { levels: [3, 4] } : false,
+                        // StarterKit already carries the link extension, so it
+                        // is configured here rather than registered a second
+                        // time: two copies trigger a duplicate-name warning and
+                        // leave it unclear which options win. Autolink rather
+                        // than a toolbar button: turning a typed address into a
+                        // link is what people expect anyway, and the
+                        // alternative was a native window.prompt. openOnClick
+                        // stays off so clicking a link while writing never
+                        // navigates away from an unsaved form.
+                        link: { openOnClick: false, autolink: true },
                     }),
-                    // Autolink rather than a toolbar button: turning a typed
-                    // address into a link is what people expect anyway, and
-                    // the alternative was a native window.prompt, which is
-                    // exactly the borrowed-browser-chrome look this app has
-                    // been getting rid of elsewhere.
-                    Link.configure({ openOnClick: false, autolink: true }),
                 ],
                 content: this.html,
                 editorProps: {
