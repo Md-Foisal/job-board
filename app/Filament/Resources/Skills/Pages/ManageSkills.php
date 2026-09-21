@@ -15,7 +15,13 @@ class ManageSkills extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Add skill'),
+            // One verb from button to modal to submit; Filament's own default
+            // mixes "Add", "Create" and "Create & create another".
+            CreateAction::make()
+                ->label('Add skill')
+                ->modalHeading('Add a skill')
+                ->modalSubmitActionLabel('Add')
+                ->createAnotherAction(fn ($action) => $action->label('Add and start another')),
         ];
     }
 
