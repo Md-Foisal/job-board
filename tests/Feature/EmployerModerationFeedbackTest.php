@@ -56,12 +56,12 @@ test('a documents request reaches the people who can answer it', function () {
 
 test('the listing says a submitted posting is in review, but not a draft', function () {
     $company = Company::factory()->create();
-    JobPosting::factory()->for($company)->pendingModeration()->create(['title' => 'Submitted Role']);
+    JobPosting::factory()->for($company)->pendingModeration()->create(['title' => 'Submitted Role', 'created_at' => now()->subDay()]);
     JobPosting::factory()->for($company)->draft()->pendingModeration()->create(['title' => 'Draft Role']);
 
     Livewire::actingAs(employerUser($company, MembershipRole::Owner))
         ->test('pages::employer.job-listings', ['company' => $company])
-        ->assertSeeInOrder(['Submitted Role', 'In review', 'Draft Role'])
+        ->assertSeeInOrder(['Draft Role', 'Submitted Role', 'In review'])
         ->set('filter', AvailabilityStatus::Draft->value)
         ->assertDontSee('In review');
 });

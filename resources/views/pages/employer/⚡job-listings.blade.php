@@ -36,6 +36,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             ])
             ->with('latestRejection')
             ->latest()
+            ->latest('id')
             ->get();
     }
 
