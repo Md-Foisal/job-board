@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Enums\AccountStatus;
 use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
@@ -21,6 +22,12 @@ class ApproveJobPosting
 {
     public function __invoke(JobPosting $jobPosting, User $staff): ModerationEvent
     {
+        // The queue hides the button for a banned company's posting; this
+        // is the second layer, for any other caller.
+        if ($jobPosting->company->account_status !== AccountStatus::Active) {
+            throw new \DomainException('A posting from a banned company cannot be approved.');
+        }
+
         return DB::transaction(function () use ($jobPosting, $staff) {
             $jobPosting->moderation_status = ModerationStatus::Approved;
             $jobPosting->save();

@@ -3,6 +3,7 @@
 use App\Actions\ApproveJobPosting;
 use App\Actions\RejectJobPosting;
 use App\Actions\SaveJobPosting;
+use App\Enums\AccountStatus;
 use App\Enums\EmploymentType;
 use App\Enums\MembershipRole;
 use App\Enums\ModerationAction;
@@ -154,4 +155,32 @@ it('sends an approved posting back for review when it is edited', function () {
     $edited = app(SaveJobPosting::class)($company, $owner, publishablePosting(['title' => 'Something else entirely']), $posting->fresh());
 
     expect($edited->moderation_status)->toBe(ModerationStatus::Pending);
+});
+
+it('never offers to approve a banned company\'s posting, and refuses if asked anyway', function () {
+    $company = Company::factory()->create();
+    $company->account_status = AccountStatus::Suspended;
+    $company->save();
+    $posting = JobPosting::factory()->for($company)->pendingModeration()->create();
+
+    $this->actingAs(queueModerator());
+
+    Livewire::test(ManageJobPostings::class)
+        ->assertActionHidden(TestAction::make('approve')->table($posting));
+
+    expect(fn () => app(ApproveJobPosting::class)($posting, queueModerator()))
+        ->toThrow(DomainException::class);
+});
+
+it('keeps the employer record the reviewer sees in step with the trust tier', function () {
+    $company = Company::factory()->create();
+    $staff = queueModerator();
+
+    $approved = JobPosting::factory()->for($company)->pendingModeration()->create();
+    $rejected = JobPosting::factory()->for($company)->pendingModeration()->create();
+    app(ApproveJobPosting::class)($approved, $staff);
+    app(RejectJobPosting::class)($rejected, $staff, 'Misleading pay.');
+
+    expect($company->postingModerationRecord())->toBe(['approved' => 1, 'rejected' => 1])
+        ->and($company->isTrustedPoster())->toBeFalse();
 });

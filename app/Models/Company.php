@@ -94,16 +94,31 @@ class Company extends Model
             return false;
         }
 
+        $record = $this->postingModerationRecord();
+
+        return $record['rejected'] === 0
+            && $record['approved'] >= self::TRUSTED_AFTER_APPROVALS;
+    }
+
+    /**
+     * How many of this company's postings staff have approved, and how
+     * many they have rejected, over its whole history. The trust tier
+     * above is decided from it, and reviewers are shown it, so both are
+     * reading the same numbers.
+     *
+     * @return array{approved: int, rejected: int}
+     */
+    public function postingModerationRecord(): array
+    {
         $decisions = ModerationEvent::query()
             ->where('subject_type', (new JobPosting)->getMorphClass())
             ->whereIn('subject_id', $this->jobPostings()->select('id'))
             ->whereIn('action', [ModerationAction::ApproveJobPosting, ModerationAction::RejectJobPosting])
             ->get(['subject_id', 'action']);
 
-        if ($decisions->contains('action', ModerationAction::RejectJobPosting)) {
-            return false;
-        }
-
-        return $decisions->unique('subject_id')->count() >= self::TRUSTED_AFTER_APPROVALS;
+        return [
+            'approved' => $decisions->where('action', ModerationAction::ApproveJobPosting)->unique('subject_id')->count(),
+            'rejected' => $decisions->where('action', ModerationAction::RejectJobPosting)->unique('subject_id')->count(),
+        ];
     }
 }
