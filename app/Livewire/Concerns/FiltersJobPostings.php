@@ -5,6 +5,7 @@ namespace App\Livewire\Concerns;
 use App\Builders\JobPostingQueryBuilder;
 use App\Models\JobPosting;
 use App\Services\MatchScoreCalculator;
+use App\Support\JobSearchCriteria;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
 
@@ -55,43 +56,31 @@ trait FiltersJobPostings
 
     protected function filteredQuery(): JobPostingQueryBuilder
     {
-        $query = JobPosting::query()
+        return JobPosting::query()
             ->active()
-            ->with(['company:id,name,slug,logo_path,verified_at', 'skills:id,name']);
+            ->with(['company:id,name,slug,logo_path,verified_at', 'skills:id,name'])
+            ->matching($this->criteria())
+            ->sortBy($this->sort);
+    }
 
-        if ($this->q !== '') {
-            $query->keyword($this->q);
-        }
-
-        if ($this->skill) {
-            $query->skill($this->skill);
-        }
-
-        if ($this->category) {
-            $query->category($this->category);
-        }
-
-        if ($this->salaryMin || $this->salaryMax) {
-            $query->salaryBetween($this->salaryMin, $this->salaryMax);
-        }
-
-        if ($this->location !== '') {
-            $query->location($this->location);
-        }
-
-        if ($this->workplaceType) {
-            $query->workplaceType($this->workplaceType);
-        }
-
-        if ($this->employmentType) {
-            $query->employmentType($this->employmentType);
-        }
-
-        if ($this->experience) {
-            $query->experience($this->experience);
-        }
-
-        return $query->sortBy($this->sort);
+    /**
+     * The filters as they stand, in the shape a job alert stores them.
+     *
+     * @return array<string, int|string>
+     */
+    protected function criteria(): array
+    {
+        return JobSearchCriteria::from([
+            'q' => $this->q,
+            'skill' => $this->skill,
+            'category' => $this->category,
+            'location' => $this->location,
+            'workplaceType' => $this->workplaceType,
+            'employmentType' => $this->employmentType,
+            'salaryMin' => $this->salaryMin,
+            'salaryMax' => $this->salaryMax,
+            'experience' => $this->experience,
+        ]);
     }
 
     /**

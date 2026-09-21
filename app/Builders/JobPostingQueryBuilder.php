@@ -85,6 +85,47 @@ class JobPostingQueryBuilder extends Builder
         return $this->where('min_experience_years', '<=', $years);
     }
 
+    /**
+     * Applies a set of search criteria (see JobSearchCriteria) -- the one
+     * definition of "matches" the search page and job alerts share.
+     */
+    public function matching(array $criteria): self
+    {
+        if (isset($criteria['q'])) {
+            $this->keyword($criteria['q']);
+        }
+
+        if (isset($criteria['skill'])) {
+            $this->skill($criteria['skill']);
+        }
+
+        if (isset($criteria['category'])) {
+            $this->category($criteria['category']);
+        }
+
+        if (isset($criteria['salaryMin']) || isset($criteria['salaryMax'])) {
+            $this->salaryBetween($criteria['salaryMin'] ?? null, $criteria['salaryMax'] ?? null);
+        }
+
+        if (isset($criteria['location'])) {
+            $this->location($criteria['location']);
+        }
+
+        if (isset($criteria['workplaceType'])) {
+            $this->workplaceType($criteria['workplaceType']);
+        }
+
+        if (isset($criteria['employmentType'])) {
+            $this->employmentType($criteria['employmentType']);
+        }
+
+        if (isset($criteria['experience'])) {
+            $this->experience($criteria['experience']);
+        }
+
+        return $this;
+    }
+
     public function sortBy(string $field): self
     {
         return match ($field) {

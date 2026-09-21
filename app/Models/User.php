@@ -123,6 +123,11 @@ class User extends Authenticatable implements FilamentUser
             ->withPivot('role');
     }
 
+    public function jobAlerts()
+    {
+        return $this->hasMany(JobAlert::class);
+    }
+
     public function savedJobs()
     {
         return $this->belongsToMany(JobPosting::class, 'saved_jobs');
