@@ -74,7 +74,7 @@
                         id="cover-upload"
                         type="file"
                         name="cover_photo"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept="{{ \App\Support\ImageUploads::ACCEPT }}"
                         class="sr-only"
                         @change="pickCover($event)"
                     >
@@ -112,7 +112,7 @@
                                 id="avatar-upload"
                                 type="file"
                                 name="avatar"
-                                accept="image/png,image/jpeg,image/webp"
+                                accept="{{ \App\Support\ImageUploads::ACCEPT }}"
                                 class="sr-only"
                                 @change="pickAvatar($event)"
                             >

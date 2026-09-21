@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ReplaceUploadedImage;
+use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -33,8 +34,8 @@ class CandidateProfileController extends Controller
     public function update(Request $request, ReplaceUploadedImage $replaceImage): RedirectResponse
     {
         $validated = $request->validate([
-            'avatar' => ['nullable', 'image', 'max:2048'],
-            'cover_photo' => ['nullable', 'image', 'max:4096'],
+            'avatar' => ['nullable', ...ImageUploads::rules(2048)],
+            'cover_photo' => ['nullable', ...ImageUploads::rules(4096)],
             'headline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:5000'],
             'portfolio_url' => ['nullable', 'url', 'max:255'],

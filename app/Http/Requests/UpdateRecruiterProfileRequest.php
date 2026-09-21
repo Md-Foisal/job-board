@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\ImageUploads;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRecruiterProfileRequest extends FormRequest
@@ -21,7 +22,7 @@ class UpdateRecruiterProfileRequest extends FormRequest
         return [
             'display_name' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:2000'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
+            'avatar' => ['nullable', ...ImageUploads::rules(2048)],
         ];
     }
 }

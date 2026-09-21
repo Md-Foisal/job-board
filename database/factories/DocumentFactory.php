@@ -14,14 +14,25 @@ class DocumentFactory extends Factory
 {
     public function definition(): array
     {
-        $type = fake()->randomElement(DocumentType::cases());
-        $extension = $type === DocumentType::Cv ? 'pdf' : fake()->randomElement(['pdf', 'jpg', 'png']);
-
         return [
             'candidate_profile_id' => CandidateProfile::factory(),
-            'document_type' => $type,
-            'file_path' => 'documents/'.fake()->uuid().'.'.$extension,
-            'original_filename' => fake()->slug().'.'.$extension,
+            'document_type' => fake()->randomElement(DocumentType::cases()),
+            // Derived from the type actually given, so a test that asks for
+            // a CV gets a CV's file name rather than a random picture's.
+            'file_path' => fn (array $attributes) => 'documents/'.fake()->uuid().'.'.self::extensionFor($attributes['document_type']),
+            'original_filename' => fn (array $attributes) => fake()->slug().'.'.self::extensionFor($attributes['document_type']),
         ];
+    }
+
+    /**
+     * An extension the upload rules would accept for this kind of document.
+     */
+    private static function extensionFor(DocumentType|string $type): string
+    {
+        return match (DocumentType::from($type instanceof DocumentType ? $type->value : $type)) {
+            DocumentType::Cv => 'pdf',
+            DocumentType::WorkSample => 'png',
+            DocumentType::Certificate => 'pdf',
+        };
     }
 }
