@@ -46,6 +46,14 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'role' => ['required', 'in:candidate,employer'],
+        ], [
+            // An address is taken while its account is deleted but still
+            // restorable, and a returning person would otherwise not know
+            // signing in brings it back. Said for every taken address, so
+            // it reveals nothing about whether this one was deleted.
+            'email.unique' => __('An account already uses this email. If it is yours — even one you deleted in the last :days days — sign in instead.', [
+                'days' => User::DELETION_GRACE_DAYS,
+            ]),
         ])->validate();
 
         $user = User::create([

@@ -35,6 +35,29 @@ new class extends Component {
             return;
         }
 
+        // Nor may the last owner walk out on a team: the others would be
+        // left with a company nobody can run -- the rule the team page
+        // already applies to removing them (Membership::isLastActiveOwner).
+        // Someone alone in their company can go; there is no one to hand
+        // it to.
+        $stranded = $user->memberships()
+            ->where('status', \App\Enums\MembershipStatus::Active)
+            ->with('company')
+            ->get()
+            ->first(fn ($membership) => $membership->isLastActiveOwner()
+                && $membership->company->memberships()
+                    ->where('status', \App\Enums\MembershipStatus::Active)
+                    ->whereKeyNot($membership->id)
+                    ->exists());
+
+        if ($stranded) {
+            $this->addError('password', __('You are the only owner of :company. Make someone else an owner from its team page before deleting your account.', [
+                'company' => $stranded->company->name,
+            ]));
+
+            return;
+        }
+
         tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
