@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\JobAlertUnsubscribeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
@@ -40,6 +41,16 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
+
+// Job alert unsubscribe (claude/14 route 45): no sign-in, the signature is
+// the proof. POST is the one-click request a mail client sends, so it is
+// kept out of CSRF checks in bootstrap/app.php -- it carries no session.
+Route::middleware('signed')->group(function () {
+    Route::get('/job-alerts/{jobAlert}/unsubscribe', [JobAlertUnsubscribeController::class, 'show'])
+        ->whereNumber('jobAlert')->name('job-alerts.unsubscribe');
+    Route::post('/job-alerts/{jobAlert}/unsubscribe', [JobAlertUnsubscribeController::class, 'store'])
+        ->whereNumber('jobAlert')->name('job-alerts.unsubscribe.store');
+});
 
 Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
     Route::get('/dashboard', [CandidateDashboardController::class, 'index'])->name('dashboard');

@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The one-click unsubscribe POST comes from a mail client, with no
+        // session and so no token; its signed URL is what protects it.
+        $middleware->preventRequestForgery(except: [
+            'job-alerts/*/unsubscribe',
+        ]);
+
         $middleware->web(append: [
             EnsureAccountIsActive::class,
         ]);

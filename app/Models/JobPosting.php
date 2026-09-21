@@ -77,6 +77,14 @@ class JobPosting extends Model
     }
 
     /**
+     * Alerts that have already emailed this posting.
+     */
+    public function jobAlerts()
+    {
+        return $this->belongsToMany(JobAlert::class, 'job_alert_job_posting')->withTimestamps();
+    }
+
+    /**
      * Publicly visible: availability_status active, moderation approved,
      * not expired, not held back by open reports, and from a company the
      * public can see.
