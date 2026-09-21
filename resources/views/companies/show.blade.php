@@ -49,9 +49,7 @@
                         <h1 class="text-balance font-display text-3xl font-bold text-zinc-900 dark:text-zinc-50">{{ $company->name }}</h1>
 
                         @if ($company->verified_at)
-                            <span class="inline-flex items-center text-brand-600 dark:text-brand-400" title="Verified company">
-                                <flux:icon.check-badge variant="mini" class="inline size-5" />
-                            </span>
+                            <x-verified-badge size="lg" />
                         @endif
                     </div>
 

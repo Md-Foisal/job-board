@@ -19,6 +19,8 @@ class DatabaseSeeder extends Seeder
             CompanySeeder::class,
             JobPostingSeeder::class,
             ApplicationSeeder::class,
+            DemoAccountsSeeder::class,
+            ModerationSeeder::class,
         ]);
 
         User::factory()->create([

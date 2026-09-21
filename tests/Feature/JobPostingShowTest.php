@@ -16,7 +16,7 @@ test('guest cannot view a draft job posting', function () {
 
     $response = $this->get(route('jobs.show', $job));
 
-    $response->assertForbidden();
+    $response->assertNotFound();
 });
 
 test('guest cannot view a job posting pending moderation', function () {
@@ -24,7 +24,7 @@ test('guest cannot view a job posting pending moderation', function () {
 
     $response = $this->get(route('jobs.show', $job));
 
-    $response->assertForbidden();
+    $response->assertNotFound();
 });
 
 test('a company member can preview their own draft job posting', function () {
@@ -42,7 +42,7 @@ test('a company member from a different company cannot preview a draft job posti
 
     $response = $this->actingAs($outsider)->get(route('jobs.show', $job));
 
-    $response->assertForbidden();
+    $response->assertNotFound();
 });
 
 test('the breadcrumb marks the current page rather than linking it', function () {

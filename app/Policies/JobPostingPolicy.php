@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class JobPostingPolicy
 {
@@ -19,17 +20,22 @@ class JobPostingPolicy
 
     /**
      * Whether the user can view this job posting. A publicly visible
-     * posting (approved, active, unexpired, company in good standing) is
-     * open to guests too -- hence the nullable $user. Anyone else needs
-     * to be a member of the owning company (e.g. to preview a draft).
+     * posting (approved, active, unexpired, not hidden by reports, company
+     * in good standing) is open to guests too -- hence the nullable $user.
+     * Anyone else needs to be a member of the owning company (e.g. to
+     * preview a draft).
+     *
+     * Everyone else gets a 404, not a 403: a 403 confirms the posting
+     * exists, and Google asks for a 404 or 410 once a job is gone so it
+     * drops out of job search. It also matches the company profile.
      */
-    public function view(?User $user, JobPosting $jobPosting): bool
+    public function view(?User $user, JobPosting $jobPosting): Response
     {
-        if ($jobPosting->isPubliclyVisible()) {
-            return true;
+        if ($jobPosting->isPubliclyVisible() || ($user !== null && $user->worksAt($jobPosting->company))) {
+            return Response::allow();
         }
 
-        return $user !== null && $user->worksAt($jobPosting->company);
+        return Response::denyAsNotFound();
     }
 
     /**
@@ -84,5 +90,20 @@ class JobPostingPolicy
     public function duplicate(User $user, JobPosting $jobPosting): bool
     {
         return $user->canManage($jobPosting->company);
+    }
+
+    /**
+     * Platform-side review of a posting: approve or reject it.
+     *
+     * Staff recuse themselves from their own employer's postings. This is
+     * the admin-side twin of the self-apply block -- the same conflict of
+     * interest, seen from the other end. Recusal is not a formality here:
+     * a moderator who works for a company could wave its postings past
+     * the queue that exists to catch them.
+     */
+    public function moderate(User $user, JobPosting $jobPosting): bool
+    {
+        return $user->isActiveStaff()
+            && ! $user->worksAt($jobPosting->company);
     }
 }

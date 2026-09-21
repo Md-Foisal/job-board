@@ -24,7 +24,7 @@ class DuplicateJobPosting
     {
         return DB::transaction(function () use ($original, $duplicatedBy) {
             $copy = $original->replicate([
-                'slug', 'availability_status', 'moderation_status', 'published_at',
+                'slug', 'availability_status', 'moderation_status', 'published_at', 'submitted_at',
             ]);
 
             $copy->title = $original->title.' (copy)';
@@ -33,6 +33,7 @@ class DuplicateJobPosting
             $copy->availability_status = AvailabilityStatus::Draft;
             $copy->moderation_status = ModerationStatus::Pending;
             $copy->published_at = null;
+            $copy->submitted_at = null;
             $copy->expires_at = now()->addMonth();
             $copy->save();
 

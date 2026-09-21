@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
-// Static guest pages (claude/14 route ১০). Route::view, not a
+// Static guest pages. Route::view, not a
 // controller: there is no data to fetch, and they are linked from
 // Shell A's footer and listed in the sitemap.
 Route::view('/about', 'static.about')->name('about');
@@ -28,7 +28,7 @@ Route::view('/privacy', 'static.privacy')->name('privacy');
 Route::view('/terms', 'static.terms')->name('terms');
 
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
-Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
+Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show')->withTrashed();
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
 /*
  * Registered ahead of the public slug route below: '/companies/create'
@@ -59,7 +59,6 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // Experience records: same CRUD-in-modal pattern as Education (claude/14 step 3b)
     Route::livewire('/experience', 'pages::candidate.experience')->name('experience.index');
 
-
     // Document library: same CRUD-in-modal pattern, plus a plain Policy-gated
     // download route (claude/14 step 7 security fix -- a private-disk file must
     // be served through an owner-only check, never a guessable public URL).
@@ -80,7 +79,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // so no Livewire reactivity is needed.
     Route::get('/applications', [CandidateApplicationController::class, 'index'])->name('applications.index');
 
-    // The application's own timeline (claude/14 route ২০) -- the
+    // The application's own timeline -- the
     // ghosting-killer page. withdraw is a PATCH on the same record
     // rather than its own resource: it flips one field on the
     // application and appends an ApplicationEvent.
@@ -94,25 +93,28 @@ Route::middleware(['auth', 'candidate'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Candidates have a real dashboard at candidate.dashboard (claude/14
-    // route ১১); this generic /dashboard stays the Fortify post-login
-    // 'home' target (config/fortify.php) and the target every existing
-    // "Dashboard" link (navbar, sidebar Platform group) already points at,
-    // so it dispatches instead of duplicating those links per role.
-    // Employer/admin have no dashboard of their own yet, so they still get
-    // the starter-kit placeholder until that's built.
+    // /dashboard is the Fortify post-login 'home' target
+    // (config/fortify.php) and where every "Dashboard" link (navbar,
+    // sidebar Platform group) points, so it sends each person to their
+    // own workspace instead of duplicating those links per role.
     Route::get('dashboard', function () {
         $user = auth()->user();
+
+        // Staff sign in through the same login as everyone else; their
+        // work is in the admin panel, not on a placeholder page.
+        if ($user->isActiveStaff()) {
+            return redirect()->to(filament()->getPanel('admin')->getUrl());
+        }
 
         if ($user->isCandidate()) {
             return redirect()->route('candidate.dashboard');
         }
 
         // Someone who works at a company has a real workspace to land in,
-        // so skip the placeholder. Anyone else -- staff, or an account
-        // with neither side set up yet -- still gets it; a fresh employer
-        // registration is sent straight to company setup at the moment of
-        // registering, where the intent is actually known.
+        // so skip the placeholder. An account with neither side set up yet
+        // still gets it; a fresh employer registration is sent straight to
+        // company setup at the moment of registering, where the intent is
+        // actually known.
         $company = $user->activeCompanies()->first();
 
         return $company

@@ -80,6 +80,10 @@ new #[Title('Security settings')] class extends Component {
      */
     public function disable(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
     {
+        // Staff must keep two-factor on: the admin panel refuses them
+        // without it, so switching it off would only lock them out.
+        abort_if(auth()->user()->isStaff(), 403);
+
         $disableTwoFactorAuthentication(auth()->user());
 
         $this->twoFactorEnabled = false;
@@ -130,6 +134,13 @@ new #[Title('Security settings')] class extends Component {
                 <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
                 <flux:subheading>{{ __('Manage your two-factor authentication settings') }}</flux:subheading>
 
+                @if (auth()->user()->isStaff() && ! $twoFactorEnabled)
+                    <flux:callout variant="warning" icon="shield-exclamation" class="mt-4">
+                        <flux:callout.heading>{{ __('Required for staff accounts') }}</flux:callout.heading>
+                        <flux:callout.text>{{ __('Your account can take moderation actions, so the admin panel stays closed until two-factor authentication is set up.') }}</flux:callout.text>
+                    </flux:callout>
+                @endif
+
                 <div class="mt-4 flex w-full flex-col space-y-6 rounded-xl border border-zinc-200 bg-white p-6 text-sm dark:border-zinc-800 dark:bg-zinc-900" wire:cloak>
                     @if ($twoFactorEnabled)
                         <div class="space-y-4">
@@ -137,14 +148,20 @@ new #[Title('Security settings')] class extends Component {
                                 {{ __('You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.') }}
                             </flux:text>
 
-                            <div class="flex justify-start">
-                                <flux:button
-                                    variant="danger"
-                                    wire:click="disable"
-                                >
-                                    {{ __('Disable 2FA') }}
-                                </flux:button>
-                            </div>
+                            @if (auth()->user()->isStaff())
+                                <flux:text class="text-zinc-500">
+                                    {{ __('Two-factor authentication cannot be switched off on a staff account.') }}
+                                </flux:text>
+                            @else
+                                <div class="flex justify-start">
+                                    <flux:button
+                                        variant="danger"
+                                        wire:click="disable"
+                                    >
+                                        {{ __('Disable 2FA') }}
+                                    </flux:button>
+                                </div>
+                            @endif
 
                             <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
                         </div>

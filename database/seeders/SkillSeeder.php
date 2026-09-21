@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Skill;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-
-use App\Models\Skill;
 
 class SkillSeeder extends Seeder
 {
@@ -16,18 +14,18 @@ class SkillSeeder extends Seeder
     public function run(): void
     {
         $skills = [
-            'Laravel', 
-            'PHP', 
-            'JavaScript', 
-            'React', 
-            'Vue.js', 
-            'Python', 
-            'MySQL', 
-            'HTML', 
-            'CSS', 
-            'Git', 
-            'Node.js', 
-            'TypeScript'
+            'Laravel',
+            'PHP',
+            'JavaScript',
+            'React',
+            'Vue.js',
+            'Python',
+            'MySQL',
+            'HTML',
+            'CSS',
+            'Git',
+            'Node.js',
+            'TypeScript',
         ];
 
         foreach ($skills as $name) {

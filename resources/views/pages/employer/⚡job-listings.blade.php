@@ -3,8 +3,10 @@
 use App\Actions\DuplicateJobPosting;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
+use App\Enums\ReportStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -28,7 +30,11 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             ->withCount([
                 'applications',
                 'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'reports as open_reporters_count' => fn ($query) => $query
+                    ->where('review_status', ReportStatus::Pending)
+                    ->select(DB::raw('count(distinct reporter_id)')),
             ])
+            ->with('latestRejection')
             ->latest()
             ->get();
     }
@@ -152,20 +158,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                 </div>
                             </td>
                             <td class="px-5 py-4">
-                                <flux:badge :color="$jobPosting->availability_status === AvailabilityStatus::Active ? 'green' : 'zinc'">
-                                    {{ $jobPosting->availability_status->label() }}
-                                </flux:badge>
-
-                                {{-- Not on a draft. Moderation starts when a
-                                     posting is submitted, so telling someone
-                                     their unpublished draft is "pending
-                                     review" claims a queue it was never put
-                                     in, and makes the wait look longer than
-                                     it is. --}}
-                                @if ($jobPosting->availability_status !== AvailabilityStatus::Draft
-                                    && $jobPosting->moderation_status !== \App\Enums\ModerationStatus::Approved)
-                                    <flux:badge color="yellow">{{ $jobPosting->moderation_status->label() }}</flux:badge>
-                                @endif
+                                <x-posting-status :job-posting="$jobPosting" />
                             </td>
                             <td class="px-5 py-4 text-end tabular-nums">
                                 <a

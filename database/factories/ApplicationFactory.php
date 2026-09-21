@@ -5,13 +5,14 @@ namespace Database\Factories;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\DocumentType;
+use App\Models\Application;
 use App\Models\CandidateProfile;
 use App\Models\Document;
 use App\Models\JobPosting;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Application>
+ * @extends Factory<Application>
  */
 class ApplicationFactory extends Factory
 {

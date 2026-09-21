@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
 use App\Models\Category;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
@@ -16,12 +14,12 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Engineering', 
-            'Information Technology', 
-            'Marketing', 
-            'Design', 
-            'Finance', 
-            'Sales'
+            'Engineering',
+            'Information Technology',
+            'Marketing',
+            'Design',
+            'Finance',
+            'Sales',
         ];
 
         foreach ($categories as $name) {

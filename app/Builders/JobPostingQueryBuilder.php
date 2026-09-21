@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 class JobPostingQueryBuilder extends Builder
 {
     /**
-     * শুধু ঐ job posting গুলো, যেগুলোর required skill-এর মধ্যে এই skill আছে।
+     * Only postings that list this skill.
      */
     public function skill(int $skillId): self
     {
@@ -19,7 +19,7 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * শুধু ঐ job posting গুলো, যেগুলো এই category-তে আছে।
+     * Only postings in this category.
      */
     public function category(int $categoryId): self
     {
@@ -29,8 +29,8 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * Candidate-এর দেওয়া salary range-এর সাথে job posting-এর
-     * (monthly-normalized) salary range-এর overlap আছে কিনা।
+     * Postings whose monthly-normalised pay range overlaps the range the
+     * candidate asked for.
      */
     public function salaryBetween(?int $min, ?int $max): self
     {
@@ -46,7 +46,7 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * শিরোনামে (title) free-text keyword খোঁজা -- candidate-facing search box-এর জন্য।
+     * Free-text match on the title, for the candidate-facing search box.
      */
     public function keyword(string $term): self
     {
@@ -54,7 +54,7 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * City name দিয়ে partial-match filter (case-insensitive, DB collation অনুযায়ী)।
+     * Partial match on city name; case sensitivity follows the database collation.
      */
     public function location(string $city): self
     {
@@ -78,7 +78,7 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * Candidate-এর experience ($years বছর) posting-এর ন্যূনতম চাহিদা পূরণ করে কিনা।
+     * Postings whose minimum experience a candidate with $years years meets.
      */
     public function experience(int $years): self
     {

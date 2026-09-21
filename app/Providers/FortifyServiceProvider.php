@@ -4,11 +4,18 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Enums\AccountStatus;
+use App\Http\Middleware\EnsureAccountIsActive;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
@@ -20,6 +27,9 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->bindRegisterResponse();
+
+        $this->app->bind(DisableTwoFactorAuthentication::class, \App\Actions\Fortify\DisableTwoFactorAuthentication::class);
+        $this->app->bind(EnableTwoFactorAuthentication::class, \App\Actions\Fortify\EnableTwoFactorAuthentication::class);
     }
 
     /**
@@ -76,6 +86,26 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
         Fortify::createUsersUsing(CreateNewUser::class);
+
+        // Fortify's own credential check, plus one refusal: a suspended
+        // account. The suspension is only revealed after the password has
+        // been checked, so the message tells nobody anything about an
+        // account they could not have signed in to anyway.
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where(Fortify::username(), $request->input(Fortify::username()))->first();
+
+            if ($user === null || ! Hash::check($request->input('password'), $user->password)) {
+                return null;
+            }
+
+            if ($user->account_status !== AccountStatus::Active) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => EnsureAccountIsActive::MESSAGE,
+                ]);
+            }
+
+            return $user;
+        });
     }
 
     /**

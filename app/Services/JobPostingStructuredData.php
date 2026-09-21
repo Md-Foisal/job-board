@@ -171,7 +171,7 @@ class JobPostingStructuredData
      */
     private function baseSalary(JobPosting $jobPosting): ?array
     {
-        if (!$jobPosting->salary_currency || !$jobPosting->salary_period) {
+        if (! $jobPosting->salary_currency || ! $jobPosting->salary_period) {
             return null;
         }
 

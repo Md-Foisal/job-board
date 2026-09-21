@@ -25,13 +25,12 @@ class CandidateApplicationController extends Controller
     }
 
     /**
-     * The candidate's own application timeline (claude/14 route ২০) --
+     * The candidate's own application timeline --
      * this is the ghosting-killer: every stage and outcome change the
      * employer made is visible here, in order, instead of the silence
      * that 61% of candidates report.
      *
-     * changedBy is deliberately NOT eager-loaded. claude/14 step 6-খ
-     * settled that the candidate never sees which individual staff
+     * changedBy is deliberately NOT eager-loaded. It is settled that the candidate never sees which individual staff
      * member touched their application, only the company -- not
      * loading the relation at all is a stronger guarantee than
      * remembering not to print it.

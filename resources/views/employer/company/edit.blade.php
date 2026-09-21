@@ -11,10 +11,23 @@
                  been asked for documents otherwise has no way of knowing. --}}
             @if ($company->verified_at)
                 <flux:badge color="green">{{ __('Verified') }}</flux:badge>
+            @elseif ($company->outstandingDocumentsRequest())
+                <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
             @else
                 <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
             @endif
         </div>
+
+        @if ($documentsRequest = $company->outstandingDocumentsRequest())
+            <flux:callout icon="document-text" color="amber">
+                <flux:callout.heading>{{ __('Documents requested') }}</flux:callout.heading>
+                <flux:callout.text>
+                    {{ __('Our team needs more before verifying :company:', ['company' => $company->name]) }}
+                    <span class="mt-2 block whitespace-pre-line">{{ $documentsRequest }}</span>
+                    <span class="mt-2 block">{{ __('Reply to the email we sent with what was asked for.') }}</span>
+                </flux:callout.text>
+            </flux:callout>
+        @endif
 
         <form method="POST" action="{{ route('employer.company.update', $company) }}" enctype="multipart/form-data" class="flex flex-col gap-8">
             @csrf

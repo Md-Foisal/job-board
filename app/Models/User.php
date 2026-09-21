@@ -3,33 +3,41 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\AccountStatus;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
+use App\Enums\StaffRole;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-use App\Models\Company;
-use App\Models\Membership;
-use App\Models\Invitation;
-use App\Models\JobPosting;
-use App\Models\Application;
-use App\Models\CandidateProfile;
-use App\Enums\MembershipRole;
-use App\Enums\MembershipStatus;
-use App\Enums\AccountStatus;
-use App\Enums\StaffRole;
 
 #[Fillable(['name', 'email', 'password', 'avatar'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+
+    /**
+     * Mirrors the database defaults so a freshly created record already
+     * knows them. Without this the column is simply absent until the row
+     * is read back, and every check against it quietly sees null --
+     * a gap preventAccessingMissingAttributes does not close, because it
+     * deliberately stays silent on recently created models.
+     */
+    protected $attributes = [
+        'account_status' => AccountStatus::Active->value,
+        'staff_role' => null,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -155,10 +163,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Whether this user can make ownership-level decisions for the
-     * given company (owner/manager) — a plain member cannot.
-     */
-    /**
      * This user's role at the given company, or null if they do not
      * currently work there. Unlike canManage() this answers "what am I",
      * which is what ranking one person against another needs.
@@ -171,6 +175,10 @@ class User extends Authenticatable
             ->first()?->role;
     }
 
+    /**
+     * Whether this user can make ownership-level decisions for the
+     * given company (owner/manager) — a plain member cannot.
+     */
     public function canManage(Company $company): bool
     {
         return $this->memberships()
@@ -178,5 +186,62 @@ class User extends Authenticatable
             ->where('status', MembershipStatus::Active)
             ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
             ->exists();
+    }
+
+    /**
+     * Unlike "candidate" and "employer", staff standing is stored rather
+     * than derived: it is granted by the platform, not by anything the
+     * user does. A null staff_role means no platform role at all.
+     */
+    public function isStaff(): bool
+    {
+        return $this->staff_role !== null;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->staff_role === StaffRole::SuperAdmin;
+    }
+
+    /**
+     * Staff standing alone is not enough to act: a suspended account
+     * loses its platform powers immediately, without its staff_role
+     * having to be cleared as well. Every moderation policy asks this
+     * question, so it is defined once, here.
+     */
+    public function isActiveStaff(): bool
+    {
+        return $this->isStaff()
+            && $this->account_status === AccountStatus::Active;
+    }
+
+    /**
+     * Staff who can act on a queue right now: not suspended, and with the
+     * two-factor setup the panel demands, so nobody is told about work they
+     * cannot get to.
+     */
+    public function scopeActiveStaff(Builder $query): Builder
+    {
+        return $query->whereNotNull('staff_role')
+            ->where('account_status', AccountStatus::Active)
+            ->whereNotNull('two_factor_confirmed_at');
+    }
+
+    /**
+     * Gate for the Filament admin panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isActiveStaff();
+    }
+
+    /**
+     * Moderation decisions taken against this user (suspension and the
+     * like) -- not the ones they took as staff, which are the events
+     * whose admin_id is theirs.
+     */
+    public function moderationEvents()
+    {
+        return $this->morphMany(ModerationEvent::class, 'subject');
     }
 }

@@ -10,27 +10,6 @@ use App\Models\JobPosting;
 use App\Models\Skill;
 use Livewire\Livewire;
 
-function jobFormPayload(array $overrides = []): array
-{
-    return array_merge([
-        'title' => 'Senior Laravel Developer',
-        'description' => 'Build and maintain our hiring platform.',
-        'employmentType' => 'full-time',
-        'workplaceType' => 'remote',
-        'locationCountry' => 'Bangladesh',
-        'expiresAt' => now()->addMonth()->toDateString(),
-    ], $overrides);
-}
-
-function fillJobForm($component, array $overrides = [])
-{
-    foreach (jobFormPayload($overrides) as $field => $value) {
-        $component->set($field, $value);
-    }
-
-    return $component;
-}
-
 test('a plain member cannot open the posting form', function () {
     $company = Company::factory()->create();
 

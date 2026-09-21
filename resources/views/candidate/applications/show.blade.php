@@ -35,8 +35,8 @@
 
         {{-- The timeline always has at least one entry: the application
              itself. Employer-side entries name the company, never the
-             individual staff member who made the change (claude/14
-             step ৬-খ -- the candidate has no business knowing which
+             individual staff member who made the change -- the
+             candidate has no business knowing which
              person opened their CV). --}}
         <ol class="relative border-s border-zinc-200 dark:border-zinc-800">
             <x-timeline-item :label="__('You applied')" :at="$application->created_at" highlight />
@@ -80,8 +80,8 @@
             </div>
 
             {{-- A plain form post, not Livewire: withdrawing is one
-                 isolated action on an otherwise static page (claude/14
-                 route ২০'s own Blade-vs-Livewire reasoning). The modal
+                 isolated action on an otherwise static page, which has no
+                 other reason to be a Livewire component. The modal
                  is Flux's name-based one so an irreversible action
                  still asks first. --}}
             <flux:modal name="withdraw-application" class="max-w-md">

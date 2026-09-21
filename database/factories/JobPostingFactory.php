@@ -51,7 +51,9 @@ class JobPostingFactory extends Factory
             'company_id' => Company::factory(),
             'posted_by_id' => User::factory(),
             'title' => $title,
-            'slug' => Str::slug($title).'-'.$this->faker->unique()->numberBetween(1000, 999999),
+            // Built from the final title, so a posting created with its own
+            // title still gets an address that matches it.
+            'slug' => fn (array $attributes) => Str::slug($attributes['title']).'-'.$this->faker->unique()->numberBetween(1000, 999999),
             'description' => $this->faker->paragraphs(3, true),
             'employment_type' => $this->faker->randomElement(EmploymentType::cases()),
             'workplace_type' => $this->faker->randomElement(WorkplaceType::cases()),
@@ -76,6 +78,9 @@ class JobPostingFactory extends Factory
 
     public function pendingModeration(): static
     {
-        return $this->state(['moderation_status' => ModerationStatus::Pending]);
+        return $this->state([
+            'moderation_status' => ModerationStatus::Pending,
+            'submitted_at' => now(),
+        ]);
     }
 }

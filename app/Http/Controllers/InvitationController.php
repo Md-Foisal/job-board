@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Actions\AcceptInvitation;
 use App\Enums\InvitationStatus;
 use App\Models\Invitation;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 

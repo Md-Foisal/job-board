@@ -2,9 +2,11 @@
 
 namespace App\Policies;
 
+use App\Enums\ApplicationOutcomeStatus;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class ApplicationPolicy
 {
@@ -14,21 +16,23 @@ class ApplicationPolicy
      * must not work at the posting company (self-apply block --
      * conflict-of-interest), and they must not have already applied.
      */
-    public function create(User $user, JobPosting $jobPosting): bool
+    public function create(User $user, JobPosting $jobPosting): bool|Response
     {
-        if (!$user->isCandidate()) {
+        if (! $user->isCandidate()) {
             return false;
         }
 
-        if (!$jobPosting->isPubliclyVisible()) {
-            return false;
+        // The same answer the posting's own page gives: saying "forbidden"
+        // here would confirm a hidden posting exists.
+        if (! $jobPosting->isPubliclyVisible()) {
+            return Response::denyAsNotFound();
         }
 
         if ($user->worksAt($jobPosting->company)) {
             return false;
         }
 
-        return !Application::query()
+        return ! Application::query()
             ->where('job_posting_id', $jobPosting->id)
             ->where('candidate_profile_id', $user->candidateProfile->id)
             ->exists();
@@ -95,6 +99,6 @@ class ApplicationPolicy
     public function withdraw(User $user, Application $application): bool
     {
         return $this->view($user, $application)
-            && $application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active;
+            && $application->outcome_status === ApplicationOutcomeStatus::Active;
     }
 }

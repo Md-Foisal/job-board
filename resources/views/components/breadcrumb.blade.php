@@ -1,6 +1,6 @@
 {{--
-    The Breadcrumb molecule from claude/14 step ৩-খ, and the Supplemental
-    navigation level from step ২-ঙ ("Home > Category > Job").
+    The breadcrumb trail for guest pages: the supplemental navigation
+    level ("Home > Category > Job").
 
     It was hand-written inline on each page before this component existed,
     which meant a change to the separator -- or adding the aria markup a

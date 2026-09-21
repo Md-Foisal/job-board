@@ -2,26 +2,21 @@
 
 namespace App\Models;
 
-use App\Casts\SanitizedHtml;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use \Illuminate\Database\Eloquent\Builder;
 use App\Builders\JobPostingQueryBuilder;
-
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Application;
-use App\Models\Category;
-use App\Models\Skill;
-use App\Models\Pivots\JobPostingSkillPivot;
-use App\Enums\EmploymentType;
-use App\Enums\WorkplaceType;
-use App\Enums\SalaryPeriod;
-use App\Enums\AvailabilityStatus;
-use App\Enums\ModerationStatus;
+use App\Casts\SanitizedHtml;
 use App\Enums\AccountStatus;
-
+use App\Enums\AvailabilityStatus;
+use App\Enums\EmploymentType;
+use App\Enums\ModerationAction;
+use App\Enums\ModerationStatus;
+use App\Enums\SalaryPeriod;
+use App\Enums\WorkplaceType;
+use App\Models\Concerns\HiddenWhileReported;
+use App\Models\Pivots\JobPostingSkillPivot;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
     'company_id', 'posted_by_id', 'title', 'slug', 'description',
@@ -31,7 +26,7 @@ use App\Enums\AccountStatus;
 ])]
 class JobPosting extends Model
 {
-    use HasFactory;
+    use HasFactory, HiddenWhileReported;
 
     protected function casts(): array
     {
@@ -39,6 +34,7 @@ class JobPosting extends Model
             'description' => SanitizedHtml::class,
             'expires_at' => 'datetime',
             'published_at' => 'datetime',
+            'submitted_at' => 'datetime',
             'salary_min' => 'integer',
             'salary_max' => 'integer',
             'min_experience_years' => 'integer',
@@ -82,31 +78,34 @@ class JobPosting extends Model
 
     /**
      * Publicly visible: availability_status active, moderation approved,
-     * not expired, and the owning company's own account not suspended.
+     * not expired, not held back by open reports, and from a company the
+     * public can see.
      */
     public function scopeActive(Builder $query)
     {
         return $query->where('availability_status', AvailabilityStatus::Active)
             ->where('moderation_status', ModerationStatus::Approved)
             ->where('expires_at', '>', now())
+            ->notHiddenByReports()
             ->fromActiveCompanies();
     }
 
     /**
-     * Exclude job postings whose owning company has been suspended.
+     * Exclude job postings whose company is suspended or itself hidden
+     * while reports about it are reviewed.
      */
     public function scopeFromActiveCompanies(Builder $query)
     {
         return $query->whereHas('company', function (Builder $q) {
-            $q->where('account_status', AccountStatus::Active);
+            $q->where('account_status', AccountStatus::Active)->notHiddenByReports();
         });
     }
 
     /**
-     * Default Eloquent Builder-এর বদলে JobPostingQueryBuilder ব্যবহার হবে,
-     * যাতে JobPosting::query()->skill($id)->salaryBetween($min, $max)...
-     * এভাবে filter/sort chain করা যায় (multi-parameter filtering এখানে,
-     * single-purpose scope মডেলেই থাকছে)।
+     * Multi-parameter filtering and sorting live in JobPostingQueryBuilder
+     * (JobPosting::query()->skill($id)->salaryBetween($min, $max)...), so
+     * they do not pile up here as scopes; single-purpose scopes stay on
+     * the model.
      */
     public function newEloquentBuilder($query): JobPostingQueryBuilder
     {
@@ -120,7 +119,7 @@ class JobPosting extends Model
 
     public function isOpen(): bool
     {
-        return $this->availability_status === AvailabilityStatus::Active && !$this->isExpired();
+        return $this->availability_status === AvailabilityStatus::Active && ! $this->isExpired();
     }
 
     /**
@@ -132,7 +131,8 @@ class JobPosting extends Model
     {
         return $this->moderation_status === ModerationStatus::Approved
             && $this->isOpen()
-            && $this->company->account_status === AccountStatus::Active;
+            && $this->company->isPubliclyVisible()
+            && ! $this->isHiddenByReports();
     }
 
     public function company()
@@ -173,5 +173,24 @@ class JobPosting extends Model
     public function jobViews()
     {
         return $this->hasMany(JobView::class);
+    }
+
+    /**
+     * Moderation decisions taken against this record.
+     */
+    public function moderationEvents()
+    {
+        return $this->morphMany(ModerationEvent::class, 'subject');
+    }
+
+    /**
+     * The most recent rejection, which carries the reason the employer
+     * needs to fix. Filtered by action because dismissing later reports
+     * also writes to this posting's trail, and that note is not the reason.
+     */
+    public function latestRejection()
+    {
+        return $this->morphOne(ModerationEvent::class, 'subject')
+            ->ofMany(['id' => 'max'], fn ($query) => $query->where('action', ModerationAction::RejectJobPosting));
     }
 }

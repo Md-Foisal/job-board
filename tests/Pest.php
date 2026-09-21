@@ -1,5 +1,11 @@
 <?php
 
+use App\Enums\MembershipRole;
+use App\Enums\StaffRole;
+use App\Models\CandidateProfile;
+use App\Models\Company;
+use App\Models\Membership;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +21,7 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -49,22 +55,61 @@ function something()
     // ..
 }
 
-function candidateUser(): \App\Models\User
+function candidateUser(): User
 {
-    $user = \App\Models\User::factory()->create();
-    \App\Models\CandidateProfile::factory()->for($user)->create();
+    $user = User::factory()->create();
+    CandidateProfile::factory()->for($user)->create();
 
     return $user;
 }
 
-function employerUser(?\App\Models\Company $company = null, \App\Enums\MembershipRole $role = \App\Enums\MembershipRole::Member): \App\Models\User
+function employerUser(?Company $company = null, MembershipRole $role = MembershipRole::Member): User
 {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
 
-    \App\Models\Membership::factory()
+    Membership::factory()
         ->for($user)
-        ->for($company ?? \App\Models\Company::factory()->create())
+        ->for($company ?? Company::factory()->create())
         ->create(['role' => $role]);
 
     return $user;
+}
+
+function staffUser(StaffRole $role = StaffRole::Moderator): User
+{
+    return User::factory()->create(['staff_role' => $role]);
+}
+
+/**
+ * A staff member who can actually get into the admin panel, which
+ * refuses anyone without two-factor authentication.
+ */
+function staffWithTwoFactor(StaffRole $role = StaffRole::Moderator): User
+{
+    return User::factory()->withTwoFactor()->create(['staff_role' => $role]);
+}
+
+/**
+ * The smallest job form that passes validation, for tests that need a
+ * posting saved through the employer's own screen.
+ */
+function jobFormPayload(array $overrides = []): array
+{
+    return array_merge([
+        'title' => 'Senior Laravel Developer',
+        'description' => 'Build and maintain our hiring platform.',
+        'employmentType' => 'full-time',
+        'workplaceType' => 'remote',
+        'locationCountry' => 'Bangladesh',
+        'expiresAt' => now()->addMonth()->toDateString(),
+    ], $overrides);
+}
+
+function fillJobForm($component, array $overrides = [])
+{
+    foreach (jobFormPayload($overrides) as $field => $value) {
+        $component->set($field, $value);
+    }
+
+    return $component;
 }

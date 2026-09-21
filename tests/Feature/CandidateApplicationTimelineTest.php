@@ -98,7 +98,7 @@ test('the timeline names the company, never the staff member who made the change
 
     $response->assertOk();
     $response->assertSee('Acme Ltd marked this application as Rejected');
-    // claude/14 step ৬-খ: the candidate has no business knowing which
+    // The candidate has no business knowing which
     // individual read their application.
     $response->assertDontSee('Nadia Karim');
 });

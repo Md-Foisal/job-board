@@ -15,7 +15,7 @@ enum ModerationStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Pending => 'Pending Review',
+            self::Pending => 'In review',
             self::Approved => 'Approved',
             self::Rejected => 'Rejected',
         };

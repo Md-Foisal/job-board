@@ -2,79 +2,103 @@
 
 namespace App\Livewire;
 
-use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
-use App\Models\JobPosting;
-use App\Models\Report;
+use App\Models\Company;
+use Flux\Flux;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 /**
- * Isolated "report this" action, embedded on job detail (and, once that
- * page exists, company profile) -- a small modal form rather than a
- * dedicated page, per the established page inventory (Report has no
- * page of its own).
+ * Isolated "report this" action, embedded on job detail and company
+ * profile -- a small modal form rather than a dedicated page, per the
+ * established page inventory (Report has no page of its own).
  */
 class ReportButton extends Component
 {
+    public const REPORTS_PER_HOUR = 10;
+
     public Model $reportable;
 
     public string $reason = '';
-
-    public bool $submitted = false;
-
-    protected array $reasons = [
-        'spam' => 'Spam or fake listing',
-        'scam' => 'Scam or fraud',
-        'inappropriate' => 'Inappropriate content',
-        'other' => 'Other',
-    ];
 
     public function mount(Model $reportable): void
     {
         $this->reportable = $reportable;
     }
 
+    /**
+     * Worded to fit a company as well as a posting: the same button sits
+     * on both pages.
+     */
     public function getReasonsProperty(): array
     {
-        return $this->reasons;
+        return [
+            'spam' => __('Spam or fake'),
+            'scam' => __('Scam or fraud'),
+            'inappropriate' => __('Inappropriate content'),
+            'other' => __('Other'),
+        ];
     }
 
     public function submit(): void
     {
+        // The button is only drawn for signed-in users, but the action can
+        // be called without it; an anonymous report would count for nobody.
+        abort_unless(auth()->check(), 403);
+
         $this->validate([
             'reason' => 'required|string|in:'.implode(',', array_keys($this->reasons)),
         ]);
 
-        Report::create([
-            'reporter_id' => auth()->id(),
-            'reportable_type' => $this->reportable::class,
-            'reportable_id' => $this->reportable->id,
-            'reason' => $this->reasons[$this->reason],
-            'review_status' => ReportStatus::Pending,
-        ]);
+        // Reports can take things out of public view, so sending them is
+        // rate-limited per account: a burst from one person is someone
+        // working through a competitor's listings, not a reader.
+        $key = 'report:'.auth()->id();
 
-        // Three or more independent pending reports on the same subject
-        // auto-hide it (not delete) until a moderator reviews it -- an
-        // established invariant. Re-using moderation_status=pending both
-        // hides it from public listings and puts it back in the same
-        // queue a brand-new posting waits in.
-        if ($this->reportable instanceof JobPosting) {
-            $pendingCount = Report::query()
-                ->where('reportable_type', JobPosting::class)
-                ->where('reportable_id', $this->reportable->id)
-                ->where('review_status', ReportStatus::Pending)
-                ->count();
+        if (RateLimiter::tooManyAttempts($key, self::REPORTS_PER_HOUR)) {
+            $this->addError('reason', __('You have sent a lot of reports in a short time. Please try again later.'));
 
-            if ($pendingCount >= 3) {
-                $this->reportable->update(['moderation_status' => ModerationStatus::Pending]);
-            }
+            return;
+        }
+
+        RateLimiter::hit($key, 3600);
+
+        // One open report per person per subject. Hiding counts people,
+        // not reports, so a second one would change nothing -- and saying
+        // it was received either way tells a repeat reporter nothing.
+        $alreadyReported = $this->reportable->reports()
+            ->where('reporter_id', auth()->id())
+            ->where('review_status', ReportStatus::Pending)
+            ->exists();
+
+        if (! $alreadyReported) {
+            $this->reportable->reports()->create([
+                'reporter_id' => auth()->id(),
+                'reason' => $this->reasons[$this->reason],
+                'review_status' => ReportStatus::Pending,
+            ]);
         }
 
         $this->reset('reason');
-        $this->submitted = true;
 
-        $this->dispatch('modal-close', name: 'report-modal-'.$this->reportable->id);
+        Flux::toast(variant: 'success', text: __('Thanks. Our team will take a look.'));
+
+        $this->dispatch('modal-close', name: $this->modalName());
+    }
+
+    /**
+     * Unique per subject type as well as id: a company and a job posting
+     * can share an id, and both buttons can be on the same page.
+     */
+    public function modalName(): string
+    {
+        return 'report-'.class_basename($this->reportable).'-'.$this->reportable->getKey();
+    }
+
+    public function subjectNoun(): string
+    {
+        return $this->reportable instanceof Company ? __('company') : __('listing');
     }
 
     public function render()

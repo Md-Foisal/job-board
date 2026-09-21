@@ -128,7 +128,7 @@ test('the dashboard counts open jobs, applications, and the ones waiting', funct
 
     $response->assertOk();
     $response->assertSee($open->title);
-    $response->assertSeeInOrder(['Open jobs', '1']);
+    $response->assertSeeInOrder(['Live jobs', '1']);
     $response->assertSeeInOrder(['Applications', '3']);
     $response->assertSeeInOrder(['Waiting on you', '2']);
 });

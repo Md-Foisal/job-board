@@ -11,7 +11,7 @@ use Illuminate\View\View;
 class CandidateDashboardController extends Controller
 {
     /**
-     * claude/14 (route ১১) is explicit: the completion % counts
+     * The completion % counts
      * $user->candidateProfile's own filled fields, computed on every
      * request rather than stored (claude/13's decision -- there is no
      * "completion" column to go stale the moment a field changes). This
@@ -70,9 +70,13 @@ class CandidateDashboardController extends Controller
         // One JobView row per (user, job posting) -- already deduped at the
         // write side (recordView() upserts on that pair), so this is just
         // the 6 most recently touched rows, not a dedupe-on-read job here.
+        // Only what is still public: a posting rewritten after approval,
+        // taken down or hidden since it was viewed must not be shown here
+        // in full when the public page for it answers 404.
         $recentlyViewedJobs = JobView::query()
             ->with('jobPosting.company')
             ->where('user_id', $request->user()->id)
+            ->whereHas('jobPosting', fn ($query) => $query->active())
             ->latest('viewed_at')
             ->take(6)
             ->get()

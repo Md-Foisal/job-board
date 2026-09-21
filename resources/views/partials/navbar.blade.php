@@ -1,5 +1,5 @@
 {{--
-    Shared Shell A navbar (claude/14 UI architecture, step "ক"): guest pages
+    Shared Shell A navbar: guest pages
     and the candidate account pages carry the exact same navbar -- account
     pages just add a local sidebar alongside it (layouts/app/sidebar.blade.php).
     Keeping this in one partial is what makes that guarantee real instead of
