@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
 class JobPostingPolicy
 {
@@ -19,17 +20,22 @@ class JobPostingPolicy
 
     /**
      * Whether the user can view this job posting. A publicly visible
-     * posting (approved, active, unexpired, company in good standing) is
-     * open to guests too -- hence the nullable $user. Anyone else needs
-     * to be a member of the owning company (e.g. to preview a draft).
+     * posting (approved, active, unexpired, not hidden by reports, company
+     * in good standing) is open to guests too -- hence the nullable $user.
+     * Anyone else needs to be a member of the owning company (e.g. to
+     * preview a draft).
+     *
+     * Everyone else gets a 404, not a 403: a 403 confirms the posting
+     * exists, and Google asks for a 404 or 410 once a job is gone so it
+     * drops out of job search. It also matches the company profile.
      */
-    public function view(?User $user, JobPosting $jobPosting): bool
+    public function view(?User $user, JobPosting $jobPosting): Response
     {
-        if ($jobPosting->isPubliclyVisible()) {
-            return true;
+        if ($jobPosting->isPubliclyVisible() || ($user !== null && $user->worksAt($jobPosting->company))) {
+            return Response::allow();
         }
 
-        return $user !== null && $user->worksAt($jobPosting->company);
+        return Response::denyAsNotFound();
     }
 
     /**

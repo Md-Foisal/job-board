@@ -41,9 +41,7 @@
                     </a>
                 </p>
                 @if ($jobPosting->company->verified_at)
-                    <span class="ml-1 inline-flex items-center text-brand-600 dark:text-brand-400" title="Verified company">
-                        <flux:icon.check-badge variant="mini" class="inline size-4" />
-                    </span>
+                    <x-verified-badge class="ml-1" />
                 @endif
 
                 <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">

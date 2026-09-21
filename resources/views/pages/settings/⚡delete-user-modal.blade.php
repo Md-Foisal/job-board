@@ -25,7 +25,12 @@ new class extends Component {
         // while a job posting of theirs is still open -- any candidate who
         // has applied (or might still apply) would be left stranded with
         // no way to know the job disappeared.
-        if ($user->jobPostings()->active()->exists()) {
+        // Open rather than publicly live: a posting hidden while reports
+        // are reviewed can still have applicants waiting on it.
+        if ($user->jobPostings()
+            ->where('availability_status', \App\Enums\AvailabilityStatus::Active)
+            ->where('expires_at', '>', now())
+            ->exists()) {
             $this->addError('password', 'You have an active job posting. Please wait for it to close or expire before deleting your account.');
             return;
         }

@@ -11,6 +11,7 @@ use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\SalaryPeriod;
 use App\Enums\WorkplaceType;
+use App\Models\Concerns\HiddenWhileReported;
 use App\Models\Pivots\JobPostingSkillPivot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 ])]
 class JobPosting extends Model
 {
-    use HasFactory;
+    use HasFactory, HiddenWhileReported;
 
     protected function casts(): array
     {
@@ -76,23 +77,26 @@ class JobPosting extends Model
 
     /**
      * Publicly visible: availability_status active, moderation approved,
-     * not expired, and the owning company's own account not suspended.
+     * not expired, not held back by open reports, and from a company the
+     * public can see.
      */
     public function scopeActive(Builder $query)
     {
         return $query->where('availability_status', AvailabilityStatus::Active)
             ->where('moderation_status', ModerationStatus::Approved)
             ->where('expires_at', '>', now())
+            ->notHiddenByReports()
             ->fromActiveCompanies();
     }
 
     /**
-     * Exclude job postings whose owning company has been suspended.
+     * Exclude job postings whose company is suspended or itself hidden
+     * while reports about it are reviewed.
      */
     public function scopeFromActiveCompanies(Builder $query)
     {
         return $query->whereHas('company', function (Builder $q) {
-            $q->where('account_status', AccountStatus::Active);
+            $q->where('account_status', AccountStatus::Active)->notHiddenByReports();
         });
     }
 
@@ -126,7 +130,8 @@ class JobPosting extends Model
     {
         return $this->moderation_status === ModerationStatus::Approved
             && $this->isOpen()
-            && $this->company->account_status === AccountStatus::Active;
+            && $this->company->isPubliclyVisible()
+            && ! $this->isHiddenByReports();
     }
 
     public function company()

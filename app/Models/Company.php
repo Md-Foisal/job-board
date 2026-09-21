@@ -9,6 +9,7 @@ use App\Enums\IdentityType;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\ModerationAction;
+use App\Models\Concerns\HiddenWhileReported;
 use App\Support\EmailDomain;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Illuminate\Support\Collection;
 #[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry'])]
 class Company extends Model
 {
-    use HasFactory;
+    use HasFactory, HiddenWhileReported;
 
     /**
      * Mirrors the database defaults so a freshly created record already
@@ -60,6 +61,16 @@ class Company extends Model
      * Reports filed against this company. Job postings carry the same
      * relation -- those are the two things a user can report.
      */
+    /**
+     * Whether a visitor may see this company's profile: not banned, and
+     * not held back while reports about it are reviewed.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return $this->account_status === AccountStatus::Active
+            && ! $this->isHiddenByReports();
+    }
+
     public function reports()
     {
         return $this->morphMany(Report::class, 'reportable');

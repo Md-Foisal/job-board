@@ -38,13 +38,18 @@
             <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
                 {{ $jobPosting->title }}
             </h3>
-            <a
-                href="{{ route('companies.show', $jobPosting->company) }}"
-                wire:navigate
-                class="relative z-10 block w-fit max-w-full truncate text-sm text-zinc-600 hover:text-brand-700 hover:underline dark:text-zinc-400 dark:hover:text-brand-400"
-            >
-                {{ $jobPosting->company->name }}
-            </a>
+            <div class="flex max-w-full items-center gap-1">
+                <a
+                    href="{{ route('companies.show', $jobPosting->company) }}"
+                    wire:navigate
+                    class="relative z-10 block w-fit max-w-full truncate text-sm text-zinc-600 hover:text-brand-700 hover:underline dark:text-zinc-400 dark:hover:text-brand-400"
+                >
+                    {{ $jobPosting->company->name }}
+                </a>
+                @if ($jobPosting->company->verified_at)
+                    <x-verified-badge />
+                @endif
+            </div>
         </div>
     </div>
 

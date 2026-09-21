@@ -19,7 +19,7 @@ class HomeController extends Controller
 
     public function index(): View
     {
-        $jobPostings = JobPosting::with('company:id,name,slug,logo_path')
+        $jobPostings = JobPosting::with('company:id,name,slug,logo_path,verified_at')
             ->active()
             ->latest('created_at')
             ->take(self::RECENT_OPENINGS_COUNT)

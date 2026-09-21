@@ -4,8 +4,11 @@ use App\Actions\DuplicateJobPosting;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
 use App\Enums\ModerationStatus;
+use App\Enums\ReportStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Models\Report;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -29,6 +32,9 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             ->withCount([
                 'applications',
                 'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'reports as open_reporters_count' => fn ($query) => $query
+                    ->where('review_status', ReportStatus::Pending)
+                    ->select(DB::raw('count(distinct reporter_id)')),
             ])
             ->with('latestRejection')
             ->latest()
@@ -177,6 +183,12 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                             <flux:text size="sm" class="mt-2 max-w-sm whitespace-pre-line text-red-700 dark:text-red-400">{{ $jobPosting->latestRejection->reason }}</flux:text>
                                         @endif
                                         <flux:text size="sm" class="mt-1">{{ __('Edit and publish again to send it back for review.') }}</flux:text>
+                                    @elseif ($jobPosting->open_reporters_count >= Report::HIDE_AFTER_REPORTERS)
+                                        {{-- Otherwise it reads as live while candidates
+                                             cannot find it. Who reported it, and why,
+                                             stays with staff. --}}
+                                        <flux:badge color="orange">{{ __('Hidden for review') }}</flux:badge>
+                                        <flux:text size="sm" class="mt-1 max-w-sm">{{ __('Several people reported this posting. It is out of search until our team has looked; you do not need to do anything.') }}</flux:text>
                                     @endif
                                 @endif
                             </td>

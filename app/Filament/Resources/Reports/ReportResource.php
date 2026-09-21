@@ -71,6 +71,12 @@ class ReportResource extends Resource
                 ->from('reports as siblings')
                 ->whereColumn('siblings.reportable_type', 'reports.reportable_type')
                 ->whereColumn('siblings.reportable_id', 'reports.reportable_id')
+                ->where('siblings.review_status', ReportStatus::Pending->value)])
+            ->addSelect(['open_reporters' => Report::query()
+                ->selectRaw('count(distinct reporter_id)')
+                ->from('reports as siblings')
+                ->whereColumn('siblings.reportable_type', 'reports.reportable_type')
+                ->whereColumn('siblings.reportable_id', 'reports.reportable_id')
                 ->where('siblings.review_status', ReportStatus::Pending->value)]);
     }
 
@@ -216,7 +222,8 @@ class ReportResource extends Resource
                 TextColumn::make('open_count')
                     ->label('Open reports')
                     ->badge()
-                    ->color(fn (int $state) => $state >= 3 ? 'danger' : ($state > 0 ? 'warning' : 'gray'))
+                    ->color(fn (Report $record, int $state) => $record->open_reporters >= Report::HIDE_AFTER_REPORTERS ? 'danger' : ($state > 0 ? 'warning' : 'gray'))
+                    ->description(fn (Report $record) => $record->open_reporters >= Report::HIDE_AFTER_REPORTERS ? 'Hidden from the public' : null)
                     ->sortable(),
                 TextColumn::make('reason')
                     ->label('Latest reason')
@@ -246,7 +253,7 @@ class ReportResource extends Resource
             ->authorize('moderate')
             ->visible(fn (Report $record) => $record->open_count > 0)
             ->modalHeading(fn (Report $record) => 'Dismiss reports about "'.static::subjectLabel($record).'"?')
-            ->modalDescription(fn (Report $record) => "All {$record->open_count} open report(s) will be closed as not upheld. Nothing about the subject changes.")
+            ->modalDescription(fn (Report $record) => "All {$record->open_count} open report(s) will be closed as not upheld. Nothing about the subject changes; if it was hidden while the reports waited, it is back in public view.")
             ->schema([
                 Textarea::make('note')
                     ->label('Note for the record (optional)')
