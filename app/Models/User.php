@@ -224,19 +224,11 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Moderation decisions taken against this user (suspension and the
-     * like) -- not the ones they took as staff, which is
-     * moderationActionsTaken().
+     * like) -- not the ones they took as staff, which are the events
+     * whose admin_id is theirs.
      */
     public function moderationEvents()
     {
         return $this->morphMany(ModerationEvent::class, 'subject');
-    }
-
-    /**
-     * Moderation decisions this user took while acting as staff.
-     */
-    public function moderationActionsTaken()
-    {
-        return $this->hasMany(ModerationEvent::class, 'admin_id');
     }
 }

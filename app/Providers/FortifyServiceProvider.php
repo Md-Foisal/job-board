@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Laravel\Fortify\Contracts\RegisterResponse;
 use Laravel\Fortify\Fortify;
 
@@ -25,6 +27,9 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->bindRegisterResponse();
+
+        $this->app->bind(DisableTwoFactorAuthentication::class, \App\Actions\Fortify\DisableTwoFactorAuthentication::class);
+        $this->app->bind(EnableTwoFactorAuthentication::class, \App\Actions\Fortify\EnableTwoFactorAuthentication::class);
     }
 
     /**

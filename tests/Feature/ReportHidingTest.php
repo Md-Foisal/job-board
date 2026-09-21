@@ -93,12 +93,15 @@ test('its own company still sees the hidden posting, marked as hidden', function
 
 test('a company reported by enough people disappears along with its postings', function () {
     $company = Company::factory()->create();
-    JobPosting::factory()->for($company)->create(['title' => 'Company Role']);
+    $posting = JobPosting::factory()->for($company)->create(['title' => 'Company Role']);
 
     reportByDifferentPeople($company, Report::HIDE_AFTER_REPORTERS);
 
     $this->get(route('companies.show', $company))->assertNotFound();
+    $this->get(route('jobs.show', $posting))->assertNotFound();
     $this->get('/')->assertDontSee('Company Role');
+    expect(JobPosting::query()->active()->whereKey($posting->id)->exists())->toBeFalse();
+    $this->get('/sitemap.xml')->assertDontSee(route('companies.show', $company));
 
     $this->actingAs(employerUser($company, MembershipRole::Member))
         ->get(route('companies.show', $company))
@@ -122,7 +125,7 @@ test('staff can see which reported things are hidden', function () {
         ->assertSee('Hidden from the public');
 });
 
-test('a verified company is marked on its job cards for everyone', function () {
+test('a verified company is marked on its job cards for visitors', function () {
     $company = Company::factory()->create(['verified_at' => now()]);
     JobPosting::factory()->for($company)->create();
 
@@ -148,4 +151,29 @@ test('a guest cannot file a report even by calling the action directly', functio
         ->assertForbidden();
 
     expect($posting->reports()->count())->toBe(0);
+});
+
+test('a hidden posting\'s apply page answers 404 like the posting itself', function () {
+    $posting = JobPosting::factory()->create();
+    reportByDifferentPeople($posting, Report::HIDE_AFTER_REPORTERS);
+
+    $this->actingAs(candidateUser())
+        ->get(route('jobs.apply', $posting))
+        ->assertNotFound();
+});
+
+test('saved jobs and recently viewed only show what is still public', function () {
+    $candidate = candidateUser();
+    $visible = JobPosting::factory()->create(['title' => 'Still Open Role']);
+    $hidden = JobPosting::factory()->create(['title' => 'Rewritten Scam Role']);
+    $candidate->savedJobs()->attach([$visible->id, $hidden->id]);
+
+    $hidden->moderation_status = ModerationStatus::Pending;
+    $hidden->save();
+
+    $this->actingAs($candidate)
+        ->get(route('candidate.saved-jobs.index'))
+        ->assertSee('Still Open Role')
+        ->assertDontSee('Rewritten Scam Role')
+        ->assertSee('One job you saved is no longer available');
 });

@@ -19,23 +19,23 @@ class ReportButton extends Component
 
     public string $reason = '';
 
-    public bool $submitted = false;
-
-    protected array $reasons = [
-        'spam' => 'Spam or fake listing',
-        'scam' => 'Scam or fraud',
-        'inappropriate' => 'Inappropriate content',
-        'other' => 'Other',
-    ];
-
     public function mount(Model $reportable): void
     {
         $this->reportable = $reportable;
     }
 
+    /**
+     * Worded to fit a company as well as a posting: the same button sits
+     * on both pages.
+     */
     public function getReasonsProperty(): array
     {
-        return $this->reasons;
+        return [
+            'spam' => __('Spam or fake'),
+            'scam' => __('Scam or fraud'),
+            'inappropriate' => __('Inappropriate content'),
+            'other' => __('Other'),
+        ];
     }
 
     public function submit(): void
@@ -65,7 +65,6 @@ class ReportButton extends Component
         }
 
         $this->reset('reason');
-        $this->submitted = true;
 
         Flux::toast(variant: 'success', text: __('Thanks. Our team will take a look.'));
 

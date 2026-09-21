@@ -1,5 +1,5 @@
 {{--
-    One entry on an application timeline (claude/14 route ২০). The dot,
+    One entry on an application timeline. The dot,
     the label and the timestamp formatting were written twice on that
     page -- once for the application itself, once inside the event loop
     -- which meant the date format lived in two places.

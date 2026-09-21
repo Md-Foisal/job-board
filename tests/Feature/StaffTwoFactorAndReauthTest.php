@@ -20,11 +20,33 @@ it('lets a staff member with two-factor into the panel', function () {
 });
 
 it('keeps an ordinary user out of the panel whatever their two-factor state', function () {
-    $user = User::factory()->withTwoFactor()->create();
-
-    $this->actingAs($user)
+    $this->actingAs(User::factory()->withTwoFactor()->create())
         ->get('/admin')
         ->assertForbidden();
+
+    $this->actingAs(User::factory()->create())
+        ->get('/admin')
+        ->assertForbidden();
+});
+
+it('will not let staff switch two-factor off or swap its secret through Fortify\'s own routes', function () {
+    $staff = staffWithTwoFactor();
+    $this->actingAs($staff)->withSession(['auth.password_confirmed_at' => time()]);
+
+    $this->deleteJson('/user/two-factor-authentication')->assertForbidden();
+    $this->postJson('/user/two-factor-authentication', ['force' => true])->assertForbidden();
+
+    expect($staff->fresh()->two_factor_confirmed_at)->not->toBeNull();
+});
+
+it('still lets staff abandon a two-factor setup they never confirmed', function () {
+    $staff = staffUser();
+    $staff->forceFill(['two_factor_secret' => encrypt('secret')])->save();
+    $this->actingAs($staff)->withSession(['auth.password_confirmed_at' => time()]);
+
+    $this->deleteJson('/user/two-factor-authentication')->assertOk();
+
+    expect($staff->fresh()->two_factor_secret)->toBeNull();
 });
 
 it('explains on the security page why a staff member was sent there', function () {

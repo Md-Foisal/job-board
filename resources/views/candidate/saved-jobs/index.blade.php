@@ -4,6 +4,12 @@
         <flux:subheading size="lg" class="mb-6">{{ __('Jobs you bookmarked to come back to later.') }}</flux:subheading>
         <flux:separator variant="subtle" class="mb-6" />
 
+        @if ($unavailableCount > 0)
+            <flux:text class="mb-6">
+                {{ trans_choice('{1} One job you saved is no longer available, so it is not shown.|[2,*] :count jobs you saved are no longer available, so they are not shown.', $unavailableCount) }}
+            </flux:text>
+        @endif
+
         @if ($jobPostings->isEmpty())
             <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
                 {{ __("You haven't saved any jobs yet.") }}

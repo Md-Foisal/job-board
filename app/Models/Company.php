@@ -58,10 +58,6 @@ class Company extends Model
     }
 
     /**
-     * Reports filed against this company. Job postings carry the same
-     * relation -- those are the two things a user can report.
-     */
-    /**
      * Whether a visitor may see this company's profile: not banned, and
      * not held back while reports about it are reviewed.
      */
@@ -71,6 +67,10 @@ class Company extends Model
             && ! $this->isHiddenByReports();
     }
 
+    /**
+     * Reports filed against this company. Job postings carry the same
+     * relation -- those are the two things a user can report.
+     */
     public function reports()
     {
         return $this->morphMany(Report::class, 'reportable');
@@ -202,8 +202,8 @@ class Company extends Model
 
     /**
      * The latest step in the verification conversation: verified, revoked,
-     * or asked for documents. Report dismissals share the trail but say
-     * nothing about verification, so they are left out.
+     * or asked for documents. Bans and report dismissals share the trail
+     * but say nothing about verification, so they are left out.
      */
     public function latestVerificationDecision()
     {

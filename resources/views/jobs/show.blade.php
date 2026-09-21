@@ -39,10 +39,10 @@
                     <a href="{{ route('companies.show', $jobPosting->company) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>
                         {{ $jobPosting->company->name }}
                     </a>
+                    @if ($jobPosting->company->verified_at)
+                        <x-verified-badge class="ml-1 align-middle" />
+                    @endif
                 </p>
-                @if ($jobPosting->company->verified_at)
-                    <x-verified-badge class="ml-1" />
-                @endif
 
                 <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">

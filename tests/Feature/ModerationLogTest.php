@@ -10,11 +10,17 @@ use App\Models\ModerationEvent;
 use Livewire\Livewire;
 
 it('is open to every member of staff, moderators included, and to nobody else', function () {
+    $this->get('/admin/moderation/log')->assertRedirect(route('login'));
+
     $this->actingAs(staffWithTwoFactor(StaffRole::Moderator))
         ->get('/admin/moderation/log')
         ->assertOk();
 
     $this->actingAs(candidateUser())
+        ->get('/admin/moderation/log')
+        ->assertForbidden();
+
+    $this->actingAs(employerUser())
         ->get('/admin/moderation/log')
         ->assertForbidden();
 });

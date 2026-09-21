@@ -18,8 +18,8 @@
     </flux:toast.group>
     @endpersist
 
-    {{-- Shell A's footer (claude/14 step ২-ঙ, Supplemental navigation).
-         It is the only place the static pages of route ১০ are reachable
+    {{-- Shell A's footer, the supplemental navigation.
+         It is the only place the static pages are reachable
          from, which is why they are links here and not just a line of
          copyright. --}}
     <footer class="mt-16 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">

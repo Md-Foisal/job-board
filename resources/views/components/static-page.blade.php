@@ -1,5 +1,5 @@
 {{--
-    Shared frame for the static guest pages of claude/14 route ১০
+    Shared frame for the static guest pages
     (About / Privacy / Terms). The heading doubles as the browser-tab
     title, so a new static page cannot accidentally ship without one.
 

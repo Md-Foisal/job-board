@@ -15,9 +15,9 @@ class SitemapController extends Controller
      * search, the static pages, every category listing, every active
      * company profile, and every publicly-visible job posting.
      *
-     * Company profiles were excluded while route ৫ did not exist. It
-     * does now, so they are listed; suspended companies are left out
-     * because their pages are not public.
+     * Companies the public cannot see -- banned, or hidden while reports
+     * about them are reviewed -- are left out: their pages answer 404, and
+     * listing them would tell anyone reading this file they exist.
      */
     public function index(): Response
     {
@@ -25,6 +25,7 @@ class SitemapController extends Controller
         $categories = Category::query()->select('id', 'slug')->get();
         $companies = Company::query()
             ->where('account_status', AccountStatus::Active)
+            ->notHiddenByReports()
             ->select('id', 'slug', 'updated_at')
             ->get();
 

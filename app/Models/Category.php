@@ -19,6 +19,13 @@ class Category extends Model
      */
     protected static function booted(): void
     {
+        // A restored category is its own page again. Left in place, the
+        // old merge link would send its address elsewhere the next time it
+        // is removed, and a later merge into it could point it at itself.
+        static::restoring(function (self $model) {
+            $model->merged_into_id = null;
+        });
+
         static::creating(function (self $model) {
             if (filled($model->slug)) {
                 return;

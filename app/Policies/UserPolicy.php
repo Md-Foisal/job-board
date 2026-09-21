@@ -12,9 +12,10 @@ class UserPolicy
      * the ones a company applies to its own members:
      *
      * only a super admin may do it; no one may do it to themselves; and
-     * no one may do it to a peer or a superior. The last rule is what
-     * stops two super admins from suspending each other, and what keeps
-     * a moderator from reaching upward.
+     * no one may do it to a peer or a superior. With only super admins
+     * allowed at all, the last rule is what stops two of them from
+     * suspending each other; it stays a rank comparison so a new staff
+     * role slots in without rewriting it.
      *
      * Suspension is deliberately separate from a user deleting their own
      * account: someone the platform has suspended must not be able to

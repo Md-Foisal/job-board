@@ -29,6 +29,9 @@ class AdminPanelProvider extends PanelProvider
             // login route. A second sign-in screen would bypass Fortify,
             // and with it the two-factor challenge that staff accounts
             // are required to pass.
+            // Same typeface as the rest of the application, from the same
+            // font host, so moving between the two does not change voice.
+            ->font('Instrument Sans')
             ->colors([
                 'primary' => [
                     50 => 'oklch(0.98 0.014 175)',
@@ -62,9 +65,11 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            // Persistent, so the checks also run on every Livewire request a
+            // panel page makes -- which is how every table action is sent.
             ->authMiddleware([
                 Authenticate::class,
                 EnsureStaffHasTwoFactor::class,
-            ]);
+            ], isPersistent: true);
     }
 }

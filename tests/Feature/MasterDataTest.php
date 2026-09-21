@@ -21,9 +21,10 @@ function importanceOf(JobPosting $posting, Skill $skill): ?string
 }
 
 it('keeps the skill and category lists away from moderators', function () {
-    $this->actingAs(staffWithTwoFactor(StaffRole::Moderator))
-        ->get('/admin/skills')
-        ->assertForbidden();
+    $this->actingAs(staffWithTwoFactor(StaffRole::Moderator));
+
+    $this->get('/admin/skills')->assertForbidden();
+    $this->get('/admin/categories')->assertForbidden();
 });
 
 it('refuses a skill that only differs from an existing one by case', function () {
@@ -40,9 +41,13 @@ it('refuses a skill that only differs from an existing one by case', function ()
 it('gives names that slug the same way their own addresses', function () {
     $c = Skill::create(['name' => 'C']);
     $sharp = Skill::create(['name' => 'C#']);
+    $design = Category::create(['name' => 'Design']);
+    $designPlus = Category::create(['name' => 'Design+']);
 
     expect($c->slug)->toBe('c')
-        ->and($sharp->slug)->toBe('c-2');
+        ->and($sharp->slug)->toBe('c-2')
+        ->and($design->slug)->toBe('design')
+        ->and($designPlus->slug)->toBe('design-2');
 });
 
 it('only lets a skill nobody uses be removed outright', function () {
@@ -103,5 +108,7 @@ it('keeps an old address one hop away even after a second merge', function () {
     app(MergeCategory::class)($a, $b);
     app(MergeCategory::class)($b, $c);
 
-    $this->get('/categories/alpha')->assertRedirect(route('categories.show', $c));
+    $this->get('/categories/alpha')
+        ->assertStatus(301)
+        ->assertRedirect(route('categories.show', $c));
 });
