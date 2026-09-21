@@ -261,3 +261,21 @@ test('the application page shows which of the posting skills are missing', funct
     expect($component->get('wantedSkillIds')->all())->toEqualCanonicalizing([$laravel->id, $vue->id]);
     expect($component->get('missingSkills')->pluck('id')->all())->toBe([$vue->id]);
 });
+
+test('a CV the candidate later removes from their library still reaches the employer who received it', function () {
+    Illuminate\Support\Facades\Storage::fake('local');
+
+    $company = Company::factory()->create();
+    $manager = employerUser($company, MembershipRole::Manager);
+    $application = applicationFor($company);
+    $document = $application->resumeDocument;
+    Illuminate\Support\Facades\Storage::disk('local')->put($document->file_path, 'cv');
+
+    $document->delete();
+
+    expect($application->fresh()->resumeDocument?->is($document))->toBeTrue();
+
+    $this->actingAs($manager)
+        ->get(route('employer.applications.resume', ['company' => $company, 'application' => $application]))
+        ->assertOk();
+});
