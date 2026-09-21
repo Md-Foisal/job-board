@@ -23,8 +23,8 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
             'matchScores' => $this->matchScores($jobPostings->getCollection()),
             // Re-read on every keystroke otherwise: the filters re-render
             // the whole component.
-            'skills' => PublicCache::lookup('skills', fn () => Skill::orderBy('name')->get()),
-            'categories' => PublicCache::lookup('categories', fn () => Category::orderBy('name')->get()),
+            'skills' => PublicCache::lookupModels('skills', Skill::class, fn () => Skill::orderBy('name')->get()),
+            'categories' => PublicCache::lookupModels('categories', Category::class, fn () => Category::orderBy('name')->get()),
             'workplaceTypes' => WorkplaceType::cases(),
             'employmentTypes' => EmploymentType::cases(),
             // Guests too: the link signs them in and brings them back

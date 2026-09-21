@@ -100,7 +100,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
     #[Computed]
     public function allCategories()
     {
-        return PublicCache::lookup('categories', fn () => Category::orderBy('name')->get());
+        return PublicCache::lookupModels('categories', Category::class, fn () => Category::orderBy('name')->get());
     }
 
     #[Computed]

@@ -22,22 +22,24 @@ class HomeController extends Controller
     {
         // The same for every visitor and the busiest page on the site: four
         // queries, two of them counts across every posting.
-        return view('home', PublicCache::remember('home', fn () => [
-            'jobPostings' => JobPosting::with('company:id,name,slug,logo_path,verified_at')
+        return view('home', [
+            'jobPostings' => PublicCache::models('home:postings', JobPosting::class, fn () => JobPosting::with('company:id,name,slug,logo_path,verified_at')
                 ->active()
                 ->latest('created_at')
                 ->latest('id')
                 ->take(self::RECENT_OPENINGS_COUNT)
-                ->get(),
-            'categories' => Category::withCount(['jobPostings' => fn ($query) => $query->active()])
+                ->get(), ['company']),
+            'categories' => PublicCache::models('home:categories', Category::class, fn () => Category::withCount(['jobPostings' => fn ($query) => $query->active()])
                 ->orderByDesc('job_postings_count')
                 ->take(8)
-                ->get(),
-            'openJobsCount' => JobPosting::active()->count(),
-            'hiringCompaniesCount' => Company::query()
-                ->where('account_status', AccountStatus::Active)
-                ->whereHas('jobPostings', fn ($query) => $query->active())
-                ->count(),
-        ]));
+                ->get()),
+            ...PublicCache::remember('home:counts', fn () => [
+                'openJobsCount' => JobPosting::active()->count(),
+                'hiringCompaniesCount' => Company::query()
+                    ->where('account_status', AccountStatus::Active)
+                    ->whereHas('jobPostings', fn ($query) => $query->active())
+                    ->count(),
+            ]),
+        ]);
     }
 }

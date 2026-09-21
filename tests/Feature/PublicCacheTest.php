@@ -2,6 +2,8 @@
 
 use App\Models\Category;
 use App\Models\JobPosting;
+use App\Support\PublicCache;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
@@ -46,3 +48,22 @@ test('a category that is removed leaves the filters with it', function () {
 
     Livewire::test('pages::job-search')->assertDontSee('Retired Field');
 });
+
+test('cached models come back as models, relation included, through a store that refuses to unserialize objects', function () {
+    expect(config('cache.serializable_classes'))->toBeFalse()
+        ->and(config('cache.stores.array.serialize'))->toBeTrue();
+
+    $posting = JobPosting::factory()->create(['title' => 'Round Trip Role']);
+
+    PublicCache::models('round-trip', JobPosting::class, fn () => JobPosting::with('company')->whereKey($posting->id)->get(), ['company']);
+    $again = PublicCache::models('round-trip', JobPosting::class, fn () => throw new RuntimeException('should be cached'), ['company']);
+
+    expect($again->sole())->toBeInstanceOf(JobPosting::class)
+        ->and($again->sole()->title)->toBe('Round Trip Role')
+        ->and($again->sole()->company->is($posting->company))->toBeTrue()
+        ->and($again->sole()->expires_at)->toBeInstanceOf(CarbonInterface::class);
+});
+
+test('only plain data can be put in the public cache directly', function () {
+    PublicCache::remember('not-plain', fn () => ['posting' => JobPosting::factory()->create()]);
+})->throws(LogicException::class, 'PublicCache stores plain data only');

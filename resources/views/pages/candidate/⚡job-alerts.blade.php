@@ -66,8 +66,8 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             'descriptions' => $jobAlerts->mapWithKeys(fn (JobAlert $jobAlert) => [
                 $jobAlert->id => implode(' · ', JobSearchCriteria::describe($jobAlert->criteria, $skillNames, $categoryNames)),
             ]),
-            'skills' => PublicCache::lookup('skills', fn () => Skill::orderBy('name')->get()),
-            'categories' => PublicCache::lookup('categories', fn () => Category::orderBy('name')->get()),
+            'skills' => PublicCache::lookupModels('skills', Skill::class, fn () => Skill::orderBy('name')->get()),
+            'categories' => PublicCache::lookupModels('categories', Category::class, fn () => Category::orderBy('name')->get()),
             'workplaceTypes' => WorkplaceType::cases(),
             'employmentTypes' => EmploymentType::cases(),
             'frequencies' => AlertFrequency::cases(),
