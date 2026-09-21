@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountRestoreController;
 use App\Http\Controllers\ApplicationResumeDownloadController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
@@ -41,6 +42,13 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
+
+// Restoring a deleted account inside its grace period. Only the sign-in
+// form sends anyone here, after the right password for that account.
+Route::middleware('guest')->group(function () {
+    Route::get('/account/restore', [AccountRestoreController::class, 'show'])->name('account.restore');
+    Route::post('/account/restore', [AccountRestoreController::class, 'store'])->name('account.restore.store');
+});
 
 // Job alert unsubscribe (claude/14 route 45): no sign-in, the signature is
 // the proof. POST is the one-click request a mail client sends, so it is

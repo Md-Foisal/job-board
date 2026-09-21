@@ -31,8 +31,8 @@
     <x-prose-section heading="Keeping and deleting it">
         <p>
             You can delete your account from your account settings. Deletion is
-            not instant: the account is switched off first and can be restored for
-            {{ \App\Models\User::DELETION_GRACE_DAYS }} days. After that we erase your
+            not instant: the account is switched off first, and signing in again
+            within {{ \App\Models\User::DELETION_GRACE_DAYS }} days restores it. After that we erase your
             personal data for good &mdash; your name, email address, profile, photos,
             uploaded files, cover letters and answers &mdash; and keep only an anonymous
             record that an application was made, so employers' and our own numbers

@@ -47,7 +47,7 @@ new class extends Component {
             <flux:heading size="lg">{{ __('Are you sure you want to delete your account?') }}</flux:heading>
 
             <flux:subheading>
-                {{ __('Your account is switched off straight away and can still be restored for :days days. After that your name, email, profile and files are erased for good; applications you sent stay with employers only as anonymous records. Enter your password to confirm.', ['days' => \App\Models\User::DELETION_GRACE_DAYS]) }}
+                {{ __('Your account is switched off straight away. Sign in again within :days days to restore it. After that your name, email, profile and files are erased for good; applications you sent stay with employers only as anonymous records. Enter your password to confirm.', ['days' => \App\Models\User::DELETION_GRACE_DAYS]) }}
             </flux:subheading>
         </div>
 

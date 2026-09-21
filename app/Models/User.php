@@ -151,6 +151,27 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Deleted by its owner, not yet erased, and still inside the grace
+     * period -- the only state a self-service restore can undo.
+     */
+    public function isRestorable(): bool
+    {
+        return $this->trashed()
+            && $this->anonymized_at === null
+            && $this->deleted_at->greaterThan(now()->subDays(self::DELETION_GRACE_DAYS));
+    }
+
+    /**
+     * When a deleted account's data will be erased, if nobody restores it.
+     */
+    public function erasesAt(): ?\Carbon\CarbonInterface
+    {
+        return $this->trashed() && $this->anonymized_at === null
+            ? $this->deleted_at->copy()->addDays(self::DELETION_GRACE_DAYS)
+            : null;
+    }
+
+    /**
      * "Candidate" is not a stored role — the existence of a
      * CandidateProfile row is what makes this true.
      */
