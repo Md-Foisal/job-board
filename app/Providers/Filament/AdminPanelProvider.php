@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
+use App\Http\Middleware\LoadStaffMemberships;
 use App\Http\Responses\AdminLogoutResponse;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse;
 use Filament\Http\Middleware\Authenticate;
@@ -79,6 +80,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 EnsureStaffHasTwoFactor::class,
+                LoadStaffMemberships::class,
             ], isPersistent: true);
     }
 }

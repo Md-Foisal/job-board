@@ -64,6 +64,8 @@ class CompanyResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            // The email-domain column reads these for every row.
+            ->with('managingMemberships')
             ->withCount(['memberships', 'jobPostings'])
             ->withCount(['reports as open_reports_count' => fn (Builder $query) => $query
                 ->where('review_status', ReportStatus::Pending->value)]);

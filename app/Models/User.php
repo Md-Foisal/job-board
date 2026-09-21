@@ -101,6 +101,16 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Only the memberships that currently grant access. Loaded whole and
+     * unfiltered by LoadStaffMemberships so worksAt() can answer from
+     * memory -- never eager-load it with extra conditions.
+     */
+    public function activeMemberships()
+    {
+        return $this->hasMany(Membership::class)->where('status', MembershipStatus::Active);
+    }
+
+    /**
      * The companies this user currently works for. "Currently" is the
      * whole point: an ended membership leaves its row behind for
      * attribution but stops granting access, so anything that asks
@@ -153,9 +163,21 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Whether this user is actively working at the given company
      * (in any role).
+     *
+     * Answered from memory when activeMemberships has been loaded. A
+     * moderation table asks this two or three times for every row -- once
+     * per action it decides whether to show -- so the admin panel loads the
+     * viewer's active memberships once per request instead of sending a
+     * query per question. It deliberately does not trust a loaded
+     * `memberships` relation: that one gets eager-loaded with filters
+     * elsewhere, and a filtered list would make this answer "no" wrongly.
      */
     public function worksAt(Company $company): bool
     {
+        if ($this->relationLoaded('activeMemberships')) {
+            return $this->activeMemberships->contains('company_id', $company->id);
+        }
+
         return $this->memberships()
             ->where('company_id', $company->id)
             ->where('status', MembershipStatus::Active)

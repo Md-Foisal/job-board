@@ -168,15 +168,24 @@ class Company extends Model
     }
 
     /**
+     * The active owners and managers, the people whose work addresses the
+     * verification check compares with the website. A relation rather than
+     * a query so a list of companies can load them all in one go.
+     */
+    public function managingMemberships()
+    {
+        return $this->hasMany(Membership::class)
+            ->where('status', MembershipStatus::Active)
+            ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
+            ->with('user:id,email');
+    }
+
+    /**
      * @return Collection<int, string>
      */
     public function managerEmailDomains()
     {
-        return $this->memberships()
-            ->where('status', MembershipStatus::Active)
-            ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
-            ->with('user:id,email')
-            ->get()
+        return $this->managingMemberships
             ->map(fn ($membership) => EmailDomain::of($membership->user->email))
             ->unique()
             ->values();
