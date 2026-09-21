@@ -29,6 +29,10 @@ class ApplicationResumeDownloadController extends Controller
 
         abort_if($document === null, 404);
 
+        // A file erased with its owner's data leaves its row behind for the
+        // application's record; it answers as gone rather than failing.
+        abort_unless(Storage::disk('local')->exists($document->file_path), 404);
+
         return Storage::disk('local')->download($document->file_path, $document->original_filename);
     }
 }

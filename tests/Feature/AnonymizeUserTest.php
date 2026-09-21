@@ -211,7 +211,13 @@ test('the employer still sees the application of someone who erased their accoun
     $this->actingAs($manager)
         ->get(route('employer.applications.show', ['company' => $company, 'application' => $application]))
         ->assertOk()
-        ->assertSee('Deleted user');
+        ->assertSee('Deleted user')
+        ->assertSee("CV removed at the candidate's request")
+        ->assertDontSee(route('employer.applications.resume', ['company' => $company, 'application' => $application]));
+
+    $this->actingAs($manager)
+        ->get(route('employer.applications.resume', ['company' => $company, 'application' => $application]))
+        ->assertNotFound();
 
     app(ChangeApplicationStage::class)($application->fresh(), $manager, ApplicationStage::Shortlisted);
 

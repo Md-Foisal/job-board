@@ -189,7 +189,11 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 <span wire:loading wire:target="updateStage">{{ __('Updating...') }}</span>
             </flux:button>
 
-            @if ($this->application->resumeDocument)
+            @if ($candidate->user->anonymized_at)
+                {{-- The snapshot yields to erasure (AnonymizeUser): the file
+                     is gone, so there is nothing to offer a link to. --}}
+                <flux:text size="sm">{{ __('CV removed at the candidate\'s request') }}</flux:text>
+            @elseif ($this->application->resumeDocument)
                 <flux:button
                     variant="subtle"
                     icon="arrow-down-tray"
