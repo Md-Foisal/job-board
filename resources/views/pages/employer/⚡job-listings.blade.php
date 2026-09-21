@@ -6,7 +6,9 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ReportStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Support\SubmissionLimits;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -98,7 +100,21 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
         $jobPosting = $this->find($jobPostingId);
         $this->authorize('duplicate', $jobPosting);
 
+        // A copy is a new posting, so it draws on the same daily allowance
+        // as the form; otherwise duplicating would be a way round it.
+        $limitKey = SubmissionLimits::jobPostingKey($this->company);
+
+        if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::JOB_POSTINGS_PER_DAY)) {
+            $message = SubmissionLimits::jobPostingLimitMessage($this->company);
+
+            Flux::toast(variant: 'warning', duration: 10000, heading: $message['heading'], text: $message['text']);
+
+            return;
+        }
+
         $copy = $duplicateJobPosting($jobPosting->load(['categories', 'skills', 'screeningQuestions']), auth()->user());
+
+        RateLimiter::hit($limitKey, 86400);
 
         $this->redirectRoute('employer.jobs.edit', [
             'company' => $this->company,

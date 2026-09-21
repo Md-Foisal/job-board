@@ -10,6 +10,9 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Skill;
+use App\Support\SubmissionLimits;
+use Flux\Flux;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
@@ -220,6 +223,19 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             ? $this->authorize('update', $this->jobPosting)
             : $this->authorize('create', [JobPosting::class, $this->company]);
 
+        // Only a new posting counts: editing one that already exists is
+        // never limited.
+        $limitKey = SubmissionLimits::jobPostingKey($this->company);
+        $creating = $this->jobPosting === null;
+
+        if ($creating && RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::JOB_POSTINGS_PER_DAY)) {
+            $message = SubmissionLimits::jobPostingLimitMessage($this->company);
+
+            Flux::toast(variant: 'warning', duration: 10000, heading: $message['heading'], text: $message['text']);
+
+            return;
+        }
+
         try {
             $validated = $this->validate($this->rulesFor($publish));
         } catch (ValidationException $e) {
@@ -258,6 +274,10 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             ],
             $this->jobPosting,
         );
+
+        if ($creating) {
+            RateLimiter::hit($limitKey, 86400);
+        }
 
         // Every other action in this shell says so when it worked --
         // closing a posting, moving a stage, inviting someone -- and this

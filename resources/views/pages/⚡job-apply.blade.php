@@ -4,7 +4,10 @@ use App\Enums\DocumentType;
 use App\Events\ApplicationSubmitted;
 use App\Models\Application;
 use App\Models\JobPosting;
+use App\Support\SubmissionLimits;
+use Flux\Flux;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -50,6 +53,22 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
     public function submit(): void
     {
         $this->authorize('create', [Application::class, $this->jobPosting]);
+
+        $limitKey = SubmissionLimits::applicationKey(auth()->user());
+
+        if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::APPLICATIONS_PER_DAY)) {
+            Flux::toast(
+                variant: 'warning',
+                duration: 10000,
+                heading: __("You've reached today's application limit"),
+                text: __('We cap applications at :limit a day so each one gets proper attention. You can apply again in :hours hours.', [
+                    'limit' => SubmissionLimits::APPLICATIONS_PER_DAY,
+                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
+                ]),
+            );
+
+            return;
+        }
 
         $rules = [
             'resumeChoice' => [
@@ -103,6 +122,8 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         // the screening answers are part of what the hiring team is about
         // to be told to go and read.
         ApplicationSubmitted::dispatch($application);
+
+        RateLimiter::hit($limitKey, 86400);
 
         session()->flash('success', 'Application submitted — good luck!');
 
