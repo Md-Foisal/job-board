@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\AvailabilityStatus;
+use App\Enums\ModerationStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\User;
@@ -60,6 +61,14 @@ class SaveJobPosting
             if ($publish && $jobPosting->published_at === null) {
                 $jobPosting->published_at = now();
             }
+
+            // Every save sends the posting back through moderation unless
+            // the company has earned its way past it. That includes edits
+            // to a posting already approved: otherwise an employer could
+            // pass review with an honest posting and then rewrite it.
+            $jobPosting->moderation_status = $publish && $company->isTrustedPoster()
+                ? ModerationStatus::Approved
+                : ModerationStatus::Pending;
 
             $jobPosting->save();
 

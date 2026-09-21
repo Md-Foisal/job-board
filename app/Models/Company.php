@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\SanitizedHtml;
 use App\Enums\AccountStatus;
 use App\Enums\IdentityType;
+use App\Enums\ModerationAction;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -65,5 +66,44 @@ class Company extends Model
     public function moderationEvents()
     {
         return $this->morphMany(ModerationEvent::class, 'subject');
+    }
+
+    /**
+     * How many of a company's postings staff must approve by hand before
+     * its new ones go live without waiting.
+     */
+    public const TRUSTED_AFTER_APPROVALS = 3;
+
+    /**
+     * Whether this company's postings skip the moderation queue.
+     *
+     * A new employer's postings are always read by a person first; after
+     * a few have been approved and none rejected, the rest go straight
+     * through. One queue reviewer cannot read a thousand postings, and
+     * scam posters rarely build a clean record first.
+     *
+     * The record is read from the moderation trail rather than from the
+     * postings' current state, so it cannot be laundered: a rejected
+     * posting that is later fixed and approved still counts as a
+     * rejection, and editing an approved posting does not erase the fact
+     * that it was approved. A banned company is never trusted.
+     */
+    public function isTrustedPoster(): bool
+    {
+        if ($this->account_status !== AccountStatus::Active) {
+            return false;
+        }
+
+        $decisions = ModerationEvent::query()
+            ->where('subject_type', (new JobPosting)->getMorphClass())
+            ->whereIn('subject_id', $this->jobPostings()->select('id'))
+            ->whereIn('action', [ModerationAction::ApproveJobPosting, ModerationAction::RejectJobPosting])
+            ->get(['subject_id', 'action']);
+
+        if ($decisions->contains('action', ModerationAction::RejectJobPosting)) {
+            return false;
+        }
+
+        return $decisions->unique('subject_id')->count() >= self::TRUSTED_AFTER_APPROVALS;
     }
 }
