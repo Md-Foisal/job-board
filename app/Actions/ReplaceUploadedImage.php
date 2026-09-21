@@ -26,17 +26,28 @@ use RuntimeException;
  */
 class ReplaceUploadedImage
 {
+    /**
+     * The default ceiling: anything larger is scaled down to this before it
+     * is stored, the same threshold WordPress applies to every upload.
+     * Callers pass a smaller one for pictures only ever shown small. It is sharp on any
+     * screen a logo or profile photo is shown on, and it keeps the rest of
+     * the work -- rotating a portrait phone photo makes a second full copy
+     * in memory -- well inside a normal web request's memory limit.
+     */
+    public const LONGEST_SIDE = 2560;
+
     public function __invoke(
         ?UploadedFile $file,
         ?string $existingPath,
         string $directory,
         string $disk = 'public',
+        int $longestSide = self::LONGEST_SIDE,
     ): ?string {
         if (! $file) {
             return $existingPath;
         }
 
-        [$contents, $extension] = $this->rewrite($file);
+        [$contents, $extension] = $this->rewrite($file, $longestSide);
 
         $path = $directory.'/'.Str::random(40).'.'.$extension;
         Storage::disk($disk)->put($path, $contents);
@@ -51,7 +62,7 @@ class ReplaceUploadedImage
     /**
      * @return array{0: string, 1: string}
      */
-    private function rewrite(UploadedFile $file): array
+    private function rewrite(UploadedFile $file, int $longestSide): array
     {
         $source = $file->getRealPath();
         $image = @imagecreatefromstring((string) file_get_contents($source));
@@ -61,6 +72,8 @@ class ReplaceUploadedImage
             // means it changed underneath us, which is not a user error.
             throw new RuntimeException('An uploaded image could not be decoded.');
         }
+
+        $image = $this->fitWithin($image, $longestSide);
 
         $mime = $file->getMimeType();
 
@@ -122,6 +135,27 @@ class ReplaceUploadedImage
             8 => $this->rotated($image, 90),
             default => $image,
         };
+    }
+
+    private function fitWithin(\GdImage $image, int $longestSide): \GdImage
+    {
+        $width = imagesx($image);
+        $height = imagesy($image);
+
+        if (max($width, $height) <= $longestSide) {
+            return $image;
+        }
+
+        $scale = $longestSide / max($width, $height);
+        $scaled = imagescale($image, max(1, (int) round($width * $scale)), max(1, (int) round($height * $scale)));
+
+        if ($scaled === false) {
+            return $image;
+        }
+
+        imagesavealpha($scaled, true);
+
+        return $scaled;
     }
 
     private function rotated(\GdImage $image, int $degrees): \GdImage

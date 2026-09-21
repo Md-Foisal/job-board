@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\ReplaceUploadedImage;
 use App\Http\Requests\UpdateRecruiterProfileRequest;
+use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -34,6 +35,7 @@ class RecruiterProfileController extends Controller
             $request->file('avatar'),
             $user->recruiterProfile?->avatar_path,
             'recruiter-avatars',
+            longestSide: ImageUploads::storedLongestSide(ImageUploads::PHOTO),
         );
 
         unset($validated['avatar']);

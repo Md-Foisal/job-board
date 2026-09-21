@@ -1,8 +1,10 @@
 <?php
 
 use App\Actions\ReplaceDocument;
+use App\Actions\StoreCandidateDocument;
 use App\Enums\DocumentType;
 use App\Models\Document;
+use App\Support\DocumentUploads;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -63,20 +65,27 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             $type = DocumentType::from($this->documentType);
         }
 
+        // CVs rotate (the oldest leaves on its own); the others are kept on
+        // purpose, so a full shelf is said up front instead.
+        if (! $this->replacingId
+            && $type !== DocumentType::Cv
+            && $candidateProfile->documents()->where('document_type', $type)->count() >= DocumentUploads::MAX_OTHER_DOCUMENTS_PER_TYPE) {
+            $this->addError('file', __('You can keep up to :count :type files. Remove one to add another.', [
+                'count' => DocumentUploads::MAX_OTHER_DOCUMENTS_PER_TYPE,
+                'type' => strtolower($type->label()),
+            ]));
+
+            return;
+        }
+
         $this->validate([
-            'file' => $this->fileRules($type),
+            'file' => DocumentUploads::rules($type),
         ]);
 
         if ($this->replacingId) {
             app(ReplaceDocument::class)($candidateProfile, $old, $this->file);
         } else {
-            $path = $this->file->store('documents', 'local');
-
-            $candidateProfile->documents()->create([
-                'document_type' => $type,
-                'file_path' => $path,
-                'original_filename' => $this->file->getClientOriginalName(),
-            ]);
+            app(StoreCandidateDocument::class)($candidateProfile, $type, $this->file);
         }
 
         $this->showModal = false;
@@ -94,15 +103,6 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
     {
         $this->showModal = false;
         $this->resetForm();
-    }
-
-    private function fileRules(DocumentType $type): array
-    {
-        return match ($type) {
-            DocumentType::Cv => ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'],
-            DocumentType::WorkSample => ['required', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,zip', 'max:10240'],
-            DocumentType::Certificate => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-        };
     }
 
     private function resetForm(): void
@@ -172,19 +172,9 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 
             <div>
                 <flux:input type="file" wire:model="file" :label="__('File')"
-                    accept="{{ match ($documentType) {
-                        'cv' => '.pdf,.doc,.docx',
-                        'work_sample' => '.pdf,.doc,.docx,.jpg,.jpeg,.png,.zip',
-                        'certificate' => '.pdf,.jpg,.jpeg,.png',
-                        default => '',
-                    } }}" />
+                    accept="{{ \App\Support\DocumentUploads::accept(\App\Enums\DocumentType::from($documentType)) }}" />
                 <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                    {{ match ($documentType) {
-                        'cv' => __('PDF or Word, up to 5 MB.'),
-                        'work_sample' => __('PDF, Word, image or zip, up to 10 MB.'),
-                        'certificate' => __('PDF or image, up to 5 MB.'),
-                        default => '',
-                    } }}
+                    {{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::from($documentType)) }}
                 </p>
             </div>
 

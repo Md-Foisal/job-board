@@ -27,8 +27,8 @@ class UpdateCompanyRequest extends FormRequest
             'website_url' => ['nullable', 'url', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
             'size' => ['nullable', Rule::in(['1-10', '11-50', '51-200', '200+'])],
-            'logo' => ['nullable', ...ImageUploads::rules(2048)],
-            'cover_photo' => ['nullable', ...ImageUploads::rules(4096)],
+            'logo' => ['nullable', ...ImageUploads::rules(ImageUploads::LOGO)],
+            'cover_photo' => ['nullable', ...ImageUploads::rules(ImageUploads::COVER)],
         ];
     }
 

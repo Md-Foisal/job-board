@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\ReplaceUploadedImage;
 use App\Http\Requests\UpdateCompanyRequest;
 use App\Models\Company;
+use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -30,12 +31,14 @@ class EmployerCompanyController extends Controller
             $request->file('logo'),
             $company->logo_path,
             'company-logos',
+            longestSide: ImageUploads::storedLongestSide(ImageUploads::LOGO),
         );
 
         $validated['cover_photo_path'] = $replaceImage(
             $request->file('cover_photo'),
             $company->cover_photo_path,
             'company-covers',
+            longestSide: ImageUploads::storedLongestSide(ImageUploads::COVER),
         );
 
         // The form's file inputs are named for what they are to the person

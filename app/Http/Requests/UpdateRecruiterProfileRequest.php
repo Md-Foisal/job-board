@@ -22,7 +22,7 @@ class UpdateRecruiterProfileRequest extends FormRequest
         return [
             'display_name' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:2000'],
-            'avatar' => ['nullable', ...ImageUploads::rules(2048)],
+            'avatar' => ['nullable', ...ImageUploads::rules(ImageUploads::PHOTO)],
         ];
     }
 }

@@ -20,7 +20,7 @@
                             :name="$recruiterProfile?->display_name ?: auth()->user()->name"
                             :initials="auth()->user()->initials()"
                         />
-                        <flux:input type="file" name="avatar" :label="__('Photo')" :accept="\App\Support\ImageUploads::ACCEPT" class="flex-1" />
+                        <flux:input type="file" name="avatar" :label="__('Photo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::PHOTO)" class="flex-1" />
                     </div>
 
                     <flux:input

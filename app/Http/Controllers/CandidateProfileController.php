@@ -34,8 +34,8 @@ class CandidateProfileController extends Controller
     public function update(Request $request, ReplaceUploadedImage $replaceImage): RedirectResponse
     {
         $validated = $request->validate([
-            'avatar' => ['nullable', ...ImageUploads::rules(2048)],
-            'cover_photo' => ['nullable', ...ImageUploads::rules(4096)],
+            'avatar' => ['nullable', ...ImageUploads::rules(ImageUploads::PHOTO)],
+            'cover_photo' => ['nullable', ...ImageUploads::rules(ImageUploads::COVER)],
             'headline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:5000'],
             'portfolio_url' => ['nullable', 'url', 'max:255'],
@@ -49,7 +49,7 @@ class CandidateProfileController extends Controller
         // Avatar lives on the User model (shared by every role), not on
         // CandidateProfile -- the starter kit already has this column,
         // it just had no upload UI anywhere yet.
-        $avatarPath = $replaceImage($request->file('avatar'), $user->avatar, 'avatars');
+        $avatarPath = $replaceImage($request->file('avatar'), $user->avatar, 'avatars', longestSide: ImageUploads::storedLongestSide(ImageUploads::PHOTO));
 
         if ($avatarPath !== $user->avatar) {
             $user->avatar = $avatarPath;
@@ -60,6 +60,7 @@ class CandidateProfileController extends Controller
             $request->file('cover_photo'),
             $candidateProfile->cover_photo_path,
             'candidate-covers',
+            longestSide: ImageUploads::storedLongestSide(ImageUploads::COVER),
         );
 
         unset($validated['avatar'], $validated['cover_photo']);
