@@ -9,6 +9,7 @@ use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\Report;
 use App\Models\User;
+use App\Support\PublicCache;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -28,23 +29,37 @@ class PlatformOverview extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $weekAgo = now()->subWeek();
+        // Seven counts across the largest tables, identical for every
+        // member of staff. The queue widget above stays live: that is the
+        // one a moderator acts on.
+        $numbers = PublicCache::remember('admin-platform-numbers', function () {
+            $weekAgo = now()->subWeek();
 
-        $closed = Report::query()
-            ->where('review_status', '!=', ReportStatus::Pending->value)
-            ->where('updated_at', '>=', $weekAgo);
-        $closedCount = (clone $closed)->count();
-        $actioned = (clone $closed)->where('review_status', ReportStatus::Actioned->value)->count();
+            $closed = Report::query()
+                ->where('review_status', '!=', ReportStatus::Pending->value)
+                ->where('updated_at', '>=', $weekAgo);
+
+            return [
+                'live' => JobPosting::query()->active()->count(),
+                'companies' => Company::count(),
+                'verified' => Company::whereNotNull('verified_at')->count(),
+                'people' => User::count(),
+                'applications' => Application::where('created_at', '>=', $weekAgo)->count(),
+                'decisions' => ModerationEvent::where('created_at', '>=', $weekAgo)->count(),
+                'closed' => (clone $closed)->count(),
+                'actioned' => (clone $closed)->where('review_status', ReportStatus::Actioned->value)->count(),
+            ];
+        });
 
         return [
-            Stat::make('Live job postings', JobPosting::query()->active()->count()),
-            Stat::make('Companies', Company::count())
-                ->description(Company::whereNotNull('verified_at')->count().' verified'),
-            Stat::make('People', User::count()),
-            Stat::make('Applications this week', Application::where('created_at', '>=', $weekAgo)->count()),
-            Stat::make('Moderation decisions this week', ModerationEvent::where('created_at', '>=', $weekAgo)->count())
-                ->description($closedCount > 0
-                    ? round($actioned / $closedCount * 100).'% of closed reports led to action'
+            Stat::make('Live job postings', $numbers['live']),
+            Stat::make('Companies', $numbers['companies'])
+                ->description($numbers['verified'].' verified'),
+            Stat::make('People', $numbers['people']),
+            Stat::make('Applications this week', $numbers['applications']),
+            Stat::make('Moderation decisions this week', $numbers['decisions'])
+                ->description($numbers['closed'] > 0
+                    ? round($numbers['actioned'] / $numbers['closed'] * 100).'% of closed reports led to action'
                     : 'No reports closed this week'),
         ];
     }

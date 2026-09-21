@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Skill;
+use App\Support\PublicCache;
 use App\Support\SubmissionLimits;
 use Flux\Flux;
 use Illuminate\Support\Facades\RateLimiter;
@@ -99,7 +100,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
     #[Computed]
     public function allCategories()
     {
-        return Category::orderBy('name')->get();
+        return PublicCache::lookup('categories', fn () => Category::orderBy('name')->get());
     }
 
     #[Computed]
