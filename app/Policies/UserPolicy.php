@@ -49,4 +49,14 @@ class UserPolicy
         return $user->isActiveStaff()
             && $user->isSuperAdmin();
     }
+
+    /**
+     * Erasing someone's personal data on request -- the one thing here
+     * that cannot be undone -- takes the same three rules as suspending,
+     * and cannot be done twice.
+     */
+    public function erase(User $user, User $target): bool
+    {
+        return $target->anonymized_at === null && $this->suspend($user, $target);
+    }
 }

@@ -27,6 +27,7 @@ enum ModerationAction: string
 
     case SuspendUser = 'suspend_user';
     case ReinstateUser = 'reinstate_user';
+    case EraseUser = 'erase_user';
 
     public function label(): string
     {
@@ -41,6 +42,7 @@ enum ModerationAction: string
             self::UnbanCompany => 'Lifted company ban',
             self::SuspendUser => 'Suspended user',
             self::ReinstateUser => 'Reinstated user',
+            self::EraseUser => 'Erased personal data',
         };
     }
 
@@ -57,6 +59,7 @@ enum ModerationAction: string
             self::RequestCompanyDocuments,
             self::BanCompany,
             self::SuspendUser,
+            self::EraseUser,
         ], true);
     }
 }

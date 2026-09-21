@@ -52,7 +52,10 @@ class AnonymizeUser
         DB::transaction(function () use ($user, &$files) {
             $originalEmail = $user->email;
 
-            if ($profile = $user->candidateProfile) {
+            // Queried, never read from already-loaded relations: a caller
+            // (the admin users table, for one) may have loaded them with only
+            // a few columns, and erasure must see every column there is.
+            if ($profile = $user->candidateProfile()->first()) {
                 $applicationIds = $profile->applications()->pluck('id');
 
                 // An open application to someone who no longer exists is
@@ -93,7 +96,7 @@ class AnonymizeUser
                 ])->save();
             }
 
-            if ($recruiterProfile = $user->recruiterProfile) {
+            if ($recruiterProfile = $user->recruiterProfile()->first()) {
                 $files[] = ['public', $recruiterProfile->avatar_path];
                 $recruiterProfile->delete();
             }
