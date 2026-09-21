@@ -107,6 +107,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::get('/applications/{application}', [CandidateApplicationController::class, 'show'])->name('applications.show');
     Route::patch('/applications/{application}/withdraw', [CandidateApplicationController::class, 'withdraw'])->name('applications.withdraw');
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
+    Route::delete('/saved-jobs/unavailable', [CandidateSavedJobController::class, 'pruneUnavailable'])->name('saved-jobs.prune');
 
     // Job alerts (claude/14 route 22): CRUD-in-modal like Education, so
     // one Livewire page handles list, create, edit, pause and delete.
