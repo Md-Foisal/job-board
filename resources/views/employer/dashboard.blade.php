@@ -7,7 +7,7 @@
 
         <div class="grid gap-4 sm:grid-cols-3">
             <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Open jobs') }}</div>
+                <div class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Live jobs') }}</div>
                 <div class="mt-1 font-display text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">{{ $openCount }}</div>
             </div>
             <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
@@ -50,9 +50,7 @@
                                         >{{ $jobPosting->title }}</a>
                                     </td>
                                     <td class="px-5 py-4">
-                                        <flux:badge :color="$jobPosting->availability_status === \App\Enums\AvailabilityStatus::Active ? 'green' : 'zinc'">
-                                            {{ $jobPosting->availability_status->label() }}
-                                        </flux:badge>
+                                        <x-posting-status :job-posting="$jobPosting" :detailed="false" />
                                     </td>
                                     <td class="px-5 py-4 text-end tabular-nums text-zinc-700 dark:text-zinc-300">{{ $jobPosting->applications_count }}</td>
                                     <td class="px-5 py-4 text-end tabular-nums font-medium {{ $jobPosting->new_applications_count > 0 ? 'text-brand-700 dark:text-brand-400' : 'text-zinc-400' }}">

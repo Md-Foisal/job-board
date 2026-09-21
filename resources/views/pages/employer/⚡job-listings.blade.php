@@ -3,11 +3,9 @@
 use App\Actions\DuplicateJobPosting;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
-use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
-use App\Models\Report;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -160,37 +158,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                 </div>
                             </td>
                             <td class="px-5 py-4">
-                                <flux:badge :color="$jobPosting->availability_status === AvailabilityStatus::Active ? 'green' : 'zinc'">
-                                    {{ $jobPosting->availability_status->label() }}
-                                </flux:badge>
-
-                                {{-- Not on a draft. Moderation starts when a
-                                     posting is submitted, so telling someone
-                                     their unpublished draft is "pending
-                                     review" claims a queue it was never put
-                                     in, and makes the wait look longer than
-                                     it is. --}}
-                                @if ($jobPosting->availability_status !== AvailabilityStatus::Draft)
-                                    @if ($jobPosting->moderation_status === ModerationStatus::Pending)
-                                        <flux:badge color="yellow">{{ __('In review') }}</flux:badge>
-                                    @elseif ($jobPosting->moderation_status === ModerationStatus::Rejected)
-                                        <flux:badge color="red">{{ __('Needs changes') }}</flux:badge>
-
-                                        {{-- The reason is the whole point of sending it
-                                             back; a bare "rejected" leaves the employer
-                                             guessing what to fix. --}}
-                                        @if ($jobPosting->latestRejection?->reason)
-                                            <flux:text size="sm" class="mt-2 max-w-sm whitespace-pre-line text-red-700 dark:text-red-400">{{ $jobPosting->latestRejection->reason }}</flux:text>
-                                        @endif
-                                        <flux:text size="sm" class="mt-1">{{ __('Edit and publish again to send it back for review.') }}</flux:text>
-                                    @elseif ($jobPosting->open_reporters_count >= Report::HIDE_AFTER_REPORTERS)
-                                        {{-- Otherwise it reads as live while candidates
-                                             cannot find it. Who reported it, and why,
-                                             stays with staff. --}}
-                                        <flux:badge color="orange">{{ __('Hidden for review') }}</flux:badge>
-                                        <flux:text size="sm" class="mt-1 max-w-sm">{{ __('Several people reported this posting. It is out of search until our team has looked; you do not need to do anything.') }}</flux:text>
-                                    @endif
-                                @endif
+                                <x-posting-status :job-posting="$jobPosting" />
                             </td>
                             <td class="px-5 py-4 text-end tabular-nums">
                                 <a

@@ -81,3 +81,12 @@ it('asks for a password before a destructive action, then trusts it for the conf
 
     expect(ConfirmsPassword::recentlyConfirmed())->toBeFalse();
 });
+
+it('signs staff out of the panel to the home page, so the next person to sign in is not sent to the panel', function () {
+    $this->actingAs(staffWithTwoFactor())
+        ->post('/admin/logout')
+        ->assertRedirect('/');
+
+    $this->assertGuest();
+    expect(session('url.intended'))->toBeNull();
+});

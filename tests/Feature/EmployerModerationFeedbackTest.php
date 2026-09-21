@@ -150,3 +150,14 @@ test('a posting sent back for review waits from its resubmission, not its first 
     expect($posting->fresh()->submitted_at->isToday())->toBeTrue()
         ->and($posting->fresh()->published_at->isToday())->toBeFalse();
 });
+
+test('the dashboard counts only what candidates can find, and says why the rest is not live', function () {
+    $company = Company::factory()->create();
+    JobPosting::factory()->for($company)->create(['title' => 'Live Role']);
+    JobPosting::factory()->for($company)->pendingModeration()->create(['title' => 'Waiting Role']);
+
+    $this->actingAs(employerUser($company, MembershipRole::Owner))
+        ->get(route('employer.dashboard', $company))
+        ->assertSeeInOrder(['Live jobs', '1'])
+        ->assertSeeInOrder(['Waiting Role', 'In review']);
+});

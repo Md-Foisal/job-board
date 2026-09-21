@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStage;
-use App\Enums\AvailabilityStatus;
+use App\Enums\ModerationStatus;
+use App\Enums\ReportStatus;
 use App\Models\Company;
+use App\Models\JobPosting;
+use App\Models\Report;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class EmployerDashboardController extends Controller
@@ -23,6 +27,9 @@ class EmployerDashboardController extends Controller
             ->withCount([
                 'applications',
                 'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'reports as open_reporters_count' => fn ($query) => $query
+                    ->where('review_status', ReportStatus::Pending)
+                    ->select(DB::raw('count(distinct reporter_id)')),
             ])
             ->latest()
             ->get();
@@ -30,7 +37,12 @@ class EmployerDashboardController extends Controller
         return view('employer.dashboard', [
             'company' => $company,
             'jobPostings' => $jobPostings,
-            'openCount' => $jobPostings->where('availability_status', AvailabilityStatus::Active)->count(),
+            // Live means candidates can find it: open, approved, and not
+            // held back by reports. Counting everything marked active
+            // included postings still in review or sent back.
+            'openCount' => $jobPostings->filter(fn (JobPosting $jobPosting) => $jobPosting->isOpen()
+                && $jobPosting->moderation_status === ModerationStatus::Approved
+                && $jobPosting->open_reporters_count < Report::HIDE_AFTER_REPORTERS)->count(),
             'applicationCount' => $jobPostings->sum('applications_count'),
             'newApplicationCount' => $jobPostings->sum('new_applications_count'),
         ]);

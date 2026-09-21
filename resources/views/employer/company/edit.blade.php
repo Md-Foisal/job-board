@@ -11,6 +11,8 @@
                  been asked for documents otherwise has no way of knowing. --}}
             @if ($company->verified_at)
                 <flux:badge color="green">{{ __('Verified') }}</flux:badge>
+            @elseif ($company->outstandingDocumentsRequest())
+                <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
             @else
                 <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
             @endif

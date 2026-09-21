@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
+use App\Http\Responses\AdminLogoutResponse;
+use Filament\Auth\Http\Responses\Contracts\LogoutResponse;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -19,6 +21,13 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        // In boot, after every register(): Filament binds its own response
+        // while registering, and the later binding is the one used.
+        $this->app->bind(LogoutResponse::class, AdminLogoutResponse::class);
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
