@@ -35,6 +35,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
+        'staff_role' => null,
     ];
 
     /**
