@@ -43,6 +43,12 @@ class CategoryResource extends Resource
 
     protected static ?string $navigationLabel = 'Categories';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Categories';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'categories';

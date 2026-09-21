@@ -43,6 +43,12 @@ class SkillResource extends Resource
 
     protected static ?string $navigationLabel = 'Skills';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Skills';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $slug = 'skills';

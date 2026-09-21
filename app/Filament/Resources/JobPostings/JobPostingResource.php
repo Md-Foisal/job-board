@@ -46,6 +46,12 @@ class JobPostingResource extends Resource
 
     protected static ?string $navigationLabel = 'Job postings';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Job postings';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'title';
@@ -212,6 +218,11 @@ class JobPostingResource extends Resource
                 IconColumn::make('company.verified_at')
                     ->label('Verified')
                     ->boolean()
+                    // Most companies are not verified, and that is not a
+                    // fault: a red cross on every row reads as an alarm and
+                    // hides the rows that really need a closer look.
+                    ->falseIcon(Heroicon::OutlinedMinus)
+                    ->falseColor('gray')
                     ->getStateUsing(fn (JobPosting $record) => $record->company?->verified_at !== null),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')

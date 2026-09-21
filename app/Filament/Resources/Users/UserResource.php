@@ -40,6 +40,12 @@ class UserResource extends Resource
 
     protected static ?string $navigationLabel = 'People';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'People';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'users';

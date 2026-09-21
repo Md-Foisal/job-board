@@ -107,7 +107,7 @@ class ModerationSeeder extends Seeder
         });
 
         // Open reports below the hiding threshold, on a posting and on a company.
-        $this->report($verified->jobPostings->first(), 1, 'Spam or fake listing');
+        $this->report($verified->jobPostings->first(), 1, 'Spam or fake');
         $this->report($companies->get(1), 2, 'Inappropriate content');
 
         // Reports staff already looked at and found nothing in.

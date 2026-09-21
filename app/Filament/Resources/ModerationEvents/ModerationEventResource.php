@@ -42,6 +42,12 @@ class ModerationEventResource extends Resource
 
     protected static ?string $navigationLabel = 'Moderation log';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Moderation log';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'moderation/log';

@@ -47,7 +47,13 @@ class CompanyResource extends Resource
 
     protected static string|UnitEnum|null $navigationGroup = 'Users & companies';
 
-    protected static ?string $navigationLabel = 'Company verification';
+    protected static ?string $navigationLabel = 'Companies';
+
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Companies';
+
+    protected static bool $hasTitleCaseModelLabel = false;
 
     protected static ?int $navigationSort = 1;
 

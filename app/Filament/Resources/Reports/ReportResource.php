@@ -52,6 +52,12 @@ class ReportResource extends Resource
 
     protected static ?string $navigationLabel = 'Reports';
 
+    // The page title repeats the menu entry word for word, in the same
+    // sentence case, so the two never read as different places.
+    protected static ?string $pluralModelLabel = 'Reports';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $slug = 'moderation/reports';
