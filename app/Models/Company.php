@@ -4,11 +4,16 @@ namespace App\Models;
 
 use App\Casts\SanitizedHtml;
 use App\Enums\AccountStatus;
+use App\Enums\DomainCheck;
 use App\Enums\IdentityType;
+use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
 use App\Enums\ModerationAction;
+use App\Support\EmailDomain;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 #[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry'])]
 class Company extends Model
@@ -120,5 +125,49 @@ class Company extends Model
             'approved' => $decisions->where('action', ModerationAction::ApproveJobPosting)->unique('subject_id')->count(),
             'rejected' => $decisions->where('action', ModerationAction::RejectJobPosting)->unique('subject_id')->count(),
         ];
+    }
+
+    /**
+     * The cheapest real check a reviewer has (the one LinkedIn relies
+     * on): does anyone who runs this company have an email address on the
+     * company's own website domain?
+     *
+     * Only owners and managers count -- an ordinary member could be anyone
+     * the company let in. A match on any one of them is enough, since a
+     * founder signing up from a personal address and a manager with a
+     * work address is the ordinary case.
+     */
+    public function domainCheck(): DomainCheck
+    {
+        $host = EmailDomain::host($this->website_url);
+
+        if ($host === null) {
+            return DomainCheck::NoWebsite;
+        }
+
+        $domains = $this->managerEmailDomains();
+
+        if ($domains->contains(fn (string $domain) => EmailDomain::belongsTo($domain, $host))) {
+            return DomainCheck::Match;
+        }
+
+        return $domains->every(fn (string $domain) => EmailDomain::isPersonal($domain))
+            ? DomainCheck::PersonalEmail
+            : DomainCheck::Mismatch;
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function managerEmailDomains()
+    {
+        return $this->memberships()
+            ->where('status', MembershipStatus::Active)
+            ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager])
+            ->with('user:id,email')
+            ->get()
+            ->map(fn ($membership) => EmailDomain::of($membership->user->email))
+            ->unique()
+            ->values();
     }
 }

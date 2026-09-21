@@ -2,13 +2,16 @@
 
 namespace App\Filament\Resources\Reports;
 
+use App\Actions\BanCompany;
 use App\Actions\DismissReports;
 use App\Actions\RejectJobPosting;
 use App\Enums\AccountStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
+use App\Filament\Resources\Companies\CompanyResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Filament\Resources\Reports\Pages\ManageReports;
+use App\Filament\Support\ConfirmsPassword;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Report;
@@ -221,6 +224,7 @@ class ReportResource extends Resource
             ->recordActions([
                 ViewAction::make()->label('Read reports'),
                 static::rejectPostingAction(),
+                static::banCompanyAction(),
                 static::dismissAction(),
             ]);
     }
@@ -284,6 +288,31 @@ class ReportResource extends Resource
                 app(RejectJobPosting::class)($record->reportable, auth()->user(), $data['reason']);
 
                 Notification::make()->title('Posting taken down')->success()->send();
+            });
+    }
+
+    /**
+     * The same ban the company verification page offers, with the same
+     * password check, reached from a report about the company.
+     */
+    public static function banCompanyAction(): Action
+    {
+        return Action::make('banCompany')
+            ->label('Ban company')
+            ->icon(Heroicon::OutlinedNoSymbol)
+            ->color('danger')
+            ->authorize('moderate')
+            ->visible(fn (Report $record) => $record->open_count > 0
+                && $record->reportable instanceof Company
+                && $record->reportable->account_status === AccountStatus::Active)
+            ->modalHeading(fn (Report $record) => 'Ban '.static::subjectLabel($record).'?')
+            ->modalDescription('All of its postings leave the public site at once, and these reports are closed as upheld. Nothing is deleted; lifting the ban brings them back.')
+            ->schema(fn () => CompanyResource::banFields())
+            ->before(fn () => ConfirmsPassword::remember())
+            ->action(function (Report $record, array $data) {
+                app(BanCompany::class)($record->reportable, auth()->user(), $data['reason']);
+
+                Notification::make()->title('Company banned')->success()->send();
             });
     }
 
