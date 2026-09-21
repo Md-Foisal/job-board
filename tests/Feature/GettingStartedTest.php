@@ -2,6 +2,7 @@
 
 use App\Enums\MembershipRole;
 use App\Models\Company;
+use App\Models\Membership;
 use App\Models\User;
 
 test('someone with neither side set up is offered both instead of a blank page', function () {
@@ -41,7 +42,7 @@ test('an employer can start a candidate side from their company workspace', func
 test('a candidate who also works at a company can reach it from the candidate side', function () {
     $company = Company::factory()->create(['name' => 'Acme Hiring Ltd']);
     $user = candidateUser();
-    App\Models\Membership::factory()->for($user)->for($company)->create(['role' => MembershipRole::Member]);
+    Membership::factory()->for($user)->for($company)->create(['role' => MembershipRole::Member]);
 
     $this->actingAs($user)
         ->get(route('candidate.dashboard'))

@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Membership;
 use App\Models\Skill;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
 function applicationFor(Company $company, ?JobPosting $job = null): Application
@@ -263,13 +264,13 @@ test('the application page shows which of the posting skills are missing', funct
 });
 
 test('a CV the candidate later removes from their library still reaches the employer who received it', function () {
-    Illuminate\Support\Facades\Storage::fake('local');
+    Storage::fake('local');
 
     $company = Company::factory()->create();
     $manager = employerUser($company, MembershipRole::Manager);
     $application = applicationFor($company);
     $document = $application->resumeDocument;
-    Illuminate\Support\Facades\Storage::disk('local')->put($document->file_path, 'cv');
+    Storage::disk('local')->put($document->file_path, 'cv');
 
     $document->delete();
 

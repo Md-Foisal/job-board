@@ -1,12 +1,16 @@
 <?php
 
 use App\Enums\AccountStatus;
+use App\Enums\ModerationStatus;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Notifications\JobAlertMatches;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
+use Symfony\Component\Mime\Email;
 
 function alertFor(array $criteria = ['q' => 'Laravel'], array $attributes = []): JobAlert
 {
@@ -59,7 +63,7 @@ test('a posting is never emailed twice by the same alert, even one approved late
     ]);
 
     $this->travel(1)->day();
-    $lateApproval->forceFill(['moderation_status' => App\Enums\ModerationStatus::Approved])->save();
+    $lateApproval->forceFill(['moderation_status' => ModerationStatus::Approved])->save();
     $this->artisan('job-alerts:send');
 
     Notification::assertSentTimes(JobAlertMatches::class, 2);
@@ -125,7 +129,7 @@ test('the email lists ten and links to the rest, with one-click unsubscribe head
     expect($rendered)->toContain('See all 12')
         ->and($rendered)->toContain('Unsubscribe from this alert');
 
-    $message = new Symfony\Component\Mime\Email;
+    $message = new Email;
     foreach ($mail->callbacks as $callback) {
         $callback($message);
     }
@@ -148,8 +152,8 @@ test('opening the unsubscribe link only asks; confirming switches the alert off'
 test('the one-click POST is let through without a CSRF token', function () {
     // Tests skip CSRF checks altogether, so a request cannot prove this;
     // the exemption itself is what a mail client's POST depends on.
-    $request = Illuminate\Http\Request::create('/job-alerts/1/unsubscribe', 'POST');
-    $middleware = app(Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class);
+    $request = Request::create('/job-alerts/1/unsubscribe', 'POST');
+    $middleware = app(PreventRequestForgery::class);
 
     expect(collect($middleware->getExcludedPaths())->contains(fn ($path) => $request->is($path)))->toBeTrue();
 });

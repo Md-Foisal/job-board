@@ -3,11 +3,12 @@
 namespace Database\Factories;
 
 use App\Enums\AlertFrequency;
+use App\Models\JobAlert;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\JobAlert>
+ * @extends Factory<JobAlert>
  */
 class JobAlertFactory extends Factory
 {

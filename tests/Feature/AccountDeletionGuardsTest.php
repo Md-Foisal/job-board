@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\MembershipRole;
+use App\Enums\MembershipStatus;
 use App\Models\Company;
 use App\Models\Membership;
 use App\Models\User;
@@ -48,7 +49,7 @@ test('someone alone in their company can delete their account', function () {
 test('a member who has left does not count as someone to strand', function () {
     $company = Company::factory()->create();
     $owner = employerUser($company, MembershipRole::Owner);
-    Membership::factory()->for($company)->create(['role' => MembershipRole::Member, 'status' => App\Enums\MembershipStatus::Inactive]);
+    Membership::factory()->for($company)->create(['role' => MembershipRole::Member, 'status' => MembershipStatus::Inactive]);
 
     tryToDelete($owner)->assertHasNoErrors();
 });

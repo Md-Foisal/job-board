@@ -3,12 +3,12 @@
 use App\Actions\MergeCategory;
 use App\Actions\MergeSkill;
 use App\Enums\AlertFrequency;
-use App\Enums\MembershipRole;
 use App\Models\Category;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Models\Skill;
 use App\Support\JobSearchCriteria;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Livewire\Livewire;
 
 test('a candidate saves a job alert with its filters', function () {
@@ -94,7 +94,7 @@ test('an alert is paused, resumed, edited and deleted only by its owner', functi
     $page->call('edit', $jobAlert->id)->set('name', 'Renamed')->call('save');
     expect($jobAlert->fresh()->name)->toBe('Renamed');
 
-    expect(fn () => $page->call('delete', $other->id))->toThrow(Illuminate\Database\Eloquent\ModelNotFoundException::class);
+    expect(fn () => $page->call('delete', $other->id))->toThrow(ModelNotFoundException::class);
 
     $page->call('delete', $jobAlert->id);
     expect(JobAlert::find($jobAlert->id))->toBeNull()

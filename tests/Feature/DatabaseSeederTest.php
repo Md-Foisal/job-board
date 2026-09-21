@@ -42,7 +42,7 @@ test('a fresh seed can be looked at from every side', function () {
     expect($candidate->jobAlerts()->count())->toBe(2)
         ->and($candidate->jobAlerts()->where('is_active', false)->count())->toBe(1)
         ->and($demoCompany->jobPostings()->pluck('availability_status')->map->value->unique()->sort()->values()->all())
-            ->toBe(['active', 'closed', 'draft', 'expired'])
+        ->toBe(['active', 'closed', 'draft', 'expired'])
         ->and($deleted->isRestorable())->toBeTrue()
         ->and(User::withTrashed()->whereNotNull('anonymized_at')->exists())->toBeTrue()
         ->and(JobPosting::query()->active()->whereNull('published_at')->exists())->toBeFalse();

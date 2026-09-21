@@ -7,6 +7,7 @@ use App\Enums\AccountStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\StaffRole;
+use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -164,7 +165,7 @@ class User extends Authenticatable implements FilamentUser
     /**
      * When a deleted account's data will be erased, if nobody restores it.
      */
-    public function erasesAt(): ?\Carbon\CarbonInterface
+    public function erasesAt(): ?CarbonInterface
     {
         return $this->trashed() && $this->anonymized_at === null
             ? $this->deleted_at->copy()->addDays(self::DELETION_GRACE_DAYS)

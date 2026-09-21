@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\AnonymizeUser;
 use App\Enums\ModerationAction;
 use App\Enums\StaffRole;
 use App\Filament\Resources\Users\Pages\ManageUsers;
@@ -65,7 +66,7 @@ it('is never offered against oneself, a peer, or someone already erased', functi
     $admin = eraser();
     $peer = eraser();
     $erased = candidateUser();
-    app(App\Actions\AnonymizeUser::class)($erased);
+    app(AnonymizeUser::class)($erased);
     $this->actingAs($admin);
 
     Livewire::test(ManageUsers::class)
