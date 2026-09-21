@@ -17,6 +17,7 @@ use App\Http\Controllers\JobAlertUnsubscribeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StartCandidateProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -38,6 +39,7 @@ Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->n
  */
 Route::middleware('auth')->group(function () {
     Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/candidate/start', StartCandidateProfileController::class)->name('candidate.start');
     Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
 });
 
