@@ -12,9 +12,15 @@ class CandidateProfile extends Model
 {
     use HasFactory;
 
+    /**
+     * Including deleted accounts: a profile outlives its owner's deletion
+     * (applications point at it), and every page that shows an applicant
+     * reads the name through here -- "Deleted user" once erased, their own
+     * name while the account can still be restored.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function preference()

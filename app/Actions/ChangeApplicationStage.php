@@ -47,7 +47,13 @@ class ChangeApplicationStage
         // goes out for a change that then rolls back cannot be recalled.
         // One known recipient, so it goes directly rather than through an
         // event -- there is no fan-out here to work out.
-        $application->candidateProfile->user->notify(new ApplicationStageChanged($application));
+        // Nobody is written to once they have deleted their account: they
+        // asked to leave, and an erased one's address cannot receive mail.
+        $candidate = $application->candidateProfile->user;
+
+        if (! $candidate->trashed()) {
+            $candidate->notify(new ApplicationStageChanged($application));
+        }
 
         return $event;
     }

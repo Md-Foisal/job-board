@@ -1,7 +1,9 @@
 <?php
 
 use App\Actions\AnonymizeUser;
+use App\Actions\ChangeApplicationStage;
 use App\Enums\ApplicationOutcomeStatus;
+use App\Enums\ApplicationStage;
 use App\Enums\InvitationStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
@@ -22,6 +24,7 @@ use App\Models\ScreeningQuestion;
 use App\Models\User;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -188,4 +191,29 @@ test('the sweep runs every night', function () {
 
     expect($event?->expression)->toBe('0 3 * * *')
         ->and($event->timezone)->toBe('Asia/Dhaka');
+});
+
+test('the employer still sees the application of someone who erased their account, without writing to them', function () {
+    Notification::fake();
+    $company = Company::factory()->create();
+    $manager = employerUser($company, MembershipRole::Manager);
+    $posting = JobPosting::factory()->for($company)->create();
+    $leaver = candidateUser();
+    $application = Application::factory()->create(['job_posting_id' => $posting->id, 'candidate_profile_id' => $leaver->candidateProfile->id]);
+
+    app(AnonymizeUser::class)($leaver);
+
+    $this->actingAs($manager)
+        ->get(route('employer.jobs.applications', ['company' => $company, 'jobPosting' => $posting]))
+        ->assertOk()
+        ->assertSee('Deleted user');
+
+    $this->actingAs($manager)
+        ->get(route('employer.applications.show', ['company' => $company, 'application' => $application]))
+        ->assertOk()
+        ->assertSee('Deleted user');
+
+    app(ChangeApplicationStage::class)($application->fresh(), $manager, ApplicationStage::Shortlisted);
+
+    Notification::assertNothingSent();
 });
