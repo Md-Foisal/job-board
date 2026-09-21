@@ -75,9 +75,7 @@ class JobPostingResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $waiting = static::getEloquentQuery()
-            ->where('moderation_status', ModerationStatus::Pending->value)
-            ->count();
+        $waiting = static::getEloquentQuery()->awaitingReview()->count();
 
         return $waiting > 0 ? (string) $waiting : null;
     }
@@ -163,6 +161,7 @@ class JobPostingResource extends Resource
                             ->state(fn (JobPosting $record) => $record->reports()
                                 ->where('review_status', ReportStatus::Pending->value)
                                 ->latest()
+                                ->latest('id')
                                 ->pluck('reason')
                                 ->all())
                             ->bulleted()
@@ -171,7 +170,7 @@ class JobPostingResource extends Resource
                         TextEntry::make('last_decision')
                             ->label('Last decision')
                             ->state(function (JobPosting $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->first();
+                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
 
                                 if ($event === null) {
                                     return null;
@@ -245,8 +244,19 @@ class JobPostingResource extends Resource
                     ->since()
                     ->sortable(),
             ])
-            ->emptyStateHeading('Nothing is waiting')
-            ->emptyStateDescription('Postings appear here when an employer publishes them.')
+            // One table behind four tabs: "Nothing is waiting" on an empty
+            // Approved tab would say the opposite of what it shows.
+            ->emptyStateHeading(fn ($livewire) => match ($livewire->activeTab ?? null) {
+                ModerationStatus::Approved->value => 'Nothing approved yet',
+                ModerationStatus::Rejected->value => 'Nothing rejected',
+                'not_open' => 'No closed or lapsed posting is waiting',
+                default => 'Nothing is waiting',
+            })
+            ->emptyStateDescription(fn ($livewire) => match ($livewire->activeTab ?? null) {
+                ModerationStatus::Approved->value, ModerationStatus::Rejected->value => null,
+                'not_open' => 'A pending posting lands here if its company closes it or it runs out while waiting, and goes back to Waiting when reopened or extended.',
+                default => 'Postings appear here when an employer publishes them.',
+            })
             ->recordActions([
                 ViewAction::make(),
                 static::approveAction(),

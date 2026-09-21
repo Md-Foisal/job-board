@@ -72,7 +72,10 @@
                      person's own, not the company's, and every member has
                      it regardless of rank. --}}
                 <flux:sidebar.group :heading="__('You')" class="grid">
-                    <flux:sidebar.item icon="identification" :href="route('employer.recruiter-profile.edit')"
+                    {{-- The workspace it was opened from travels along, so the
+                         page keeps the company you were in instead of jumping to
+                         another one of yours. --}}
+                    <flux:sidebar.item icon="identification" :href="route('employer.recruiter-profile.edit', ['company' => $company->slug])"
                         :current="request()->routeIs('employer.recruiter-profile.*')" wire:navigate>
                         {{ __('Recruiter profile') }}
                     </flux:sidebar.item>

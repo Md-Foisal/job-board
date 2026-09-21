@@ -103,7 +103,7 @@ test('uploading a new logo replaces the old file rather than leaving it behind',
         ->patch(route('employer.company.update', $company), [
             'name' => $company->name,
             'identity_type' => $company->identity_type->value,
-            'logo' => UploadedFile::fake()->image('new.png'),
+            'logo' => UploadedFile::fake()->image('new.png', 300, 300),
         ]);
 
     $company->refresh();

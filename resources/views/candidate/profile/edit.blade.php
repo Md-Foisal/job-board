@@ -74,7 +74,7 @@
                         id="cover-upload"
                         type="file"
                         name="cover_photo"
-                        accept="image/png,image/jpeg,image/webp"
+                        accept="{{ \App\Support\ImageUploads::ACCEPT }}"
                         class="sr-only"
                         @change="pickCover($event)"
                     >
@@ -112,7 +112,7 @@
                                 id="avatar-upload"
                                 type="file"
                                 name="avatar"
-                                accept="image/png,image/jpeg,image/webp"
+                                accept="{{ \App\Support\ImageUploads::ACCEPT }}"
                                 class="sr-only"
                                 @change="pickAvatar($event)"
                             >
@@ -160,6 +160,19 @@
                             maxlength="255"
                     />
                 </div>
+
+                {{-- The camera buttons above carry no room for a caption, so
+                     the rules and any refusal are spelled out here. --}}
+                <div class="mt-4 space-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+                    <p>{{ __('Photo:') }} {{ \App\Support\ImageUploads::hint(\App\Support\ImageUploads::PHOTO) }}</p>
+                    <p>{{ __('Cover:') }} {{ \App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER) }}</p>
+                </div>
+                @error('avatar')
+                    <flux:text size="sm" class="mt-2 text-red-600 dark:text-red-400" role="alert">{{ $message }}</flux:text>
+                @enderror
+                @error('cover_photo')
+                    <flux:text size="sm" class="mt-2 text-red-600 dark:text-red-400" role="alert">{{ $message }}</flux:text>
+                @enderror
             </div>
 
             {{-- Bio --}}

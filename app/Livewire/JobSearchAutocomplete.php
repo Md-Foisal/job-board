@@ -36,6 +36,7 @@ class JobSearchAutocomplete extends Component
             ->keyword($this->q)
             ->with('company:id,name')
             ->latest()
+            ->latest('id')
             ->limit(6)
             ->get();
     }

@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Enums\SkillImportance;
+use App\Models\JobAlert;
 use App\Models\Skill;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -41,6 +42,11 @@ class MergeSkill
 
             $this->move('candidate_profile_skill', 'candidate_profile_id', 'proficiency', $from, $into,
                 fn (string $a, string $b) => (self::PROFICIENCY_RANK[$a] ?? 0) >= (self::PROFICIENCY_RANK[$b] ?? 0) ? $a : $b);
+
+            // Same reason for job alerts: one that asked for "ReactJS"
+            // would otherwise stop matching anything at all.
+            JobAlert::where('criteria->skill', $from->id)
+                ->update(['criteria->skill' => $into->id]);
 
             $from->delete();
         });

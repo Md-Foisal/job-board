@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Models\Application;
 use App\Models\JobView;
+use App\Services\JobMatches;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -29,7 +30,7 @@ class CandidateDashboardController extends Controller
         'linkedin_url' => 'LinkedIn link',
     ];
 
-    public function index(Request $request): View
+    public function index(Request $request, JobMatches $jobMatches): View
     {
         $candidateProfile = $request->user()->candidateProfile;
 
@@ -74,15 +75,19 @@ class CandidateDashboardController extends Controller
         // taken down or hidden since it was viewed must not be shown here
         // in full when the public page for it answers 404.
         $recentlyViewedJobs = JobView::query()
-            ->with('jobPosting.company')
+            ->with(['jobPosting.company', 'jobPosting.skills:id,name'])
             ->where('user_id', $request->user()->id)
             ->whereHas('jobPosting', fn ($query) => $query->active())
             ->latest('viewed_at')
+            ->latest('id')
             ->take(6)
             ->get()
             ->pluck('jobPosting');
 
         return view('candidate.dashboard', [
+            'hasSkills' => $sectionChecks['Skills'],
+            'matches' => $jobMatches->for($candidateProfile),
+            'recentlyViewedScores' => $jobMatches->scoresFor($candidateProfile, $recentlyViewedJobs),
             'profileCompletionPercent' => $profileCompletionPercent,
             'missingProfileItems' => $missingProfileItems,
             'activeApplicationCount' => $activeApplicationCount,

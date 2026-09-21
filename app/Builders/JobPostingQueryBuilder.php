@@ -85,13 +85,61 @@ class JobPostingQueryBuilder extends Builder
         return $this->where('min_experience_years', '<=', $years);
     }
 
+    /**
+     * Applies a set of search criteria (see JobSearchCriteria) -- the one
+     * definition of "matches" the search page and job alerts share.
+     */
+    public function matching(array $criteria): self
+    {
+        if (isset($criteria['q'])) {
+            $this->keyword($criteria['q']);
+        }
+
+        if (isset($criteria['skill'])) {
+            $this->skill($criteria['skill']);
+        }
+
+        if (isset($criteria['category'])) {
+            $this->category($criteria['category']);
+        }
+
+        if (isset($criteria['salaryMin']) || isset($criteria['salaryMax'])) {
+            $this->salaryBetween($criteria['salaryMin'] ?? null, $criteria['salaryMax'] ?? null);
+        }
+
+        if (isset($criteria['location'])) {
+            $this->location($criteria['location']);
+        }
+
+        if (isset($criteria['workplaceType'])) {
+            $this->workplaceType($criteria['workplaceType']);
+        }
+
+        if (isset($criteria['employmentType'])) {
+            $this->employmentType($criteria['employmentType']);
+        }
+
+        if (isset($criteria['experience'])) {
+            $this->experience($criteria['experience']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Every sort ends on the id, newest first: many postings share a date
+     * or a salary, and tied rows may come back in any order -- a paginated
+     * list would then repeat some postings and skip others between pages.
+     */
     public function sortBy(string $field): self
     {
-        return match ($field) {
+        match ($field) {
             'newest' => $this->orderByDesc('created_at'),
             'salary_high' => $this->orderByDesc('salary_max_monthly'),
             'salary_low' => $this->orderBy('salary_min_monthly'),
-            default => $this,
+            default => null,
         };
+
+        return $this->orderByDesc($this->qualifyColumn('id'));
     }
 }

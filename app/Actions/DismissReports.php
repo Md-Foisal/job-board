@@ -7,6 +7,7 @@ use App\Enums\ReportStatus;
 use App\Models\ModerationEvent;
 use App\Models\Report;
 use App\Models\User;
+use App\Support\PublicCache;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -21,7 +22,7 @@ class DismissReports
 {
     public function __invoke(Report $report, User $staff, ?string $note = null): ModerationEvent
     {
-        return DB::transaction(function () use ($report, $staff, $note) {
+        $event = DB::transaction(function () use ($report, $staff, $note) {
             Report::query()
                 ->where('reportable_type', $report->reportable_type)
                 ->where('reportable_id', $report->reportable_id)
@@ -36,5 +37,12 @@ class DismissReports
                 'reason' => $note,
             ]);
         });
+
+        // The reports were closed with one bulk update, which fires no
+        // model events; closing them can bring a hidden subject back into
+        // public view.
+        PublicCache::flushPublic();
+
+        return $event;
     }
 }

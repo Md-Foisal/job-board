@@ -3,7 +3,9 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
+use App\Http\Middleware\LoadStaffMemberships;
 use App\Http\Responses\AdminLogoutResponse;
+use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -12,6 +14,8 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Icons\Heroicon;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -41,6 +45,24 @@ class AdminPanelProvider extends PanelProvider
             // Same typeface as the rest of the application, from the same
             // font host, so moving between the two does not change voice.
             ->font('Instrument Sans')
+            // Looks and behaves like the rest of the product: the app's
+            // wordmark, which leads back to the public site as it does
+            // everywhere else; one light/dark setting shared with the app
+            // (its switch in the bar, Filament's own three-way one removed so
+            // there are not two that disagree); and the app's surfaces.
+            // See resources/views/filament/.
+            ->brandName('JobBoard')
+            ->brandLogo(fn () => view('filament.brand'))
+            ->homeUrl(fn () => route('home'))
+            ->themeSwitcher(false)
+            ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
+            ->userMenuItems([
+                'site' => Action::make('site')
+                    ->label('View site')
+                    ->icon(Heroicon::OutlinedGlobeAlt)
+                    ->url(fn () => route('home')),
+            ])
             ->colors([
                 'primary' => [
                     50 => 'oklch(0.98 0.014 175)',
@@ -79,6 +101,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 EnsureStaffHasTwoFactor::class,
+                LoadStaffMemberships::class,
             ], isPersistent: true);
     }
 }

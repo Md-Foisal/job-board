@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountRestoreController;
 use App\Http\Controllers\ApplicationResumeDownloadController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
@@ -12,9 +13,11 @@ use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\JobAlertUnsubscribeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\StartCandidateProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -36,10 +39,28 @@ Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->n
  */
 Route::middleware('auth')->group(function () {
     Route::get('/companies/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/candidate/start', StartCandidateProfileController::class)->name('candidate.start');
     Route::post('/companies', [CompanyController::class, 'store'])->name('companies.store');
 });
 
 Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->name('companies.show');
+
+// Restoring a deleted account inside its grace period. Only the sign-in
+// form sends anyone here, after the right password for that account.
+Route::middleware('guest')->group(function () {
+    Route::get('/account/restore', [AccountRestoreController::class, 'show'])->name('account.restore');
+    Route::post('/account/restore', [AccountRestoreController::class, 'store'])->name('account.restore.store');
+});
+
+// Job alert unsubscribe (claude/14 route 45): no sign-in, the signature is
+// the proof. POST is the one-click request a mail client sends, so it is
+// kept out of CSRF checks in bootstrap/app.php -- it carries no session.
+Route::middleware('signed')->group(function () {
+    Route::get('/job-alerts/{jobAlert}/unsubscribe', [JobAlertUnsubscribeController::class, 'show'])
+        ->whereNumber('jobAlert')->name('job-alerts.unsubscribe');
+    Route::post('/job-alerts/{jobAlert}/unsubscribe', [JobAlertUnsubscribeController::class, 'store'])
+        ->whereNumber('jobAlert')->name('job-alerts.unsubscribe.store');
+});
 
 Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.')->group(function () {
     Route::get('/dashboard', [CandidateDashboardController::class, 'index'])->name('dashboard');
@@ -86,6 +107,11 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::get('/applications/{application}', [CandidateApplicationController::class, 'show'])->name('applications.show');
     Route::patch('/applications/{application}/withdraw', [CandidateApplicationController::class, 'withdraw'])->name('applications.withdraw');
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
+    Route::delete('/saved-jobs/unavailable', [CandidateSavedJobController::class, 'pruneUnavailable'])->name('saved-jobs.prune');
+
+    // Job alerts (claude/14 route 22): CRUD-in-modal like Education, so
+    // one Livewire page handles list, create, edit, pause and delete.
+    Route::livewire('/job-alerts', 'pages::candidate.job-alerts')->name('job-alerts.index');
 });
 
 Route::middleware(['auth', 'candidate'])->group(function () {

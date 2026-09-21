@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Enums\AccountStatus;
+use App\Http\Controllers\AccountRestoreController;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
@@ -91,8 +93,17 @@ class FortifyServiceProvider extends ServiceProvider
         // account. The suspension is only revealed after the password has
         // been checked, so the message tells nobody anything about an
         // account they could not have signed in to anyway.
+        //
+        // An account its owner deleted is found too, while it can still be
+        // restored: signing in is how they get it back (the same way
+        // Facebook cancels a pending deletion). They are not signed in
+        // here -- only sent to confirm -- and after restoring they sign in
+        // again through the normal path, so two-factor still applies.
         Fortify::authenticateUsing(function (Request $request) {
-            $user = User::where(Fortify::username(), $request->input(Fortify::username()))->first();
+            $user = User::withTrashed()
+                ->where(Fortify::username(), $request->input(Fortify::username()))
+                ->whereNull('anonymized_at')
+                ->first();
 
             if ($user === null || ! Hash::check($request->input('password'), $user->password)) {
                 return null;
@@ -102,6 +113,19 @@ class FortifyServiceProvider extends ServiceProvider
                 throw ValidationException::withMessages([
                     Fortify::username() => EnsureAccountIsActive::MESSAGE,
                 ]);
+            }
+
+            if ($user->trashed()) {
+                if (! $user->isRestorable()) {
+                    return null;
+                }
+
+                $request->session()->put(AccountRestoreController::SESSION_KEY, [
+                    'user_id' => $user->id,
+                    'until' => now()->addMinutes(10)->getTimestamp(),
+                ]);
+
+                throw new HttpResponseException(redirect()->route('account.restore'));
             }
 
             return $user;

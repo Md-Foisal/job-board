@@ -27,7 +27,7 @@ test('the workspace carries no public job-browsing controls', function () {
     $response->assertDontSee('For Employers');
 });
 
-test('the switcher stays hidden when there is only one context', function () {
+test('with only one context, the switcher offers no other space to go to', function () {
     $company = Company::factory()->create(['name' => 'Solo Studio']);
     $user = User::factory()->create();
     Membership::factory()->for($user)->for($company)->create();

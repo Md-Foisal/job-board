@@ -35,6 +35,29 @@ new class extends Component {
             return;
         }
 
+        // Nor may the last owner walk out on a team: the others would be
+        // left with a company nobody can run -- the rule the team page
+        // already applies to removing them (Membership::isLastActiveOwner).
+        // Someone alone in their company can go; there is no one to hand
+        // it to.
+        $stranded = $user->memberships()
+            ->where('status', \App\Enums\MembershipStatus::Active)
+            ->with('company')
+            ->get()
+            ->first(fn ($membership) => $membership->isLastActiveOwner()
+                && $membership->company->memberships()
+                    ->where('status', \App\Enums\MembershipStatus::Active)
+                    ->whereKeyNot($membership->id)
+                    ->exists());
+
+        if ($stranded) {
+            $this->addError('password', __('You are the only owner of :company. Make someone else an owner from its team page before deleting your account.', [
+                'company' => $stranded->company->name,
+            ]));
+
+            return;
+        }
+
         tap($user, $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
@@ -47,7 +70,7 @@ new class extends Component {
             <flux:heading size="lg">{{ __('Are you sure you want to delete your account?') }}</flux:heading>
 
             <flux:subheading>
-                {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
+                {{ __('Your account is switched off straight away. Sign in again within :days days to restore it. After that your name, email, profile and files are erased for good; applications you sent stay with employers only as anonymous records. Enter your password to confirm.', ['days' => \App\Models\User::DELETION_GRACE_DAYS]) }}
             </flux:subheading>
         </div>
 

@@ -65,6 +65,12 @@
 
                     <flux:menu.separator />
 
+                    {{-- The only way across from the candidate side to a
+                         company workspace, and to start the other side. --}}
+                    @include('partials.space-menu-items')
+
+                    <flux:menu.separator />
+
                     @if (auth()->user()->isCandidate())
                         <flux:menu.item :href="route('candidate.profile.edit')" icon="user" wire:navigate>
                             {{ __('My profile') }}

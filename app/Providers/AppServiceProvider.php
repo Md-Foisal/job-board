@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Category;
+use App\Models\Company;
+use App\Models\JobPosting;
+use App\Models\Report;
+use App\Models\Skill;
+use App\Observers\FlushLookupCache;
+use App\Observers\FlushPublicCache;
 use App\Services\MatchScoreCalculator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +33,21 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->registerCacheFlushing();
+    }
+
+    /**
+     * What keeps App\Support\PublicCache honest: the models whose changes
+     * alter what visitors see, each moving the matching generation on.
+     */
+    protected function registerCacheFlushing(): void
+    {
+        JobPosting::observe(FlushPublicCache::class);
+        Company::observe(FlushPublicCache::class);
+        Report::observe(FlushPublicCache::class);
+
+        Skill::observe(FlushLookupCache::class);
+        Category::observe(FlushLookupCache::class);
     }
 
     /**

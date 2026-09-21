@@ -7,6 +7,7 @@ use App\Enums\AccountStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Enums\StaffRole;
+use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -26,6 +27,12 @@ class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
+
+    /**
+     * How long a deleted account can still be restored before its
+     * personal data is erased for good. 30 days is what Facebook settled on.
+     */
+    public const DELETION_GRACE_DAYS = 30;
 
     /**
      * Mirrors the database defaults so a freshly created record already
@@ -48,6 +55,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'anonymized_at' => 'datetime',
             'password' => 'hashed',
             'account_status' => AccountStatus::class,
             'staff_role' => StaffRole::class,
@@ -101,6 +109,16 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Only the memberships that currently grant access. Loaded whole and
+     * unfiltered by LoadStaffMemberships so worksAt() can answer from
+     * memory -- never eager-load it with extra conditions.
+     */
+    public function activeMemberships()
+    {
+        return $this->hasMany(Membership::class)->where('status', MembershipStatus::Active);
+    }
+
+    /**
      * The companies this user currently works for. "Currently" is the
      * whole point: an ended membership leaves its row behind for
      * attribution but stops granting access, so anything that asks
@@ -111,6 +129,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsToMany(Company::class, 'memberships')
             ->wherePivot('status', MembershipStatus::Active)
             ->withPivot('role');
+    }
+
+    public function jobAlerts()
+    {
+        return $this->hasMany(JobAlert::class);
     }
 
     public function savedJobs()
@@ -126,6 +149,27 @@ class User extends Authenticatable implements FilamentUser
     public function reportsFiled()
     {
         return $this->hasMany(Report::class, 'reporter_id');
+    }
+
+    /**
+     * Deleted by its owner, not yet erased, and still inside the grace
+     * period -- the only state a self-service restore can undo.
+     */
+    public function isRestorable(): bool
+    {
+        return $this->trashed()
+            && $this->anonymized_at === null
+            && $this->deleted_at->greaterThan(now()->subDays(self::DELETION_GRACE_DAYS));
+    }
+
+    /**
+     * When a deleted account's data will be erased, if nobody restores it.
+     */
+    public function erasesAt(): ?CarbonInterface
+    {
+        return $this->trashed() && $this->anonymized_at === null
+            ? $this->deleted_at->copy()->addDays(self::DELETION_GRACE_DAYS)
+            : null;
     }
 
     /**
@@ -153,9 +197,21 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Whether this user is actively working at the given company
      * (in any role).
+     *
+     * Answered from memory when activeMemberships has been loaded. A
+     * moderation table asks this two or three times for every row -- once
+     * per action it decides whether to show -- so the admin panel loads the
+     * viewer's active memberships once per request instead of sending a
+     * query per question. It deliberately does not trust a loaded
+     * `memberships` relation: that one gets eager-loaded with filters
+     * elsewhere, and a filtered list would make this answer "no" wrongly.
      */
     public function worksAt(Company $company): bool
     {
+        if ($this->relationLoaded('activeMemberships')) {
+            return $this->activeMemberships->contains('company_id', $company->id);
+        }
+
         return $this->memberships()
             ->where('company_id', $company->id)
             ->where('status', MembershipStatus::Active)

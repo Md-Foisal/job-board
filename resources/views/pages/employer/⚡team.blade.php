@@ -7,6 +7,8 @@ use App\Enums\MembershipStatus;
 use App\Models\Company;
 use App\Models\Invitation;
 use App\Models\Membership;
+use App\Support\SubmissionLimits;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -45,12 +47,30 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
             ->where('status', InvitationStatus::Pending)
             ->where('expires_at', '>', now())
             ->latest()
+            ->latest('id')
             ->get();
     }
 
     public function invite(InviteTeamMember $inviteTeamMember): void
     {
         $this->authorize('create', [Invitation::class, $this->company]);
+
+        $limitKey = SubmissionLimits::invitationKey($this->company);
+
+        if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::INVITATIONS_PER_DAY)) {
+            Flux::toast(
+                variant: 'warning',
+                duration: 10000,
+                heading: __("You've reached today's invitation limit"),
+                text: __(':company can send up to :limit invitations a day. You can send more in :hours hours.', [
+                    'company' => $this->company->name,
+                    'limit' => SubmissionLimits::INVITATIONS_PER_DAY,
+                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
+                ]),
+            );
+
+            return;
+        }
 
         $this->validate([
             'inviteEmail' => [
@@ -59,9 +79,12 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                 // Someone already on the roster does not need inviting, and a
                 // second open invitation to the same address would just make
                 // two links that both work.
+                // A lapsed one does not count, even in the minute before
+                // invitations:expire marks it: it is no longer on the list.
                 Rule::unique('invitations', 'email')
                     ->where('company_id', $this->company->id)
-                    ->where('status', InvitationStatus::Pending->value),
+                    ->where('status', InvitationStatus::Pending->value)
+                    ->where(fn ($query) => $query->where('expires_at', '>', now())),
             ],
             'inviteRole' => ['required', Rule::enum(MembershipRole::class)],
         ], [
@@ -69,6 +92,8 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
         ]);
 
         $inviteTeamMember($this->company, auth()->user(), $this->inviteEmail, $this->inviteRole);
+
+        RateLimiter::hit($limitKey, 86400);
 
         $this->reset('inviteEmail', 'inviteRole', 'showInviteModal');
         unset($this->pendingInvitations);

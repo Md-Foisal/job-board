@@ -5,12 +5,30 @@
         <flux:separator variant="subtle" class="mb-6" />
 
         @if ($unavailableCount > 0)
-            <flux:text class="mb-6">
-                {{ trans_choice('{1} One job you saved is no longer available, so it is not shown.|[2,*] :count jobs you saved are no longer available, so they are not shown.', $unavailableCount) }}
-            </flux:text>
+            <div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <flux:text>
+                    {{ trans_choice('{1} One job you saved is no longer available, so it is not shown.|[2,*] :count jobs you saved are no longer available, so they are not shown.', $unavailableCount) }}
+                </flux:text>
+                <form method="POST" action="{{ route('candidate.saved-jobs.prune') }}">
+                    @csrf
+                    @method('DELETE')
+                    <flux:button type="submit" size="sm" variant="ghost" icon="trash">
+                        {{ trans_choice('{1} Remove it|[2,*] Remove them', $unavailableCount) }}
+                    </flux:button>
+                </form>
+            </div>
         @endif
 
-        @if ($jobPostings->isEmpty())
+        @if ($jobPostings->isEmpty() && $unavailableCount > 0)
+            {{-- Saying "you haven't saved any" here would contradict the
+                 line just above it. --}}
+            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
+                {{ __('None of the jobs you saved is open right now.') }}
+                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
+                    {{ __('Browse open roles') }} &rarr;
+                </a>
+            </div>
+        @elseif ($jobPostings->isEmpty())
             <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
                 {{ __("You haven't saved any jobs yet.") }}
                 <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>

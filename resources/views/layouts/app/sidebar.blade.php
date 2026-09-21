@@ -65,6 +65,10 @@
                                 :current="request()->routeIs('candidate.saved-jobs.*')" wire:navigate>
                                 {{ __('Saved Jobs') }}
                             </flux:sidebar.item>
+                            <flux:sidebar.item icon="bell" :href="route('candidate.job-alerts.index')"
+                                :current="request()->routeIs('candidate.job-alerts.*')" wire:navigate>
+                                {{ __('Job Alerts') }}
+                            </flux:sidebar.item>
                         </flux:sidebar.group>
                     @endif
                 @endauth

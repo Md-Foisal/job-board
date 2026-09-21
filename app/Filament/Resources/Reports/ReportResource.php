@@ -31,6 +31,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use UnitEnum;
 
 /**
@@ -71,7 +72,9 @@ class ReportResource extends Resource
 
         return parent::getEloquentQuery()
             ->whereIn('id', $latestPerSubject)
-            ->with('reportable')
+            // A reported posting's company decides whether the viewer is
+            // recused from it, asked once per row and per action.
+            ->with(['reportable' => fn (MorphTo $morphTo) => $morphTo->morphWith([JobPosting::class => ['company']])])
             ->addSelect(['open_count' => Report::query()
                 ->selectRaw('count(*)')
                 ->from('reports as siblings')
@@ -208,6 +211,7 @@ class ReportResource extends Resource
                                 ->where('reportable_id', $record->reportable_id)
                                 ->where('review_status', ReportStatus::Pending->value)
                                 ->latest()
+                                ->latest('id')
                                 ->get()
                                 ->map(fn (Report $report) => "{$report->reason} ({$report->created_at->diffForHumans()})")
                                 ->all())

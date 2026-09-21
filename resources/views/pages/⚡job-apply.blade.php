@@ -1,10 +1,15 @@
 <?php
 
+use App\Actions\StoreCandidateDocument;
 use App\Enums\DocumentType;
 use App\Events\ApplicationSubmitted;
 use App\Models\Application;
 use App\Models\JobPosting;
+use App\Support\DocumentUploads;
+use App\Support\SubmissionLimits;
+use Flux\Flux;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -36,6 +41,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         $this->existingCvs = auth()->user()->candidateProfile->documents()
             ->where('document_type', DocumentType::Cv)
             ->latest()
+            ->latest('id')
             ->get();
 
         $this->resumeChoice = $this->existingCvs->isNotEmpty()
@@ -51,6 +57,22 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
     {
         $this->authorize('create', [Application::class, $this->jobPosting]);
 
+        $limitKey = SubmissionLimits::applicationKey(auth()->user());
+
+        if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::APPLICATIONS_PER_DAY)) {
+            Flux::toast(
+                variant: 'warning',
+                duration: 10000,
+                heading: __("You've reached today's application limit"),
+                text: __('We cap applications at :limit a day so each one gets proper attention. You can apply again in :hours hours.', [
+                    'limit' => SubmissionLimits::APPLICATIONS_PER_DAY,
+                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
+                ]),
+            );
+
+            return;
+        }
+
         $rules = [
             'resumeChoice' => [
                 'required',
@@ -60,7 +82,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         ];
 
         if ($this->resumeChoice === 'new') {
-            $rules['newResume'] = ['required', 'file', 'mimes:pdf,doc,docx', 'max:5120'];
+            $rules['newResume'] = DocumentUploads::rules(DocumentType::Cv);
         }
 
         foreach ($this->jobPosting->screeningQuestions as $question) {
@@ -72,13 +94,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         $candidateProfile = auth()->user()->candidateProfile;
 
         if ($this->resumeChoice === 'new') {
-            $path = $this->newResume->store('resumes', 'local');
-
-            $resumeDocumentId = $candidateProfile->documents()->create([
-                'document_type' => DocumentType::Cv,
-                'file_path' => $path,
-                'original_filename' => $this->newResume->getClientOriginalName(),
-            ])->id;
+            $resumeDocumentId = app(StoreCandidateDocument::class)($candidateProfile, DocumentType::Cv, $this->newResume)->id;
         } else {
             $resumeDocumentId = (int) $this->resumeChoice;
         }
@@ -103,6 +119,8 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         // the screening answers are part of what the hiring team is about
         // to be told to go and read.
         ApplicationSubmitted::dispatch($application);
+
+        RateLimiter::hit($limitKey, 86400);
 
         session()->flash('success', 'Application submitted — good luck!');
 
@@ -131,8 +149,8 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
 
             @if ($resumeChoice === 'new')
                 <div class="mt-3">
-                    <flux:input type="file" wire:model="newResume" accept=".pdf,.doc,.docx" />
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">PDF or Word, up to 5&nbsp;MB.</p>
+                    <flux:input type="file" wire:model="newResume" :accept="\App\Support\DocumentUploads::accept(\App\Enums\DocumentType::Cv)" />
+                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::Cv) }}</p>
                 </div>
             @endif
         </div>

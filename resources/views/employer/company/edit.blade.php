@@ -87,10 +87,10 @@
                                 {{ \Illuminate\Support\Str::of($company->name)->substr(0, 1) }}
                             @endif
                         </div>
-                        <flux:input type="file" name="logo" :label="__('Logo')" accept="image/*" class="flex-1" />
+                        <flux:input type="file" name="logo" :label="__('Logo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::LOGO)" class="flex-1" />
                     </div>
 
-                    <flux:input type="file" name="cover_photo" :label="__('Cover photo')" accept="image/*" />
+                    <flux:input type="file" name="cover_photo" :label="__('Cover photo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)" />
                 </div>
             </div>
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\ReplaceUploadedImage;
 use App\Http\Requests\UpdateRecruiterProfileRequest;
+use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -14,12 +15,11 @@ class RecruiterProfileController extends Controller
     {
         return view('employer.recruiter-profile.edit', [
             'recruiterProfile' => $request->user()->recruiterProfile,
-            // The page has no company in its URL -- the profile is the same
-            // one whichever company you are posting for -- but it is still
-            // reached from inside a company workspace, so the shell needs a
-            // company to render. Any of theirs is correct here, because
-            // nothing on the page varies by it.
-            'company' => $request->user()->activeCompanies()->first(),
+            // The profile is the same whichever company you post for, so the
+            // company only decides which workspace frames the page: the one
+            // it was opened from (?company=), if it is really one of theirs,
+            // so someone in two companies is not dropped into the other one.
+            'company' => $this->frame($request),
         ]);
     }
 
@@ -34,6 +34,7 @@ class RecruiterProfileController extends Controller
             $request->file('avatar'),
             $user->recruiterProfile?->avatar_path,
             'recruiter-avatars',
+            longestSide: ImageUploads::storedLongestSide(ImageUploads::PHOTO),
         );
 
         unset($validated['avatar']);
@@ -44,5 +45,14 @@ class RecruiterProfileController extends Controller
         $user->recruiterProfile()->updateOrCreate([], $validated);
 
         return back()->with('success', __('Your recruiter profile is updated.'));
+    }
+
+    private function frame(Request $request)
+    {
+        $companies = $request->user()->activeCompanies();
+
+        return $request->filled('company')
+            ? ((clone $companies)->where('companies.slug', $request->query('company'))->first() ?? $companies->first())
+            : $companies->first();
     }
 }

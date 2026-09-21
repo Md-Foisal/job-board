@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Actions\AnonymizeUser;
 use App\Actions\ChangeApplicationStage;
+use App\Enums\AlertFrequency;
 use App\Enums\ApplicationStage;
 use App\Enums\DocumentType;
 use App\Enums\StaffRole;
@@ -11,6 +13,7 @@ use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\Document;
+use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Models\JobView;
 use App\Models\Membership;
@@ -78,12 +81,16 @@ class DemoAccountsSeeder extends Seeder
             ->create();
         $this->attachSkills($profile, 5, 8);
         $this->seedCandidateActivity($candidate, $profile);
+        $this->seedJobAlerts($candidate, $profile);
+        $this->seedCompanyLifecycle($company, $employer);
+        $deleted = $this->seedDeletedAccount();
 
         $this->command?->table(['Role', 'Email', 'Password'], [
             ['Super admin', 'superadmin@jobboard.test', self::PASSWORD],
             ['Moderator', 'moderator@jobboard.test', self::PASSWORD],
             ['Employer (owner of Demo Hiring Co)', 'employer@jobboard.test', self::PASSWORD],
             ['Candidate', 'candidate@jobboard.test', self::PASSWORD],
+            ['Deleted candidate (sign in to restore)', $deleted->email, self::PASSWORD],
         ]);
         $this->command?->line('Staff two-factor secret: '.self::TWO_FACTOR_SECRET.' (or a recovery code, demo-recovery-code-1 to -8)');
     }
@@ -129,6 +136,60 @@ class DemoAccountsSeeder extends Seeder
             'job_posting_id' => $posting->id,
             'viewed_at' => now()->subHours($hoursAgo + 1),
         ]));
+    }
+
+    /**
+     * One alert that runs and one the candidate has paused, both searches
+     * that match seeded postings, so the alerts page and the unsubscribe
+     * page have something real to show.
+     */
+    private function seedJobAlerts(User $candidate, CandidateProfile $profile): void
+    {
+        $skillId = $profile->skills()->value('skills.id');
+
+        JobAlert::factory()->for($candidate)->create([
+            'name' => 'Jobs that use my top skill',
+            'criteria' => $skillId ? ['skill' => $skillId] : [],
+            'frequency' => AlertFrequency::Daily,
+        ]);
+
+        JobAlert::factory()->for($candidate)->paused()->create([
+            'name' => 'Remote roles, weekly',
+            'criteria' => ['workplaceType' => 'remote'],
+            'frequency' => AlertFrequency::Weekly,
+        ]);
+    }
+
+    /**
+     * The demo company's listing shows every state a posting passes
+     * through, and one applicant who has since erased their account, so
+     * the employer sees what that leaves behind.
+     */
+    private function seedCompanyLifecycle(Company $company, User $employer): void
+    {
+        $open = JobPosting::factory()->for($company)->create(['title' => 'Customer Support Specialist', 'posted_by_id' => $employer->id]);
+        JobPosting::factory()->for($company)->expired()->create(['title' => 'Junior QA Tester', 'posted_by_id' => $employer->id]);
+        JobPosting::factory()->for($company)->closed()->create(['title' => 'Content Writer', 'posted_by_id' => $employer->id]);
+        JobPosting::factory()->for($company)->draft()->create(['title' => 'Office Manager', 'posted_by_id' => $employer->id]);
+
+        $leaver = User::factory()->create(['name' => 'Former Applicant', 'email' => 'former-applicant@jobboard.test']);
+        $profile = CandidateProfile::factory()->for($leaver)->create();
+        Application::factory()->create(['job_posting_id' => $open->id, 'candidate_profile_id' => $profile->id]);
+
+        app(AnonymizeUser::class)($leaver);
+    }
+
+    /**
+     * Deleted five days ago and still inside the grace period: signing in
+     * with it leads to the restore page.
+     */
+    private function seedDeletedAccount(): User
+    {
+        $user = User::factory()->create(['name' => 'Deleted Candidate', 'email' => 'deleted@jobboard.test']);
+        CandidateProfile::factory()->for($user)->create();
+        $user->forceFill(['deleted_at' => now()->subDays(5)])->save();
+
+        return $user;
     }
 
     private function staff(string $name, string $email, StaffRole $role): User

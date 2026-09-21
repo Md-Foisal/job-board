@@ -64,6 +64,8 @@ class CompanyResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            // The email-domain column reads these for every row.
+            ->with('managingMemberships')
             ->withCount(['memberships', 'jobPostings'])
             ->withCount(['reports as open_reports_count' => fn (Builder $query) => $query
                 ->where('review_status', ReportStatus::Pending->value)]);
@@ -152,6 +154,7 @@ class CompanyResource extends Resource
                             ->state(fn (Company $record) => $record->reports()
                                 ->where('review_status', ReportStatus::Pending->value)
                                 ->latest()
+                                ->latest('id')
                                 ->pluck('reason')
                                 ->all())
                             ->bulleted()
@@ -160,7 +163,7 @@ class CompanyResource extends Resource
                         TextEntry::make('last_decision')
                             ->label('Last decision')
                             ->state(function (Company $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->first();
+                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
 
                                 if ($event === null) {
                                     return null;

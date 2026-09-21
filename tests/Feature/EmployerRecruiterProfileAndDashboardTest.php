@@ -68,7 +68,7 @@ test('a new photo replaces the old file', function () {
 
     $this->actingAs($user)->patch(route('employer.recruiter-profile.update'), [
         'display_name' => 'Nadia',
-        'avatar' => UploadedFile::fake()->image('new.png'),
+        'avatar' => UploadedFile::fake()->image('new.png', 300, 300),
     ]);
 
     expect($profile->fresh()->avatar_path)->not->toBe($originalPath);

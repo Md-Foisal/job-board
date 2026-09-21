@@ -42,6 +42,33 @@
             </div>
         </div>
 
+        <flux:heading size="lg" level="2" class="mb-1 mt-10">{{ __('Jobs that match your skills') }}</flux:heading>
+        <flux:subheading class="mb-6">{{ __('Open roles you have not applied to, best fit first.') }}</flux:subheading>
+
+        @if (! $hasSkills)
+            {{-- Nothing to match on yet, so nothing is guessed: the only
+                 useful thing to show is how to get a real list. --}}
+            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
+                {{ __('Add your skills and we will show the open jobs that fit you, with how well each one matches.') }}
+                <a href="{{ route('candidate.skills.edit') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
+                    {{ __('Add skills') }} &rarr;
+                </a>
+            </div>
+        @elseif ($matches->isEmpty())
+            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
+                {{ __('No open job asks for your skills right now.') }}
+                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
+                    {{ __('Browse all open roles') }} &rarr;
+                </a>
+            </div>
+        @else
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($matches as $match)
+                    <x-job-card :job-posting="$match['jobPosting']" :match-score="$match['score']" :show-save-button="true" />
+                @endforeach
+            </div>
+        @endif
+
         <flux:heading size="lg" level="2" class="mb-1 mt-10">{{ __('Recently viewed') }}</flux:heading>
         <flux:subheading class="mb-6">{{ __('Jobs you looked at, in case you want another look.') }}</flux:subheading>
 
@@ -55,7 +82,7 @@
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($recentlyViewedJobs as $jobPosting)
-                    <x-job-card :job-posting="$jobPosting" :show-save-button="true" />
+                    <x-job-card :job-posting="$jobPosting" :match-score="$recentlyViewedScores[$jobPosting->id] ?? null" :show-save-button="true" />
                 @endforeach
             </div>
         @endif

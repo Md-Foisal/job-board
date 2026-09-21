@@ -5,6 +5,7 @@ use App\Enums\WorkplaceType;
 use App\Livewire\Concerns\FiltersJobPostings;
 use App\Models\Category;
 use App\Models\Skill;
+use App\Support\PublicCache;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -20,10 +21,16 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
         return [
             'jobPostings' => $jobPostings,
             'matchScores' => $this->matchScores($jobPostings->getCollection()),
-            'skills' => Skill::orderBy('name')->get(),
-            'categories' => Category::orderBy('name')->get(),
+            // Re-read on every keystroke otherwise: the filters re-render
+            // the whole component.
+            'skills' => PublicCache::lookupModels('skills', Skill::class, fn () => Skill::orderBy('name')->get()),
+            'categories' => PublicCache::lookupModels('categories', Category::class, fn () => Category::orderBy('name')->get()),
             'workplaceTypes' => WorkplaceType::cases(),
             'employmentTypes' => EmploymentType::cases(),
+            // Guests too: the link signs them in and brings them back
+            // with the search intact. Employers have no alerts to keep.
+            'canCreateAlert' => ! auth()->check() || auth()->user()->isCandidate(),
+            'alertUrl' => route('candidate.job-alerts.index', ['create' => 1] + $this->criteria()),
         ];
     }
 }; ?>
@@ -73,6 +80,10 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
             <flux:input wire:model.live.debounce.400ms="experience" type="number" placeholder="Min years experience" />
 
             <flux:button wire:click="resetFilters" variant="ghost" size="sm">Clear filters</flux:button>
+
+            @if ($canCreateAlert)
+                <flux:button :href="$alertUrl" icon="bell" size="sm" class="w-full">{{ __('Create job alert') }}</flux:button>
+            @endif
         </aside>
 
         <div>

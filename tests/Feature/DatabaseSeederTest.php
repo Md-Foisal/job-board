@@ -33,6 +33,19 @@ test('a fresh seed can be looked at from every side', function () {
         ->and(Company::query()->where('account_status', AccountStatus::Suspended)->exists())->toBeTrue()
         ->and(User::query()->where('account_status', AccountStatus::Suspended)->exists())->toBeTrue()
         ->and(ModerationEvent::query()->count())->toBeGreaterThan(5);
+
+    // What layer 5 added: alerts, every posting state, and both ends of
+    // account deletion.
+    $demoCompany = Company::query()->where('slug', DemoAccountsSeeder::DEMO_COMPANY_SLUG)->sole();
+    $deleted = User::withTrashed()->where('email', 'deleted@jobboard.test')->sole();
+
+    expect($candidate->jobAlerts()->count())->toBe(2)
+        ->and($candidate->jobAlerts()->where('is_active', false)->count())->toBe(1)
+        ->and($demoCompany->jobPostings()->pluck('availability_status')->map->value->unique()->sort()->values()->all())
+        ->toBe(['active', 'closed', 'draft', 'expired'])
+        ->and($deleted->isRestorable())->toBeTrue()
+        ->and(User::withTrashed()->whereNotNull('anonymized_at')->exists())->toBeTrue()
+        ->and(JobPosting::query()->active()->whereNull('published_at')->exists())->toBeFalse();
 });
 
 test('the demo two-factor secret gives codes that sign staff in', function () {

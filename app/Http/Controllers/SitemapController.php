@@ -6,6 +6,7 @@ use App\Enums\AccountStatus;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Support\PublicCache;
 use Illuminate\Http\Response;
 
 class SitemapController extends Controller
@@ -21,6 +22,13 @@ class SitemapController extends Controller
      */
     public function index(): Response
     {
+        // Crawlers ask for this repeatedly and it lists every public row.
+        return response(PublicCache::remember('sitemap', fn () => $this->render()), 200)
+            ->header('Content-Type', 'application/xml');
+    }
+
+    private function render(): string
+    {
         $jobPostings = JobPosting::query()->active()->select('id', 'slug', 'updated_at')->get();
         $categories = Category::query()->select('id', 'slug')->get();
         $companies = Company::query()
@@ -29,7 +37,7 @@ class SitemapController extends Controller
             ->select('id', 'slug', 'updated_at')
             ->get();
 
-        $xml = view('sitemap', [
+        return view('sitemap', [
             // Passed in as a variable rather than written literally in
             // sitemap.blade.php: this app's Blade compiler mishandles a
             // literal opening/closing PHP tag pair inside a raw-echo tag
@@ -40,7 +48,5 @@ class SitemapController extends Controller
             'categories' => $categories,
             'companies' => $companies,
         ])->render();
-
-        return response($xml, 200)->header('Content-Type', 'application/xml');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Actions\EraseUserData;
 use App\Actions\ReinstateUser;
 use App\Actions\SuspendUser;
 use App\Enums\AccountStatus;
@@ -12,6 +13,7 @@ use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -20,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -123,8 +126,8 @@ class UserResource extends Resource
                         TextEntry::make('account_status')
                             ->label('Account')
                             ->badge()
-                            ->formatStateUsing(fn (AccountStatus $state) => $state->label())
-                            ->color(fn (AccountStatus $state) => $state === AccountStatus::Active ? 'success' : 'danger'),
+                            ->formatStateUsing(fn (AccountStatus $state, User $record) => static::accountLabel($record))
+                            ->color(fn (AccountStatus $state, User $record) => static::accountColor($record)),
                         TextEntry::make('standing')
                             ->state(fn (User $record) => static::standing($record))
                             ->badge()
@@ -141,7 +144,7 @@ class UserResource extends Resource
                         TextEntry::make('last_decision')
                             ->label('Last decision')
                             ->state(function (User $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->first();
+                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
 
                                 if ($event === null) {
                                     return null;
@@ -174,14 +177,25 @@ class UserResource extends Resource
                 TextColumn::make('account_status')
                     ->label('Account')
                     ->badge()
-                    ->formatStateUsing(fn (AccountStatus $state) => $state->label())
-                    ->color(fn (AccountStatus $state) => $state === AccountStatus::Active ? 'success' : 'danger'),
+                    ->formatStateUsing(fn (AccountStatus $state, User $record) => static::accountLabel($record))
+                    ->color(fn (AccountStatus $state, User $record) => static::accountColor($record)),
                 TextColumn::make('created_at')->label('Joined')->since()->sortable(),
+            ])
+            ->filters([
+                // Off by default, like the app: a deleted account is gone for
+                // everyone else. Staff turn it on to act on an erasure request
+                // from someone who has already deleted their account.
+                TrashedFilter::make()
+                    ->label('Deleted accounts')
+                    ->placeholder('Hide deleted')
+                    ->trueLabel('Show deleted too')
+                    ->falseLabel('Only deleted'),
             ])
             ->recordActions([
                 ViewAction::make(),
                 static::suspendAction(),
                 static::reinstateAction(),
+                static::eraseAction(),
             ]);
     }
 
@@ -192,7 +206,7 @@ class UserResource extends Resource
             ->icon(Heroicon::OutlinedNoSymbol)
             ->color('danger')
             ->authorize('suspend')
-            ->visible(fn (User $record) => $record->account_status === AccountStatus::Active)
+            ->visible(fn (User $record) => ! $record->trashed() && $record->account_status === AccountStatus::Active)
             ->modalHeading(fn (User $record) => "Suspend {$record->name}?")
             ->modalDescription('They are signed out and cannot sign back in. Nothing they made is removed. This is not the same as them deleting their own account: they cannot undo it themselves.')
             ->schema(fn () => [
@@ -219,7 +233,7 @@ class UserResource extends Resource
             ->icon(Heroicon::OutlinedArrowUturnLeft)
             ->color('gray')
             ->authorize('reinstate')
-            ->visible(fn (User $record) => $record->account_status !== AccountStatus::Active)
+            ->visible(fn (User $record) => ! $record->trashed() && $record->account_status !== AccountStatus::Active)
             ->modalHeading(fn (User $record) => "Reinstate {$record->name}?")
             ->modalDescription('They can sign in again straight away, with everything as it was.')
             ->schema([
@@ -230,6 +244,65 @@ class UserResource extends Resource
 
                 Notification::make()->title('Account reinstated')->success()->send();
             });
+    }
+
+    /**
+     * Erasing someone's personal data on their request (claude/13,
+     * question 3: "handle requests to delete data"). It cannot be undone,
+     * so it asks three times over: a reason, an explicit acknowledgement,
+     * and the staff member's password.
+     */
+    public static function eraseAction(): Action
+    {
+        return Action::make('erase')
+            ->label('Erase personal data')
+            ->icon(Heroicon::OutlinedTrash)
+            ->color('danger')
+            ->authorize('erase')
+            ->visible(fn (User $record) => $record->anonymized_at === null)
+            ->modalHeading(fn (User $record) => "Erase {$record->name}'s personal data?")
+            // GDPR Art. 12(6): act only once it is clear the request comes
+            // from the account's owner -- otherwise anyone could have a rival
+            // erased by writing in with their name.
+            ->modalDescription(fn (User $record) => "Only act on a request sent from {$record->email}, or once you have otherwise confirmed it comes from them. Their name, email, profile, photos, files, cover letters and answers are erased now, and their account is closed. Applications, postings and reports stay as anonymous records. This cannot be undone.")
+            ->schema(fn () => [
+                Textarea::make('reason')
+                    ->label('Reason')
+                    // The trail outlives the person: writing who they were
+                    // into it would undo the erasure it records.
+                    ->helperText('Kept on the record. Say how the request came in — do not write their name or email here.')
+                    ->required()
+                    ->maxLength(2000)
+                    ->rows(3),
+                Checkbox::make('understood')
+                    ->label('I understand this cannot be undone.')
+                    ->accepted(),
+                ...ConfirmsPassword::fields(),
+            ])
+            ->before(fn () => ConfirmsPassword::remember())
+            ->action(function (User $record, array $data) {
+                app(EraseUserData::class)($record, auth()->user(), $data['reason']);
+
+                Notification::make()->title('Personal data erased')->success()->send();
+            });
+    }
+
+    public static function accountLabel(User $user): string
+    {
+        return match (true) {
+            $user->anonymized_at !== null => 'Erased',
+            $user->trashed() => 'Deleted',
+            default => $user->account_status->label(),
+        };
+    }
+
+    public static function accountColor(User $user): string
+    {
+        return match (true) {
+            $user->anonymized_at !== null, $user->trashed() => 'gray',
+            $user->account_status === AccountStatus::Active => 'success',
+            default => 'danger',
+        };
     }
 
     public static function getPages(): array

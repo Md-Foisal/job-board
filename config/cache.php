@@ -34,9 +34,13 @@ return [
 
     'stores' => [
 
+        // Serialized like every real store, so the test suite (which runs on
+        // this one) hits the same serializable_classes rule the database and
+        // file stores enforce -- unserialized, it hid a homepage that broke
+        // the first time it was read back from the real cache.
         'array' => [
             'driver' => 'array',
-            'serialize' => false,
+            'serialize' => true,
         ],
 
         'database' => [

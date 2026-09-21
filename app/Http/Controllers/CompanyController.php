@@ -42,6 +42,7 @@ class CompanyController extends Controller
         $jobPostings = $company->jobPostings()
             ->active()
             ->latest('created_at')
+            ->latest('id')
             ->get()
             ->each(fn ($jobPosting) => $jobPosting->setRelation('company', $company));
 

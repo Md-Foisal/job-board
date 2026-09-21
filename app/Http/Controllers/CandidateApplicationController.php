@@ -17,6 +17,7 @@ class CandidateApplicationController extends Controller
             ->where('candidate_profile_id', $request->user()->candidateProfile->id)
             ->with('jobPosting.company')
             ->latest('created_at')
+            ->latest('id')
             ->paginate(15);
 
         return view('candidate.applications.index', [
