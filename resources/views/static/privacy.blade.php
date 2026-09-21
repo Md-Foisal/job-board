@@ -31,11 +31,13 @@
     <x-prose-section heading="Keeping and deleting it">
         <p>
             You can delete your account from your account settings. Deletion is
-            not instant: the account is deactivated first and can be restored for a
-            short grace period, after which it is removed. Applications you have
-            already submitted keep the copy of the CV you attached at the time, so
-            that an employer record of what they received does not change
-            retroactively.
+            not instant: the account is switched off first and can be restored for
+            {{ \App\Models\User::DELETION_GRACE_DAYS }} days. After that we erase your
+            personal data for good &mdash; your name, email address, profile, photos,
+            uploaded files, cover letters and answers &mdash; and keep only an anonymous
+            record that an application was made, so employers' and our own numbers
+            stay correct. Until then, applications you have already submitted keep
+            the copy of the CV you attached at the time.
         </p>
     </x-prose-section>
 

@@ -28,6 +28,12 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
 
     /**
+     * How long a deleted account can still be restored before its
+     * personal data is erased for good. 30 days is what Facebook settled on.
+     */
+    public const DELETION_GRACE_DAYS = 30;
+
+    /**
      * Mirrors the database defaults so a freshly created record already
      * knows them. Without this the column is simply absent until the row
      * is read back, and every check against it quietly sees null --
@@ -48,6 +54,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'anonymized_at' => 'datetime',
             'password' => 'hashed',
             'account_status' => AccountStatus::class,
             'staff_role' => StaffRole::class,
