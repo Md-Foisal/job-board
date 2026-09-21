@@ -22,6 +22,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use UnitEnum;
 
 /**
@@ -54,7 +55,15 @@ class ModerationEventResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['admin', 'subject']);
+        // Deleted and erased people stay on the trail as who they are now
+        // ("Person: Deleted user"), not as something that "no longer exists":
+        // the row is still there, only emptied.
+        return parent::getEloquentQuery()->with([
+            'admin',
+            'subject' => fn (MorphTo $morphTo) => $morphTo->constrain([
+                User::class => fn (Builder $query) => $query->withTrashed(),
+            ]),
+        ]);
     }
 
     public static function canViewAny(): bool

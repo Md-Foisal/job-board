@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\ApproveJobPosting;
+use App\Actions\EraseUserData;
 use App\Actions\RejectJobPosting;
 use App\Enums\ModerationAction;
 use App\Enums\StaffRole;
@@ -52,4 +53,15 @@ it('refuses to let anything change or remove a recorded decision', function () {
     expect(fn () => $event->update(['reason' => 'rewritten']))->toThrow(LogicException::class)
         ->and(fn () => $event->delete())->toThrow(LogicException::class)
         ->and(ModerationEvent::whereKey($event->id)->value('reason'))->toBeNull();
+});
+
+it('names an erased person as they are now, not as something gone', function () {
+    $admin = staffWithTwoFactor(StaffRole::SuperAdmin);
+    app(EraseUserData::class)(candidateUser(), $admin, 'Asked by email.');
+
+    $this->actingAs($admin);
+
+    Livewire::test(ListModerationEvents::class)
+        ->assertSee('Person: Deleted user')
+        ->assertDontSee('No longer exists');
 });
