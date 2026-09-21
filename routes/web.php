@@ -28,7 +28,7 @@ Route::view('/privacy', 'static.privacy')->name('privacy');
 Route::view('/terms', 'static.terms')->name('terms');
 
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
-Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show');
+Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show')->withTrashed();
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
 /*
  * Registered ahead of the public slug route below: '/companies/create'

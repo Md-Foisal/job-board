@@ -2,6 +2,8 @@
 
 use App\Livewire\Concerns\FiltersJobPostings;
 use App\Models\Category;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\RedirectResponse;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -14,6 +16,19 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
 
     public function mount(Category $categoryModel): void
     {
+        // The route resolves removed categories too, only so that a merged
+        // one can forward permanently to where its postings went. Anything
+        // else that has been removed is simply gone.
+        if ($categoryModel->trashed()) {
+            $target = $categoryModel->merged_into_id ? Category::find($categoryModel->merged_into_id) : null;
+
+            abort_if($target === null, 404);
+
+            // Built directly: inside a Livewire component redirect() returns
+            // Livewire's own redirector, which cannot carry a 301.
+            throw new HttpResponseException(new RedirectResponse(route('categories.show', $target), 301));
+        }
+
         $this->categoryModel = $categoryModel;
         $this->category = $categoryModel->id;
     }
