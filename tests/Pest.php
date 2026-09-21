@@ -88,3 +88,28 @@ function staffWithTwoFactor(StaffRole $role = StaffRole::Moderator): User
 {
     return User::factory()->withTwoFactor()->create(['staff_role' => $role]);
 }
+
+/**
+ * The smallest job form that passes validation, for tests that need a
+ * posting saved through the employer's own screen.
+ */
+function jobFormPayload(array $overrides = []): array
+{
+    return array_merge([
+        'title' => 'Senior Laravel Developer',
+        'description' => 'Build and maintain our hiring platform.',
+        'employmentType' => 'full-time',
+        'workplaceType' => 'remote',
+        'locationCountry' => 'Bangladesh',
+        'expiresAt' => now()->addMonth()->toDateString(),
+    ], $overrides);
+}
+
+function fillJobForm($component, array $overrides = [])
+{
+    foreach (jobFormPayload($overrides) as $field => $value) {
+        $component->set($field, $value);
+    }
+
+    return $component;
+}

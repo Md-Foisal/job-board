@@ -170,4 +170,51 @@ class Company extends Model
             ->unique()
             ->values();
     }
+
+    /**
+     * The people who can act for this company right now -- active owners
+     * and managers. Everything the platform tells a company goes to them:
+     * a plain member cannot post or decide, so mail to them is noise they
+     * learn to ignore, and an ended membership hears nothing.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
+    public function decisionMakers()
+    {
+        return User::query()
+            ->whereHas('memberships', fn ($query) => $query
+                ->where('company_id', $this->id)
+                ->where('status', MembershipStatus::Active)
+                ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager]))
+            ->get();
+    }
+
+    /**
+     * The latest step in the verification conversation: verified, revoked,
+     * or asked for documents. Report dismissals share the trail but say
+     * nothing about verification, so they are left out.
+     */
+    public function latestVerificationDecision()
+    {
+        return $this->morphOne(ModerationEvent::class, 'subject')
+            ->ofMany(['id' => 'max'], fn ($query) => $query->whereIn('action', [
+                ModerationAction::VerifyCompany,
+                ModerationAction::RevokeCompanyVerification,
+                ModerationAction::RequestCompanyDocuments,
+            ]));
+    }
+
+    /**
+     * What staff asked this company to provide, while the request is
+     * still the open step. Null once the company is verified or the
+     * request has been superseded.
+     */
+    public function outstandingDocumentsRequest(): ?string
+    {
+        $decision = $this->latestVerificationDecision;
+
+        return ! $this->verified_at && $decision?->action === ModerationAction::RequestCompanyDocuments
+            ? $decision->reason
+            : null;
+    }
 }

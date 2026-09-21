@@ -6,7 +6,9 @@ use App\Enums\ModerationAction;
 use App\Models\Company;
 use App\Models\ModerationEvent;
 use App\Models\User;
+use App\Notifications\CompanyDocumentsRequested;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Asking a company to prove itself before it can be verified. Nothing
@@ -18,13 +20,16 @@ class RequestCompanyDocuments
 {
     public function __invoke(Company $company, User $staff, string $reason): ModerationEvent
     {
-        return DB::transaction(function () use ($company, $staff, $reason) {
-
+        $event = DB::transaction(function () use ($company, $staff, $reason) {
             return $company->moderationEvents()->create([
                 'admin_id' => $staff->id,
                 'action' => ModerationAction::RequestCompanyDocuments,
                 'reason' => $reason,
             ]);
         });
+
+        Notification::send($company->decisionMakers(), new CompanyDocumentsRequested($company, $reason));
+
+        return $event;
     }
 }

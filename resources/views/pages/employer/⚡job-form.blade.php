@@ -2,6 +2,7 @@
 
 use App\Actions\SaveJobPosting;
 use App\Enums\EmploymentType;
+use App\Enums\ModerationStatus;
 use App\Enums\SalaryPeriod;
 use App\Enums\SkillImportance;
 use App\Enums\WorkplaceType;
@@ -262,9 +263,14 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
         // closing a posting, moving a stage, inviting someone -- and this
         // is the largest of them; landing back on the list with a new row
         // and no word about it is the odd one out.
-        session()->flash('success', $publish
-            ? __('Job posting published.')
-            : __('Draft saved.'));
+        // A company still earning trust waits for a reviewer; saying
+        // "published" there would send them looking for a posting nobody
+        // can see yet.
+        session()->flash('success', match (true) {
+            ! $publish => __('Draft saved.'),
+            $jobPosting->moderation_status === ModerationStatus::Pending => __('Sent for review. It goes live once approved, usually within a day.'),
+            default => __('Job posting published.'),
+        });
 
         $this->redirectRoute('employer.jobs.index', $this->company, navigate: true);
     }

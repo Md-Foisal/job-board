@@ -8,7 +8,9 @@ use App\Enums\ReportStatus;
 use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
+use App\Notifications\JobPostingRejected;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Keeping a posting off the public site. A reason is required: the
@@ -22,7 +24,7 @@ class RejectJobPosting
 {
     public function __invoke(JobPosting $jobPosting, User $staff, string $reason): ModerationEvent
     {
-        return DB::transaction(function () use ($jobPosting, $staff, $reason) {
+        $event = DB::transaction(function () use ($jobPosting, $staff, $reason) {
             $jobPosting->moderation_status = ModerationStatus::Rejected;
             $jobPosting->save();
 
@@ -36,5 +38,9 @@ class RejectJobPosting
                 'reason' => $reason,
             ]);
         });
+
+        Notification::send($jobPosting->company->decisionMakers(), new JobPostingRejected($jobPosting, $reason));
+
+        return $event;
     }
 }

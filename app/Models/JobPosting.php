@@ -7,6 +7,7 @@ use App\Casts\SanitizedHtml;
 use App\Enums\AccountStatus;
 use App\Enums\AvailabilityStatus;
 use App\Enums\EmploymentType;
+use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\SalaryPeriod;
 use App\Enums\WorkplaceType;
@@ -174,5 +175,16 @@ class JobPosting extends Model
     public function moderationEvents()
     {
         return $this->morphMany(ModerationEvent::class, 'subject');
+    }
+
+    /**
+     * The most recent rejection, which carries the reason the employer
+     * needs to fix. Filtered by action because dismissing later reports
+     * also writes to this posting's trail, and that note is not the reason.
+     */
+    public function latestRejection()
+    {
+        return $this->morphOne(ModerationEvent::class, 'subject')
+            ->ofMany(['id' => 'max'], fn ($query) => $query->where('action', ModerationAction::RejectJobPosting));
     }
 }

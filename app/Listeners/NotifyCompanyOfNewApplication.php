@@ -2,10 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Enums\MembershipRole;
-use App\Enums\MembershipStatus;
 use App\Events\ApplicationSubmitted;
-use App\Models\User;
 use App\Notifications\NewApplicationReceived;
 use Illuminate\Support\Facades\Notification;
 
@@ -21,15 +18,9 @@ class NotifyCompanyOfNewApplication
      */
     public function handle(ApplicationSubmitted $event): void
     {
-        $company = $event->application->jobPosting->company;
-
-        $recipients = User::query()
-            ->whereHas('memberships', fn ($query) => $query
-                ->where('company_id', $company->id)
-                ->where('status', MembershipStatus::Active)
-                ->whereIn('role', [MembershipRole::Owner, MembershipRole::Manager]))
-            ->get();
-
-        Notification::send($recipients, new NewApplicationReceived($event->application));
+        Notification::send(
+            $event->application->jobPosting->company->decisionMakers(),
+            new NewApplicationReceived($event->application),
+        );
     }
 }

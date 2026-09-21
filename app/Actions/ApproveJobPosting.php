@@ -9,7 +9,9 @@ use App\Enums\ReportStatus;
 use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
+use App\Notifications\JobPostingApproved;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
  * Clearing a posting for the public site, and writing down who did it.
@@ -28,7 +30,7 @@ class ApproveJobPosting
             throw new \DomainException('A posting from a banned company cannot be approved.');
         }
 
-        return DB::transaction(function () use ($jobPosting, $staff) {
+        $event = DB::transaction(function () use ($jobPosting, $staff) {
             $jobPosting->moderation_status = ModerationStatus::Approved;
             $jobPosting->save();
 
@@ -41,5 +43,11 @@ class ApproveJobPosting
                 'action' => ModerationAction::ApproveJobPosting,
             ]);
         });
+
+        // After the commit, never inside it: a mail cannot be recalled if
+        // the decision rolls back.
+        Notification::send($jobPosting->company->decisionMakers(), new JobPostingApproved($jobPosting));
+
+        return $event;
     }
 }

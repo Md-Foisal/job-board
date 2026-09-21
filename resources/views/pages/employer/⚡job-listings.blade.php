@@ -3,6 +3,7 @@
 use App\Actions\DuplicateJobPosting;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
+use App\Enums\ModerationStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
 use Livewire\Attributes\Computed;
@@ -29,6 +30,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                 'applications',
                 'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
             ])
+            ->with('latestRejection')
             ->latest()
             ->get();
     }
@@ -162,9 +164,20 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                      review" claims a queue it was never put
                                      in, and makes the wait look longer than
                                      it is. --}}
-                                @if ($jobPosting->availability_status !== AvailabilityStatus::Draft
-                                    && $jobPosting->moderation_status !== \App\Enums\ModerationStatus::Approved)
-                                    <flux:badge color="yellow">{{ $jobPosting->moderation_status->label() }}</flux:badge>
+                                @if ($jobPosting->availability_status !== AvailabilityStatus::Draft)
+                                    @if ($jobPosting->moderation_status === ModerationStatus::Pending)
+                                        <flux:badge color="yellow">{{ __('In review') }}</flux:badge>
+                                    @elseif ($jobPosting->moderation_status === ModerationStatus::Rejected)
+                                        <flux:badge color="red">{{ __('Needs changes') }}</flux:badge>
+
+                                        {{-- The reason is the whole point of sending it
+                                             back; a bare "rejected" leaves the employer
+                                             guessing what to fix. --}}
+                                        @if ($jobPosting->latestRejection?->reason)
+                                            <flux:text size="sm" class="mt-2 max-w-sm whitespace-pre-line text-red-700 dark:text-red-400">{{ $jobPosting->latestRejection->reason }}</flux:text>
+                                        @endif
+                                        <flux:text size="sm" class="mt-1">{{ __('Edit and publish again to send it back for review.') }}</flux:text>
+                                    @endif
                                 @endif
                             </td>
                             <td class="px-5 py-4 text-end tabular-nums">
