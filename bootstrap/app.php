@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Http\Middleware\EnsureActiveMembership;
 use App\Http\Middleware\EnsureUserIsCandidate;
 use App\Http\Middleware\EnsureUserIsEmployer;
@@ -14,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->web(append: [
+            EnsureAccountIsActive::class,
+        ]);
+
         $middleware->alias([
             'employer' => EnsureUserIsEmployer::class,
             'candidate' => EnsureUserIsCandidate::class,
