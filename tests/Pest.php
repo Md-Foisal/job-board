@@ -79,3 +79,12 @@ function staffUser(StaffRole $role = StaffRole::Moderator): User
 {
     return User::factory()->create(['staff_role' => $role]);
 }
+
+/**
+ * A staff member who can actually get into the admin panel, which
+ * refuses anyone without two-factor authentication.
+ */
+function staffWithTwoFactor(StaffRole $role = StaffRole::Moderator): User
+{
+    return User::factory()->withTwoFactor()->create(['staff_role' => $role]);
+}

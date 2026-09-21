@@ -9,7 +9,6 @@ use App\Enums\MembershipRole;
 use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
-use App\Enums\StaffRole;
 use App\Enums\WorkplaceType;
 use App\Filament\Resources\JobPostings\Pages\ManageJobPostings;
 use App\Models\Company;
@@ -18,11 +17,6 @@ use App\Models\Membership;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Livewire\Livewire;
-
-function queueModerator(): User
-{
-    return User::factory()->withTwoFactor()->create(['staff_role' => StaffRole::Moderator]);
-}
 
 function publishablePosting(array $overrides = []): array
 {
@@ -41,7 +35,7 @@ it('shows staff the postings waiting for review, but never an unfinished draft',
     JobPosting::factory()->pendingModeration()->create(['title' => 'Waiting Role']);
     JobPosting::factory()->draft()->pendingModeration()->create(['title' => 'Unfinished Draft']);
 
-    $this->actingAs(queueModerator())
+    $this->actingAs(staffWithTwoFactor())
         ->get('/admin/moderation/jobs')
         ->assertOk()
         ->assertSee('Waiting Role')
@@ -55,7 +49,7 @@ it('keeps the queue closed to anyone who is not staff', function () {
 });
 
 it('approves a posting, records who did it, and closes its reports as reviewed', function () {
-    $staff = queueModerator();
+    $staff = staffWithTwoFactor();
     $posting = JobPosting::factory()->pendingModeration()->create();
     $report = $posting->reports()->create(['reporter_id' => User::factory()->create()->id, 'reason' => 'Looks off']);
 
@@ -71,7 +65,7 @@ it('rejects a posting with its reason, and closes its reports as actioned', func
     $posting = JobPosting::factory()->pendingModeration()->create();
     $report = $posting->reports()->create(['reporter_id' => User::factory()->create()->id, 'reason' => 'Asks for a fee']);
 
-    $event = app(RejectJobPosting::class)($posting, queueModerator(), 'Charges applicants a fee.');
+    $event = app(RejectJobPosting::class)($posting, staffWithTwoFactor(), 'Charges applicants a fee.');
 
     expect($posting->fresh()->moderation_status)->toBe(ModerationStatus::Rejected)
         ->and($event->reason)->toBe('Charges applicants a fee.')
@@ -80,7 +74,7 @@ it('rejects a posting with its reason, and closes its reports as actioned', func
 
 it('will not reject without a reason', function () {
     $posting = JobPosting::factory()->pendingModeration()->create();
-    $this->actingAs(queueModerator());
+    $this->actingAs(staffWithTwoFactor());
 
     Livewire::test(ManageJobPostings::class)
         ->callAction(TestAction::make('reject')->table($posting), data: ['reason' => ''])
@@ -93,7 +87,7 @@ it('hides both decisions from staff on their own employer\'s posting', function 
     $company = Company::factory()->create();
     $posting = JobPosting::factory()->for($company)->pendingModeration()->create();
 
-    $staff = queueModerator();
+    $staff = staffWithTwoFactor();
     Membership::factory()->for($staff)->for($company)->create(['role' => MembershipRole::Member]);
     $this->actingAs($staff->fresh());
 
@@ -114,7 +108,7 @@ it('holds a new employer\'s posting for review', function () {
 it('lets a company with a clean record publish straight through', function () {
     $company = Company::factory()->create();
     $owner = employerUser($company, MembershipRole::Owner);
-    $staff = queueModerator();
+    $staff = staffWithTwoFactor();
 
     foreach (range(1, Company::TRUSTED_AFTER_APPROVALS) as $n) {
         $earlier = app(SaveJobPosting::class)($company, $owner, publishablePosting(['title' => "Role {$n}"]));
@@ -129,7 +123,7 @@ it('lets a company with a clean record publish straight through', function () {
 it('never lets a company with a rejection on record skip the queue', function () {
     $company = Company::factory()->create();
     $owner = employerUser($company, MembershipRole::Owner);
-    $staff = queueModerator();
+    $staff = staffWithTwoFactor();
 
     foreach (range(1, Company::TRUSTED_AFTER_APPROVALS) as $n) {
         $earlier = app(SaveJobPosting::class)($company, $owner, publishablePosting(['title' => "Role {$n}"]));
@@ -150,7 +144,7 @@ it('sends an approved posting back for review when it is edited', function () {
     $owner = employerUser($company, MembershipRole::Owner);
 
     $posting = app(SaveJobPosting::class)($company, $owner, publishablePosting());
-    app(ApproveJobPosting::class)($posting, queueModerator());
+    app(ApproveJobPosting::class)($posting, staffWithTwoFactor());
 
     $edited = app(SaveJobPosting::class)($company, $owner, publishablePosting(['title' => 'Something else entirely']), $posting->fresh());
 
@@ -163,18 +157,18 @@ it('never offers to approve a banned company\'s posting, and refuses if asked an
     $company->save();
     $posting = JobPosting::factory()->for($company)->pendingModeration()->create();
 
-    $this->actingAs(queueModerator());
+    $this->actingAs(staffWithTwoFactor());
 
     Livewire::test(ManageJobPostings::class)
         ->assertActionHidden(TestAction::make('approve')->table($posting));
 
-    expect(fn () => app(ApproveJobPosting::class)($posting, queueModerator()))
+    expect(fn () => app(ApproveJobPosting::class)($posting, staffWithTwoFactor()))
         ->toThrow(DomainException::class);
 });
 
 it('keeps the employer record the reviewer sees in step with the trust tier', function () {
     $company = Company::factory()->create();
-    $staff = queueModerator();
+    $staff = staffWithTwoFactor();
 
     $approved = JobPosting::factory()->for($company)->pendingModeration()->create();
     $rejected = JobPosting::factory()->for($company)->pendingModeration()->create();

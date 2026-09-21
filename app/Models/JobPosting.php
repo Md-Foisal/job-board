@@ -96,10 +96,10 @@ class JobPosting extends Model
     }
 
     /**
-     * Default Eloquent Builder-এর বদলে JobPostingQueryBuilder ব্যবহার হবে,
-     * যাতে JobPosting::query()->skill($id)->salaryBetween($min, $max)...
-     * এভাবে filter/sort chain করা যায় (multi-parameter filtering এখানে,
-     * single-purpose scope মডেলেই থাকছে)।
+     * Multi-parameter filtering and sorting live in JobPostingQueryBuilder
+     * (JobPosting::query()->skill($id)->salaryBetween($min, $max)...), so
+     * they do not pile up here as scopes; single-purpose scopes stay on
+     * the model.
      */
     public function newEloquentBuilder($query): JobPostingQueryBuilder
     {
