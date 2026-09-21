@@ -79,6 +79,7 @@ class CandidateDashboardController extends Controller
             ->where('user_id', $request->user()->id)
             ->whereHas('jobPosting', fn ($query) => $query->active())
             ->latest('viewed_at')
+            ->latest('id')
             ->take(6)
             ->get()
             ->pluck('jobPosting');

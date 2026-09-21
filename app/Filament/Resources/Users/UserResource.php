@@ -144,7 +144,7 @@ class UserResource extends Resource
                         TextEntry::make('last_decision')
                             ->label('Last decision')
                             ->state(function (User $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->first();
+                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
 
                                 if ($event === null) {
                                     return null;

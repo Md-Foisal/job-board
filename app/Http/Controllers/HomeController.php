@@ -26,6 +26,7 @@ class HomeController extends Controller
             'jobPostings' => JobPosting::with('company:id,name,slug,logo_path,verified_at')
                 ->active()
                 ->latest('created_at')
+                ->latest('id')
                 ->take(self::RECENT_OPENINGS_COUNT)
                 ->get(),
             'categories' => Category::withCount(['jobPostings' => fn ($query) => $query->active()])

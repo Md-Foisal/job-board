@@ -41,6 +41,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
         $this->existingCvs = auth()->user()->candidateProfile->documents()
             ->where('document_type', DocumentType::Cv)
             ->latest()
+            ->latest('id')
             ->get();
 
         $this->resumeChoice = $this->existingCvs->isNotEmpty()

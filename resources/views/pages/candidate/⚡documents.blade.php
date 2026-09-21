@@ -28,6 +28,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             'documents' => auth()->user()->candidateProfile
                 ->documents()
                 ->latest()
+                ->latest('id')
                 ->get(),
         ];
     }

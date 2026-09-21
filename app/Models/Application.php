@@ -54,7 +54,7 @@ class Application extends Model
 
     public function events()
     {
-        return $this->hasMany(ApplicationEvent::class)->latest('created_at');
+        return $this->hasMany(ApplicationEvent::class)->latest('created_at')->latest('id');
     }
 
     /**
@@ -64,6 +64,6 @@ class Application extends Model
      */
     public function notes()
     {
-        return $this->hasMany(ApplicationNote::class)->latest();
+        return $this->hasMany(ApplicationNote::class)->latest()->latest('id');
     }
 }

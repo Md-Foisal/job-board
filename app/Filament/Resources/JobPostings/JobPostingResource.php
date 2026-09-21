@@ -163,6 +163,7 @@ class JobPostingResource extends Resource
                             ->state(fn (JobPosting $record) => $record->reports()
                                 ->where('review_status', ReportStatus::Pending->value)
                                 ->latest()
+                                ->latest('id')
                                 ->pluck('reason')
                                 ->all())
                             ->bulleted()
@@ -171,7 +172,7 @@ class JobPostingResource extends Resource
                         TextEntry::make('last_decision')
                             ->label('Last decision')
                             ->state(function (JobPosting $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->first();
+                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
 
                                 if ($event === null) {
                                     return null;

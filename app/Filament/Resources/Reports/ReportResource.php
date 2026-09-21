@@ -211,6 +211,7 @@ class ReportResource extends Resource
                                 ->where('reportable_id', $record->reportable_id)
                                 ->where('review_status', ReportStatus::Pending->value)
                                 ->latest()
+                                ->latest('id')
                                 ->get()
                                 ->map(fn (Report $report) => "{$report->reason} ({$report->created_at->diffForHumans()})")
                                 ->all())

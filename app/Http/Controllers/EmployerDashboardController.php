@@ -32,6 +32,7 @@ class EmployerDashboardController extends Controller
                     ->select(DB::raw('count(distinct reporter_id)')),
             ])
             ->latest()
+            ->latest('id')
             ->get();
 
         return view('employer.dashboard', [

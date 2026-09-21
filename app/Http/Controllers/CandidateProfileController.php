@@ -27,7 +27,7 @@ class CandidateProfileController extends Controller
             'educationRecords' => $candidateProfile->educationRecords()->orderByDesc('start_date')->get(),
             'experienceRecords' => $candidateProfile->experienceRecords()->orderByDesc('start_date')->get(),
             'skills' => $candidateProfile->skills()->orderBy('name')->get(),
-            'documents' => $candidateProfile->documents()->latest()->get(),
+            'documents' => $candidateProfile->documents()->latest()->latest('id')->get(),
         ]);
     }
 

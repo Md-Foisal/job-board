@@ -21,6 +21,7 @@ class CandidateSavedJobController extends Controller
             ->active()
             ->with('company')
             ->latest('job_postings.created_at')
+            ->latest('job_postings.id')
             ->get();
 
         return view('candidate.saved-jobs.index', [

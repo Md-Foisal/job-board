@@ -126,13 +126,20 @@ class JobPostingQueryBuilder extends Builder
         return $this;
     }
 
+    /**
+     * Every sort ends on the id, newest first: many postings share a date
+     * or a salary, and tied rows may come back in any order -- a paginated
+     * list would then repeat some postings and skip others between pages.
+     */
     public function sortBy(string $field): self
     {
-        return match ($field) {
+        match ($field) {
             'newest' => $this->orderByDesc('created_at'),
             'salary_high' => $this->orderByDesc('salary_max_monthly'),
             'salary_low' => $this->orderBy('salary_min_monthly'),
-            default => $this,
+            default => null,
         };
+
+        return $this->orderByDesc($this->qualifyColumn('id'));
     }
 }

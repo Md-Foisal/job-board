@@ -47,6 +47,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
             ->where('status', InvitationStatus::Pending)
             ->where('expires_at', '>', now())
             ->latest()
+            ->latest('id')
             ->get();
     }
 
