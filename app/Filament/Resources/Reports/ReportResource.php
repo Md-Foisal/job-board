@@ -74,15 +74,23 @@ class ReportResource extends Resource
                 ->where('siblings.review_status', ReportStatus::Pending->value)]);
     }
 
-    public static function getNavigationBadge(): ?string
+    /**
+     * Reported things with at least one open report -- counted as
+     * subjects, like the rows, not as individual reports.
+     */
+    public static function openSubjectCount(): int
     {
-        // Counted as subjects, like the rows, not as individual reports.
-        $subjects = Report::query()
+        return Report::query()
             ->where('review_status', ReportStatus::Pending->value)
             ->select('reportable_type', 'reportable_id')
             ->distinct()
             ->get()
             ->count();
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $subjects = static::openSubjectCount();
 
         return $subjects > 0 ? (string) $subjects : null;
     }
