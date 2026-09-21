@@ -48,7 +48,7 @@ class ModerationQueuesOverview extends StatsOverviewWidget
             $this->queueStat(
                 'Job postings to review',
                 $postings->count(),
-                $postings->min('published_at'),
+                $postings->min('submitted_at'),
                 JobPostingResource::getUrl('index'),
                 Heroicon::OutlinedRectangleStack,
             ),

@@ -102,7 +102,7 @@ class ModerationSeeder extends Seeder
         $companies->take(4)->each(function (Company $company, int $index) {
             $posting = $company->jobPostings->first();
             $this->resubmit($posting);
-            $posting->published_at = now()->subHours($index === 0 ? 30 : $index * 3);
+            $posting->submitted_at = now()->subHours($index === 0 ? 30 : $index * 3);
             $posting->saveQuietly();
         });
 
@@ -128,7 +128,8 @@ class ModerationSeeder extends Seeder
         $posting = JobPosting::factory()->for($company)->pendingModeration()->create([
             'title' => $title,
             'posted_by_id' => $company->memberships()->value('user_id'),
-            'published_at' => now()->subHours(random_int(1, 6)),
+            'published_at' => $submitted = now()->subHours(random_int(1, 6)),
+            'submitted_at' => $submitted,
         ]);
 
         $posting->categories()->attach(Category::query()->inRandomOrder()->value('id'));

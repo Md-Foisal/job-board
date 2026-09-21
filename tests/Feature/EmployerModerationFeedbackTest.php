@@ -9,9 +9,11 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\MembershipRole;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Models\Membership;
 use App\Models\User;
 use App\Notifications\CompanyDocumentsRequested;
 use App\Notifications\JobPostingApproved;
+use App\Notifications\JobPostingAwaitingReview;
 use App\Notifications\JobPostingRejected;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -116,4 +118,35 @@ test('the company profile shows an open documents request until it is answered',
 
     $this->get(route('employer.company.edit', $company))
         ->assertDontSee('Documents requested');
+});
+
+test('staff hear about a posting that joins the queue, except staff who work there', function () {
+    $company = Company::factory()->create();
+    $owner = employerUser($company, MembershipRole::Owner);
+    $moderator = staffWithTwoFactor();
+    $recused = staffWithTwoFactor();
+    Membership::factory()->for($company)->for($recused, 'user')->create();
+    $withoutTwoFactor = staffUser();
+
+    fillJobForm(Livewire::actingAs($owner)->test('pages::employer.job-form', ['company' => $company]))
+        ->call('saveAndPublish');
+
+    Notification::assertSentTo($moderator, JobPostingAwaitingReview::class);
+    Notification::assertNotSentTo([$recused, $withoutTwoFactor], JobPostingAwaitingReview::class);
+    expect($company->jobPostings()->sole()->submitted_at)->not->toBeNull();
+});
+
+test('a posting sent back for review waits from its resubmission, not its first publication', function () {
+    $company = Company::factory()->create();
+    $owner = employerUser($company, MembershipRole::Owner);
+    $posting = JobPosting::factory()->for($company)->create(['published_at' => now()->subMonths(3)]);
+
+    $this->travel(1)->minutes();
+
+    fillJobForm(Livewire::actingAs($owner)->test('pages::employer.job-form', ['company' => $company, 'jobPosting' => $posting]))
+        ->call('saveAndPublish')
+        ->assertHasNoErrors();
+
+    expect($posting->fresh()->submitted_at->isToday())->toBeTrue()
+        ->and($posting->fresh()->published_at->isToday())->toBeFalse();
 });

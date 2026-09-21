@@ -7,7 +7,9 @@ use App\Enums\ModerationStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Notifications\JobPostingAwaitingReview;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 /**
@@ -30,7 +32,7 @@ class SaveJobPosting
         array $data,
         ?JobPosting $jobPosting = null,
     ): JobPosting {
-        return DB::transaction(function () use ($company, $postedBy, $data, $jobPosting) {
+        $jobPosting = DB::transaction(function () use ($company, $postedBy, $data, $jobPosting) {
             $attributes = collect($data)->only([
                 'title', 'description', 'employment_type', 'workplace_type',
                 'location_city', 'location_country', 'min_experience_years',
@@ -70,6 +72,10 @@ class SaveJobPosting
                 ? ModerationStatus::Approved
                 : ModerationStatus::Pending;
 
+            if ($publish && $jobPosting->moderation_status === ModerationStatus::Pending) {
+                $jobPosting->submitted_at = now();
+            }
+
             $jobPosting->save();
 
             $jobPosting->categories()->sync($data['categories'] ?? []);
@@ -79,6 +85,16 @@ class SaveJobPosting
 
             return $jobPosting;
         });
+
+        if ($jobPosting->availability_status === AvailabilityStatus::Active
+            && $jobPosting->moderation_status === ModerationStatus::Pending) {
+            Notification::send(
+                User::query()->activeStaff()->get()->reject(fn (User $staff) => $staff->worksAt($company)),
+                new JobPostingAwaitingReview($jobPosting),
+            );
+        }
+
+        return $jobPosting;
     }
 
     /**

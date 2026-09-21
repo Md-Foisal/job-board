@@ -177,3 +177,18 @@ test('saved jobs and recently viewed only show what is still public', function (
         ->assertDontSee('Rewritten Scam Role')
         ->assertSee('One job you saved is no longer available');
 });
+
+test('one account cannot send reports without limit', function () {
+    $reporter = User::factory()->create();
+    $postings = JobPosting::factory()->count(ReportButton::REPORTS_PER_HOUR + 1)->create();
+
+    $postings->take(ReportButton::REPORTS_PER_HOUR)->each(fn ($posting) => reportAs($reporter, $posting));
+
+    Livewire::actingAs($reporter)
+        ->test(ReportButton::class, ['reportable' => $postings->last()])
+        ->set('reason', 'scam')
+        ->call('submit')
+        ->assertHasErrors('reason');
+
+    expect(Report::query()->count())->toBe(ReportButton::REPORTS_PER_HOUR);
+});

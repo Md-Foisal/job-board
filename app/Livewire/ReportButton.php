@@ -6,6 +6,7 @@ use App\Enums\ReportStatus;
 use App\Models\Company;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 /**
@@ -15,6 +16,8 @@ use Livewire\Component;
  */
 class ReportButton extends Component
 {
+    public const REPORTS_PER_HOUR = 10;
+
     public Model $reportable;
 
     public string $reason = '';
@@ -47,6 +50,19 @@ class ReportButton extends Component
         $this->validate([
             'reason' => 'required|string|in:'.implode(',', array_keys($this->reasons)),
         ]);
+
+        // Reports can take things out of public view, so sending them is
+        // rate-limited per account: a burst from one person is someone
+        // working through a competitor's listings, not a reader.
+        $key = 'report:'.auth()->id();
+
+        if (RateLimiter::tooManyAttempts($key, self::REPORTS_PER_HOUR)) {
+            $this->addError('reason', __('You have sent a lot of reports in a short time. Please try again later.'));
+
+            return;
+        }
+
+        RateLimiter::hit($key, 3600);
 
         // One open report per person per subject. Hiding counts people,
         // not reports, so a second one would change nothing -- and saying

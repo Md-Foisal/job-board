@@ -76,6 +76,9 @@ class JobPostingFactory extends Factory
 
     public function pendingModeration(): static
     {
-        return $this->state(['moderation_status' => ModerationStatus::Pending]);
+        return $this->state([
+            'moderation_status' => ModerationStatus::Pending,
+            'submitted_at' => now(),
+        ]);
     }
 }

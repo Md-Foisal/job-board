@@ -34,6 +34,7 @@ class JobPosting extends Model
             'description' => SanitizedHtml::class,
             'expires_at' => 'datetime',
             'published_at' => 'datetime',
+            'submitted_at' => 'datetime',
             'salary_min' => 'integer',
             'salary_max' => 'integer',
             'min_experience_years' => 'integer',

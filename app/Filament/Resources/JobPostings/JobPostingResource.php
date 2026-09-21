@@ -192,7 +192,7 @@ class JobPostingResource extends Resource
                         TextEntry::make('location_country')->label('Location')
                             ->formatStateUsing(fn ($state, JobPosting $record) => collect([$record->location_city, $state])->filter()->join(', '))
                             ->placeholder('Not given'),
-                        TextEntry::make('published_at')->label('Submitted')->since(),
+                        TextEntry::make('submitted_at')->label('Submitted')->since(),
                     ]),
                 Section::make('Description')
                     ->schema([
@@ -204,7 +204,7 @@ class JobPostingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('published_at', 'asc')
+            ->defaultSort('submitted_at', 'asc')
             ->columns([
                 TextColumn::make('title')
                     ->searchable()
@@ -229,7 +229,7 @@ class JobPostingResource extends Resource
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
                     }),
-                TextColumn::make('published_at')
+                TextColumn::make('submitted_at')
                     ->label('Submitted')
                     ->since()
                     ->sortable(),

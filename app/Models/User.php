@@ -12,6 +12,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -212,6 +213,18 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->isStaff()
             && $this->account_status === AccountStatus::Active;
+    }
+
+    /**
+     * Staff who can act on a queue right now: not suspended, and with the
+     * two-factor setup the panel demands, so nobody is told about work they
+     * cannot get to.
+     */
+    public function scopeActiveStaff(Builder $query): Builder
+    {
+        return $query->whereNotNull('staff_role')
+            ->where('account_status', AccountStatus::Active)
+            ->whereNotNull('two_factor_confirmed_at');
     }
 
     /**

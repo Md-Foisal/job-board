@@ -21,8 +21,8 @@ it('links every queue from the dashboard', function () {
 });
 
 it('says how long the oldest item in a queue has waited, not just how many there are', function () {
-    JobPosting::factory()->pendingModeration()->create(['published_at' => now()->subDays(2)]);
-    JobPosting::factory()->pendingModeration()->create(['published_at' => now()->subHour()]);
+    JobPosting::factory()->pendingModeration()->create(['submitted_at' => now()->subDays(2)]);
+    JobPosting::factory()->pendingModeration()->create(['submitted_at' => now()->subHour()]);
     $this->actingAs(staffWithTwoFactor());
 
     Livewire::test(ModerationQueuesOverview::class)
