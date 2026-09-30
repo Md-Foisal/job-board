@@ -7,7 +7,6 @@ use App\Enums\MatchCheckResult;
 use App\Enums\SkillImportance;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
-use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
 use App\Models\Skill;
 use App\Support\ExperienceDuration;
@@ -69,6 +68,7 @@ class MatchScoreCalculator
     {
         $candidateSkillIds = $candidateProfile->skills()->pluck('skills.id');
         $experience = $candidateProfile->experienceRecords;
+        $experienceMonths = $experience->isEmpty() ? null : ExperienceDuration::months($experience);
         $preference = $candidateProfile->preference;
 
         [$required, $niceToHave] = $jobPosting->skills
@@ -86,8 +86,9 @@ class MatchScoreCalculator
                 MatchCheck::Salary->value => $this->salary($jobPosting, $preference),
                 MatchCheck::Workplace->value => $this->same($preference?->preferred_workplace_type, $jobPosting->workplace_type),
                 MatchCheck::Employment->value => $this->same($preference?->preferred_employment_type, $jobPosting->employment_type),
-                MatchCheck::Experience->value => $this->experience($jobPosting, $experience),
+                MatchCheck::Experience->value => $this->experience($jobPosting, $experienceMonths),
             ],
+            experienceMonths: $experienceMonths,
             profileIsEmpty: $candidateSkillIds->isEmpty()
                 && $experience->isEmpty()
                 && $preference?->desired_salary_min === null
@@ -147,10 +148,8 @@ class MatchScoreCalculator
      * the score follows for an empty skill list: the candidate may simply
      * not have filled it in. A posting asking for no experience fits
      * anyone.
-     *
-     * @param  Collection<int, ExperienceRecord>  $experience
      */
-    private function experience(JobPosting $jobPosting, Collection $experience): MatchCheckResult
+    private function experience(JobPosting $jobPosting, ?int $experienceMonths): MatchCheckResult
     {
         $years = $jobPosting->min_experience_years;
 
@@ -162,12 +161,10 @@ class MatchScoreCalculator
             return MatchCheckResult::Fits;
         }
 
-        if ($experience->isEmpty()) {
+        if ($experienceMonths === null) {
             return MatchCheckResult::Unknown;
         }
 
-        return ExperienceDuration::months($experience) >= $years * 12
-            ? MatchCheckResult::Fits
-            : MatchCheckResult::Misses;
+        return $experienceMonths >= $years * 12 ? MatchCheckResult::Fits : MatchCheckResult::Misses;
     }
 }

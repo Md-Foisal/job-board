@@ -24,6 +24,7 @@ final readonly class MatchBreakdown
      * @param  Collection<int, Skill>  $missingRequired
      * @param  Collection<int, Skill>  $missingNiceToHave
      * @param  array<string, MatchCheckResult>  $checks  keyed by MatchCheck value, in MatchCheck order
+     * @param  int|null  $experienceMonths  the candidate's total work time, null with no work history listed
      */
     public function __construct(
         public ?int $score,
@@ -32,6 +33,7 @@ final readonly class MatchBreakdown
         public Collection $missingRequired,
         public Collection $missingNiceToHave,
         public array $checks,
+        public ?int $experienceMonths,
         public bool $profileIsEmpty,
     ) {}
 

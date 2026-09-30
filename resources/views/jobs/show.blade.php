@@ -80,6 +80,10 @@
             <livewire:report-button :reportable="$jobPosting" :key="'report-'.$jobPosting->id" />
         </div>
 
+        @if (auth()->check() && auth()->user()->isCandidate() && $jobPosting->isPubliclyVisible())
+            <livewire:match-breakdown :job-posting="$jobPosting" :key="'match-'.$jobPosting->id" defer />
+        @endif
+
         @if ($jobPosting->salary_negotiable || $jobPosting->salary_min || $jobPosting->salary_max)
             <p class="mt-6 font-display text-lg font-semibold tabular-nums text-brand-700 dark:text-brand-400">
                 @if ($jobPosting->salary_negotiable)
