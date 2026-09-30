@@ -20,11 +20,40 @@
             you apply for a job. When you apply, the company you applied to can
             see your profile and the CV you attached to that application -- nobody
             else. Documents are served through an access check every time, so a
-            file address alone is not enough to open it.
+            file address alone is not enough to open it. The one exception is a
+            CV you ask our AI to read, which is sent to Anthropic, as described
+            below.
         </p>
         <p>
             Job postings and company profiles are public, and are indexed by search
             engines. Your candidate profile is not.
+        </p>
+    </x-prose-section>
+
+    <x-prose-section heading="Filling your profile from your CV">
+        <p>
+            When you fill your profile from a CV in your library, we first read it
+            ourselves, on our own servers: we look for skills from our list and for
+            your LinkedIn, GitHub and portfolio links. Nothing is sent anywhere for
+            this.
+        </p>
+        <p>
+            If your plan includes it, you can also ask our AI to read the CV, to
+            suggest your headline, summary, roles and education. Only then, and
+            only that CV, is sent to Anthropic, which reads it on our behalf as our
+            processor: a PDF is sent as the file, a Word file as its text. The
+            suggestions come back to us and wait an hour for you to choose from;
+            nothing is added to your profile unless you tick it. We keep a record
+            that a reading happened, to count it against your plan's allowance,
+            but not what the CV or the suggestions said.
+        </p>
+        <p>
+            Anthropic does not use what we send it to train its models
+            (<a href="https://privacy.claude.com/en/articles/7996868" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: model training</a>).
+            By default it deletes it within 30 days. If its automated safety systems
+            flag it as breaking Anthropic's Usage Policy, it may keep it for up to
+            two years
+            (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: data retention</a>).
         </p>
     </x-prose-section>
 
