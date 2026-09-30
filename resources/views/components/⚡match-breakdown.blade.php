@@ -1,13 +1,23 @@
 <?php
 
+use App\Enums\AiAvailability;
+use App\Enums\AiFeature;
 use App\Enums\MatchCheck;
 use App\Enums\MatchCheckResult;
 use App\Enums\SalaryPeriod;
+use App\Jobs\ExplainMatchWithAi;
 use App\Models\CandidatePreference;
 use App\Models\JobPosting;
 use App\Services\MatchScoreCalculator;
+use App\Support\AiQuota;
 use App\Support\MatchBreakdown;
+use App\Support\MatchExplanation;
+use App\Support\MatchExplanationInput;
+use Flux\Flux;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -15,10 +25,54 @@ use Livewire\Component;
  * button. It loads in its own request after the page, so the job page
  * itself stays the same for everyone and one candidate's details never
  * sit in a page another person could be served.
+ *
+ * On a paid plan the candidate can also ask the AI to explain the match
+ * in words. That runs in the background while the page polls, and only
+ * when asked: never on a page view.
  */
 new class extends Component
 {
     public JobPosting $jobPosting;
+
+    /**
+     * Where the AI explanation is: null (not asked), running, done,
+     * failed, or unavailable (the allowance ran out before it started).
+     */
+    #[Locked]
+    public ?string $aiStatus = null;
+
+    /**
+     * The cache key of the explanation being waited for or shown, fixed
+     * when it was asked for so the poll reads the same one.
+     */
+    #[Locked]
+    public ?string $aiKey = null;
+
+    /**
+     * @var array{summary: string, strengths: array<int, string>, gaps: array<int, string>, tips: array<int, string>}|array{}
+     */
+    #[Locked]
+    public array $explanation = [];
+
+    /**
+     * An explanation already written for this job and profile as they are
+     * now is shown again rather than asked for, and paid for, twice.
+     */
+    public function mount(): void
+    {
+        if ($this->breakdown === null || ! AiQuota::enabled()) {
+            return;
+        }
+
+        $key = $this->currentAiKey();
+        $result = Cache::get($key);
+
+        if (($result['status'] ?? null) === 'done') {
+            [$this->aiKey, $this->explanation, $this->aiStatus] = [$key, $result['explanation'], 'done'];
+        } elseif (Cache::has(ExplainMatchWithAi::runningKey($key))) {
+            [$this->aiKey, $this->aiStatus] = [$key, 'running'];
+        }
+    }
 
     /**
      * Nothing for anyone but a candidate on a job the public can see: an
@@ -35,6 +89,116 @@ new class extends Component
         }
 
         return app(MatchScoreCalculator::class)->breakdown($this->jobPosting, $profile);
+    }
+
+    #[Computed]
+    public function aiAvailability(): AiAvailability
+    {
+        return AiQuota::availability(AiFeature::MatchExplanation, auth()->user());
+    }
+
+    /**
+     * With no skills and no work history there is nothing for the AI to
+     * explain, and a run would only spend the allowance on generalities.
+     */
+    #[Computed]
+    public function aiHasMaterial(): bool
+    {
+        return $this->breakdown->experienceMonths !== null
+            || auth()->user()->candidateProfile->skills()->exists();
+    }
+
+    public function explain(): void
+    {
+        if ($this->breakdown === null || $this->aiStatus === 'running' || ! $this->aiHasMaterial) {
+            return;
+        }
+
+        if ($this->aiAvailability !== AiAvailability::Available) {
+            $this->aiStatus = 'unavailable';
+
+            return;
+        }
+
+        $key = $this->currentAiKey();
+        $result = Cache::get($key);
+
+        if (($result['status'] ?? null) === 'done') {
+            [$this->aiKey, $this->explanation, $this->aiStatus] = [$key, $result['explanation'], 'done'];
+
+            return;
+        }
+
+        $attempts = ExplainMatchWithAi::attemptsKey(auth()->user());
+
+        if (RateLimiter::tooManyAttempts($attempts, ExplainMatchWithAi::DAILY_ATTEMPTS)) {
+            Flux::toast(variant: 'warning', text: __('You can ask the AI to explain a match :count times a day. Try again tomorrow.', [
+                'count' => ExplainMatchWithAi::DAILY_ATTEMPTS,
+            ]));
+
+            return;
+        }
+
+        [$this->aiKey, $this->aiStatus] = [$key, 'running'];
+
+        // A second click, or the same job open in another tab, finds the
+        // mark already set and waits for the run already under way.
+        if (! Cache::add(ExplainMatchWithAi::runningKey($key), true, ExplainMatchWithAi::RUNNING_SECONDS)) {
+            return;
+        }
+
+        RateLimiter::hit($attempts, 24 * 60 * 60);
+        Cache::forget($key);
+
+        ExplainMatchWithAi::dispatch($this->jobPosting->id, auth()->id(), $key);
+
+        $this->checkAi();
+    }
+
+    /**
+     * Polled while the explanation runs. When the running mark has expired
+     * without a result, the job never finished, and the page says so
+     * instead of waiting for ever.
+     */
+    public function checkAi(): void
+    {
+        if ($this->aiStatus !== 'running' || $this->aiKey === null) {
+            return;
+        }
+
+        $result = Cache::get($this->aiKey);
+
+        if ($result === null) {
+            if (! Cache::has(ExplainMatchWithAi::runningKey($this->aiKey))) {
+                $this->aiStatus = 'failed';
+            }
+
+            return;
+        }
+
+        if ($result['status'] !== 'done') {
+            $this->aiStatus = $result['status'] === 'unavailable' ? 'unavailable' : 'failed';
+
+            return;
+        }
+
+        [$this->explanation, $this->aiStatus] = [$result['explanation'], 'done'];
+    }
+
+    public function shownExplanation(): ?MatchExplanation
+    {
+        return $this->explanation === [] ? null : MatchExplanation::fromArray($this->explanation);
+    }
+
+    private function currentAiKey(): string
+    {
+        $profile = auth()->user()->candidateProfile;
+
+        return MatchExplanationInput::cacheKey(
+            $profile,
+            $this->jobPosting,
+            MatchExplanationInput::for($this->jobPosting, $profile, $this->breakdown),
+        );
     }
 
     #[Computed]
@@ -244,6 +408,67 @@ new class extends Component
                     <a href="{{ route('candidate.experience.index') }}" class="font-medium text-brand-700 hover:underline dark:text-brand-400" wire:navigate>{{ __('work history') }}</a>.
                     {{ __('Employers see only the skills match.') }}
                 </p>
+
+                {{-- The AI explanation: offered, running, shown, failed, or out of allowance.
+                     Plans without it see nothing here. --}}
+                @php($availability = $this->aiAvailability)
+
+                @if ($aiStatus === 'running')
+                    <div wire:poll.2s="checkAi" role="status" class="mt-4 flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
+                        <flux:icon.loading variant="mini" />
+                        <div>
+                            <p class="font-medium">{{ __('Reading the job…') }}</p>
+                            <p>{{ __('This usually takes a few seconds.') }}</p>
+                        </div>
+                    </div>
+                @elseif ($aiStatus === 'done' && $shown = $this->shownExplanation())
+                    <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h3 class="font-medium text-zinc-900 dark:text-zinc-100">{{ __('AI explanation') }}</h3>
+                            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — may be wrong') }}</span>
+                        </div>
+                        @if ($shown->summary !== '')
+                            <p class="mt-2 text-zinc-700 dark:text-zinc-300">{{ $shown->summary }}</p>
+                        @endif
+                        @foreach ([
+                            __('Where you fit') => $shown->strengths,
+                            __('What the job asks that your profile doesn\'t show') => $shown->gaps,
+                            __('Worth stressing when you apply') => $shown->tips,
+                        ] as $title => $points)
+                            @if ($points !== [])
+                                <h4 class="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">{{ $title }}</h4>
+                                <ul class="mt-1 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-300">
+                                    @foreach ($points as $point)
+                                        <li>{{ $point }}</li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        @endforeach
+                    </div>
+                @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
+                    <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => now()->startOfMonth()->addMonth()->format('j F')]) }}
+                    </p>
+                @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
+                    <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">
+                        @if ($aiStatus === 'failed')
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ __("The AI couldn't explain this match right now.") }}</p>
+                            <p class="mt-1 text-zinc-600 dark:text-zinc-400">{{ __('You can try again; the match above does not depend on it.') }}</p>
+                        @elseif (! $this->aiHasMaterial)
+                            <p class="text-zinc-600 dark:text-zinc-400">{{ __('Add your skills or work history, and the AI can explain how you fit this job.') }}</p>
+                        @else
+                            <p class="text-zinc-600 dark:text-zinc-400">{{ __('The AI can explain in words where you fit this job, what is missing, and what to stress when you apply.') }}</p>
+                        @endif
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <flux:button wire:click="explain" icon="sparkles" size="sm" :disabled="! $this->aiHasMaterial">
+                                {{ $aiStatus === 'failed' ? __('Try again') : __('Explain my match') }}
+                            </flux:button>
+                            <span class="text-xs text-zinc-500 dark:text-zinc-400">
+                                {{ __("Your profile (not your CV, name, contact details or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
             @endif
         </section>
     @endif
