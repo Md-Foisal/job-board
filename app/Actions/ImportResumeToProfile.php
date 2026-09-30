@@ -129,7 +129,7 @@ class ImportResumeToProfile
      * Two entries are the same when their names match, ignoring case and
      * spacing, and they started in the same month.
      */
-    private static function key(string $first, string $second, DateTimeInterface $start): string
+    public static function key(string $first, string $second, DateTimeInterface $start): string
     {
         $normalise = fn (string $value) => mb_strtolower(trim(preg_replace('/\s+/u', ' ', $value) ?? ''));
 
