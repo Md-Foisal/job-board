@@ -52,6 +52,8 @@ test('the page shows what the CV suggests, all ticked when the profile is empty'
     $this->actingAs($candidate)->get(route('candidate.resume-import', $document))
         ->assertOk()
         ->assertSee('Fill your profile from your CV')
+        ->assertSee('found the things below')
+        ->assertDontSee('Everything this CV suggests is already on your profile.')
         ->assertSee('Laravel')
         ->assertSee('https://www.linkedin.com/in/karim-rahman')
         ->assertDontSee('Docker');
@@ -88,9 +90,24 @@ test('after adding, the added things read as already on the profile and nothing 
         ->assertSet('chosenSkills', [])
         ->assertSet('chosenLinks', [])
         ->assertSee('already on your profile')
+        ->assertSee('Everything this CV suggests is already on your profile.')
         ->assertDontSee('Add to my profile');
 
     expect($candidate->candidateProfile->skills()->count())->toBe(2);
+});
+
+test('a CV whose every suggestion is already on the profile says so when the page opens', function () {
+    $candidate = candidateWithoutLinks();
+    $candidate->candidateProfile->update([
+        'linkedin_url' => 'https://www.linkedin.com/in/karim-rahman',
+        'github_url' => 'https://github.com/karim',
+    ]);
+    $candidate->candidateProfile->skills()->attach(Skill::whereIn('name', ['Laravel', 'PHP'])->pluck('id'));
+
+    $this->actingAs($candidate)->get(route('candidate.resume-import', karimsCv($candidate)))
+        ->assertOk()
+        ->assertSee('Everything this CV suggests is already on your profile.')
+        ->assertDontSee('Add to my profile');
 });
 
 test('a different link already on the profile is offered as a replacement, unticked', function () {
@@ -165,7 +182,8 @@ test('a CV with no readable text says so and points to filling in by hand', func
     $this->actingAs($candidate)->get(route('candidate.resume-import', $document))
         ->assertOk()
         ->assertSee("We couldn't read any text in this CV")
-        ->assertDontSee('Add to my profile');
+        ->assertDontSee('Add to my profile')
+        ->assertDontSee('found the things below');
 });
 
 test('a CV with text but nothing on our lists says what was looked for', function () {
@@ -175,7 +193,8 @@ test('a CV with text but nothing on our lists says what was looked for', functio
     $this->actingAs($candidate)->get(route('candidate.resume-import', $document))
         ->assertOk()
         ->assertSee('No skills or profile links found')
-        ->assertDontSee('Add to my profile');
+        ->assertDontSee('Add to my profile')
+        ->assertDontSee('found the things below');
 });
 
 test('only the candidate\'s own, current, readable CV has this page', function () {

@@ -179,9 +179,11 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     </a>
 
     <flux:heading size="xl" level="1" class="mt-4">{{ __('Fill your profile from your CV') }}</flux:heading>
-    <flux:subheading>
-        {{ __('We read :file and found the things below. Nothing is added until you choose it.', ['file' => $document->original_filename]) }}
-    </flux:subheading>
+    @if ($readable && ! $nothingFound)
+        <flux:subheading>
+            {{ __('We read :file and found the things below. Nothing is added until you choose it.', ['file' => $document->original_filename]) }}
+        </flux:subheading>
+    @endif
 
     @if (! $readable)
         <div class="mt-6 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
@@ -259,6 +261,9 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
             @endif
 
             <div class="flex flex-wrap items-center justify-end gap-2">
+                @if ($nothingLeft)
+                    <flux:text size="sm" class="mr-auto">{{ __('Everything this CV suggests is already on your profile.') }}</flux:text>
+                @endif
                 <flux:button :href="route('candidate.profile.edit')" wire:navigate variant="ghost">{{ __('View profile') }}</flux:button>
                 @unless ($nothingLeft)
                     <flux:button type="submit" variant="primary">{{ __('Add to my profile') }}</flux:button>
