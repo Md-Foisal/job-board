@@ -42,6 +42,16 @@ class Company extends Model
         ];
     }
 
+    /**
+     * The plan whose limits apply to the team's AI tools, a key of
+     * config/plans.php. There are no subscriptions yet, so every company
+     * is on the default plan.
+     */
+    public function plan(): string
+    {
+        return config('plans.default');
+    }
+
     public function memberships()
     {
         return $this->hasMany(Membership::class);

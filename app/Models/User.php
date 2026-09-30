@@ -63,6 +63,16 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * The plan whose limits apply to this person's own AI tools, a key of
+     * config/plans.php. There are no subscriptions yet, so everyone is on
+     * the default plan.
+     */
+    public function plan(): string
+    {
+        return config('plans.default');
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string

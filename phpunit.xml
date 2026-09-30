@@ -28,6 +28,10 @@
              processes if it is simply growth. -->
         <ini name="memory_limit" value="256M"/>
         <env name="APP_ENV" value="testing"/>
+        <!-- A real key in a developer's .env must never reach the tests:
+             they switch AI on themselves, against faked models. -->
+        <env name="AI_ENABLED" value="false"/>
+        <env name="ANTHROPIC_API_KEY" value=""/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
