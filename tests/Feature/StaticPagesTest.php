@@ -24,6 +24,16 @@ test('the privacy policy names Anthropic as the reader of CVs sent to the AI, an
         ->assertDontSee('does not keep it');
 });
 
+test('the privacy policy says what an AI match explanation sends, to whom, and what it leaves out', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('preferences are never shown to employers, even when you apply.')
+        ->assertSee('How you match a job')
+        ->assertSee("An employer sees only how many of the job's skills you have", false)
+        ->assertSee('name, contact details, photos, links, CVs and salary expectations are')
+        ->assertSee('We keep it for a day');
+});
+
 test('the terms of service render for a guest', function () {
     $this->get(route('terms'))
         ->assertOk()

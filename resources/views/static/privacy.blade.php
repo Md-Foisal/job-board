@@ -20,9 +20,11 @@
             you apply for a job. When you apply, the company you applied to can
             see your profile and the CV you attached to that application -- nobody
             else. Documents are served through an access check every time, so a
-            file address alone is not enough to open it. The one exception is a
-            CV you ask our AI to read, which is sent to Anthropic, as described
-            below.
+            file address alone is not enough to open it. Your salary and work-type
+            preferences are never shown to employers, even when you apply. The
+            exceptions are a CV you ask our AI to read, and the parts of your
+            profile you ask our AI to explain a match with: both are sent to
+            Anthropic, as described below.
         </p>
         <p>
             Job postings and company profiles are public, and are indexed by search
@@ -54,6 +56,29 @@
             flag it as breaking Anthropic's Usage Policy, it may keep it for up to
             two years
             (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: data retention</a>).
+        </p>
+    </x-prose-section>
+
+    <x-prose-section heading="How you match a job">
+        <p>
+            On a job's page we compare the job with your skills, work history and
+            job preferences, on our own servers, and show the result to you alone.
+            An employer sees only how many of the job's skills you have, never
+            your preferences or how the rest compares. Nothing is sent anywhere
+            for this.
+        </p>
+        <p>
+            If your plan includes it, you can also ask our AI to explain the match
+            in words. Only then is the following sent to Anthropic, which reads it
+            on our behalf as our processor: the job posting, your headline, about
+            text, skills, work history and education, and our own comparison. Your
+            name, contact details, photos, links, CVs and salary expectations are
+            not sent. The explanation is shown only to you, never to employers, and
+            never changes your match or where you appear. We keep it for a day, so
+            you can come back to it, and then delete it; we keep a record that one
+            was made, to count it against your plan's allowance, but not what it
+            said. Anthropic handles what we send the same way as a CV it reads,
+            above.
         </p>
     </x-prose-section>
 
