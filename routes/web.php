@@ -68,6 +68,11 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
 
+    // Filling the profile from a CV in the library: the page reads the
+    // file, suggests what it found, and adds only what the candidate ticks.
+    Route::livewire('/profile/import/{document}', 'pages::candidate.resume-import')
+        ->whereNumber('document')->name('resume-import');
+
     Route::get('/preferences', [CandidatePreferenceController::class, 'edit'])->name('preferences.edit');
     Route::patch('/preferences', [CandidatePreferenceController::class, 'update'])->name('preferences.update');
 

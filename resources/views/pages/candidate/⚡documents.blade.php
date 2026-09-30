@@ -141,6 +141,18 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                         <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->original_filename }}</p>
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $document->document_type->label() }}</p>
                         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">{{ $document->created_at->format('M j, Y') }}</p>
+
+                        @if ($document->document_type === \App\Enums\DocumentType::Cv)
+                            @if (\App\Support\CvText::supports($document))
+                                <flux:button :href="route('candidate.resume-import', $document)" wire:navigate size="xs" icon="user-plus" class="mt-3">
+                                    {{ __('Fill my profile from this CV') }}
+                                </flux:button>
+                            @else
+                                <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+                                    {{ __('Upload this CV as PDF or DOCX to fill your profile from it.') }}
+                                </p>
+                            @endif
+                        @endif
                     </div>
                 </div>
 
