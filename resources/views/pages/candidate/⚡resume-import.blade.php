@@ -537,7 +537,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                     {{ $aiStatus === 'failed' ? __('Try again') : __('Read with AI') }}
                 </flux:button>
                 <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
-                    {{ __('Your CV is sent to Anthropic to be read. Anthropic does not keep it or use it to train models.') }}
+                    {{ __("Your CV is sent to Anthropic to be read. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
                 </flux:text>
             </div>
         </div>
