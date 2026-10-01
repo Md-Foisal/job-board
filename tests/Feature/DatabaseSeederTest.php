@@ -7,6 +7,7 @@ use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\JobPerformance;
 use Database\Seeders\DemoAccountsSeeder;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use PragmaRX\Google2FA\Google2FA;
@@ -46,6 +47,16 @@ test('a fresh seed can be looked at from every side', function () {
         ->and($deleted->isRestorable())->toBeTrue()
         ->and(User::withTrashed()->whereNotNull('anonymized_at')->exists())->toBeTrue()
         ->and(JobPosting::query()->active()->whereNull('published_at')->exists())->toBeFalse();
+
+    // The analytics page has a history to draw for the demo company.
+    $report = app(JobPerformance::class)->for($demoCompany, days: 90);
+
+    expect($report->views)->toBeGreaterThan(0)
+        ->and($report->applications)->toBeGreaterThanOrEqual(14)
+        ->and($report->funnel['hired'])->toBe(1)
+        ->and($report->rejectedUnseen)->toBe(2)
+        ->and($report->firstResponseMedianHours)->not->toBeNull()
+        ->and($report->viewsCoverRange())->toBeFalse();
 });
 
 test('the demo two-factor secret gives codes that sign staff in', function () {
