@@ -22,11 +22,14 @@ use Stringable;
  * Suggests better wording for a CV: a headline, a summary and bullet
  * points for each role, plus tips.
  *
- * It rewords; it never adds facts. AI resume writers are known to invent
- * numbers and to move an achievement from one job to another, so the
+ * It rewords; it never adds facts. AI resume writers are known to attach
+ * outcomes nobody stated -- "improving team velocity" -- and to merge
+ * separate true facts into one claim with such an outcome, so the
  * instructions forbid both, the answer has a field per role keyed by the
  * role's id, and the product flags any number that is not in the
- * candidate's own text before they decide.
+ * candidate's own text. An invented outcome without a number cannot be
+ * caught in code, so the candidate's review of every line is the last
+ * guard, and the page asks for it.
  *
  * The profile arrives as the result of a tool call already in the
  * conversation, like the match explanation's material, and the answer is
@@ -43,7 +46,7 @@ class CvWriter implements Agent, HasStructuredOutput, HasTools
      * the answer's shape must not show suggestions written under the old
      * ones.
      */
-    public const VERSION = 1;
+    public const VERSION = 2;
 
     private const CALL_ID = 'toolu_cv_material';
 
@@ -69,6 +72,11 @@ class CvWriter implements Agent, HasStructuredOutput, HasTools
             Rules:
             - Use only what the profile says. Never add a number, percentage, amount, team size, tool, technology,
               employer, client, product, award or result that is not written in the profile.
+            - Never add an outcome, benefit or effect the profile does not state, with or without a number: no
+              "improving team velocity", "raising standards", "accelerating delivery" or "increasing revenue" unless
+              the profile says exactly that happened.
+            - Never merge separate facts into one claim that says more than each says alone, and never make one thing
+              the cause of another unless the profile says so.
             - Keep each role's facts in that role. Never move something from one role, or from the summary, to another.
             - If a bullet would be stronger with a number the profile does not give, write the bullet without it and say
               so in tips instead (for example "Add how many users the payments API served").

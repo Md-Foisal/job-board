@@ -555,6 +555,11 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                     <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — check every line') }}</span>
                 </div>
                 <flux:text size="sm" class="mt-1">{{ __('Ticked suggestions replace that part of your profile, and the CV follows. Anything with a number you did not write starts unticked.') }}</flux:text>
+                <flux:callout variant="warning" icon="exclamation-triangle" class="mt-3">
+                    <flux:callout.text>
+                        {{ __('Before you apply a suggestion, check that every claim in it is true, not only the flagged numbers. The AI can add a result you never mentioned, such as "improving team velocity", or join two separate things into one claim. Untick anything you could not explain in an interview.') }}
+                    </flux:callout.text>
+                </flux:callout>
 
                 <div class="mt-5 space-y-6">
                     @foreach (['headline' => [__('Headline'), $shown->headline, 'useHeadline', $shown->headlineIsCurrent($profile), $profile->headline], 'summary' => [__('Summary'), $shown->summary, 'useSummary', $shown->summaryIsCurrent($profile), $profile->bio]] as $part => [$label, $item, $model, $current, $now])

@@ -331,6 +331,22 @@ test('suggestions are shown when they arrive, with numbers to check left unticke
         ->assertSet('useRoles', [acmeRole($nadia)->id]);
 });
 
+test('the suggestions ask the candidate to check every claim, not only the flagged numbers', function () {
+    $nadia = nadia();
+    CvWriter::fake([cvAnswer($nadia)]);
+
+    polishPage($nadia)
+        ->call('polish')
+        ->assertSee('check that every claim in it is true, not only the flagged numbers')
+        ->assertSee('Untick anything you could not explain in an interview.');
+});
+
+test('the AI is told never to add an outcome or merge facts into a bigger claim', function () {
+    expect((string) (new CvWriter)->instructions())
+        ->toContain('Never add an outcome, benefit or effect the profile does not state, with or without a number')
+        ->toContain('Never merge separate facts into one claim');
+});
+
 test('applying writes the ticked parts, rebuilds the preview, and takes them off the list', function () {
     $nadia = nadia();
     CvWriter::fake([cvAnswer($nadia)]);

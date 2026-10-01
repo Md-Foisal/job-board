@@ -20,8 +20,10 @@ use Mews\Purifier\Facades\Purifier;
  *   is ever stored as markup.
  * - A suggestion for a role that is not on this profile is dropped.
  * - Any number in a suggestion that the candidate's own text does not
- *   contain is listed, and that suggestion starts unticked: invented and
- *   misplaced figures are the known failure of AI resume writers.
+ *   contain is listed, and that suggestion starts unticked. Invented
+ *   figures are one known failure of AI resume writers; an invented
+ *   outcome without a number is another, which only the candidate can
+ *   catch, so the page asks them to check every claim.
  * - Each suggestion remembers what it was written against -- the headline
  *   and summary text, each role's last change -- so one the candidate has
  *   since edited by hand is closed instead of written over.
