@@ -99,7 +99,8 @@ test('the privacy policy says what the AI reads of a review or an answer, and wh
         ->assertSee('replies to. Nothing about who wrote either is sent. The AI never')
         ->assertSee('publishes or rejects anything: a person decides every time.')
         ->assertSee('of companies with any answers to them &mdash; and keep only an anonymous', false)
-        ->assertSee("stay correct. Answers you wrote to reviews on a company's behalf stay", false);
+        ->assertSee('the copy of the CV you attached at the time. Answers you wrote to')
+        ->assertSee("reviews on a company's behalf stay up, as the company's, with nothing", false);
 });
 
 test('the terms of service set out the review rules, and what moderation never does', function () {

@@ -184,9 +184,10 @@
             uploaded and built files, cover letters and answers, and your reviews
             of companies with any answers to them &mdash; and keep only an anonymous
             record that an application was made, so employers' and our own numbers
-            stay correct. Answers you wrote to reviews on a company's behalf stay
-            up, as the company's, with nothing linking them to you. Until then, applications you have already submitted keep
-            the copy of the CV you attached at the time.
+            stay correct. Until then, applications you have already submitted keep
+            the copy of the CV you attached at the time. Answers you wrote to
+            reviews on a company's behalf stay up, as the company's, with nothing
+            linking them to you.
         </p>
     </x-prose-section>
 
