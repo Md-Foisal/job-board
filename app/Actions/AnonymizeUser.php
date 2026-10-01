@@ -141,6 +141,8 @@ class AnonymizeUser
                 // to a real person, and the id keeps the unique index happy.
                 'email' => $anonymousEmail,
                 'avatar' => null,
+                'timezone' => null,
+                'timezone_automatic' => true,
                 'password' => Hash::make(Str::random(64)),
                 'email_verified_at' => null,
                 'two_factor_secret' => null,

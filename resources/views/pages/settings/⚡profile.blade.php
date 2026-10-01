@@ -1,9 +1,11 @@
 <?php
 
 use App\Concerns\ProfileValidationRules;
+use App\Support\LocalTime;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -15,12 +17,18 @@ new #[Title('Profile settings')] class extends Component {
     public string $email = '';
 
     /**
+     * Empty means automatic: follow the browser.
+     */
+    public string $timezone = '';
+
+    /**
      * Mount the component.
      */
     public function mount(): void
     {
         $this->name = Auth::user()->name;
         $this->email = Auth::user()->email;
+        $this->timezone = Auth::user()->timezone_automatic ? '' : (string) Auth::user()->timezone;
     }
 
     /**
@@ -41,6 +49,35 @@ new #[Title('Profile settings')] class extends Component {
         $user->save();
 
         Flux::toast(variant: 'success', text: __('Profile updated.'));
+    }
+
+    /**
+     * A zone picked by hand stays put; going back to automatic takes the
+     * browser's zone straight away rather than on the next page.
+     */
+    public function updateTimezone(): void
+    {
+        $validated = $this->validate([
+            'timezone' => ['nullable', 'string', Rule::in(\DateTimeZone::listIdentifiers())],
+        ], attributes: ['timezone' => __('time zone')]);
+
+        $user = Auth::user();
+        $automatic = blank($validated['timezone']);
+
+        $user->timezone_automatic = $automatic;
+        $user->timezone = $automatic ? (LocalTime::fromBrowser() ?? $user->timezone) : $validated['timezone'];
+        $user->save();
+
+        Flux::toast(variant: 'success', text: __('Time zone updated.'));
+    }
+
+    /**
+     * What "Automatic" means for this person right now, to show beside it.
+     */
+    #[Computed]
+    public function detectedTimezone(): ?string
+    {
+        return LocalTime::fromBrowser() ?? (Auth::user()->timezone_automatic ? Auth::user()->timezone : null);
     }
 
     /**
@@ -103,6 +140,31 @@ new #[Title('Profile settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit" data-test="update-profile-button">
+                    {{ __('Save') }}
+                </flux:button>
+            </div>
+        </form>
+
+        <form wire:submit="updateTimezone" class="mt-6 w-full space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <flux:select
+                wire:model="timezone"
+                :label="__('Time zone')"
+                :description="__('Dates and times across the site, and in our emails, are shown in this zone. Automatic follows the device you are using, including when you travel.')"
+            >
+                <flux:select.option value="">
+                    {{ $this->detectedTimezone ? __('Automatic — :zone', ['zone' => LocalTime::label($this->detectedTimezone)]) : __('Automatic') }}
+                </flux:select.option>
+                @foreach (LocalTime::choices() as $region => $zones)
+                    <optgroup label="{{ $region }}">
+                        @foreach ($zones as $zone => $label)
+                            <flux:select.option :value="$zone">{{ $label }}</flux:select.option>
+                        @endforeach
+                    </optgroup>
+                @endforeach
+            </flux:select>
+
+            <div class="flex items-center gap-4">
+                <flux:button variant="primary" type="submit" data-test="update-timezone-button">
                     {{ __('Save') }}
                 </flux:button>
             </div>

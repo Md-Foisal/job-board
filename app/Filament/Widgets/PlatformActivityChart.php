@@ -19,7 +19,10 @@ use Illuminate\Support\Facades\DB;
  * thousands where postings run in single figures, and on a shared axis
  * the small lines would sit flat along the bottom. The filter picks which.
  *
- * Days are UTC, the app's timezone, as on the employer analytics page.
+ * Days are UTC: the platform has no zone of its own, and its staff may sit
+ * anywhere. Views are the exception that cannot be helped -- they are
+ * stored per day already, each on the day of the company that posted the
+ * job (RecordJobView) -- and the description says so.
  * The counts are cached for ten minutes, the same as the employers'
  * numbers, so the chart does not poll; a reload shows anything newer.
  */
@@ -72,7 +75,9 @@ class PlatformActivityChart extends ChartWidget
             $summary .= ', most on '.CarbonImmutable::parse($busiest)->format('j M').' ('.number_format($series[$busiest]).')';
         }
 
-        return $summary.'.'.($this->metric() === 'views' ? ' Bots, staff and each company\'s own team are not counted.' : '');
+        return $summary.'.'.($this->metric() === 'views'
+            ? ' Bots, staff and each company\'s own team are not counted. Each view falls on the day of the company that posted the job.'
+            : ' Days are UTC.');
     }
 
     protected function getData(): array

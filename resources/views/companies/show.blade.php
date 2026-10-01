@@ -71,7 +71,7 @@
                         <span class="font-semibold tabular-nums text-zinc-700 dark:text-zinc-300">{{ $jobPostings->count() }}</span>
                         open {{ \Illuminate\Support\Str::plural('position', $jobPostings->count()) }}
                         <span class="mx-1.5">·</span>
-                        On JobBoard since {{ $company->created_at->format('Y') }}
+                        On JobBoard since {{ \App\Support\LocalTime::of($company->created_at)->format('Y') }}
                     </p>
 
                     @if ($responsivePercent !== null)
@@ -173,7 +173,8 @@
                                         <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
                                             {{ __('Verified applicant') }}
                                             <span class="mx-1">·</span>
-                                            <time datetime="{{ $review->published_at->format('Y-m') }}">{{ $review->published_at->format('F Y') }}</time>
+                                            @php($publishedAt = \App\Support\LocalTime::of($review->published_at))
+                                            <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format('F Y') }}</time>
                                         </p>
                                     </div>
 

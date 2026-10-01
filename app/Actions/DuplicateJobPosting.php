@@ -6,6 +6,7 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ModerationStatus;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Support\ClosingDate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -34,7 +35,7 @@ class DuplicateJobPosting
             $copy->moderation_status = ModerationStatus::Pending;
             $copy->published_at = null;
             $copy->submitted_at = null;
-            $copy->expires_at = now()->addMonth();
+            $copy->expires_at = ClosingDate::monthAfter($original->company);
             $copy->save();
 
             $copy->categories()->sync($original->categories->pluck('id')->all());

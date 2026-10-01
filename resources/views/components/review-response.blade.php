@@ -8,7 +8,8 @@
         <p class="text-xs font-medium text-zinc-700 dark:text-zinc-300">
             {{ __('Response from :company', ['company' => $company->name]) }}
             <span class="mx-1 font-normal text-zinc-500">·</span>
-            <time class="font-normal text-zinc-500" datetime="{{ $review->responded_at->format('Y-m') }}">{{ $review->responded_at->format('F Y') }}</time>
+            @php($respondedAt = \App\Support\LocalTime::of($review->responded_at))
+            <time class="font-normal text-zinc-500" datetime="{{ $respondedAt->format('Y-m') }}">{{ $respondedAt->format('F Y') }}</time>
         </p>
         @if ($review->responseAnswersEarlierVersion())
             <p class="mt-1 text-xs italic text-zinc-500 dark:text-zinc-400">{{ __('Written to an earlier version of this review.') }}</p>

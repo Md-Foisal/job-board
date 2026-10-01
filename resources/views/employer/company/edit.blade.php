@@ -72,6 +72,21 @@
 
                         <flux:input name="industry" :label="__('Industry')" :value="old('industry', $company->industry)" placeholder="{{ __('Software, logistics, retail...') }}" />
                     </div>
+
+                    @php($currentZone = old('timezone', $company->timezone))
+                    <flux:select
+                        name="timezone"
+                        :label="__('Time zone')"
+                        :description="__('Your closing dates run to the end of the day in this zone, and your analytics count days by it, so everyone on the team sees the same numbers. A change applies to the days counted from then on.')"
+                    >
+                        @foreach (\App\Support\LocalTime::choices() as $region => $zones)
+                            <optgroup label="{{ $region }}">
+                                @foreach ($zones as $zone => $label)
+                                    <flux:select.option value="{{ $zone }}" :selected="$currentZone === $zone">{{ $label }}</flux:select.option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </flux:select>
                 </div>
             </div>
 

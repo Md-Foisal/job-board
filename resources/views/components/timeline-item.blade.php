@@ -8,17 +8,19 @@
     (border-s), because the dot is absolutely positioned against it.
 
     @param string $label
-    @param \Illuminate\Support\Carbon $at
+    @param \Carbon\CarbonInterface $at  stored in UTC; shown in the reader's zone.
     @param bool $highlight  true for the entry that started it all.
 --}}
 @props(['label', 'at', 'highlight' => false])
+
+@php($local = \App\Support\LocalTime::of($at))
 
 <li class="ms-6 pb-8 last:pb-0">
     <span class="absolute -start-1.5 mt-1.5 size-3 rounded-full {{ $highlight ? 'bg-brand-600 dark:bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-700' }}"></span>
 
     <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
 
-    <time class="text-sm text-zinc-500 dark:text-zinc-500" datetime="{{ $at->toIso8601String() }}">
-        {{ $at->format('j M Y, g:i a') }}
+    <time class="text-sm text-zinc-500 dark:text-zinc-500" datetime="{{ $local->toIso8601String() }}">
+        {{ $local->format('j M Y, g:i a') }}
     </time>
 </li>

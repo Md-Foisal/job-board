@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-#[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry'])]
+#[Fillable(['name', 'slug', 'identity_type', 'description', 'website_url', 'logo_path', 'cover_photo_path', 'size', 'industry', 'timezone'])]
 class Company extends Model
 {
     use HasFactory, HiddenWhileReported;
@@ -30,6 +30,7 @@ class Company extends Model
      */
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
+        'timezone' => 'UTC',
     ];
 
     protected function casts(): array

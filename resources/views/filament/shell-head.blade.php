@@ -12,6 +12,8 @@
     renders at STYLES_AFTER, above that script), and the panel's toggle
     (filament/theme-toggle) writes both.
 --}}
+@include('partials.timezone-cookie')
+
 <link rel="preconnect" href="https://fonts.bunny.net">
 <link href="https://fonts.bunny.net/css?family=bricolage-grotesque:700" rel="stylesheet" />
 
