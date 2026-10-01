@@ -72,7 +72,7 @@ class CandidateDashboardController extends Controller
             ->count();
 
         // One JobView row per (user, job posting) -- already deduped at the
-        // write side (recordView() upserts on that pair), so this is just
+        // write side (RecordJobView upserts on that pair), so this is just
         // the 6 most recently touched rows, not a dedupe-on-read job here.
         // Only what is still public: a posting rewritten after approval,
         // taken down or hidden since it was viewed must not be shown here

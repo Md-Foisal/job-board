@@ -13,6 +13,14 @@
             We also record which job postings you open while signed in, so your
             dashboard can show you what you were last looking at.
         </p>
+        <p>
+            Whenever anyone opens a job posting, signed in or not, we add one to
+            that posting's view count for the day, which the company that posted
+            it can see. The count holds no name, account or address. So that
+            the same visit is not counted twice, your browser session remembers
+            which postings it has already been counted for that day; nothing
+            more is kept.
+        </p>
     </x-prose-section>
 
     <x-prose-section heading="Who can see it">

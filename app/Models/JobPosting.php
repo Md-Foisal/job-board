@@ -209,6 +209,11 @@ class JobPosting extends Model
         return $this->hasMany(JobView::class);
     }
 
+    public function dailyStats()
+    {
+        return $this->hasMany(JobPostingDailyStat::class);
+    }
+
     /**
      * Moderation decisions taken against this record.
      */

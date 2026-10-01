@@ -12,6 +12,14 @@ test('the privacy policy renders for a guest', function () {
         ->assertSee('What we collect');
 });
 
+test('the privacy policy says job views are counted for everyone, and what the count keeps', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('signed in or not, we add one to')
+        ->assertSee('The count holds no name, account or address.')
+        ->assertSee('which postings it has already been counted for that day');
+});
+
 test('the privacy policy names Anthropic as the reader of CVs sent to the AI, and what it keeps', function () {
     $this->get(route('privacy'))
         ->assertOk()
