@@ -6,7 +6,10 @@ use App\Enums\ModerationStatus;
 use App\Models\Application;
 use App\Models\CompanyReview;
 use App\Support\ReviewTextFlags;
+use App\Support\SubmissionLimits;
 use Flux\Flux;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -90,6 +93,27 @@ new class extends Component
             ? $this->authorize('create', [CompanyReview::class, $this->application])
             : $this->authorize('update', $review);
 
+        $limitKey = SubmissionLimits::reviewSaveKey(auth()->user());
+
+        if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::REVIEW_SAVES_PER_DAY)) {
+            Flux::toast(
+                variant: 'warning',
+                duration: 10000,
+                heading: __("You've reached today's limit for reviews"),
+                text: __('You can save a review up to :limit times a day. You can save again in :hours hours.', [
+                    'limit' => SubmissionLimits::REVIEW_SAVES_PER_DAY,
+                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
+                ]),
+            );
+
+            return;
+        }
+
+        // Livewire's own requests skip the TrimStrings middleware, so the
+        // lengths below would otherwise count the spaces around the text.
+        $this->title = Str::squish($this->title);
+        $this->body = trim($this->body);
+
         $validated = $this->validate([
             'overallRating' => ['required', 'integer', 'between:1,5'],
             'communicationRating' => ['required', 'integer', 'between:1,5'],
@@ -109,6 +133,8 @@ new class extends Component
             'title' => $validated['title'],
             'body' => $validated['body'],
         ]);
+
+        RateLimiter::hit($limitKey, 86400);
 
         unset($this->review, $this->canWrite);
         $this->showForm = false;

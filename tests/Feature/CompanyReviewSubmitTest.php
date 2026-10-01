@@ -12,8 +12,10 @@ use App\Models\JobPosting;
 use App\Models\Membership;
 use App\Notifications\CompanyReviewAwaitingReview;
 use App\Support\ReviewTextFlags;
+use App\Support\SubmissionLimits;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -136,7 +138,49 @@ test('the form holds a review to the length and ratings it promises', function (
     'headline too long' => [['title' => str_repeat('a', 101)], 'title'],
     'body too short' => [['body' => str_repeat('a', 49)], 'body'],
     'body too long' => [['body' => str_repeat('a', 2001)], 'body'],
+    'body padded with spaces' => [['body' => 'a'.str_repeat(' ', 49)], 'body'],
+    'headline of spaces only' => [['title' => '     '], 'title'],
 ]);
+
+test('spaces around the text are not stored', function () {
+    fillReview(reviewForm($this)->call('open'), validReview([
+        'title' => '   Slow   but fair  ',
+        'body' => "\n  ".validReview()['body']."   \n",
+    ]))->call('save')->assertHasNoErrors();
+
+    expect(CompanyReview::sole()->title)->toBe('Slow but fair')
+        ->and(CompanyReview::sole()->body)->toBe(validReview()['body']);
+});
+
+test('deleting and rewriting cannot mail staff without end', function () {
+    $staff = staffWithTwoFactor();
+
+    foreach (range(1, SubmissionLimits::REVIEW_SAVES_PER_DAY) as $round) {
+        fillReview(reviewForm($this)->call('open'), validReview())->call('save')->assertHasNoErrors();
+        reviewForm($this)->call('delete');
+    }
+
+    fillReview(reviewForm($this)->call('open'), validReview())->call('save');
+
+    expect(CompanyReview::count())->toBe(0);
+    Notification::assertSentToTimes($staff, CompanyReviewAwaitingReview::class, SubmissionLimits::REVIEW_SAVES_PER_DAY);
+
+    $this->travel(1)->day();
+    fillReview(reviewForm($this)->call('open'), validReview())->call('save')->assertHasNoErrors();
+
+    expect(CompanyReview::count())->toBe(1);
+});
+
+test('a refused save keeps the form open and the text as typed', function () {
+    RateLimiter::increment(SubmissionLimits::reviewSaveKey($this->candidate), 86400, SubmissionLimits::REVIEW_SAVES_PER_DAY);
+
+    fillReview(reviewForm($this)->call('open'), validReview())
+        ->call('save')
+        ->assertSet('showForm', true)
+        ->assertSet('title', validReview()['title']);
+
+    expect(CompanyReview::count())->toBe(0);
+});
 
 test('a candidate whose application does not qualify cannot open or save the form', function () {
     $fresh = Application::factory()
