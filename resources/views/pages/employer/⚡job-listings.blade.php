@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\DuplicateJobPosting;
+use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
 use App\Enums\ReportStatus;
@@ -31,7 +32,9 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             ->when($this->filter !== 'all', fn ($query) => $query->where('availability_status', $this->filter))
             ->withCount([
                 'applications',
-                'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'applications as new_applications_count' => fn ($query) => $query
+                    ->where('stage', ApplicationStage::New)
+                    ->where('outcome_status', ApplicationOutcomeStatus::Active),
                 'reports as open_reporters_count' => fn ($query) => $query
                     ->where('review_status', ReportStatus::Pending)
                     ->select(DB::raw('count(distinct reporter_id)')),

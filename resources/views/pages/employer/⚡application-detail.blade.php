@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\ChangeApplicationOutcome;
 use App\Actions\ChangeApplicationStage;
+use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Models\Application;
 use App\Models\ApplicationNote;
@@ -98,6 +100,24 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         Flux::toast(variant: 'success', text: __('Stage updated.'));
     }
 
+    public function decide(ChangeApplicationOutcome $changeOutcome, string $outcome): void
+    {
+        $this->authorize('decideOutcome', $this->application);
+
+        $to = ApplicationOutcomeStatus::tryFrom($outcome);
+
+        abort_unless(in_array($to, [ApplicationOutcomeStatus::Hired, ApplicationOutcomeStatus::Rejected], true), 422);
+
+        $changeOutcome($this->application, auth()->user(), $to);
+
+        $this->application->refresh();
+        unset($this->timeline);
+
+        Flux::toast(variant: 'success', text: $to === ApplicationOutcomeStatus::Hired
+            ? __('Marked as hired. We have let the candidate know.')
+            : __('Application rejected. We have let the candidate know.'));
+    }
+
     public function addNote(): void
     {
         $this->authorize('create', [ApplicationNote::class, $this->application]);
@@ -178,16 +198,22 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
 
     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div class="flex flex-wrap items-end gap-4">
-            <flux:select wire:model="stage" :label="__('Review stage')" class="w-56">
-                @foreach (ApplicationStage::cases() as $stage)
-                    <flux:select.option value="{{ $stage->value }}">{{ $stage->label() }}</flux:select.option>
-                @endforeach
-            </flux:select>
+            @can('updateStage', $this->application)
+                <flux:select wire:model="stage" :label="__('Review stage')" class="w-56">
+                    @foreach (ApplicationStage::cases() as $stage)
+                        <flux:select.option value="{{ $stage->value }}">{{ $stage->label() }}</flux:select.option>
+                    @endforeach
+                </flux:select>
 
-            <flux:button variant="primary" wire:click="updateStage" wire:loading.attr="disabled" wire:target="updateStage">
-                <span wire:loading.remove wire:target="updateStage">{{ __('Update') }}</span>
-                <span wire:loading wire:target="updateStage">{{ __('Updating...') }}</span>
-            </flux:button>
+                <flux:button variant="primary" wire:click="updateStage" wire:loading.attr="disabled" wire:target="updateStage">
+                    <span wire:loading.remove wire:target="updateStage">{{ __('Update') }}</span>
+                    <span wire:loading wire:target="updateStage">{{ __('Updating...') }}</span>
+                </flux:button>
+            @else
+                <flux:text>
+                    {{ __('This application is closed (:outcome). Its stage no longer changes.', ['outcome' => $this->application->outcome_status->label()]) }}
+                </flux:text>
+            @endcan
 
             @if ($candidate->user->anonymized_at)
                 {{-- The snapshot yields to erasure (AnonymizeUser): the file
@@ -204,6 +230,37 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             @endif
         </div>
     </div>
+
+    @can('decideOutcome', $this->application)
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="min-w-0">
+                <flux:heading size="lg">{{ __('Decision') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Final. The candidate is told by email either way.') }}</flux:text>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:button
+                    variant="danger"
+                    wire:click="decide('{{ ApplicationOutcomeStatus::Rejected->value }}')"
+                    wire:confirm="{{ __('Reject this application? The candidate will be told, and this cannot be undone.') }}"
+                    wire:loading.attr="disabled"
+                    wire:target="decide"
+                >
+                    {{ __('Reject') }}
+                </flux:button>
+
+                <flux:button
+                    variant="primary"
+                    wire:click="decide('{{ ApplicationOutcomeStatus::Hired->value }}')"
+                    wire:confirm="{{ __('Mark this candidate as hired? They will be told, and this cannot be undone.') }}"
+                    wire:loading.attr="disabled"
+                    wire:target="decide"
+                >
+                    {{ __('Mark as hired') }}
+                </flux:button>
+            </div>
+        </div>
+    @endcan
 
     {{-- The candidate's profile is read live rather than frozen: only the CV
          and the screening answers are a snapshot of the moment they applied.

@@ -68,9 +68,26 @@ class ApplicationPolicy
         return $user->worksAt($jobPosting->company);
     }
 
+    /**
+     * Only while the application is still open: once it has an outcome a
+     * stage move would tell the candidate they moved forward after being
+     * hired, turned down or withdrawing.
+     */
     public function updateStage(User $user, Application $application): bool
     {
-        return $this->review($user, $application);
+        return $this->review($user, $application)
+            && $application->outcome_status === ApplicationOutcomeStatus::Active;
+    }
+
+    /**
+     * Hiring or turning someone down is final and is written to the
+     * candidate straight away, so it stays with the people who answer for
+     * the hire, as moving a whole batch does.
+     */
+    public function decideOutcome(User $user, Application $application): bool
+    {
+        return $user->canManage($application->jobPosting->company)
+            && $application->outcome_status === ApplicationOutcomeStatus::Active;
     }
 
     /**
