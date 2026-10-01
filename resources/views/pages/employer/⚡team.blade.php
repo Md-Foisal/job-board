@@ -229,7 +229,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                                 <div class="text-sm text-zinc-500 dark:text-zinc-500">
                                     {{ __('Invited as a :role, expires :date', [
                                         'role' => \Illuminate\Support\Str::lower($invitation->role->label()),
-                                        'date' => $invitation->expires_at->toFormattedDateString(),
+                                        'date' => \App\Support\LocalTime::of($invitation->expires_at)->toFormattedDateString(),
                                     ]) }}
                                 </div>
                             </div>

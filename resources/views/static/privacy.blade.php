@@ -21,6 +21,12 @@
             which postings it has already been counted for that day; nothing
             more is kept.
         </p>
+        <p>
+            Your browser tells us its time zone, such as Asia/Dhaka, in a small
+            cookie, so that dates and times are shown in your own time. If you
+            are signed in, your account keeps a copy, so our emails use it too.
+            You can choose a time zone yourself in your profile settings.
+        </p>
     </x-prose-section>
 
     <x-prose-section heading="Who can see it">

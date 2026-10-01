@@ -21,7 +21,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-#[Fillable(['name', 'email', 'password', 'avatar'])]
+#[Fillable(['name', 'email', 'password', 'avatar', 'timezone', 'timezone_automatic'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -44,6 +44,8 @@ class User extends Authenticatable implements FilamentUser
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
         'staff_role' => null,
+        'timezone' => null,
+        'timezone_automatic' => true,
     ];
 
     /**
@@ -59,6 +61,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'account_status' => AccountStatus::class,
             'staff_role' => StaffRole::class,
+            'timezone_automatic' => 'boolean',
         ];
     }
 

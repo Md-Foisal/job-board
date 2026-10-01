@@ -244,7 +244,7 @@ new class extends Component
                 @endif
             @elseif ($aiStatus === 'unavailable' || $availability === \App\Enums\AiAvailability::LimitReached)
                 <flux:text class="mt-2">
-                    {{ __("Your company has used this month's AI reviews. They reset on :date.", ['date' => now()->startOfMonth()->addMonth()->format('j F')]) }}
+                    {{ __("Your company has used this month's AI reviews. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
                 </flux:text>
             @elseif (! $this->canRequest)
                 <flux:text class="mt-2">{{ __('Owners and managers can ask the AI to review this posting.') }}</flux:text>

@@ -284,7 +284,8 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                             <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
                                 {{ __('Verified applicant') }}
                                 <span class="mx-1">·</span>
-                                <time datetime="{{ $review->published_at->format('Y-m') }}">{{ $review->published_at->format('F Y') }}</time>
+                                @php($publishedAt = \App\Support\LocalTime::of($review->published_at))
+                                <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format('F Y') }}</time>
                             </p>
                         </div>
 

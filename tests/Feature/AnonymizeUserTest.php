@@ -37,7 +37,7 @@ function candidateWithEverything(): array
     Storage::fake('public');
 
     $user = candidateUser();
-    $user->forceFill(['name' => 'Sakib Hasan', 'email' => 'sakib@example.com', 'avatar' => 'avatars/sakib.jpg'])->save();
+    $user->forceFill(['name' => 'Sakib Hasan', 'email' => 'sakib@example.com', 'avatar' => 'avatars/sakib.jpg', 'timezone' => 'Asia/Dhaka', 'timezone_automatic' => false])->save();
     Storage::disk('public')->put('avatars/sakib.jpg', 'x');
 
     $profile = $user->candidateProfile;
@@ -83,6 +83,8 @@ test('a candidate is emptied of everything personal while the application stays 
     expect($user->name)->toBe('Deleted user')
         ->and($user->email)->toBe("deleted-{$user->id}@anonymized.invalid")
         ->and($user->avatar)->toBeNull()
+        ->and($user->timezone)->toBeNull()
+        ->and($user->timezone_automatic)->toBeTrue()
         ->and($user->anonymized_at)->not->toBeNull()
         ->and($user->trashed())->toBeTrue()
         ->and($profile->headline)->toBeNull()

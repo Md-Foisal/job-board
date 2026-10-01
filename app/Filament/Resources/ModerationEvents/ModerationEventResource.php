@@ -10,12 +10,14 @@ use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
 use BackedEnum;
+use Carbon\CarbonImmutable;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -180,9 +182,11 @@ class ModerationEventResource extends Resource
                         DatePicker::make('from'),
                         DatePicker::make('until'),
                     ])
+                    // The days are the staff member's own, as the times in the
+                    // table are, so each is turned into its UTC span first.
                     ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date))
-                        ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date))),
+                        ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->where('created_at', '>=', CarbonImmutable::parse($date, FilamentTimezone::get())->startOfDay()->utc()))
+                        ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->where('created_at', '<', CarbonImmutable::parse($date, FilamentTimezone::get())->startOfDay()->addDay()->utc()))),
             ])
             ->emptyStateHeading('No decisions yet')
             ->emptyStateDescription('Every approval, rejection, dismissal, verification, ban and suspension will be recorded here.')
