@@ -122,7 +122,10 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             <flux:subheading>{{ __('Your CV, work samples and certificates — used when you apply.') }}</flux:subheading>
         </div>
 
-        <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>
+        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+            <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
+            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>
+        </div>
     </div>
 
     <div class="mt-6 space-y-4">

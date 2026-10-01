@@ -469,9 +469,14 @@
         <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
             <div class="flex items-center justify-between gap-4 px-6 py-5 sm:px-8">
                 <flux:subheading>{{ __('Documents') }}</flux:subheading>
-                <a href="{{ route('candidate.documents.index') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
-                    {{ __('Manage') }}
-                </a>
+                <div class="flex items-center gap-4">
+                    <a href="{{ route('candidate.cv-builder') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('Build a CV from your profile') }}
+                    </a>
+                    <a href="{{ route('candidate.documents.index') }}" wire:navigate class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">
+                        {{ __('Manage') }}
+                    </a>
+                </div>
             </div>
 
             @if ($documents->isEmpty())

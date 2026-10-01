@@ -2,6 +2,9 @@
     One template for the preview and the PDF. DOMPDF reads CSS 2.1 only
     (no flexbox or grid), so the layout is plain blocks and one float.
 
+    In the preview there is no printed page, so the page margins are
+    drawn as padding instead ($preview).
+
     Written for applicant tracking systems: a single column, contact
     details in the body rather than a page header, the section names
     parsers look for, round bullets, and real text throughout. Each role
@@ -22,6 +25,7 @@
             color: #1f2937;
             background: #ffffff;
         }
+        body.preview { padding: 16mm 18mm; }
         .photo {
             float: right;
             width: 26mm;
@@ -57,7 +61,7 @@
         .description a { color: #1f2937; }
     </style>
 </head>
-<body>
+<body @class(['preview' => $preview ?? false])>
     @if ($photo)
         <img class="photo" src="{{ $photo }}" alt="{{ $cv->name }}">
     @endif
