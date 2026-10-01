@@ -74,28 +74,57 @@ final readonly class ReviewEligibility
             return new self(self::INSIDER);
         }
 
-        // A decision still inside its undo window has not reached the
-        // candidate yet, so it cannot be what they are reviewing.
-        if (in_array($application->outcomeForCandidate(), [ApplicationOutcomeStatus::Hired, ApplicationOutcomeStatus::Rejected], true)) {
-            return new self(self::DECIDED);
-        }
+        return new self(self::experience($application));
+    }
 
-        if (self::reachedInterview($application)) {
-            return new self(self::INTERVIEWED);
-        }
-
-        if (self::wentUnanswered($application)) {
-            return new self(self::UNANSWERED);
-        }
-
-        return new self($application->outcome_status === ApplicationOutcomeStatus::Withdrawn
-            ? self::WITHDRAWN
-            : self::IN_PROGRESS);
+    /**
+     * The candidate's most recent application to the company that gives
+     * them something to describe -- the one their single review of that
+     * company is about. Null if none does yet.
+     */
+    public static function latestQualifying(int $candidateProfileId, int $companyId): ?Application
+    {
+        return Application::query()
+            ->where('candidate_profile_id', $candidateProfileId)
+            ->whereRelation('jobPosting', 'company_id', $companyId)
+            ->latest('created_at')
+            ->latest('id')
+            ->get()
+            ->first(fn (Application $application) => in_array(
+                self::experience($application),
+                [self::DECIDED, self::INTERVIEWED, self::UNANSWERED],
+                true,
+            ));
     }
 
     public function allows(): bool
     {
         return in_array($this->reason, [self::DECIDED, self::INTERVIEWED, self::UNANSWERED], true);
+    }
+
+    /**
+     * What the application itself gives the candidate to describe, apart
+     * from who they are and what they have already written.
+     */
+    private static function experience(Application $application): string
+    {
+        // A decision still inside its undo window has not reached the
+        // candidate yet, so it cannot be what they are reviewing.
+        if (in_array($application->outcomeForCandidate(), [ApplicationOutcomeStatus::Hired, ApplicationOutcomeStatus::Rejected], true)) {
+            return self::DECIDED;
+        }
+
+        if (self::reachedInterview($application)) {
+            return self::INTERVIEWED;
+        }
+
+        if (self::wentUnanswered($application)) {
+            return self::UNANSWERED;
+        }
+
+        return $application->outcome_status === ApplicationOutcomeStatus::Withdrawn
+            ? self::WITHDRAWN
+            : self::IN_PROGRESS;
     }
 
     /**

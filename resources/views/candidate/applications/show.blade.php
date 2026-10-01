@@ -63,6 +63,8 @@
             @endforeach
         </ol>
 
+        <livewire:company-review :application="$application" />
+
         @can('withdraw', $application)
             <flux:separator variant="subtle" class="my-8" />
 
