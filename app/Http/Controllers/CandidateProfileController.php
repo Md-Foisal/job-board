@@ -39,9 +39,9 @@ class CandidateProfileController extends Controller
             'cover_photo' => ['nullable', ...ImageUploads::rules(ImageUploads::COVER)],
             'headline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:5000'],
-            'portfolio_url' => ['nullable', 'url', 'max:255'],
-            'github_url' => ['nullable', 'url', 'max:255'],
-            'linkedin_url' => ['nullable', 'url', 'max:255'],
+            'portfolio_url' => ['nullable', 'url:http,https', 'max:255'],
+            'github_url' => ['nullable', 'url:http,https', 'max:255'],
+            'linkedin_url' => ['nullable', 'url:http,https', 'max:255'],
             'phone' => ContactDetails::phoneRules(),
             'location' => ContactDetails::locationRules(),
         ], [

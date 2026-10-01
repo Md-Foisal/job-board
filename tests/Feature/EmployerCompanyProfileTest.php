@@ -89,6 +89,24 @@ test('an invalid website is rejected', function () {
     expect($company->fresh()->name)->toBe('Unchanged Ltd');
 });
 
+test('a website has to be a web address', function (string $website) {
+    $company = Company::factory()->create(['website_url' => 'https://unchanged.example']);
+
+    $this->actingAs(employerUser($company, MembershipRole::Owner))
+        ->patch(route('employer.company.update', $company), [
+            'name' => $company->name,
+            'identity_type' => 'company',
+            'website_url' => $website,
+        ])
+        ->assertSessionHasErrors('website_url');
+
+    expect($company->fresh()->website_url)->toBe('https://unchanged.example');
+})->with([
+    'ftp://beacon.example',
+    'data://text/html,hello',
+    'file://localhost/etc/passwd',
+]);
+
 test('uploading a new logo replaces the old file rather than leaving it behind', function () {
     Storage::fake('public');
 

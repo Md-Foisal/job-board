@@ -41,7 +41,7 @@ final class CvData
     private const SUPPORTED_SCRIPTS = '/[^\p{Latin}\p{Greek}\p{Cyrillic}\p{Common}\p{Inherited}]/u';
 
     /**
-     * @param  array<int, array{label: string, url: string, text: string}>  $links
+     * @param  array<int, array{label: string, url: ?string, text: string}>  $links
      * @param  array<int, array{id: int, title: string, company: string, dates: string, description: ?string}>  $experience
      * @param  array<int, array{title: string, institution: string, dates: string}>  $education
      * @param  array<int, string>  $skills
@@ -182,7 +182,11 @@ final class CvData
     }
 
     /**
-     * @return array<int, array{label: string, url: string, text: string}>
+     * Only a web address becomes a link. The profile form accepts nothing
+     * else, but a link is followed by whoever opens the CV, so one written
+     * by any other path is printed as text and never made clickable.
+     *
+     * @return array<int, array{label: string, url: ?string, text: string}>
      */
     private static function links(CandidateProfile $profile): array
     {
@@ -194,7 +198,7 @@ final class CvData
             ->filter()
             ->map(fn (string $url, string $label) => [
                 'label' => $label,
-                'url' => $url,
+                'url' => preg_match('#^https?://#i', $url) === 1 ? $url : null,
                 // Printed as well as linked: a parser reading the text,
                 // and a reader holding paper, both need the address itself.
                 'text' => rtrim(preg_replace('#^https?://(www\.)?#i', '', $url) ?? $url, '/'),

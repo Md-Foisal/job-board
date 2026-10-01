@@ -108,6 +108,19 @@ test('contact details and links come from the account and the profile', function
         ]);
 });
 
+test('a link that is not a web address is printed but never made clickable', function () {
+    $karim = karimForCv();
+    $karim->candidateProfile->forceFill(['portfolio_url' => 'data://text/html,hello'])->save();
+
+    $cv = CvData::fromProfile($karim->candidateProfile->fresh());
+    $html = view('cv.classic', ['cv' => $cv, 'photo' => null])->render();
+
+    expect($cv->links[1])->toBe(['label' => 'Portfolio', 'url' => null, 'text' => 'data://text/html,hello'])
+        ->and($html)->toContain('data://text/html,hello')
+        ->not->toContain('href="data:')
+        ->toContain('href="https://www.linkedin.com/in/karim-rahman/"');
+});
+
 test('a CV needs at least one role, course or skill', function () {
     $candidate = candidateUser();
 

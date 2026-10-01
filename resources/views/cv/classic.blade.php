@@ -74,7 +74,11 @@
         <p class="contact">
             @foreach ($cv->links as $link)
                 @unless ($loop->first)<span class="separator"> · </span>@endunless
-                <a href="{{ $link['url'] }}">{{ $link['text'] }}</a>
+                @if ($link['url'])
+                    <a href="{{ $link['url'] }}">{{ $link['text'] }}</a>
+                @else
+                    {{ $link['text'] }}
+                @endif
             @endforeach
         </p>
     @endif
