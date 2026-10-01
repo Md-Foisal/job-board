@@ -192,6 +192,8 @@
                                         <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $review->job_as_described->label() }}</dd>
                                     </div>
                                 </dl>
+
+                                <x-review-response :review="$review" :company="$company" />
                             </article>
                         @endforeach
                     </div>

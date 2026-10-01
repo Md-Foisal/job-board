@@ -42,6 +42,8 @@ class ModerationQueuesOverview extends StatsOverviewWidget
 
         $reviews = CompanyReviewResource::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value);
 
+        $responses = CompanyReviewResource::getEloquentQuery()->where('response_status', ModerationStatus::Pending->value);
+
         $companies = Company::query()
             ->whereNull('verified_at')
             ->where('account_status', AccountStatus::Active->value);
@@ -60,6 +62,13 @@ class ModerationQueuesOverview extends StatsOverviewWidget
                 $reviews->min('updated_at'),
                 CompanyReviewResource::getUrl('index'),
                 Heroicon::OutlinedChatBubbleLeftRight,
+            ),
+            $this->queueStat(
+                'Company responses to check',
+                $responses->count(),
+                $responses->min('responded_at'),
+                CompanyReviewResource::getUrl('index', ['tab' => 'responses']),
+                Heroicon::OutlinedChatBubbleBottomCenterText,
             ),
             $this->queueStat(
                 'Reported things',

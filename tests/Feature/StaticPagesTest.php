@@ -86,5 +86,7 @@ test('the privacy policy says what a company review shows, and who can tell who 
         ->assertSee('never your name, the job you applied for, the')
         ->assertSee('The company cannot see who wrote it.')
         ->assertSee('staff who work at that')
-        ->assertSee('it says nothing about');
+        ->assertSee('it says nothing about')
+        ->assertSee('The company can publish one answer under your review.')
+        ->assertSee('describes you, or threatens you.');
 });

@@ -54,13 +54,16 @@ class CompanyController extends Controller
             ->each(fn ($jobPosting) => $jobPosting->setRelation('company', $company));
 
         // Only the columns a reader is shown. The application and the
-        // candidate behind a review are never read on this page, so they
-        // cannot leak into it.
+        // candidate behind a review, and who answered it for the company,
+        // are never read on this page, so they cannot leak into it.
         $reviews = $company->reviews()
             ->published()
             ->latest('published_at')
             ->latest('id')
-            ->select(['id', 'company_id', 'overall_rating', 'communication_rating', 'job_as_described', 'title', 'body', 'published_at'])
+            ->select([
+                'id', 'company_id', 'overall_rating', 'communication_rating', 'job_as_described', 'title', 'body', 'published_at',
+                'response_body', 'response_status', 'responded_at',
+            ])
             ->paginate(self::REVIEWS_PER_PAGE)
             ->fragment('reviews');
 

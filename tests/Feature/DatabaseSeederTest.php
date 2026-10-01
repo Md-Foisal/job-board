@@ -64,6 +64,7 @@ test('a fresh seed can be looked at from every side', function () {
     // waiting in the staff queue.
     expect(ReviewSummary::of($demoCompany)->hasAverages())->toBeTrue()
         ->and($demoCompany->reviews()->where('moderation_status', ModerationStatus::Pending)->count())->toBe(1)
+        ->and($demoCompany->reviews()->where('response_status', ModerationStatus::Approved)->count())->toBe(1)
         ->and(app(EmployerResponsiveness::class)->percentFor($demoCompany))->not->toBeNull();
 });
 

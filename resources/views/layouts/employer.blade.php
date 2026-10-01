@@ -70,6 +70,17 @@
                         :current="request()->routeIs('employer.analytics')" wire:navigate>
                         {{ __('Analytics') }}
                     </flux:sidebar.item>
+                    {{-- The count is for those who can answer: to a plain
+                         member it would be a to-do they cannot do. --}}
+                    @php
+                        $reviewsAwaiting = auth()->user()?->canManage($company)
+                            ? $company->reviews()->published()->awaitingResponse()->count()
+                            : 0;
+                    @endphp
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('employer.reviews', $company)"
+                        :current="request()->routeIs('employer.reviews')" :badge="$reviewsAwaiting > 0 ? $reviewsAwaiting : null" wire:navigate>
+                        {{ __('Reviews') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 {{-- Outside the Company group on purpose: this one is the

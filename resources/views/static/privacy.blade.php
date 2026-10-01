@@ -150,6 +150,12 @@
             company cannot. You can edit or delete your review at any time.
         </p>
         <p>
+            The company can publish one answer under your review. We read it
+            before it appears, and do not publish an answer that names you,
+            describes you, or threatens you. Deleting your review removes the
+            answer with it.
+        </p>
+        <p>
             A company's page can also say that it answers applications quickly.
             That is worked out from when the company first moved or decided each
             application, across all of them together &mdash; it says nothing about

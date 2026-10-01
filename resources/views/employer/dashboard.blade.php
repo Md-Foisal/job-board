@@ -26,6 +26,17 @@
             </div>
         </div>
 
+        @if ($reviewsAwaitingResponse > 0)
+            <flux:callout icon="chat-bubble-left-right">
+                <flux:callout.text>
+                    {{ trans_choice(':count review of your hiring process is waiting for an answer.|:count reviews of your hiring process are waiting for an answer.', $reviewsAwaitingResponse, ['count' => $reviewsAwaitingResponse]) }}
+                </flux:callout.text>
+                <x-slot name="actions">
+                    <flux:button size="sm" :href="route('employer.reviews', ['company' => $company, 'show' => 'waiting'])" wire:navigate>{{ __('Read and answer') }}</flux:button>
+                </x-slot>
+            </flux:callout>
+        @endif
+
         <div>
             <flux:heading size="lg">{{ __('Your job postings') }}</flux:heading>
 

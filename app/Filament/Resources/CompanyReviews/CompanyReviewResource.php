@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\CompanyReviews;
 
 use App\Actions\ModerateCompanyReview;
+use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
+use App\Enums\ResponseRejectionReason;
 use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
 use App\Models\CompanyReview;
@@ -28,10 +30,11 @@ use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
- * The moderation queue for company reviews.
+ * The moderation queue for company reviews, and for the companies'
+ * answers to them.
  *
- * Staff read every review before it goes public and decide on it here;
- * they never write, edit or delete one. The application behind a review
+ * Staff read every review and every answer before it goes public and
+ * decide on each here, separately; they never write, edit or delete one. The application behind a review
  * is shown only in this panel, as the proof that the writer went through
  * the process -- never their name, which the decision does not need.
  */
@@ -64,9 +67,16 @@ class CompanyReviewResource extends Resource
                 ->where('review_status', ReportStatus::Pending->value)]);
     }
 
+    /**
+     * Reviews and answers waiting, together: both are decided here.
+     */
     public static function getNavigationBadge(): ?string
     {
-        $waiting = static::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value)->count();
+        $waiting = static::getEloquentQuery()
+            ->where(fn (Builder $query) => $query
+                ->where('moderation_status', ModerationStatus::Pending->value)
+                ->orWhere('response_status', ModerationStatus::Pending->value))
+            ->count();
 
         return $waiting > 0 ? (string) $waiting : null;
     }
@@ -149,18 +159,11 @@ class CompanyReviewResource extends Resource
                             ->placeholder('None'),
                         TextEntry::make('last_decision')
                             ->label('Last decision')
-                            ->state(function (CompanyReview $record) {
-                                $event = $record->moderationEvents()->with('admin')->latest('created_at')->latest('id')->first();
-
-                                if ($event === null) {
-                                    return null;
-                                }
-
-                                $by = $event->admin?->name ?? 'a former staff member';
-                                $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
-
-                                return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
-                            })
+                            ->state(fn (CompanyReview $record) => static::lastDecision($record, [
+                                ModerationAction::ApproveCompanyReview,
+                                ModerationAction::RejectCompanyReview,
+                                ModerationAction::DismissReports,
+                            ]))
                             ->placeholder('Never reviewed')
                             ->columnSpanFull(),
                     ]),
@@ -177,7 +180,64 @@ class CompanyReviewResource extends Resource
                         TextEntry::make('title')->columnSpanFull(),
                         TextEntry::make('body')->columnSpanFull()->extraAttributes(['class' => 'whitespace-pre-line']),
                     ]),
+                // Who on the company's side wrote the answer is left out: the
+                // decision is about what it says, and it speaks for the
+                // company.
+                Section::make('Company response')
+                    ->visible(fn (CompanyReview $record) => $record->response_body !== null)
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('response_status')
+                            ->label('Status')
+                            ->formatStateUsing(fn (ModerationStatus $state) => $state->label())
+                            ->badge(),
+                        TextEntry::make('responded_at')->label('Written')->since(),
+                        TextEntry::make('response_flags')
+                            ->label('Text contains')
+                            ->state(fn (CompanyReview $record) => collect(ReviewTextFlags::in($record->response_body))
+                                ->map(fn (string $flag) => ReviewTextFlags::label($flag))
+                                ->all())
+                            ->badge()
+                            ->color('warning')
+                            ->placeholder('Nothing flagged'),
+                        TextEntry::make('response_last_decision')
+                            ->label('Last decision')
+                            ->state(fn (CompanyReview $record) => static::lastDecision($record, [
+                                ModerationAction::ApproveReviewResponse,
+                                ModerationAction::RejectReviewResponse,
+                            ]))
+                            ->placeholder('Never reviewed'),
+                        TextEntry::make('response_body')
+                            ->label('Response')
+                            ->columnSpanFull()
+                            ->extraAttributes(['class' => 'whitespace-pre-line']),
+                    ]),
             ]);
+    }
+
+    /**
+     * The latest of the given decisions on a review. Review and response
+     * decisions share the trail, so each line asks for its own kind.
+     *
+     * @param  list<ModerationAction>  $actions
+     */
+    public static function lastDecision(CompanyReview $record, array $actions): ?string
+    {
+        $event = $record->moderationEvents()
+            ->whereIn('action', array_map(fn (ModerationAction $action) => $action->value, $actions))
+            ->with('admin')
+            ->latest('created_at')
+            ->latest('id')
+            ->first();
+
+        if ($event === null) {
+            return null;
+        }
+
+        $by = $event->admin?->name ?? 'a former staff member';
+        $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
+
+        return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
     }
 
     public static function table(Table $table): Table
@@ -200,6 +260,16 @@ class CompanyReviewResource extends Resource
                     ->badge()
                     ->color('warning')
                     ->placeholder('None'),
+                TextColumn::make('response_status')
+                    ->label('Response')
+                    ->badge()
+                    ->formatStateUsing(fn (ModerationStatus $state) => $state->label())
+                    ->color(fn (ModerationStatus $state) => match ($state) {
+                        ModerationStatus::Pending => 'warning',
+                        ModerationStatus::Approved => 'success',
+                        ModerationStatus::Rejected => 'danger',
+                    })
+                    ->placeholder('None'),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')
                     ->badge()
@@ -221,16 +291,20 @@ class CompanyReviewResource extends Resource
             ->emptyStateHeading(fn ($livewire) => match ($livewire->activeTab ?? null) {
                 ModerationStatus::Approved->value => 'Nothing approved yet',
                 ModerationStatus::Rejected->value => 'Nothing rejected',
+                'responses' => 'No responses waiting',
                 default => 'Nothing is waiting',
             })
             ->emptyStateDescription(fn ($livewire) => match ($livewire->activeTab ?? null) {
                 ModerationStatus::Approved->value, ModerationStatus::Rejected->value => null,
+                'responses' => 'A company\'s answer to a review appears here when it is written or changed.',
                 default => 'Reviews appear here when an applicant writes or edits one.',
             })
             ->recordActions([
                 ViewAction::make(),
                 static::approveAction(),
                 static::rejectAction(),
+                static::approveResponseAction(),
+                static::rejectResponseAction(),
             ]);
     }
 
@@ -282,6 +356,72 @@ class CompanyReviewResource extends Resource
                 );
 
                 Notification::make()->title('Review rejected')->success()->send();
+            });
+    }
+
+    /**
+     * Shown only while an answer waits, and on a rejected one so that a
+     * wrong rejection can be undone. The review's own state does not
+     * matter: an approved answer to a review that is off the page is not
+     * shown either.
+     */
+    public static function approveResponseAction(): Action
+    {
+        return Action::make('approveResponse')
+            ->label('Approve response')
+            ->icon(Heroicon::OutlinedCheck)
+            ->color('success')
+            ->authorize('moderate')
+            ->visible(fn (CompanyReview $record) => in_array($record->response_status, [ModerationStatus::Pending, ModerationStatus::Rejected], true)
+                && $record->response_body !== null)
+            ->requiresConfirmation()
+            ->modalHeading(fn (CompanyReview $record) => "Publish {$record->company->name}'s answer?")
+            ->modalDescription('It appears under the review straight away, and the writer is told.')
+            ->action(function (CompanyReview $record) {
+                app(ModerateCompanyReview::class)->approveResponse($record, auth()->user());
+
+                Notification::make()->title('Response published')->success()->send();
+            });
+    }
+
+    /**
+     * Also offered on a published answer, so one that turns out to point
+     * at the writer can be taken back down.
+     */
+    public static function rejectResponseAction(): Action
+    {
+        return Action::make('rejectResponse')
+            ->label('Reject response')
+            ->icon(Heroicon::OutlinedXMark)
+            ->color('danger')
+            ->authorize('moderate')
+            ->visible(fn (CompanyReview $record) => in_array($record->response_status, [ModerationStatus::Pending, ModerationStatus::Approved], true)
+                && $record->response_body !== null)
+            ->modalHeading(fn (CompanyReview $record) => "Keep {$record->company->name}'s answer off the page?")
+            ->modalDescription('Only for one of the reasons below, never because staff disagree with the answer. The company\'s owners and managers are told why and can write it again.')
+            ->schema([
+                Select::make('reason')
+                    ->label('Reason')
+                    ->options(collect(ResponseRejectionReason::cases())
+                        ->mapWithKeys(fn (ResponseRejectionReason $reason) => [$reason->value => $reason->label()])
+                        ->all())
+                    ->helperText('"Points to who wrote the review" includes describing them: their role, their dates, or what happened to their application.')
+                    ->required(),
+                Textarea::make('note')
+                    ->label('Note to the company (optional)')
+                    ->helperText('Say what to change. Do not repeat anything that identifies the writer.')
+                    ->maxLength(1000)
+                    ->rows(3),
+            ])
+            ->action(function (CompanyReview $record, array $data) {
+                app(ModerateCompanyReview::class)->rejectResponse(
+                    $record,
+                    auth()->user(),
+                    ResponseRejectionReason::from($data['reason']),
+                    $data['note'] ?? null,
+                );
+
+                Notification::make()->title('Response rejected')->success()->send();
             });
     }
 

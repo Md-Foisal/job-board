@@ -276,6 +276,8 @@ new class extends Component
                     </flux:callout>
                 @endif
 
+                <x-review-response :review="$review" :company="$application->jobPosting->company" />
+
                 <div class="mt-4 flex flex-wrap items-center gap-2">
                     @can('update', $review)
                         <flux:button wire:click="open" size="sm" icon="pencil">{{ __('Edit') }}</flux:button>
@@ -345,6 +347,12 @@ new class extends Component
                     rows="6"
                     maxlength="2000"
                 />
+
+                @if ($this->review?->hasPublishedResponse())
+                    <flux:text>
+                        {{ __('The company has answered your review. If you change it, the answer stays under it, marked as written to an earlier version, until the company updates it.') }}
+                    </flux:text>
+                @endif
 
                 <div class="flex gap-2">
                     <flux:spacer />

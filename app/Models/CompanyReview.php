@@ -54,6 +54,38 @@ class CompanyReview extends Model
     }
 
     /**
+     * Published reviews the company has not answered, or whose answer
+     * staff sent back: the ones still waiting on the company.
+     */
+    public function scopeAwaitingResponse(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $query) => $query
+            ->whereNull('company_reviews.response_status')
+            ->orWhere('company_reviews.response_status', ModerationStatus::Rejected->value));
+    }
+
+    public function hasPublishedResponse(): bool
+    {
+        return $this->response_status === ModerationStatus::Approved
+            && $this->response_body !== null;
+    }
+
+    /**
+     * Whether the company's answer was written before the review took its
+     * current wording. The writer may rewrite a review after the company
+     * answered; the answer stays, but readers are told what it answered.
+     * published_at is when the current wording was approved, and an
+     * answer can only be written to a published review, so an answer
+     * older than that was written to earlier text.
+     */
+    public function responseAnswersEarlierVersion(): bool
+    {
+        return $this->responded_at !== null
+            && $this->published_at !== null
+            && $this->responded_at->lt($this->published_at);
+    }
+
+    /**
      * The reviews a staff member may see in the panel: not those about the
      * company they work for, and not their own. The panel shows the
      * application behind a review, and someone on the company's team can

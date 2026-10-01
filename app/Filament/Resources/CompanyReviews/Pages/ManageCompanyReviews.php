@@ -19,7 +19,8 @@ class ManageCompanyReviews extends ManageRecords
 
     /**
      * Waiting is the queue. Approved and Rejected are there so a decision
-     * can be found again and reversed.
+     * can be found again and reversed. Responses is the second queue: the
+     * companies' answers waiting, whatever state their review is in.
      */
     public function getTabs(): array
     {
@@ -29,6 +30,8 @@ class ManageCompanyReviews extends ManageRecords
             ModerationStatus::Rejected->value => ModerationStatus::Rejected->label(),
         ])->map(fn (string $label, string $status) => Tab::make($label)
             ->modifyQueryUsing(fn (Builder $query) => $query->where('moderation_status', $status)))
+            ->put('responses', Tab::make('Responses')
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('response_status', ModerationStatus::Pending->value)))
             ->all();
     }
 

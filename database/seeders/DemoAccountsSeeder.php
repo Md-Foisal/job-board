@@ -282,18 +282,19 @@ class DemoAccountsSeeder extends Seeder
             }
         }
 
-        $this->seedReviews($posting, $applications);
+        $this->seedReviews($posting, $applications, $reviewer);
     }
 
     /**
      * Enough published reviews for the company page to show its averages,
      * written by applicants the history above makes eligible (the hire,
      * one turned down, one interviewed), and one more from another
-     * interviewee waiting in the staff queue.
+     * interviewee waiting in the staff queue. The company has answered
+     * one of them, so its reviews page shows both states.
      *
      * @param  array<int, Application>  $applications
      */
-    private function seedReviews(JobPosting $posting, array $applications): void
+    private function seedReviews(JobPosting $posting, array $applications, User $responder): void
     {
         $reviews = [
             1 => [5, 5, JobAsDescribed::Yes, 'Clear steps from the first call to the offer', "Every stage was explained before it happened, and I always knew who I was talking to next.\n\nThe offer matched the pay in the posting.", 15],
@@ -305,7 +306,7 @@ class DemoAccountsSeeder extends Seeder
         foreach ($reviews as $index => [$overall, $communication, $asDescribed, $title, $body, $publishedDaysAgo]) {
             $application = $applications[$index];
 
-            CompanyReview::create([
+            $review = CompanyReview::create([
                 'company_id' => $posting->company_id,
                 'application_id' => $application->id,
                 'candidate_profile_id' => $application->candidate_profile_id,
@@ -317,6 +318,15 @@ class DemoAccountsSeeder extends Seeder
                 'moderation_status' => $publishedDaysAgo === null ? ModerationStatus::Pending : ModerationStatus::Approved,
                 'published_at' => $publishedDaysAgo === null ? null : now()->subDays($publishedDaysAgo),
             ]);
+
+            if ($index === 2) {
+                $review->forceFill([
+                    'response_body' => 'Thank you for writing this. We try to answer every applicant within a few days, and we are now adding a short reason to our rejection emails.',
+                    'response_status' => ModerationStatus::Approved,
+                    'responded_by_id' => $responder->id,
+                    'responded_at' => now()->subDays($publishedDaysAgo - 3),
+                ])->save();
+            }
         }
     }
 

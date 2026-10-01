@@ -5,16 +5,27 @@ namespace App\Actions;
 use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
+use App\Enums\ResponseRejectionReason;
 use App\Enums\ReviewRejectionReason;
 use App\Models\CompanyReview;
 use App\Models\ModerationEvent;
 use App\Models\User;
 use App\Notifications\CompanyReviewApproved;
 use App\Notifications\CompanyReviewRejected;
+use App\Notifications\CompanyReviewResponsePublished;
+use App\Notifications\ReviewResponseRejected;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 /**
- * Staff decisions on a company review, each one written to the trail.
+ * Staff decisions on a company review and on the company's answer to it,
+ * each one written to the trail. The two are decided separately: a fair
+ * review can draw an answer that names its writer, and the other way
+ * round.
+ *
+ * No decision touches updated_at, which stays the time the writer last
+ * changed the review: the queue sorts and ages reviews by it, and the
+ * panel shows it as when the review was written.
  *
  * Reviews are never deleted here. Rejecting takes a review off the
  * public page and keeps both the review and the reason it was held back,
@@ -35,7 +46,7 @@ class ModerateCompanyReview
         $event = DB::transaction(function () use ($review, $staff) {
             $review->moderation_status = ModerationStatus::Approved;
             $review->published_at ??= now();
-            $review->save();
+            CompanyReview::withoutTimestamps(fn () => $review->save());
 
             $review->reports()
                 ->where('review_status', ReportStatus::Pending->value)
@@ -64,7 +75,7 @@ class ModerateCompanyReview
 
         $event = DB::transaction(function () use ($review, $staff, $text) {
             $review->moderation_status = ModerationStatus::Rejected;
-            $review->save();
+            CompanyReview::withoutTimestamps(fn () => $review->save());
 
             $review->reports()
                 ->where('review_status', ReportStatus::Pending->value)
@@ -78,6 +89,52 @@ class ModerateCompanyReview
         });
 
         $review->candidateProfile->user->notify(new CompanyReviewRejected($review, $text));
+
+        return $event;
+    }
+
+    /**
+     * The writer hears that the company answered: it is their review, and
+     * the answer may speak to them directly.
+     */
+    public function approveResponse(CompanyReview $review, User $staff): ModerationEvent
+    {
+        $event = DB::transaction(function () use ($review, $staff) {
+            $review->response_status = ModerationStatus::Approved;
+            CompanyReview::withoutTimestamps(fn () => $review->save());
+
+            return $review->moderationEvents()->create([
+                'admin_id' => $staff->id,
+                'action' => ModerationAction::ApproveReviewResponse,
+            ]);
+        });
+
+        $review->candidateProfile->user->notify(new CompanyReviewResponsePublished($review));
+
+        return $event;
+    }
+
+    /**
+     * The company is told why, so the people who can answer for it can
+     * write the answer again.
+     */
+    public function rejectResponse(CompanyReview $review, User $staff, ResponseRejectionReason $reason, ?string $note = null): ModerationEvent
+    {
+        $note = trim((string) $note);
+        $text = $reason->forCompany().($note === '' ? '' : "\n\n".$note);
+
+        $event = DB::transaction(function () use ($review, $staff, $text) {
+            $review->response_status = ModerationStatus::Rejected;
+            CompanyReview::withoutTimestamps(fn () => $review->save());
+
+            return $review->moderationEvents()->create([
+                'admin_id' => $staff->id,
+                'action' => ModerationAction::RejectReviewResponse,
+                'reason' => $text,
+            ]);
+        });
+
+        Notification::send($review->company->decisionMakers(), new ReviewResponseRejected($review, $text));
 
         return $event;
     }

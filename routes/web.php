@@ -199,6 +199,7 @@ Route::middleware(['auth', 'company.member'])
         Route::livewire('/jobs/{jobPosting:slug}/applications', 'pages::employer.applications')->name('jobs.applications');
 
         Route::livewire('/analytics', 'pages::employer.analytics')->name('analytics');
+        Route::livewire('/reviews', 'pages::employer.reviews')->name('reviews');
 
         Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
         Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');

@@ -48,6 +48,13 @@ final class SubmissionLimits
 
     public const REVIEW_SAVES_PER_DAY = 10;
 
+    /**
+     * Per company, since any of its owners and managers can answer. Each
+     * save sends the response back to staff, so this is also what keeps a
+     * save-and-delete loop from flooding the queue.
+     */
+    public const RESPONSE_SAVES_PER_DAY = 20;
+
     public static function registrationKey(string $ip): string
     {
         return 'registrations:'.$ip;
@@ -71,6 +78,11 @@ final class SubmissionLimits
     public static function reviewSaveKey(User $candidate): string
     {
         return 'company-review-saves:'.$candidate->id;
+    }
+
+    public static function responseSaveKey(Company $company): string
+    {
+        return 'review-response-saves:'.$company->id;
     }
 
     /**

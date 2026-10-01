@@ -50,6 +50,12 @@ class EmployerDashboardController extends Controller
                 && $jobPosting->open_reporters_count < Report::HIDE_AFTER_REPORTERS)->count(),
             'applicationCount' => $jobPostings->sum('applications_count'),
             'newApplicationCount' => $jobPostings->sum('new_applications_count'),
+            // Counted for the people who can answer. The company hears of a
+            // new review here, by count and not by mail: a mail would date
+            // it to the day, which the public page deliberately does not.
+            'reviewsAwaitingResponse' => auth()->user()->canManage($company)
+                ? $company->reviews()->published()->awaitingResponse()->count()
+                : 0,
         ]);
     }
 }
