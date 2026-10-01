@@ -1,12 +1,22 @@
 <?php
 
+use App\Actions\ApplyCvSuggestions;
 use App\Actions\RenderCvPdf;
 use App\Actions\StoreCandidateDocument;
+use App\Ai\Agents\CvWriter;
+use App\Enums\AiAvailability;
+use App\Enums\AiFeature;
 use App\Enums\DocumentType;
+use App\Jobs\PolishCvWithAi;
 use App\Models\Document;
+use App\Models\ExperienceRecord;
+use App\Support\AiQuota;
 use App\Support\CvChecks;
 use App\Support\CvData;
+use App\Support\CvSuggestions;
 use App\Support\DocumentUploads;
+use Flux\Flux;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -37,10 +47,63 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
     #[Locked]
     public bool $buildFailed = false;
 
-    public function updated(): void
+    /**
+     * Where the AI suggestions are: null (not asked), running, done,
+     * failed, or unavailable (the allowance ran out before it started).
+     */
+    #[Locked]
+    public ?string $aiStatus = null;
+
+    /**
+     * The checked suggestions, fixed on the server so the browser can only
+     * change which of them are ticked.
+     *
+     * @var array<string, mixed>
+     */
+    #[Locked]
+    public array $suggestions = [];
+
+    /**
+     * When the suggestions leave the cache. Applying some keeps the rest
+     * only until then, never for a fresh hour.
+     */
+    #[Locked]
+    public ?int $suggestionsExpireAt = null;
+
+    public bool $useHeadline = false;
+
+    public bool $useSummary = false;
+
+    /** @var array<int, int> */
+    public array $useRoles = [];
+
+    /**
+     * Suggestions written within the last hour are shown again rather
+     * than asked for, and paid for, twice.
+     */
+    public function mount(): void
     {
-        $this->savedDocumentId = null;
-        $this->buildFailed = false;
+        if (! AiQuota::enabled()) {
+            return;
+        }
+
+        $profileId = auth()->user()->candidateProfile->id;
+        $result = Cache::get(PolishCvWithAi::resultKey($profileId));
+
+        if (($result['status'] ?? null) === 'done' && ($result['suggestions']['version'] ?? null) === CvWriter::VERSION) {
+            [$this->suggestions, $this->suggestionsExpireAt, $this->aiStatus] = [$result['suggestions'], $result['expires_at'] ?? null, 'done'];
+            $this->tickSuggestions();
+        } elseif (Cache::has(PolishCvWithAi::runningKey($profileId))) {
+            $this->aiStatus = 'running';
+        }
+    }
+
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['withPhoto', 'paper'], true)) {
+            $this->savedDocumentId = null;
+            $this->buildFailed = false;
+        }
     }
 
     #[Computed]
@@ -96,6 +159,175 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
         return $this->savedDocumentId === null
             ? null
             : auth()->user()->candidateProfile->documents()->find($this->savedDocumentId);
+    }
+
+    #[Computed]
+    public function aiAvailability(): AiAvailability
+    {
+        return AiQuota::availability(AiFeature::CvBuilder, auth()->user());
+    }
+
+    #[Computed]
+    public function shownSuggestions(): ?CvSuggestions
+    {
+        return $this->suggestions === [] ? null : CvSuggestions::fromArray($this->suggestions);
+    }
+
+    /**
+     * The profile's roles as they are now, to tell which suggestions were
+     * overtaken by the candidate's own edits.
+     *
+     * @return \Illuminate\Support\Collection<int, ExperienceRecord>
+     */
+    #[Computed]
+    public function roles()
+    {
+        return auth()->user()->candidateProfile->experienceRecords()->get()->keyBy('id');
+    }
+
+    public function polish(): void
+    {
+        if ($this->aiStatus === 'running' || ! $this->cv->hasContent()) {
+            return;
+        }
+
+        if ($this->aiAvailability === AiAvailability::LimitReached) {
+            $this->aiStatus = 'unavailable';
+
+            return;
+        }
+
+        if ($this->aiAvailability !== AiAvailability::Available) {
+            return;
+        }
+
+        $attempts = PolishCvWithAi::attemptsKey(auth()->user());
+
+        if (RateLimiter::tooManyAttempts($attempts, PolishCvWithAi::DAILY_ATTEMPTS)) {
+            Flux::toast(variant: 'warning', text: __('You can ask the AI for CV suggestions :count times a day. Try again tomorrow.', [
+                'count' => PolishCvWithAi::DAILY_ATTEMPTS,
+            ]));
+
+            return;
+        }
+
+        $profileId = auth()->user()->candidateProfile->id;
+        $this->aiStatus = 'running';
+
+        // A second click, or the page open in another tab, finds the mark
+        // already set and waits for the run already under way.
+        if (! Cache::add(PolishCvWithAi::runningKey($profileId), true, PolishCvWithAi::RUNNING_SECONDS)) {
+            return;
+        }
+
+        RateLimiter::hit($attempts, 24 * 60 * 60);
+        Cache::forget(PolishCvWithAi::resultKey($profileId));
+        $this->suggestions = [];
+
+        PolishCvWithAi::dispatch(auth()->id());
+
+        $this->checkAi();
+    }
+
+    /**
+     * Polled while the AI writes. When the running mark has expired
+     * without a result, the job never finished, and the page says so
+     * instead of waiting for ever.
+     */
+    public function checkAi(): void
+    {
+        if ($this->aiStatus !== 'running') {
+            return;
+        }
+
+        $profileId = auth()->user()->candidateProfile->id;
+        $result = Cache::get(PolishCvWithAi::resultKey($profileId));
+
+        if ($result === null) {
+            if (! Cache::has(PolishCvWithAi::runningKey($profileId))) {
+                $this->aiStatus = 'failed';
+            }
+
+            return;
+        }
+
+        if ($result['status'] !== 'done') {
+            $this->aiStatus = $result['status'] === 'unavailable' ? 'unavailable' : 'failed';
+
+            return;
+        }
+
+        [$this->suggestions, $this->suggestionsExpireAt, $this->aiStatus] = [$result['suggestions'], $result['expires_at'] ?? null, 'done'];
+        unset($this->shownSuggestions);
+        $this->tickSuggestions();
+    }
+
+    public function applySuggestions(ApplyCvSuggestions $apply): void
+    {
+        $suggestions = $this->shownSuggestions;
+
+        if ($this->aiStatus !== 'done' || $suggestions === null) {
+            return;
+        }
+
+        $profile = auth()->user()->candidateProfile;
+        $result = $apply($profile, $suggestions, [
+            'headline' => $this->useHeadline,
+            'summary' => $this->useSummary,
+            'experience' => array_map('intval', $this->useRoles),
+        ]);
+
+        if ($result['applied'] === [] && $result['skipped'] === 0) {
+            Flux::toast(variant: 'warning', text: __('Tick at least one suggestion to apply.'));
+
+            return;
+        }
+
+        $this->suggestions = $suggestions->without($result['applied'])->toArray();
+        $expiresAt = $this->suggestionsExpireAt ?? now()->addSeconds(PolishCvWithAi::RESULT_SECONDS)->getTimestamp();
+
+        if ($expiresAt > now()->getTimestamp()) {
+            Cache::put(
+                PolishCvWithAi::resultKey($profile->id),
+                ['status' => 'done', 'suggestions' => $this->suggestions, 'expires_at' => $expiresAt],
+                now()->setTimestamp($expiresAt),
+            );
+        }
+
+        auth()->user()->unsetRelation('candidateProfile');
+        unset($this->cv, $this->checks, $this->preview, $this->shownSuggestions, $this->roles);
+        $this->savedDocumentId = null;
+        $this->tickSuggestions();
+
+        Flux::toast(variant: $result['skipped'] > 0 ? 'warning' : 'success', text: trim(
+            trans_choice('{0} Nothing was applied.|{1} Applied 1 suggestion to your profile.|[2,*] Applied :count suggestions to your profile.', count($result['applied']))
+            .' '.trans_choice('{0}|{1} 1 was left out because you changed that part since.|[2,*] :count were left out because you changed those parts since.', $result['skipped']),
+        ));
+    }
+
+    public function discardSuggestions(): void
+    {
+        Cache::forget(PolishCvWithAi::resultKey(auth()->user()->candidateProfile->id));
+        [$this->suggestions, $this->suggestionsExpireAt, $this->aiStatus] = [[], null, null];
+        [$this->useHeadline, $this->useSummary, $this->useRoles] = [false, false, []];
+        unset($this->shownSuggestions);
+    }
+
+    /**
+     * A suggestion starts ticked only when it still fits the profile as it
+     * is, can be applied, and brings no number the candidate did not write.
+     */
+    private function tickSuggestions(): void
+    {
+        $suggestions = $this->shownSuggestions;
+        $profile = auth()->user()->candidateProfile;
+
+        $this->useHeadline = $suggestions?->headline !== null && $suggestions->headline['new_numbers'] === [] && $suggestions->headlineIsCurrent($profile);
+        $this->useSummary = $suggestions?->summary !== null && $suggestions->summary['new_numbers'] === [] && $suggestions->summaryIsCurrent($profile);
+        $this->useRoles = collect($suggestions?->experience ?? [])
+            ->filter(fn (array $role) => ! $role['too_long'] && $role['new_numbers'] === [] && CvSuggestions::roleIsCurrent($role, $this->roles->get($role['id'])))
+            ->pluck('id')
+            ->all();
     }
 
     public function save(StoreCandidateDocument $store): void
@@ -265,6 +497,42 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         <p role="alert" class="mt-4 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </section>
+
+                {{-- AI suggestions: offered, running, failed, or out of allowance.
+                     With AI off, or a plan without it, nothing shows here. --}}
+                @php($availability = $this->aiAvailability)
+
+                @if ($aiStatus === 'running')
+                    <div wire:poll.2s="checkAi" role="status" class="flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
+                        <flux:icon.loading variant="mini" />
+                        <div>
+                            <p class="font-medium">{{ __('Writing suggestions…') }}</p>
+                            <p>{{ __('This usually takes under a minute. You can stay on this page.') }}</p>
+                        </div>
+                    </div>
+                @elseif ($aiStatus === 'done')
+                    <flux:text size="sm">{{ __('The AI suggestions are below the preview.') }}</flux:text>
+                @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
+                    <flux:text size="sm">
+                        {{ __("You've used this month's AI suggestions. They reset on :date.", ['date' => now()->startOfMonth()->addMonth()->format('j F')]) }}
+                    </flux:text>
+                @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
+                    <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                        @if ($aiStatus === 'failed')
+                            <flux:heading>{{ __("The AI couldn't write suggestions this time") }}</flux:heading>
+                            <flux:text size="sm" class="mt-1">{{ __('You can try again. Your CV above does not depend on it.') }}</flux:text>
+                        @else
+                            <flux:heading>{{ __('Improve the wording with AI') }}</flux:heading>
+                            <flux:text size="sm" class="mt-1">{{ __('Suggests a headline, a summary and bullet points for your roles, from what your profile already says. You choose what goes into your profile.') }}</flux:text>
+                        @endif
+                        <flux:button wire:click="polish" icon="sparkles" size="sm" class="mt-3">
+                            {{ $aiStatus === 'failed' ? __('Try again') : __('Improve with AI') }}
+                        </flux:button>
+                        <flux:text size="sm" class="mt-2 text-zinc-500 dark:text-zinc-400">
+                            {{ __("Your headline, summary, roles, education and skills (not your name, contact details, links or photo) are sent to Anthropic. Anthropic doesn't train on them and, by default, deletes them within 30 days.") }}
+                        </flux:text>
+                    </section>
+                @endif
             </div>
 
             {{-- Preview: the same view the PDF is drawn from, isolated in a
@@ -278,5 +546,94 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                 ></iframe>
             </section>
         </div>
+
+        @if ($aiStatus === 'done' && ($shown = $this->shownSuggestions))
+            @php($profile = auth()->user()->candidateProfile)
+            <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="flex flex-wrap items-center gap-2">
+                    <flux:heading size="lg">{{ __('AI suggestions') }}</flux:heading>
+                    <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — check every line') }}</span>
+                </div>
+                <flux:text size="sm" class="mt-1">{{ __('Ticked suggestions replace that part of your profile, and the CV follows. Anything with a number you did not write starts unticked.') }}</flux:text>
+
+                <div class="mt-5 space-y-6">
+                    @foreach (['headline' => [__('Headline'), $shown->headline, 'useHeadline', $shown->headlineIsCurrent($profile), $profile->headline], 'summary' => [__('Summary'), $shown->summary, 'useSummary', $shown->summaryIsCurrent($profile), $profile->bio]] as $part => [$label, $item, $model, $current, $now])
+                        @if ($item)
+                            <div wire:key="suggestion-{{ $part }}">
+                                @if ($current)
+                                    <flux:checkbox wire:model="{{ $model }}" :label="__('Use this :part', ['part' => strtolower($label)])" />
+                                @else
+                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('You changed this since the AI read it, so your own text stays.') }}</p>
+                                @endif
+                                <div class="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+                                    <div>
+                                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Now') }}</p>
+                                        <p class="mt-1 whitespace-pre-line text-zinc-600 dark:text-zinc-400">{{ filled($now) ? $now : __('Nothing yet') }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Suggested') }}</p>
+                                        <p class="mt-1 whitespace-pre-line text-zinc-900 dark:text-zinc-100">{{ $item['suggested'] }}</p>
+                                    </div>
+                                </div>
+                                @if ($item['new_numbers'] !== [])
+                                    <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">{{ __('Check these numbers, which your profile does not give: :numbers.', ['numbers' => implode(', ', $item['new_numbers'])]) }}</p>
+                                @endif
+                            </div>
+                        @endif
+                    @endforeach
+
+                    @foreach ($shown->experience as $role)
+                        @php($record = $this->roles->get($role['id']))
+                        <div wire:key="suggestion-role-{{ $role['id'] }}">
+                            @if ($role['too_long'])
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('These bullet points are longer than a role description can be (:max characters), so they cannot be applied.', ['max' => number_format(\App\Support\CvSuggestions::DESCRIPTION_MAX)]) }}</p>
+                            @elseif (! \App\Support\CvSuggestions::roleIsCurrent($role, $record))
+                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('You changed or removed this role since the AI read it, so your own text stays.') }}</p>
+                            @else
+                                <flux:checkbox wire:model="useRoles" value="{{ $role['id'] }}" :label="__('Use these bullet points for :title at :company', ['title' => $role['title'], 'company' => $role['company']])" />
+                            @endif
+                            <div class="mt-2 grid gap-3 text-sm sm:grid-cols-2">
+                                <div>
+                                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Now') }}</p>
+                                    <div class="prose-content mt-1 text-zinc-600 dark:text-zinc-400">{!! $record?->description ?: e(__('Nothing yet')) !!}</div>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Suggested') }}</p>
+                                    <ul class="mt-1 list-disc space-y-1 pl-5 text-zinc-900 dark:text-zinc-100">
+                                        @foreach ($role['bullets'] as $bullet)
+                                            <li>{{ $bullet }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                            @if ($role['new_numbers'] !== [])
+                                <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">{{ __('Check these numbers, which this role\'s description does not give: :numbers.', ['numbers' => implode(', ', $role['new_numbers'])]) }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+
+                    @if ($shown->tips !== [])
+                        <div>
+                            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('Tips') }}</p>
+                            <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+                                @foreach ($shown->tips as $tip)
+                                    <li>{{ $tip }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="mt-6 flex flex-wrap justify-end gap-2">
+                    <flux:button wire:click="discardSuggestions" variant="ghost">{{ __('Discard suggestions') }}</flux:button>
+                    @if ($shown->headline || $shown->summary || $shown->experience !== [])
+                        <flux:button wire:click="applySuggestions" variant="primary">{{ __('Apply to my profile') }}</flux:button>
+                    @endif
+                </div>
+            </section>
+        @endif
     @endif
 </div>

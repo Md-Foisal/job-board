@@ -47,11 +47,11 @@ final class MatchExplanationInput
                 'min_experience_years' => $jobPosting->min_experience_years,
                 'required_skills' => self::names($jobPosting->skills->filter(fn (Skill $skill) => $skill->pivot->importance === SkillImportance::Required)),
                 'nice_to_have_skills' => self::names($jobPosting->skills->reject(fn (Skill $skill) => $skill->pivot->importance === SkillImportance::Required)),
-                'description' => self::plain($jobPosting->description, self::DESCRIPTION_MAX),
+                'description' => RichText::plain($jobPosting->description, self::DESCRIPTION_MAX),
             ],
             'candidate_profile' => [
                 'headline' => $candidateProfile->headline,
-                'about' => self::plain($candidateProfile->bio, self::PROFILE_TEXT_MAX),
+                'about' => RichText::plain($candidateProfile->bio, self::PROFILE_TEXT_MAX),
                 'skills' => $candidateProfile->skills()->orderBy('name')->pluck('name')->all(),
                 'experience' => $candidateProfile->experienceRecords()->orderByDesc('start_date')->get()
                     ->map(fn (ExperienceRecord $record) => [
@@ -59,7 +59,7 @@ final class MatchExplanationInput
                         'company' => $record->company_name,
                         'from' => $record->start_date->format('Y-m'),
                         'to' => $record->end_date?->format('Y-m') ?? 'present',
-                        'description' => self::plain($record->description, self::PROFILE_TEXT_MAX),
+                        'description' => RichText::plain($record->description, self::PROFILE_TEXT_MAX),
                     ])->all(),
                 'education' => $candidateProfile->educationRecords()->orderByDesc('start_date')->get()
                     ->map(fn (EducationRecord $record) => [
@@ -113,23 +113,5 @@ final class MatchExplanationInput
     private static function names(iterable $skills): array
     {
         return collect($skills)->pluck('name')->values()->all();
-    }
-
-    /**
-     * Stored rich text as plain text: block ends become line breaks, tags
-     * and entities go, and runs of blank space shrink.
-     */
-    private static function plain(?string $html, int $max): ?string
-    {
-        if (blank($html)) {
-            return null;
-        }
-
-        $text = preg_replace('~<\s*(?:br\s*/?|/p|/li|/h[1-6]|/div|/blockquote)\s*>~i', "\n", $html) ?? '';
-        $text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-        $text = preg_replace(['/[ \t]+/u', '/\n\s*\n\s*/u'], [' ', "\n\n"], $text) ?? '';
-        $text = trim($text);
-
-        return $text === '' ? null : mb_substr($text, 0, $max);
     }
 }
