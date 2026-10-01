@@ -278,7 +278,7 @@ class CompanyReviewResource extends Resource
         $by = $event->admin?->name ?? 'a former staff member';
         $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
 
-        return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
+        return $event->reason ? "{$line} — \"{$event->reason}\"" : $line;
     }
 
     public static function table(Table $table): Table
@@ -402,7 +402,7 @@ class CompanyReviewResource extends Resource
             ->authorize('moderate')
             ->visible(fn (CompanyReview $record) => $record->moderation_status !== ModerationStatus::Rejected)
             ->modalHeading('Keep this review off the company page?')
-            ->modalDescription('Only for one of the reasons below, whatever the review says about the company -- never because it is negative. The writer is told why and can edit it.')
+            ->modalDescription('Only for one of the reasons below, whatever the review says about the company — never because it is negative. The writer is told why and can edit it.')
             ->schema(fn () => static::rejectionFields())
             ->action(function (CompanyReview $record, array $data) {
                 app(ModerateCompanyReview::class)->reject(
@@ -496,7 +496,7 @@ class CompanyReviewResource extends Resource
                 ->options(collect(ReviewRejectionReason::cases())
                     ->mapWithKeys(fn (ReviewRejectionReason $reason) => [$reason->value => $reason->label()])
                     ->all())
-                ->helperText('"Clearly false or misleading" only when our own records contradict it -- such as "they never replied" against replies on file -- never because the company disputes it.')
+                ->helperText('"Clearly false or misleading" only when our own records contradict it — such as "they never replied" against replies on file — never because the company disputes it.')
                 ->required(),
             Textarea::make('note')
                 ->label('Note to the writer (optional)')

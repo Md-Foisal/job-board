@@ -172,7 +172,7 @@ class CompanyResource extends Resource
                                 $by = $event->admin?->name ?? 'a former staff member';
                                 $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
 
-                                return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
+                                return $event->reason ? "{$line} — \"{$event->reason}\"" : $line;
                             })
                             ->placeholder('Never reviewed')
                             ->columnSpanFull(),
