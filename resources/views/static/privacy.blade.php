@@ -5,9 +5,9 @@
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
             and location, education and work history, skills, salary and
-            work-type preferences, and any documents you upload such as a CV. If
-            you post jobs, we store your company details and the postings
-            themselves.
+            work-type preferences, and any documents you upload or build, such as
+            a CV. If you post jobs, we store your company details and the
+            postings themselves.
         </p>
         <p>
             We also record which job postings you open while signed in, so your
@@ -26,8 +26,8 @@
             neither are the phone number and location on your profile: they
             appear only on a CV you build from your profile and choose to send.
             The exceptions are a CV you ask our AI to read, and the parts of your
-            profile you ask our AI to explain a match with: both are sent to
-            Anthropic, as described below.
+            profile you ask our AI to explain a match with or to improve the
+            wording of: these are sent to Anthropic, as described below.
         </p>
         <p>
             Job postings and company profiles are public, and are indexed by search
@@ -86,13 +86,37 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Building a CV">
+        <p>
+            The CV builder makes a CV from your profile on our own servers.
+            Nothing is sent anywhere for this. Your salary and work-type
+            preferences are never on it, and your phone number and location
+            appear only on CVs you build. A CV you save goes into your documents
+            like one you upload, where your {{ \App\Support\DocumentUploads::RECENT_CVS_KEPT }} most recent CVs are kept;
+            downloading gives you the file without keeping a copy.
+        </p>
+        <p>
+            If your plan includes it, you can also ask our AI to suggest better
+            wording. Only then is the following sent to Anthropic, which reads it
+            on our behalf as our processor: your headline, summary, roles with
+            their descriptions, education and skills. Your name, email address,
+            phone number, location, links, photo and preferences are not sent.
+            The suggestions wait an hour for you to choose from and are then
+            deleted. Only the ones you tick are written to your profile, which is
+            what an employer sees when you apply, so check that each one is true
+            before you apply it. We keep a record that suggestions were made, to
+            count them against your plan's allowance, but not what they said.
+            Anthropic handles what we send the same way as a CV it reads, above.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="Keeping and deleting it">
         <p>
             You can delete your account from your account settings. Deletion is
             not instant: the account is switched off first, and signing in again
             within {{ \App\Models\User::DELETION_GRACE_DAYS }} days restores it. After that we erase your
             personal data for good &mdash; your name, email address, profile, photos,
-            uploaded files, cover letters and answers &mdash; and keep only an anonymous
+            uploaded and built files, cover letters and answers &mdash; and keep only an anonymous
             record that an application was made, so employers' and our own numbers
             stay correct. Until then, applications you have already submitted keep
             the copy of the CV you attached at the time.

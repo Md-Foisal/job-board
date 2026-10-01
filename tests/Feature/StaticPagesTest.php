@@ -36,6 +36,17 @@ test('the privacy policy says what an AI match explanation sends, to whom, and w
         ->assertSee('We keep it for a day');
 });
 
+test('the privacy policy says what the CV builder keeps and what its AI suggestions send', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('Building a CV')
+        ->assertSee('The CV builder makes a CV from your profile on our own servers.')
+        ->assertSee('profile you ask our AI to explain a match with or to improve the')
+        ->assertSee('on our behalf as our processor: your headline, summary, roles with')
+        ->assertSee('phone number, location, links, photo and preferences are not sent.')
+        ->assertSee('The suggestions wait an hour for you to choose from and are then');
+});
+
 test('the terms of service render for a guest', function () {
     $this->get(route('terms'))
         ->assertOk()
