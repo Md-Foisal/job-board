@@ -94,6 +94,34 @@ test('a PDF is sent as the file itself, and the checked answer waits for the pag
         ->and($result['draft']['education'][0]['institution_name'])->toBe('University of Dhaka');
 });
 
+test('a phone number is kept only in a shape the profile form accepts, and a location is cut to fit', function (mixed $phone, ?string $kept) {
+    ResumeParser::fake([[...karimsAnswer(), 'phone' => $phone, 'location' => '  Dhaka,   Bangladesh '.str_repeat('x', 200)]]);
+    $document = aiCv();
+
+    runParse($document);
+
+    $draft = Cache::get(ParseResumeWithAi::resultKey($document->id))['draft'];
+
+    expect($draft['phone'])->toBe($kept)
+        ->and($draft['location'])->toStartWith('Dhaka, Bangladesh x')
+        ->and(mb_strlen($draft['location']))->toBe(100);
+})->with([
+    'international, with separators' => ['+880 1712-345678', '+880 1712-345678'],
+    'national, with brackets' => ['(020) 7946 0000', '(020) 7946 0000'],
+    'not a number' => ['call me on WhatsApp', null],
+    'too few digits' => ['1234', null],
+    'longer than the field' => ['+1 234 567 890 123 456 789 012 345', null],
+    'not text' => [8801712345678, null],
+]);
+
+test('the AI is asked for a phone number and a city, never a street address', function () {
+    $instructions = (string) (new ResumeParser)->instructions();
+
+    expect($instructions)->toContain('phone:')
+        ->toContain('location:')
+        ->toContain('Never a street, house number or postcode.');
+});
+
 test('a Word CV is sent as the text the product already reads, with no file attached', function () {
     ResumeParser::fake([karimsAnswer()])->preventStrayPrompts();
 

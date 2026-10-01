@@ -62,6 +62,9 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     /** @var array<int, string> */
     public array $chosenText = [];
 
+    /** @var array<int, string> */
+    public array $chosenContact = [];
+
     /** @var array<int, int> */
     public array $chosenExperience = [];
 
@@ -273,6 +276,37 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     }
 
     /**
+     * The phone number and location the AI found, offered only where the
+     * profile has none: what the candidate typed on their profile is
+     * newer than an old CV, and replacing it is a profile edit, not an
+     * import.
+     *
+     * @return array<string, array{label: string, suggested: string, current: null, same: false}>
+     */
+    #[Computed]
+    public function contact(): array
+    {
+        $profile = $this->profile();
+        $suggestions = $this->suggestions();
+        $contact = [];
+
+        foreach (['phone' => $suggestions->phone, 'location' => $suggestions->location] as $field => $suggested) {
+            if ($suggested === null || filled($profile->{$field})) {
+                continue;
+            }
+
+            $contact[$field] = [
+                'label' => $field === 'phone' ? __('Phone') : __('Location'),
+                'suggested' => $suggested,
+                'current' => null,
+                'same' => false,
+            ];
+        }
+
+        return $contact;
+    }
+
+    /**
      * @return array<int, array<string, mixed>>
      */
     #[Computed]
@@ -308,9 +342,9 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     {
         $this->resetErrorBag();
 
-        $profile = collect([...$this->links, ...$this->profileText])
+        $profile = collect([...$this->links, ...$this->profileText, ...$this->contact])
             ->reject(fn (array $item) => $item['same'])
-            ->only([...$this->chosenLinks, ...$this->chosenText])
+            ->only([...$this->chosenLinks, ...$this->chosenText, ...$this->chosenContact])
             ->map(fn (array $item) => $item['suggested'])
             ->all();
 
@@ -433,13 +467,15 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     }
 
     /**
-     * Headline and summary start ticked only where the profile has none;
-     * roles and courses start ticked unless already on the profile or
-     * still missing a start date.
+     * Headline and summary start ticked only where the profile has none,
+     * and so do phone and location, which are only offered then; roles
+     * and courses start ticked unless already on the profile or still
+     * missing a start date.
      */
     private function tickAiOnlyDefaults(): void
     {
         $this->chosenText = collect($this->profileText)->filter(fn (array $item) => $item['current'] === null)->keys()->all();
+        $this->chosenContact = array_keys($this->contact);
         $this->chosenExperience = self::tickableEntries($this->experience);
         $this->chosenEducation = self::tickableEntries($this->education);
     }
@@ -458,7 +494,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
 
     private function forgetComputed(): void
     {
-        unset($this->links, $this->skills, $this->profileText, $this->experience, $this->education);
+        unset($this->links, $this->skills, $this->profileText, $this->contact, $this->experience, $this->education);
     }
 
     private function profile()
@@ -483,6 +519,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     $links = $this->links;
     $skills = $this->skills;
     $profileText = $this->profileText;
+    $contact = $this->contact;
     $experience = $this->experience;
     $education = $this->education;
     $unmatchedSkills = $aiDraft['unmatched_skills'] ?? [];
@@ -491,7 +528,8 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
         ->merge(\App\Support\ResumeDraft::fromArray($aiDraft))
         ->isEmpty();
 
-    $nothingLeft = collect([...$links, ...$profileText])->every(fn ($item) => $item['same'])
+    $nothingLeft = $contact === []
+        && collect([...$links, ...$profileText])->every(fn ($item) => $item['same'])
         && collect($skills)->every(fn ($skill) => $skill['has'])
         && collect([...$experience, ...$education])->every(fn ($entry) => $entry['has']);
 
@@ -530,7 +568,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                 <flux:text size="sm" class="mt-1">{{ __('Nothing was used from your allowance. You can try again, or use what we found ourselves.') }}</flux:text>
             @else
                 <flux:heading>{{ __('Have the AI read the rest') }}</flux:heading>
-                <flux:text size="sm" class="mt-1">{{ __('It can suggest your headline, summary, roles and education from this CV. You choose what is added.') }}</flux:text>
+                <flux:text size="sm" class="mt-1">{{ __('It can suggest your headline, summary, phone number, location, roles and education from this CV. You choose what is added.') }}</flux:text>
             @endif
             <div class="mt-4 flex flex-wrap items-center gap-3">
                 <flux:button wire:click="readWithAi" icon="sparkles" size="sm">
@@ -589,6 +627,21 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                                         :label="$item['current'] === null ? $item['label'] : __('Replace your :label', ['label' => strtolower($item['label'])])" />
                                     <p class="mt-1 ml-7 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $item['suggested'] }}</p>
                                 @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </section>
+            @endif
+
+            @if ($contact !== [])
+                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                    <flux:heading>{{ __('Contact for your CVs') }}</flux:heading>
+                    <flux:text size="sm">{{ __("Shown on CVs you build here. Companies don't see these on your profile.") }}</flux:text>
+
+                    <ul class="mt-4 space-y-3">
+                        @foreach ($contact as $field => $item)
+                            <li wire:key="contact-{{ $field }}">
+                                <flux:checkbox wire:model="chosenContact" value="{{ $field }}" :label="$item['label']" :description="$item['suggested']" />
                             </li>
                         @endforeach
                     </ul>

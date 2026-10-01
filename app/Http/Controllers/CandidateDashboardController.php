@@ -16,10 +16,13 @@ class CandidateDashboardController extends Controller
      * $user->candidateProfile's own filled fields, computed on every
      * request rather than stored (claude/13's decision -- there is no
      * "completion" column to go stale the moment a field changes). This
-     * mirrors the model's #[Fillable(...)] set exactly, so a future field
-     * added there is a one-line addition here too. Labeled (not a bare
-     * list) because the dashboard names the specific missing items, not
-     * just a percentage -- a number alone gives no next action.
+     * mirrors the model's #[Fillable(...)] set, so a future field added
+     * there is a one-line addition here too -- except phone and location:
+     * companies never see those on the profile, they only go on CVs the
+     * candidate builds, so a missing one is not a gap in what an employer
+     * looks at. Labeled (not a bare list) because the dashboard names
+     * the specific missing items, not just a percentage -- a number alone
+     * gives no next action.
      */
     private const PROFILE_FIELD_LABELS = [
         'headline' => 'Headline',

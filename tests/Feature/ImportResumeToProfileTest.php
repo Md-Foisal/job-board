@@ -17,6 +17,8 @@ test('chosen profile fields are written, and nothing outside them', function () 
     $added = importResume(['profile' => [
         'headline' => 'Laravel developer',
         'linkedin_url' => 'https://www.linkedin.com/in/karim-rahman',
+        'phone' => '+880 1712-345678',
+        'location' => 'Dhaka, Bangladesh',
         'user_id' => 999,
     ]], $profile);
 
@@ -24,8 +26,10 @@ test('chosen profile fields are written, and nothing outside them', function () 
 
     expect($profile->headline)->toBe('Laravel developer')
         ->and($profile->linkedin_url)->toBe('https://www.linkedin.com/in/karim-rahman')
+        ->and($profile->phone)->toBe('+880 1712-345678')
+        ->and($profile->location)->toBe('Dhaka, Bangladesh')
         ->and($profile->user_id)->not->toBe(999)
-        ->and($added['profile'])->toBe(2);
+        ->and($added['profile'])->toBe(4);
 });
 
 test('new skills start at intermediate, and a skill already held keeps its level', function () {

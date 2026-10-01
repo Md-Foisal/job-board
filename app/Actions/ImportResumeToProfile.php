@@ -18,8 +18,9 @@ use Illuminate\Support\Facades\DB;
  * The selection has already been validated by the page with the same
  * rules as the profile's own forms; this only decides what is new:
  *
- * - Profile fields (headline, bio, links) are written as given. The page
- *   only passes a filled field when the candidate ticked "replace".
+ * - Profile fields (headline, bio, links, phone, location) are written as
+ *   given. The page only passes a filled field when the candidate ticked
+ *   "replace", and offers phone and location only where they are empty.
  * - Skills come only from the platform's list, and one the candidate
  *   already has keeps the level they set. New ones start at intermediate,
  *   the same default as adding a skill by hand.
@@ -30,7 +31,7 @@ use Illuminate\Support\Facades\DB;
  */
 class ImportResumeToProfile
 {
-    private const PROFILE_FIELDS = ['headline', 'bio', 'linkedin_url', 'github_url', 'portfolio_url'];
+    private const PROFILE_FIELDS = ['headline', 'bio', 'linkedin_url', 'github_url', 'portfolio_url', 'phone', 'location'];
 
     /**
      * @param  array{

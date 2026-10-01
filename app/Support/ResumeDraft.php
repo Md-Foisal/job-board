@@ -10,8 +10,9 @@ use App\Models\Skill;
  * what they want and ImportResumeToProfile writes only that.
  *
  * The product's own reading fills the skills and links. Headline, summary,
- * experience and education come only from the AI reading, which fills the
- * same shape, so the page and the import handle both the same way.
+ * phone, location, experience and education come only from the AI reading,
+ * which fills the same shape, so the page and the import handle both the
+ * same way.
  *
  * Dates are months, "2021-03", because that is what a CV gives; a missing
  * start date stays null and the page asks for it before the entry can be
@@ -51,6 +52,8 @@ final class ResumeDraft
         public readonly array $unmatchedSkills = [],
         public readonly array $experience = [],
         public readonly array $education = [],
+        public readonly ?string $phone = null,
+        public readonly ?string $location = null,
     ) {}
 
     /**
@@ -69,8 +72,9 @@ final class ResumeDraft
 
     /**
      * The AI reading's answer, checked the way a form would check it: text
-     * trimmed and cut to what the profile's own fields hold, months that
-     * are not YYYY-MM dropped, links kept only if they pass the same rules
+     * trimmed and cut to what the profile's own fields hold, a phone number
+     * the profile form would refuse dropped, months that are not YYYY-MM
+     * dropped, links kept only if they pass the same rules
      * as the product's own link reading, and skills matched to the
      * platform's list, with the rest reported as not on it.
      *
@@ -79,6 +83,7 @@ final class ResumeDraft
     public static function fromAiAnswer(array $answer): self
     {
         $skills = SkillMatcher::byNames(array_filter((array) ($answer['skills'] ?? []), 'is_string'));
+        $phone = self::text($answer['phone'] ?? null, ContactDetails::PHONE_MAX + 1);
 
         return new self(
             headline: self::text($answer['headline'] ?? null, self::HEADLINE_MAX),
@@ -100,6 +105,8 @@ final class ResumeDraft
                 'start_month' => self::month($entry['start_month'] ?? null),
                 'end_month' => self::month($entry['end_month'] ?? null),
             ], ['institution_name']),
+            phone: $phone !== null && ContactDetails::isPhone($phone) ? $phone : null,
+            location: self::text($answer['location'] ?? null, ContactDetails::LOCATION_MAX),
         );
     }
 
@@ -124,6 +131,8 @@ final class ResumeDraft
             unmatchedSkills: $ai->unmatchedSkills,
             experience: $ai->experience,
             education: $ai->education,
+            phone: $ai->phone,
+            location: $ai->location,
         );
     }
 
@@ -135,7 +144,9 @@ final class ResumeDraft
             && $this->skills === []
             && $this->unmatchedSkills === []
             && $this->experience === []
-            && $this->education === [];
+            && $this->education === []
+            && blank($this->phone)
+            && blank($this->location);
     }
 
     /**
@@ -151,6 +162,8 @@ final class ResumeDraft
             'unmatched_skills' => $this->unmatchedSkills,
             'experience' => $this->experience,
             'education' => $this->education,
+            'phone' => $this->phone,
+            'location' => $this->location,
         ];
     }
 
@@ -167,6 +180,8 @@ final class ResumeDraft
             unmatchedSkills: $data['unmatched_skills'] ?? [],
             experience: $data['experience'] ?? [],
             education: $data['education'] ?? [],
+            phone: $data['phone'] ?? null,
+            location: $data['location'] ?? null,
         );
     }
 

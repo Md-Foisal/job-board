@@ -276,6 +276,42 @@ test('a headline already on the profile is offered as a replacement, unticked', 
         ->assertSee('Replace your headline');
 });
 
+test('a phone number and location from the CV are offered ticked, and added with the rest', function () {
+    aiOn();
+    ResumeParser::fake([aiAnswer(['phone' => '+880 1712-345678', 'location' => 'Dhaka, Bangladesh'])]);
+    $candidate = blankCandidate();
+
+    aiPage($candidate, cvFor($candidate))
+        ->call('readWithAi')
+        ->assertSee('Contact for your CVs')
+        ->assertSee('+880 1712-345678')
+        ->assertSet('chosenContact', ['phone', 'location'])
+        ->set('chosenContact', ['location'])
+        ->call('import')
+        ->assertHasNoErrors();
+
+    $profile = $candidate->candidateProfile->refresh();
+
+    expect($profile->phone)->toBeNull()
+        ->and($profile->location)->toBe('Dhaka, Bangladesh');
+});
+
+test('a phone number or location already on the profile is not offered again', function () {
+    aiOn();
+    ResumeParser::fake([aiAnswer(['phone' => '+880 1712-345678', 'location' => 'Dhaka, Bangladesh'])]);
+    $candidate = blankCandidate();
+    $candidate->candidateProfile->update(['phone' => '+44 20 7946 0000']);
+
+    aiPage($candidate, cvFor($candidate))
+        ->call('readWithAi')
+        ->assertDontSee('+880 1712-345678')
+        ->assertSet('chosenContact', ['location'])
+        ->set('chosenContact', ['phone', 'location'])
+        ->call('import');
+
+    expect($candidate->candidateProfile->refresh()->phone)->toBe('+44 20 7946 0000');
+});
+
 test('coming back within the hour shows the AI\'s reading without asking again', function () {
     aiOn();
     ResumeParser::fake([aiAnswer()])->preventStrayPrompts();

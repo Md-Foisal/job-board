@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ReplaceUploadedImage;
+use App\Support\ContactDetails;
 use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,6 +42,10 @@ class CandidateProfileController extends Controller
             'portfolio_url' => ['nullable', 'url', 'max:255'],
             'github_url' => ['nullable', 'url', 'max:255'],
             'linkedin_url' => ['nullable', 'url', 'max:255'],
+            'phone' => ContactDetails::phoneRules(),
+            'location' => ContactDetails::locationRules(),
+        ], [
+            'phone.regex' => __('Enter a phone number using digits, with an optional + and country code.'),
         ]);
 
         $user = $request->user();

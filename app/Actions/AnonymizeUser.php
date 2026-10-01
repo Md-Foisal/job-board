@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  * happened -- claude/12's rule: anonymise, don't delete.
  *
  * What goes: everything that says who they were or what they wrote about
- * themselves -- name, email, photos, profile, preferences, education,
+ * themselves -- name, email, phone, photos, profile, preferences, education,
  * experience, every uploaded file, cover letters, screening answers, the
  * notes employers wrote about them, alerts, saved jobs, viewing history,
  * sessions and reset tokens.
@@ -92,6 +92,8 @@ class AnonymizeUser
                     'portfolio_url' => null,
                     'github_url' => null,
                     'linkedin_url' => null,
+                    'phone' => null,
+                    'location' => null,
                     'cover_photo_path' => null,
                 ])->save();
             }

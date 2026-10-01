@@ -69,6 +69,8 @@ function karimCandidate(): User
         'linkedin_url' => 'https://www.linkedin.com/in/karim-rahman',
         'github_url' => null,
         'portfolio_url' => null,
+        'phone' => '+880 1999-406280',
+        'location' => 'Sylhet, Bangladesh',
     ]);
     $profile->skills()->attach(Skill::firstOrCreate(['name' => 'Laravel']), ['proficiency' => 'advanced']);
     CandidatePreference::factory()->for($profile)->create([
@@ -150,6 +152,8 @@ test('the job, the profile and the product\'s facts are sent as the tool\'s resu
             && ! str_contains($text, 'Karim Rahman')
             && ! str_contains($text, 'karim@example.com')
             && ! str_contains($text, 'linkedin.com')
+            && ! str_contains($text, '406280')
+            && ! str_contains($text, 'Sylhet')
             && ! str_contains($text, '70123')
             && ! str_contains($text, '81234')
             && ! str_contains($text, 'salary');

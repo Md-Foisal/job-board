@@ -3,10 +3,11 @@
         <p>
             When you create an account we store your name, email address and
             password (hashed, never in readable form). If you build a candidate
-            profile we store what you enter: headline, bio, links, education and
-            work history, skills, salary and work-type preferences, and any
-            documents you upload such as a CV. If you post jobs, we store your
-            company details and the postings themselves.
+            profile we store what you enter: headline, bio, links, phone number
+            and location, education and work history, skills, salary and
+            work-type preferences, and any documents you upload such as a CV. If
+            you post jobs, we store your company details and the postings
+            themselves.
         </p>
         <p>
             We also record which job postings you open while signed in, so your
@@ -21,8 +22,10 @@
             see your profile and the CV you attached to that application -- nobody
             else. Documents are served through an access check every time, so a
             file address alone is not enough to open it. Your salary and work-type
-            preferences are never shown to employers, even when you apply. The
-            exceptions are a CV you ask our AI to read, and the parts of your
+            preferences are never shown to employers, even when you apply, and
+            neither are the phone number and location on your profile: they
+            appear only on a CV you build from your profile and choose to send.
+            The exceptions are a CV you ask our AI to read, and the parts of your
             profile you ask our AI to explain a match with: both are sent to
             Anthropic, as described below.
         </p>
@@ -41,7 +44,8 @@
         </p>
         <p>
             If your plan includes it, you can also ask our AI to read the CV, to
-            suggest your headline, summary, roles and education. Only then, and
+            suggest your headline, summary, phone number, location, roles and
+            education. Only then, and
             only that CV, is sent to Anthropic, which reads it on our behalf as our
             processor: a PDF is sent as the file, a Word file as its text. The
             suggestions come back to us and wait an hour for you to choose from;

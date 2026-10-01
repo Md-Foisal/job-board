@@ -40,7 +40,13 @@ function candidateWithEverything(): array
     Storage::disk('public')->put('avatars/sakib.jpg', 'x');
 
     $profile = $user->candidateProfile;
-    $profile->forceFill(['headline' => 'Laravel developer', 'bio' => 'I live in Dhaka.', 'cover_photo_path' => 'covers/sakib.jpg'])->save();
+    $profile->forceFill([
+        'headline' => 'Laravel developer',
+        'bio' => 'I live in Dhaka.',
+        'phone' => '+880 1712-345678',
+        'location' => 'Dhaka, Bangladesh',
+        'cover_photo_path' => 'covers/sakib.jpg',
+    ])->save();
     Storage::disk('public')->put('covers/sakib.jpg', 'x');
 
     CandidatePreference::factory()->for($profile)->create();
@@ -80,6 +86,8 @@ test('a candidate is emptied of everything personal while the application stays 
         ->and($user->trashed())->toBeTrue()
         ->and($profile->headline)->toBeNull()
         ->and($profile->bio)->toBeNull()
+        ->and($profile->phone)->toBeNull()
+        ->and($profile->location)->toBeNull()
         ->and($profile->cover_photo_path)->toBeNull()
         ->and(CandidatePreference::count())->toBe(0)
         ->and(EducationRecord::count())->toBe(0)

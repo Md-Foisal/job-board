@@ -5,9 +5,12 @@
 
         <div
             x-data="{
-                editingHeadline: false,
-                editingBio: false,
-                editingLinks: false,
+                {{-- A section the server sent back with an error opens
+                     again, so the message and the typed value are seen. --}}
+                editingHeadline: @js($errors->has('headline')),
+                editingBio: @js($errors->has('bio')),
+                editingLinks: @js($errors->hasAny(['portfolio_url', 'github_url', 'linkedin_url'])),
+                editingContact: @js($errors->hasAny(['phone', 'location'])),
                 avatarPreview: null,
                 coverPreview: null,
                 pickAvatar(event) {
@@ -20,7 +23,7 @@
                 },
                 get hasPendingEdits() {
                     return this.editingHeadline || this.editingBio || this.editingLinks
-                        || this.avatarPreview || this.coverPreview;
+                        || this.editingContact || this.avatarPreview || this.coverPreview;
                 },
             }"
             class="overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
@@ -271,6 +274,62 @@
                         :label="__('LinkedIn URL')"
                         placeholder="https://linkedin.com/in/username"
                         :value="old('linkedin_url', $candidateProfile->linkedin_url)"
+                    />
+                </div>
+            </div>
+
+            {{-- Contact: kept for the CVs the candidate builds here, never
+                 shown to companies on the profile itself. --}}
+            <div class="border-t border-zinc-100 px-6 py-6 dark:border-zinc-800 sm:px-8">
+                <div class="flex items-center gap-1.5" x-show="!editingContact">
+                    <flux:subheading>{{ __('Contact for your CVs') }}</flux:subheading>
+                    <button
+                        type="button"
+                        @click="editingContact = true; $nextTick(() => $refs.phoneInput.focus())"
+                        class="text-zinc-400 hover:text-brand-600 dark:text-zinc-500 dark:hover:text-brand-400"
+                        title="{{ __('Edit contact details') }}"
+                    >
+                        <flux:icon.pencil-square variant="mini" class="size-4" />
+                    </button>
+                </div>
+                <flux:text size="sm" class="mt-1">{{ __("Shown on CVs you build here. Companies don't see these on your profile.") }}</flux:text>
+
+                <ul class="mt-2 space-y-2" x-show="!editingContact">
+                    <li class="flex items-center gap-2 text-sm">
+                        <flux:icon name="phone" variant="mini" class="size-4 shrink-0 text-zinc-400" />
+                        @if ($candidateProfile->phone)
+                            <span class="text-zinc-700 dark:text-zinc-300">{{ $candidateProfile->phone }}</span>
+                        @else
+                            <span class="text-zinc-400 dark:text-zinc-500">{{ __('Phone') }} — {{ __('not added yet') }}</span>
+                        @endif
+                    </li>
+                    <li class="flex items-center gap-2 text-sm">
+                        <flux:icon name="map-pin" variant="mini" class="size-4 shrink-0 text-zinc-400" />
+                        @if ($candidateProfile->location)
+                            <span class="text-zinc-700 dark:text-zinc-300">{{ $candidateProfile->location }}</span>
+                        @else
+                            <span class="text-zinc-400 dark:text-zinc-500">{{ __('Location') }} — {{ __('not added yet') }}</span>
+                        @endif
+                    </li>
+                </ul>
+
+                <div class="mt-4 space-y-6" x-show="editingContact" x-cloak>
+                    <flux:input
+                        x-ref="phoneInput"
+                        name="phone"
+                        type="tel"
+                        autocomplete="tel"
+                        :label="__('Phone')"
+                        :description="__('Include the country code, e.g. +44 for the UK')"
+                        :value="old('phone', $candidateProfile->phone)"
+                        maxlength="{{ \App\Support\ContactDetails::PHONE_MAX }}"
+                    />
+                    <flux:input
+                        name="location"
+                        :label="__('Location')"
+                        :description="__('City and country is enough, e.g. Dhaka, Bangladesh')"
+                        :value="old('location', $candidateProfile->location)"
+                        maxlength="{{ \App\Support\ContactDetails::LOCATION_MAX }}"
                     />
                 </div>
             </div>

@@ -78,7 +78,9 @@ class DemoAccountsSeeder extends Seeder
         $profile = CandidateProfile::factory()
             ->for($candidate)
             ->has(CandidatePreference::factory(), 'preference')
-            ->create();
+            // Ofcom keeps 07700 900000-900999 for fiction, so the demo
+            // number can never ring a real phone.
+            ->create(['phone' => '+44 7700 900123', 'location' => 'London, United Kingdom']);
         $this->attachSkills($profile, 5, 8);
         $this->seedCandidateActivity($candidate, $profile);
         $this->seedJobAlerts($candidate, $profile);
