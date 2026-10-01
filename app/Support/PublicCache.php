@@ -10,8 +10,9 @@ use LogicException;
 
 /**
  * Caching for what every visitor sees the same way: the homepage, the
- * sitemap, the platform numbers on the admin dashboard, and the skill and
- * category lists every filter and form draws from.
+ * sitemap, the platform numbers on the admin dashboard, a company's
+ * responsiveness mark, and the skill and category lists every filter and
+ * form draws from.
  *
  * Invalidation works by generation rather than by tags. Laravel's cache
  * tags are not available on the database or file stores, which is what
@@ -53,10 +54,15 @@ final class PublicCache
 
     /**
      * Plain data only -- see the class comment.
+     *
+     * A longer lifetime suits figures built from activity that moves no
+     * generation, such as applications being answered: no flush follows
+     * those, so the lifetime is the only thing that refreshes them, and
+     * it is chosen for how stale such a figure may be.
      */
-    public static function remember(string $key, Closure $callback): mixed
+    public static function remember(string $key, Closure $callback, int $seconds = self::TTL_SECONDS): mixed
     {
-        return Cache::remember(self::key(self::PUBLIC, $key), self::TTL_SECONDS, fn () => self::plain($callback()));
+        return Cache::remember(self::key(self::PUBLIC, $key), $seconds, fn () => self::plain($callback()));
     }
 
     /**

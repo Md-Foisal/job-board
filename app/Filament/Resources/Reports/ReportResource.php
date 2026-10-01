@@ -4,15 +4,19 @@ namespace App\Filament\Resources\Reports;
 
 use App\Actions\BanCompany;
 use App\Actions\DismissReports;
+use App\Actions\ModerateCompanyReview;
 use App\Actions\RejectJobPosting;
 use App\Enums\AccountStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
+use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Filament\Resources\Reports\Pages\ManageReports;
 use App\Filament\Support\ConfirmsPassword;
 use App\Models\Company;
+use App\Models\CompanyReview;
 use App\Models\JobPosting;
 use App\Models\Report;
 use BackedEnum;
@@ -72,9 +76,12 @@ class ReportResource extends Resource
 
         return parent::getEloquentQuery()
             ->whereIn('id', $latestPerSubject)
-            // A reported posting's company decides whether the viewer is
-            // recused from it, asked once per row and per action.
-            ->with(['reportable' => fn (MorphTo $morphTo) => $morphTo->morphWith([JobPosting::class => ['company']])])
+            // A reported posting's or review's company decides whether the
+            // viewer is recused from it, asked once per row and per action.
+            ->with(['reportable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
+                JobPosting::class => ['company'],
+                CompanyReview::class => ['company'],
+            ])])
             ->addSelect(['open_count' => Report::query()
                 ->selectRaw('count(*)')
                 ->from('reports as siblings')
@@ -150,6 +157,7 @@ class ReportResource extends Resource
         return match (true) {
             $report->reportable instanceof JobPosting => $report->reportable->title,
             $report->reportable instanceof Company => $report->reportable->name,
+            $report->reportable instanceof CompanyReview => 'Review of '.$report->reportable->company->name,
             default => 'No longer exists',
         };
     }
@@ -159,6 +167,7 @@ class ReportResource extends Resource
         return match ($report->reportable_type) {
             (new JobPosting)->getMorphClass() => 'Job posting',
             (new Company)->getMorphClass() => 'Company',
+            (new CompanyReview)->getMorphClass() => 'Company review',
             default => 'Unknown',
         };
     }
@@ -180,6 +189,7 @@ class ReportResource extends Resource
                             ->url(fn (Report $record) => match (true) {
                                 $record->reportable instanceof JobPosting => route('jobs.show', $record->reportable),
                                 $record->reportable instanceof Company => route('companies.show', $record->reportable),
+                                $record->reportable instanceof CompanyReview && $record->reportable->moderation_status === ModerationStatus::Approved => route('companies.show', $record->reportable->company).'#reviews',
                                 default => null,
                             }, shouldOpenInNewTab: true),
                         TextEntry::make('kind')
@@ -200,6 +210,34 @@ class ReportResource extends Resource
                                 return "{$company->name}: {$history['approved']} approved · {$history['rejected']} rejected{$standing}";
                             })
                             ->placeholder('Unknown')
+                            ->columnSpanFull(),
+                    ]),
+                // What the public sees of a reported review, and no more:
+                // the application behind it would name the writer to
+                // anyone on the company's team, and this queue is open to
+                // them too.
+                Section::make('The review')
+                    ->visible(fn (Report $record) => $record->reportable instanceof CompanyReview)
+                    ->columns(3)
+                    ->schema([
+                        TextEntry::make('review_publication')
+                            ->label('Status')
+                            ->state(fn (Report $record) => $record->reportable->moderation_status->label())
+                            ->badge(),
+                        TextEntry::make('review_overall')
+                            ->label('Overall')
+                            ->state(fn (Report $record) => $record->reportable->overall_rating.' / 5'),
+                        TextEntry::make('review_communication')
+                            ->label('Communication')
+                            ->state(fn (Report $record) => $record->reportable->communication_rating.' / 5'),
+                        TextEntry::make('review_title')
+                            ->label('Headline')
+                            ->state(fn (Report $record) => $record->reportable->title)
+                            ->columnSpanFull(),
+                        TextEntry::make('review_body')
+                            ->label('Review')
+                            ->state(fn (Report $record) => $record->reportable->body)
+                            ->extraAttributes(['class' => 'whitespace-pre-line'])
                             ->columnSpanFull(),
                     ]),
                 Section::make('What people reported')
@@ -245,10 +283,11 @@ class ReportResource extends Resource
                     ->sortable(),
             ])
             ->emptyStateHeading('No open reports')
-            ->emptyStateDescription('Reports from signed-in users about postings and companies land here.')
+            ->emptyStateDescription('Reports from signed-in users about postings, companies and reviews land here.')
             ->recordActions([
                 ViewAction::make()->label('Read reports'),
                 static::rejectPostingAction(),
+                static::rejectReviewAction(),
                 static::banCompanyAction(),
                 static::dismissAction(),
             ]);
@@ -263,7 +302,9 @@ class ReportResource extends Resource
             ->authorize('moderate')
             ->visible(fn (Report $record) => $record->open_count > 0)
             ->modalHeading(fn (Report $record) => 'Dismiss reports about "'.static::subjectLabel($record).'"?')
-            ->modalDescription(fn (Report $record) => "All {$record->open_count} open report(s) will be closed as not upheld. Nothing about the subject changes; if it was hidden while the reports waited, it is back in public view.")
+            ->modalDescription(fn (Report $record) => $record->reportable instanceof CompanyReview
+                ? "All {$record->open_count} open report(s) will be closed as not upheld. The review stays as it is."
+                : "All {$record->open_count} open report(s) will be closed as not upheld. Nothing about the subject changes; if it was hidden while the reports waited, it is back in public view.")
             ->schema([
                 Textarea::make('note')
                     ->label('Note for the record (optional)')
@@ -313,6 +354,36 @@ class ReportResource extends Resource
                 app(RejectJobPosting::class)($record->reportable, auth()->user(), $data['reason']);
 
                 Notification::make()->title('Posting taken down')->success()->send();
+            });
+    }
+
+    /**
+     * Taking a reported review off the company page goes through the same
+     * decision, and the same closed list of grounds, as the review queue:
+     * the writer is told why, and the reports close as upheld.
+     */
+    public static function rejectReviewAction(): Action
+    {
+        return Action::make('rejectReview')
+            ->label('Take review down')
+            ->icon(Heroicon::OutlinedXMark)
+            ->color('danger')
+            ->authorize('moderate')
+            ->visible(fn (Report $record) => $record->open_count > 0
+                && $record->reportable instanceof CompanyReview
+                && $record->reportable->moderation_status !== ModerationStatus::Rejected)
+            ->modalHeading(fn (Report $record) => 'Take this review of '.$record->reportable->company->name.' down?')
+            ->modalDescription('Only for one of the reasons below, whatever the review says about the company — never because it is negative or because the company disputes it. The writer is told why and can edit it.')
+            ->schema(fn () => CompanyReviewResource::rejectionFields())
+            ->action(function (Report $record, array $data) {
+                app(ModerateCompanyReview::class)->reject(
+                    $record->reportable,
+                    auth()->user(),
+                    ReviewRejectionReason::from($data['reason']),
+                    $data['note'] ?? null,
+                );
+
+                Notification::make()->title('Review taken down')->success()->send();
             });
     }
 

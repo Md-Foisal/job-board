@@ -7,7 +7,9 @@ use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\Report;
 use App\Models\User;
+use App\Services\EmployerResponsiveness;
 use App\Services\JobPerformance;
+use App\Support\ReviewSummary;
 use Database\Seeders\DemoAccountsSeeder;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use PragmaRX\Google2FA\Google2FA;
@@ -57,6 +59,12 @@ test('a fresh seed can be looked at from every side', function () {
         ->and($report->rejectedUnseen)->toBe(2)
         ->and($report->firstResponseMedianHours)->not->toBeNull()
         ->and($report->viewsCoverRange())->toBeFalse();
+
+    // The company page has reviews with averages, the mark, and one review
+    // waiting in the staff queue.
+    expect(ReviewSummary::of($demoCompany)->hasAverages())->toBeTrue()
+        ->and($demoCompany->reviews()->where('moderation_status', ModerationStatus::Pending)->count())->toBe(1)
+        ->and(app(EmployerResponsiveness::class)->percentFor($demoCompany))->not->toBeNull();
 });
 
 test('the demo two-factor secret gives codes that sign staff in', function () {

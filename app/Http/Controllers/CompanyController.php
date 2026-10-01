@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Actions\CreateCompany;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Models\Company;
+use App\Services\EmployerResponsiveness;
+use App\Support\ReviewSummary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,7 +27,12 @@ class CompanyController extends Controller
             ->with('success', __('Your company is set up.'));
     }
 
-    public function show(Request $request, Company $company): View
+    /**
+     * The number of reviews on one page of the company profile.
+     */
+    public const REVIEWS_PER_PAGE = 10;
+
+    public function show(Request $request, Company $company, EmployerResponsiveness $responsiveness): View
     {
         // A banned or reported-and-hidden company is not there for the
         // public, and a 404 says so without saying why. Its own people
@@ -46,9 +53,23 @@ class CompanyController extends Controller
             ->get()
             ->each(fn ($jobPosting) => $jobPosting->setRelation('company', $company));
 
+        // Only the columns a reader is shown. The application and the
+        // candidate behind a review are never read on this page, so they
+        // cannot leak into it.
+        $reviews = $company->reviews()
+            ->published()
+            ->latest('published_at')
+            ->latest('id')
+            ->select(['id', 'company_id', 'overall_rating', 'communication_rating', 'job_as_described', 'title', 'body', 'published_at'])
+            ->paginate(self::REVIEWS_PER_PAGE)
+            ->fragment('reviews');
+
         return view('companies.show', [
             'company' => $company,
             'jobPostings' => $jobPostings,
+            'reviews' => $reviews,
+            'reviewSummary' => ReviewSummary::of($company),
+            'responsivePercent' => $responsiveness->percentFor($company),
         ]);
     }
 }

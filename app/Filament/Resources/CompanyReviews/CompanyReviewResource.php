@@ -272,20 +272,7 @@ class CompanyReviewResource extends Resource
             ->visible(fn (CompanyReview $record) => $record->moderation_status !== ModerationStatus::Rejected)
             ->modalHeading('Keep this review off the company page?')
             ->modalDescription('Only for one of the reasons below, whatever the review says about the company -- never because it is negative. The writer is told why and can edit it.')
-            ->schema([
-                Select::make('reason')
-                    ->label('Reason')
-                    ->options(collect(ReviewRejectionReason::cases())
-                        ->mapWithKeys(fn (ReviewRejectionReason $reason) => [$reason->value => $reason->label()])
-                        ->all())
-                    ->helperText('"Clearly false or misleading" only when our own records contradict it -- such as "they never replied" against replies on file -- never because the company disputes it.')
-                    ->required(),
-                Textarea::make('note')
-                    ->label('Note to the writer (optional)')
-                    ->helperText('Say what to change. Do not quote personal details back.')
-                    ->maxLength(1000)
-                    ->rows(3),
-            ])
+            ->schema(fn () => static::rejectionFields())
             ->action(function (CompanyReview $record, array $data) {
                 app(ModerateCompanyReview::class)->reject(
                     $record,
@@ -296,6 +283,30 @@ class CompanyReviewResource extends Resource
 
                 Notification::make()->title('Review rejected')->success()->send();
             });
+    }
+
+    /**
+     * The same closed list of grounds wherever a review is rejected, here
+     * or from the reports queue.
+     *
+     * @return array<int, Select|Textarea>
+     */
+    public static function rejectionFields(): array
+    {
+        return [
+            Select::make('reason')
+                ->label('Reason')
+                ->options(collect(ReviewRejectionReason::cases())
+                    ->mapWithKeys(fn (ReviewRejectionReason $reason) => [$reason->value => $reason->label()])
+                    ->all())
+                ->helperText('"Clearly false or misleading" only when our own records contradict it -- such as "they never replied" against replies on file -- never because the company disputes it.')
+                ->required(),
+            Textarea::make('note')
+                ->label('Note to the writer (optional)')
+                ->helperText('Say what to change. Do not quote personal details back.')
+                ->maxLength(1000)
+                ->rows(3),
+        ];
     }
 
     public static function getPages(): array

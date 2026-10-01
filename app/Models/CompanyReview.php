@@ -42,6 +42,18 @@ class CompanyReview extends Model
     }
 
     /**
+     * What the public sees: reviews staff have approved, in their current
+     * wording. Reports never take one out of this; only a staff decision
+     * does.
+     */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query
+            ->where('company_reviews.moderation_status', ModerationStatus::Approved->value)
+            ->whereNotNull('company_reviews.published_at');
+    }
+
+    /**
      * The reviews a staff member may see in the panel: not those about the
      * company they work for, and not their own. The panel shows the
      * application behind a review, and someone on the company's team can

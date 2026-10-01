@@ -74,6 +74,10 @@
                         On JobBoard since {{ $company->created_at->format('Y') }}
                     </p>
 
+                    @if ($responsivePercent !== null)
+                        <x-responsive-badge :percent="$responsivePercent" show-detail class="mt-3" />
+                    @endif
+
                     <div class="mt-5 flex flex-wrap items-center gap-3">
                         @if ($company->website_url)
                             <flux:button href="{{ $company->website_url }}" variant="primary" icon:trailing="arrow-top-right-on-square" target="_blank" rel="noopener noreferrer">
@@ -107,6 +111,96 @@
                             <x-job-card :job-posting="$jobPosting" />
                         @endforeach
                     </div>
+                @endif
+            </section>
+
+            <section id="reviews" class="mt-12 scroll-mt-6" aria-labelledby="reviews-heading">
+                <h2 id="reviews-heading" class="font-display text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+                    {{ __('Hiring process reviews') }}
+                </h2>
+                <p class="mt-1 max-w-3xl text-sm text-zinc-500 dark:text-zinc-500">
+                    {{ __('Written by people who applied here through JobBoard and read by our team before they appear. Names, jobs and outcomes are never shown.') }}
+                </p>
+
+                @if ($reviewSummary->count === 0)
+                    <div class="mt-6 rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
+                        {{ __('No reviews yet. Anyone who applies here through JobBoard can review the hiring process once they get a decision, reach an interview, or go a month without an answer.') }}
+                    </div>
+                @else
+                    @if ($reviewSummary->hasAverages())
+                        <dl class="mt-6 grid gap-6 rounded-xl border border-zinc-200 bg-white p-6 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900">
+                            <div>
+                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Overall') }}</dt>
+                                <dd class="mt-1 flex items-center gap-2">
+                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50" aria-hidden="true">{{ number_format($reviewSummary->overall, 1) }}</span>
+                                    <x-rating-stars :value="$reviewSummary->overall" size="lg" />
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}</dt>
+                                <dd class="mt-1 flex items-center gap-2">
+                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50" aria-hidden="true">{{ number_format($reviewSummary->communication, 1) }}</span>
+                                    <x-rating-stars :value="$reviewSummary->communication" size="lg" />
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}</dt>
+                                <dd class="mt-1 text-zinc-700 dark:text-zinc-300">
+                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $reviewSummary->asDescribed }}</span>
+                                    {{ __('of :count said yes', ['count' => $reviewSummary->count]) }}
+                                </dd>
+                            </div>
+                        </dl>
+                        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+                            {{ trans_choice('Based on :count published review.|Based on :count published reviews.', $reviewSummary->count, ['count' => $reviewSummary->count]) }}
+                        </p>
+                    @else
+                        <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+                            {{ trans_choice(':count review so far. Averages appear once there are :min.|:count reviews so far. Averages appear once there are :min.', $reviewSummary->count, [
+                                'count' => $reviewSummary->count,
+                                'min' => \App\Support\ReviewSummary::MIN_FOR_AVERAGES,
+                            ]) }}
+                        </p>
+                    @endif
+
+                    <div class="mt-6 space-y-4">
+                        @foreach ($reviews as $review)
+                            <article class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900" aria-labelledby="review-{{ $review->id }}-title">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div class="min-w-0">
+                                        <x-rating-stars :value="$review->overall_rating" />
+                                        <h3 id="review-{{ $review->id }}-title" class="mt-2 font-medium text-zinc-900 dark:text-zinc-100">{{ $review->title }}</h3>
+                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                                            {{ __('Verified applicant') }}
+                                            <span class="mx-1">·</span>
+                                            <time datetime="{{ $review->published_at->format('Y-m') }}">{{ $review->published_at->format('F Y') }}</time>
+                                        </p>
+                                    </div>
+
+                                    <livewire:report-button :reportable="$review" :key="'report-review-'.$review->id" />
+                                </div>
+
+                                <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $review->body }}</p>
+
+                                <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                                    <div class="flex gap-1">
+                                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}:</dt>
+                                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
+                                    </div>
+                                    <div class="flex gap-1">
+                                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}:</dt>
+                                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $review->job_as_described->label() }}</dd>
+                                    </div>
+                                </dl>
+                            </article>
+                        @endforeach
+                    </div>
+
+                    @if ($reviews->hasPages())
+                        <div class="mt-6">
+                            {{ $reviews->links() }}
+                        </div>
+                    @endif
                 @endif
             </section>
         </div>

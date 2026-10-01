@@ -44,6 +44,26 @@
                     @endif
                 </p>
 
+                @if ($reviewSummary->count > 0 || $responsivePercent !== null)
+                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                        @if ($reviewSummary->count > 0)
+                            {{-- A plain link, not wire:navigate, so the browser
+                                 itself scrolls to the reviews on arrival. --}}
+                            <a href="{{ route('companies.show', $jobPosting->company) }}#reviews" class="inline-flex items-center gap-1.5 text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">
+                                @if ($reviewSummary->hasAverages())
+                                    <x-rating-stars :value="$reviewSummary->overall" />
+                                    <span class="font-medium tabular-nums text-zinc-900 dark:text-zinc-100" aria-hidden="true">{{ number_format($reviewSummary->overall, 1) }}</span>
+                                @endif
+                                <span class="underline underline-offset-2">{{ trans_choice(':count hiring process review|:count hiring process reviews', $reviewSummary->count, ['count' => $reviewSummary->count]) }}</span>
+                            </a>
+                        @endif
+
+                        @if ($responsivePercent !== null)
+                            <x-responsive-badge :percent="$responsivePercent" />
+                        @endif
+                    </div>
+                @endif
+
                 <div class="mt-3 flex flex-wrap items-center gap-2 text-xs">
                     <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
                         {{ $jobPosting->workplace_type->label() }}

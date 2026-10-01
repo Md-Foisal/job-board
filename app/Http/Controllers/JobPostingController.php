@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Actions\RecordJobView;
 use App\Models\JobPosting;
+use App\Services\EmployerResponsiveness;
 use App\Services\JobPostingStructuredData;
+use App\Support\ReviewSummary;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -15,6 +17,7 @@ class JobPostingController extends Controller
         JobPosting $jobPosting,
         JobPostingStructuredData $structuredData,
         RecordJobView $recordView,
+        EmployerResponsiveness $responsiveness,
     ): View {
         $this->authorize('view', $jobPosting);
 
@@ -42,6 +45,8 @@ class JobPostingController extends Controller
 
         return view('jobs.show', [
             'jobPosting' => $jobPosting,
+            'reviewSummary' => ReviewSummary::of($jobPosting->company),
+            'responsivePercent' => $responsiveness->percentFor($jobPosting->company),
             // Only a publicly visible posting carries JSON-LD. A company
             // member previewing their own draft sees the same page, but
             // must not emit markup telling Google the job is live.

@@ -8,6 +8,8 @@ use App\Enums\AlertFrequency;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\DocumentType;
+use App\Enums\JobAsDescribed;
+use App\Enums\ModerationStatus;
 use App\Enums\SkillImportance;
 use App\Enums\StaffRole;
 use App\Models\Application;
@@ -15,6 +17,7 @@ use App\Models\ApplicationEvent;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\Company;
+use App\Models\CompanyReview;
 use App\Models\Document;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
@@ -231,6 +234,8 @@ class DemoAccountsSeeder extends Seeder
             4 => 'shortlisted', 7 => 'shortlisted', 10 => 'shortlisted',
         ];
 
+        $applications = [];
+
         foreach (range(1, 14) as $index) {
             $appliedAt = now()->subDays(36 - $index * 2)->setTime(random_int(8, 20), random_int(0, 59));
             $profile = CandidateProfile::factory()->create();
@@ -244,6 +249,7 @@ class DemoAccountsSeeder extends Seeder
                 'candidate_profile_id' => $profile->id,
                 'created_at' => $appliedAt,
             ]);
+            $applications[$index] = $application;
 
             switch ($plan[$index] ?? 'new') {
                 case 'hired':
@@ -274,6 +280,43 @@ class DemoAccountsSeeder extends Seeder
                     $application->forceFill(['stage' => ApplicationStage::Shortlisted])->save();
                     break;
             }
+        }
+
+        $this->seedReviews($posting, $applications);
+    }
+
+    /**
+     * Enough published reviews for the company page to show its averages,
+     * written by applicants the history above makes eligible (the hire,
+     * one turned down, one interviewed), and one more from another
+     * interviewee waiting in the staff queue.
+     *
+     * @param  array<int, Application>  $applications
+     */
+    private function seedReviews(JobPosting $posting, array $applications): void
+    {
+        $reviews = [
+            1 => [5, 5, JobAsDescribed::Yes, 'Clear steps from the first call to the offer', "Every stage was explained before it happened, and I always knew who I was talking to next.\n\nThe offer matched the pay in the posting.", 15],
+            2 => [3, 4, JobAsDescribed::Yes, 'A quick no, but at least an answer', 'I was turned down two days after applying. No feedback on why, but a short and polite email beats the silence I get from most places.', 28],
+            3 => [4, 3, JobAsDescribed::NotSure, 'Good interview, slow updates afterwards', 'The interview was friendly and focused on real support tickets rather than trick questions. After that I waited over a week without hearing anything, and had to ask for an update.', 20],
+            6 => [2, 2, JobAsDescribed::No, 'The role was more sales than support', 'The posting talked about helping customers, but the interview was mostly about hitting upsell targets. I would have liked that to be in the ad.', null],
+        ];
+
+        foreach ($reviews as $index => [$overall, $communication, $asDescribed, $title, $body, $publishedDaysAgo]) {
+            $application = $applications[$index];
+
+            CompanyReview::create([
+                'company_id' => $posting->company_id,
+                'application_id' => $application->id,
+                'candidate_profile_id' => $application->candidate_profile_id,
+                'overall_rating' => $overall,
+                'communication_rating' => $communication,
+                'job_as_described' => $asDescribed,
+                'title' => $title,
+                'body' => $body,
+                'moderation_status' => $publishedDaysAgo === null ? ModerationStatus::Pending : ModerationStatus::Approved,
+                'published_at' => $publishedDaysAgo === null ? null : now()->subDays($publishedDaysAgo),
+            ]);
         }
     }
 

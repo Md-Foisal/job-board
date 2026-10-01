@@ -78,3 +78,13 @@ test('the footer links to all three static pages', function () {
     $response->assertSee(route('privacy'), false);
     $response->assertSee(route('terms'), false);
 });
+
+test('the privacy policy says what a company review shows, and who can tell who wrote it', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee("Reviewing a company's hiring process")
+        ->assertSee('never your name, the job you applied for, the')
+        ->assertSee('The company cannot see who wrote it.')
+        ->assertSee('staff who work at that')
+        ->assertSee('it says nothing about');
+});

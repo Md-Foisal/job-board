@@ -133,6 +133,30 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Reviewing a company's hiring process">
+        <p>
+            If you applied to a company here, you can review how it handled your
+            application once you get a decision, reach an interview, or go
+            {{ \App\Support\ReviewEligibility::UNANSWERED_DAYS }} days without an answer. Someone on our team reads every
+            review before it appears, and again after every edit.
+        </p>
+        <p>
+            On the company's page a review shows your ratings, your headline and
+            text, the words &ldquo;Verified applicant&rdquo; and the month it was
+            published &mdash; never your name, the job you applied for, the
+            outcome or the day. The company cannot see who wrote it. Our staff can
+            see the application behind it, because checking that a review comes
+            from a real application is part of their job; staff who work at that
+            company cannot. You can edit or delete your review at any time.
+        </p>
+        <p>
+            A company's page can also say that it answers applications quickly.
+            That is worked out from when the company first moved or decided each
+            application, across all of them together &mdash; it says nothing about
+            any one applicant.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="Keeping and deleting it">
         <p>
             You can delete your account from your account settings. Deletion is
