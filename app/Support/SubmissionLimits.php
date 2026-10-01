@@ -95,10 +95,9 @@ final class SubmissionLimits
     {
         return [
             'heading' => __("You've reached today's posting limit"),
-            'text' => __(':company can start up to :limit new postings a day. You can add more in :hours hours; existing postings can still be edited.', [
+            'text' => trans_choice('{1} :company can start up to :limit new postings a day. You can add more in 1 hour; existing postings can still be edited.|[2,*] :company can start up to :limit new postings a day. You can add more in :count hours; existing postings can still be edited.', self::hoursUntilAvailable(self::jobPostingKey($company)), [
                 'company' => $company->name,
                 'limit' => self::JOB_POSTINGS_PER_DAY,
-                'hours' => self::hoursUntilAvailable(self::jobPostingKey($company)),
             ]),
         ];
     }

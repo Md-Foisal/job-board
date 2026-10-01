@@ -114,9 +114,8 @@ new class extends Component
                 variant: 'warning',
                 duration: 10000,
                 heading: __("You've reached today's limit for reviews"),
-                text: __('You can save a review up to :limit times a day. You can save again in :hours hours.', [
+                text: trans_choice('{1} You can save a review up to :limit times a day. You can save again in 1 hour.|[2,*] You can save a review up to :limit times a day. You can save again in :count hours.', SubmissionLimits::hoursUntilAvailable($limitKey), [
                     'limit' => SubmissionLimits::REVIEW_SAVES_PER_DAY,
-                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
                 ]),
             );
 

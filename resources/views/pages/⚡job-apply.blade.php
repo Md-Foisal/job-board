@@ -64,9 +64,8 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
                 variant: 'warning',
                 duration: 10000,
                 heading: __("You've reached today's application limit"),
-                text: __('We cap applications at :limit a day so each one gets proper attention. You can apply again in :hours hours.', [
+                text: trans_choice('{1} We cap applications at :limit a day so each one gets proper attention. You can apply again in 1 hour.|[2,*] We cap applications at :limit a day so each one gets proper attention. You can apply again in :count hours.', SubmissionLimits::hoursUntilAvailable($limitKey), [
                     'limit' => SubmissionLimits::APPLICATIONS_PER_DAY,
-                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
                 ]),
             );
 

@@ -159,9 +159,8 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                 variant: 'warning',
                 duration: 10000,
                 heading: __("You've reached today's limit for answers"),
-                text: __('Your company can save answers to reviews up to :limit times a day. You can save again in :hours hours.', [
+                text: trans_choice('{1} Your company can save answers to reviews up to :limit times a day. You can save again in 1 hour.|[2,*] Your company can save answers to reviews up to :limit times a day. You can save again in :count hours.', SubmissionLimits::hoursUntilAvailable($limitKey), [
                     'limit' => SubmissionLimits::RESPONSE_SAVES_PER_DAY,
-                    'hours' => SubmissionLimits::hoursUntilAvailable($limitKey),
                 ]),
             );
 

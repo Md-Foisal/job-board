@@ -15,6 +15,7 @@ use App\Support\CvChecks;
 use App\Support\CvData;
 use App\Support\CvSuggestions;
 use App\Support\DocumentUploads;
+use App\Support\SubmissionLimits;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -373,9 +374,8 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
         $key = 'cv-build:'.auth()->id();
 
         if (RateLimiter::tooManyAttempts($key, self::BUILDS_PER_HOUR)) {
-            $this->addError('build', __("You've built :count CVs in the last hour. Try again in :minutes minutes.", [
-                'count' => self::BUILDS_PER_HOUR,
-                'minutes' => max(1, (int) ceil(RateLimiter::availableIn($key) / 60)),
+            $this->addError('build', trans_choice("{1} You've built :limit CVs in the last hour. Try again in 1 minute.|[2,*] You've built :limit CVs in the last hour. Try again in :count minutes.", SubmissionLimits::minutesUntilAvailable($key), [
+                'limit' => self::BUILDS_PER_HOUR,
             ]));
 
             return null;
