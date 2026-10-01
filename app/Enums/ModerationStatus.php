@@ -3,8 +3,9 @@
 namespace App\Enums;
 
 /**
- * Admin/moderation workflow for a job posting, separate from its
- * employer-facing availability status (draft/active/expired/closed).
+ * Staff review before something goes public: a job posting (separate
+ * from its employer-facing draft/active/expired/closed status), and a
+ * company review and the company's answer to it, each on its own.
  */
 enum ModerationStatus: string
 {

@@ -68,6 +68,15 @@ class Company extends Model
     }
 
     /**
+     * Applicants' accounts of this company's hiring process, in every
+     * moderation state -- the public page narrows them itself.
+     */
+    public function reviews()
+    {
+        return $this->hasMany(CompanyReview::class);
+    }
+
+    /**
      * Whether a visitor may see this company's profile: not banned, and
      * not held back while reports about it are reviewed.
      */

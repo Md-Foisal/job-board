@@ -229,6 +229,16 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Whether this user is, or ever was, on the company's team. Unlike
+     * worksAt() an ended membership counts too: its row stays behind
+     * after someone leaves, and so does what they know from the inside.
+     */
+    public function hasWorkedAt(Company $company): bool
+    {
+        return $this->memberships()->where('company_id', $company->id)->exists();
+    }
+
+    /**
      * This user's role at the given company, or null if they do not
      * currently work there. Unlike canManage() this answers "what am I",
      * which is what ranking one person against another needs.

@@ -11,8 +11,8 @@ class ReportPolicy
      * Acting on a report -- dismissing it, or taking it as grounds to act
      * on its subject.
      *
-     * A report is only ever about a job posting or a company, and both
-     * trace back to one company; staff recuse themselves from reports
+     * A report is about a job posting, a company or a company review, and
+     * each traces back to one company; staff recuse themselves from reports
      * that reach their own employer. A report whose subject has since
      * disappeared has no company to be compromised by, so it stays
      * actionable.

@@ -122,6 +122,15 @@ class Application extends Model
     }
 
     /**
+     * The candidate's review of the hiring process behind this
+     * application -- at most one.
+     */
+    public function review()
+    {
+        return $this->hasOne(CompanyReview::class);
+    }
+
+    /**
      * Private hiring-side commentary. Newest first: a reviewer opening an
      * application wants the most recent read on the candidate, not the
      * first one written weeks ago.
