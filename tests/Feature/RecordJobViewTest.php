@@ -104,6 +104,21 @@ test('a HEAD request is not counted', function () {
     expect(viewsOn($job))->toBe([]);
 });
 
+test('a page the browser fetched in advance is not counted, and leaves the session free to count the real visit', function (string $purpose) {
+    $job = JobPosting::factory()->create();
+
+    $this->withHeader('Sec-Purpose', $purpose)->get(route('jobs.show', $job))->assertOk();
+
+    expect(viewsOn($job))->toBe([]);
+
+    $this->withoutHeader('Sec-Purpose')->get(route('jobs.show', $job))->assertOk();
+
+    expect(viewsOn($job))->toBe([today()->toDateString() => 1]);
+})->with([
+    'prefetch' => 'prefetch',
+    'prerender' => 'prefetch;prerender',
+]);
+
 test('a request with no user agent is not counted', function () {
     $job = JobPosting::factory()->create();
 

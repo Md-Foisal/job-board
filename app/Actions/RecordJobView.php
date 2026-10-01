@@ -21,10 +21,10 @@ use function Illuminate\Support\defer;
  * Separately, the posting's view count for the day goes up by one -- for
  * anyone, guests included, because most people reading a job have not
  * signed in. The count is what the employer's analytics are built on, so
- * it leaves out what would inflate it: crawlers, the company's own people
- * looking at their posting, platform staff, a posting the public cannot
- * see, and the same browser session opening the same job again on the
- * same day.
+ * it leaves out what would inflate it: crawlers, pages a browser fetched in
+ * advance, the company's own people looking at their posting, platform
+ * staff, a posting the public cannot see, and the same browser session
+ * opening the same job again on the same day.
  *
  * The decision is made during the request, because it needs the session,
  * which is saved before the response goes out. The write itself waits
@@ -70,6 +70,10 @@ class RecordJobView
             return false;
         }
 
+        if ($this->isSpeculative($request)) {
+            return false;
+        }
+
         $user = $request->user();
 
         if ($user !== null && ($user->isStaff() || $user->worksAt($jobPosting->company))) {
@@ -85,6 +89,32 @@ class RecordJobView
         }
 
         return $jobPosting->isPubliclyVisible();
+    }
+
+    /**
+     * A browser can fetch a page before anyone asks for it: Chrome
+     * prefetches or prerenders on its own from the address bar when it
+     * expects the visit, and on bookmark hover. Such a request says so in
+     * Sec-Purpose ("prefetch", or "prefetch;prerender"), and the visitor
+     * may never open the page.
+     *
+     * The cost is that a prerendered page the visitor does open is not
+     * counted, because opening it sends no second request. Counting it
+     * would take a script reporting the moment the page is shown. A
+     * slight undercount is the safer error: an employer deciding whether
+     * a posting works should not be shown views that never happened.
+     */
+    private function isSpeculative(Request $request): bool
+    {
+        $purposes = explode(',', (string) $request->header('Sec-Purpose'));
+
+        foreach ($purposes as $purpose) {
+            if (strtolower(trim(explode(';', $purpose)[0])) === 'prefetch') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
