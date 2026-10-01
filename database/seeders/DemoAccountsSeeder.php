@@ -10,6 +10,7 @@ use App\Enums\ApplicationStage;
 use App\Enums\DocumentType;
 use App\Enums\JobAsDescribed;
 use App\Enums\ModerationStatus;
+use App\Enums\ReviewPart;
 use App\Enums\SkillImportance;
 use App\Enums\StaffRole;
 use App\Models\Application;
@@ -26,6 +27,8 @@ use App\Models\JobView;
 use App\Models\Membership;
 use App\Models\Skill;
 use App\Models\User;
+use App\Support\ReviewScreening;
+use Carbon\CarbonImmutable;
 use Database\Seeders\Concerns\SeedsCandidateSkills;
 use Illuminate\Database\Seeder;
 
@@ -289,8 +292,9 @@ class DemoAccountsSeeder extends Seeder
      * Enough published reviews for the company page to show its averages,
      * written by applicants the history above makes eligible (the hire,
      * one turned down, one interviewed), and one more from another
-     * interviewee waiting in the staff queue. The company has answered
-     * one of them, so its reviews page shows both states.
+     * interviewee waiting in the staff queue, already read by the AI. The
+     * company has answered one of them, so its reviews page shows both
+     * states.
      *
      * @param  array<int, Application>  $applications
      */
@@ -317,6 +321,11 @@ class DemoAccountsSeeder extends Seeder
                 'body' => $body,
                 'moderation_status' => $publishedDaysAgo === null ? ModerationStatus::Pending : ModerationStatus::Approved,
                 'published_at' => $publishedDaysAgo === null ? null : now()->subDays($publishedDaysAgo),
+                // What a run that finds nothing leaves, so the staff view
+                // shows the hint without an API key.
+                'screening' => $publishedDaysAgo === null
+                    ? (new ReviewScreening(ReviewPart::Review, [], CarbonImmutable::now()))->toArray()
+                    : null,
             ]);
 
             if ($index === 2) {

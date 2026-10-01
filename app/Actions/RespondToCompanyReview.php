@@ -3,6 +3,8 @@
 namespace App\Actions;
 
 use App\Enums\ModerationStatus;
+use App\Enums\ReviewPart;
+use App\Jobs\ScreenReviewWithAi;
 use App\Models\CompanyReview;
 use App\Models\User;
 use App\Notifications\ReviewResponseAwaitingReview;
@@ -18,6 +20,9 @@ use Illuminate\Support\Facades\Notification;
  * an answer is the easiest place for a writer to be named. Until staff
  * approve a revision, the review shows no answer at all rather than the
  * old one, so the page never shows words nobody checked.
+ *
+ * With the AI switched on, every saved answer is also read by it in the
+ * background, and staff find its hint next to the answer.
  *
  * Authorisation is the caller's: the policy's respond ability.
  */
@@ -36,6 +41,7 @@ class RespondToCompanyReview
                 'response_status' => ModerationStatus::Pending,
                 'responded_by_id' => $by->id,
                 'responded_at' => now(),
+                'response_screening' => null,
             ]);
 
             // updated_at stays the time the review's own text last
@@ -46,6 +52,8 @@ class RespondToCompanyReview
         });
 
         $review->refresh();
+
+        ScreenReviewWithAi::queueFor($review, ReviewPart::Response);
 
         // An answer already waiting is already in the queue.
         if (! $wasPending) {
@@ -68,6 +76,7 @@ class RespondToCompanyReview
             'response_status' => null,
             'responded_by_id' => null,
             'responded_at' => null,
+            'response_screening' => null,
         ]);
 
         CompanyReview::withoutTimestamps(fn () => $review->save());

@@ -24,6 +24,10 @@ return new class extends Migration
      * company's answer can expose a reviewer just as easily as the review
      * can. published_at is when the current text was approved, shown to
      * readers by month; an edit clears it.
+     *
+     * screening and response_screening hold the AI's hint to staff on the
+     * current text of each, when the AI is switched on; it never decides,
+     * and an edit clears it.
      */
     public function up(): void
     {
@@ -39,10 +43,12 @@ return new class extends Migration
             $table->text('body');
             $table->string('moderation_status')->default('pending');
             $table->timestamp('published_at')->nullable();
+            $table->json('screening')->nullable();
             $table->text('response_body')->nullable();
             $table->string('response_status')->nullable();
             $table->foreignId('responded_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('responded_at')->nullable();
+            $table->json('response_screening')->nullable();
             $table->timestamps();
 
             $table->unique(['company_id', 'candidate_profile_id']);

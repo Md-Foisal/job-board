@@ -27,7 +27,7 @@
         <p>
             Your candidate profile and your uploaded documents are private until
             you apply for a job. When you apply, the company you applied to can
-            see your profile and the CV you attached to that application -- nobody
+            see your profile and the CV you attached to that application &mdash; nobody
             else. Documents are served through an access check every time, so a
             file address alone is not enough to open it. Your salary and work-type
             preferences are never shown to employers, even when you apply, and
@@ -156,6 +156,18 @@
             answer with it.
         </p>
         <p>
+            Before our team reads a review or a company's answer, our AI may read
+            it first and point out anything that might break our review rules. For
+            this, Anthropic is sent the review's ratings, headline and text and the
+            company's name &mdash; and for an answer, the answer and the review it
+            replies to. Nothing about who wrote either is sent. The AI never
+            publishes or rejects anything: a person decides every time. Its note is
+            shown only to our staff and is removed when the text is edited; we also
+            keep a record that a reading happened, which counts against no one's
+            plan. Anthropic handles what we send the same way as a CV it reads,
+            above.
+        </p>
+        <p>
             A company's page can also say that it answers applications quickly.
             That is worked out from when the company first moved or decided each
             application, across all of them together &mdash; it says nothing about
@@ -169,9 +181,11 @@
             not instant: the account is switched off first, and signing in again
             within {{ \App\Models\User::DELETION_GRACE_DAYS }} days restores it. After that we erase your
             personal data for good &mdash; your name, email address, profile, photos,
-            uploaded and built files, cover letters and answers &mdash; and keep only an anonymous
+            uploaded and built files, cover letters and answers, and your reviews
+            of companies with any answers to them &mdash; and keep only an anonymous
             record that an application was made, so employers' and our own numbers
-            stay correct. Until then, applications you have already submitted keep
+            stay correct. Answers you wrote to reviews on a company's behalf stay
+            up, as the company's, with nothing linking them to you. Until then, applications you have already submitted keep
             the copy of the CV you attached at the time.
         </p>
     </x-prose-section>

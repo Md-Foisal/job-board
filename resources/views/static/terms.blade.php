@@ -28,11 +28,41 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Reviews of companies">
+        <p>
+            You can review a company's hiring process only if you applied to one of
+            its jobs here, and only from your own experience of it: one review per
+            company, which you can edit or delete at any time. Write about the
+            process, not the people in it. Leave out names, contact details and
+            anything else that identifies someone, anything the company keeps
+            confidential, and anything discriminatory, abusive or obscene. You
+            cannot review a company you work for.
+        </p>
+        <p>
+            Someone on our team reads every review, and every company's answer,
+            before it appears. We hold one back only for breaking these rules,
+            never because it is negative or because the company disagrees with it.
+            We do not decide whose account of events is right: we treat a review
+            as clearly false only when our own records contradict it, such as a
+            review saying a company never replied to an application it did reply
+            to. Our AI may point our team to things to check, but a person makes
+            every decision.
+        </p>
+        <p>
+            A company can publish one answer under each review. It cannot remove
+            or hide a review, and reporting one does not take it down. An answer
+            must not name or describe the person who wrote the review, threaten
+            them, or press them to change or remove it. A company must not offer
+            anything in return for a review of itself or of anyone else.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="Your content">
         <p>
             What you write and upload stays yours. You give us permission to store
-            and display it where the service requires -- a posting on its public
-            page, a CV to the company you sent it to.
+            and display it where the service requires &mdash; a posting on its public
+            page, a review on the company's page, a CV to the company you sent it
+            to.
         </p>
     </x-prose-section>
 

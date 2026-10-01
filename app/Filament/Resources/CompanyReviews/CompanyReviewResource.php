@@ -7,6 +7,7 @@ use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ResponseRejectionReason;
+use App\Enums\ReviewPart;
 use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
 use App\Models\CompanyReview;
@@ -37,6 +38,11 @@ use UnitEnum;
  * decide on each here, separately; they never write, edit or delete one. The application behind a review
  * is shown only in this panel, as the proof that the writer went through
  * the process -- never their name, which the decision does not need.
+ *
+ * With the AI switched on, each text also carries its hint: the grounds
+ * it thinks staff should look at. The hint never reorders the queue --
+ * nothing is public while it waits, so the oldest is read first -- and
+ * an empty hint is never shown as an all-clear in the list.
  */
 class CompanyReviewResource extends Resource
 {
@@ -147,6 +153,7 @@ class CompanyReviewResource extends Resource
                             ->badge()
                             ->color('warning')
                             ->placeholder('Nothing flagged'),
+                        static::aiHintEntry('ai_hint', ReviewPart::Review),
                         TextEntry::make('open_reports')
                             ->label('Open reports')
                             ->state(fn (CompanyReview $record) => $record->reports()
@@ -200,6 +207,7 @@ class CompanyReviewResource extends Resource
                             ->badge()
                             ->color('warning')
                             ->placeholder('Nothing flagged'),
+                        static::aiHintEntry('response_ai_hint', ReviewPart::Response),
                         TextEntry::make('response_last_decision')
                             ->label('Last decision')
                             ->state(fn (CompanyReview $record) => static::lastDecision($record, [
@@ -213,6 +221,39 @@ class CompanyReviewResource extends Resource
                             ->extraAttributes(['class' => 'whitespace-pre-line']),
                     ]),
             ]);
+    }
+
+    /**
+     * The AI's hint on one part, for the record view. "Raised nothing" is
+     * said with a reminder that it can miss things, and a text it has not
+     * read says so, so neither reads as a verdict.
+     */
+    public static function aiHintEntry(string $name, ReviewPart $part): TextEntry
+    {
+        return TextEntry::make($name)
+            ->label('AI hint')
+            ->hint('Where to look. It never decides.')
+            ->state(function (CompanyReview $record) use ($part) {
+                $screening = $record->screeningOf($part);
+
+                return match (true) {
+                    $screening === null => null,
+                    $screening->raisedNothing() => ['Raised nothing. It can miss things, so read it all the same.'],
+                    default => $screening->lines(),
+                };
+            })
+            ->bulleted()
+            ->placeholder('Not read by the AI')
+            ->columnSpanFull();
+    }
+
+    /**
+     * Which part the list is showing: the answers on the Responses tab,
+     * the reviews everywhere else.
+     */
+    public static function partShownOn(mixed $livewire): ReviewPart
+    {
+        return ($livewire->activeTab ?? null) === 'responses' ? ReviewPart::Response : ReviewPart::Review;
     }
 
     /**
@@ -243,7 +284,9 @@ class CompanyReviewResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('updated_at', 'asc')
+            // Oldest first: the review's own writing time, or on the
+            // Responses tab the time the answer was written.
+            ->defaultSort(fn ($livewire) => static::partShownOn($livewire) === ReviewPart::Response ? 'responded_at' : 'updated_at', 'asc')
             ->columns([
                 TextColumn::make('title')
                     ->searchable()
@@ -254,12 +297,20 @@ class CompanyReviewResource extends Resource
                     ->suffix(' / 5'),
                 TextColumn::make('flags')
                     ->label('Flags')
-                    ->state(fn (CompanyReview $record) => collect(ReviewTextFlags::in($record->title, $record->body))
+                    ->state(fn (CompanyReview $record, $livewire) => collect(static::partShownOn($livewire) === ReviewPart::Response
+                        ? ReviewTextFlags::in($record->response_body ?? '')
+                        : ReviewTextFlags::in($record->title, $record->body))
                         ->map(fn (string $flag) => ucfirst(ReviewTextFlags::label($flag)))
                         ->all())
                     ->badge()
                     ->color('warning')
                     ->placeholder('None'),
+                TextColumn::make('ai_hint')
+                    ->label('AI hint')
+                    ->state(fn (CompanyReview $record, $livewire) => $record->screeningOf(static::partShownOn($livewire))?->labels() ?? [])
+                    ->badge()
+                    ->color('warning')
+                    ->placeholder('—'),
                 TextColumn::make('response_status')
                     ->label('Response')
                     ->badge()
@@ -285,8 +336,14 @@ class CompanyReviewResource extends Resource
                     }),
                 TextColumn::make('updated_at')
                     ->label('Written')
+                    ->state(fn (CompanyReview $record, $livewire) => static::partShownOn($livewire) === ReviewPart::Response
+                        ? $record->responded_at
+                        : $record->updated_at)
                     ->since()
-                    ->sortable(),
+                    ->sortable(query: fn (Builder $query, string $direction, $livewire) => $query->orderBy(
+                        static::partShownOn($livewire) === ReviewPart::Response ? 'responded_at' : 'updated_at',
+                        $direction,
+                    )),
             ])
             ->emptyStateHeading(fn ($livewire) => match ($livewire->activeTab ?? null) {
                 ModerationStatus::Approved->value => 'Nothing approved yet',

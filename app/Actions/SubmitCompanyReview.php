@@ -3,6 +3,8 @@
 namespace App\Actions;
 
 use App\Enums\ModerationStatus;
+use App\Enums\ReviewPart;
+use App\Jobs\ScreenReviewWithAi;
 use App\Models\Application;
 use App\Models\CandidateProfile;
 use App\Models\CompanyReview;
@@ -22,6 +24,9 @@ use Illuminate\Support\Facades\Notification;
  * the company that qualifies them to write it. A candidate who applied
  * twice and updates their review after the second process is most likely
  * describing that one, so that is the proof staff should see.
+ *
+ * With the AI switched on, every saved text is also read by it in the
+ * background, and staff find its hint next to the review.
  *
  * Authorisation is the caller's: create on the application for a new
  * review, update on the review for a revision.
@@ -64,10 +69,14 @@ class SubmitCompanyReview
                 // The published text is gone, so is its date: readers will
                 // see the month the new text is approved.
                 'published_at' => null,
+                // The AI's hint was about the old text.
+                'screening' => null,
             ])->save();
 
             return [$review, $wasPending];
         });
+
+        ScreenReviewWithAi::queueFor($review, ReviewPart::Review);
 
         // A review already waiting is already in the queue; telling staff
         // again for every edit would only teach them to ignore the mail.

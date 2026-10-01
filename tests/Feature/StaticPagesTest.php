@@ -90,3 +90,24 @@ test('the privacy policy says what a company review shows, and who can tell who 
         ->assertSee('The company can publish one answer under your review.')
         ->assertSee('describes you, or threatens you.');
 });
+
+test('the privacy policy says what the AI reads of a review or an answer, and what erasing an account does to them', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee("Before our team reads a review or a company's answer, our AI may read", false)
+        ->assertSee("this, Anthropic is sent the review's ratings, headline and text and the", false)
+        ->assertSee('replies to. Nothing about who wrote either is sent. The AI never')
+        ->assertSee('publishes or rejects anything: a person decides every time.')
+        ->assertSee('of companies with any answers to them &mdash; and keep only an anonymous', false)
+        ->assertSee("stay correct. Answers you wrote to reviews on a company's behalf stay", false);
+});
+
+test('the terms of service set out the review rules, and what moderation never does', function () {
+    $this->get(route('terms'))
+        ->assertOk()
+        ->assertSee('Reviews of companies')
+        ->assertSee("You can review a company's hiring process only if you applied to one of", false)
+        ->assertSee('never because it is negative or because the company disagrees with it.')
+        ->assertSee('as clearly false only when our own records contradict it, such as a')
+        ->assertSee('or hide a review, and reporting one does not take it down. An answer');
+});

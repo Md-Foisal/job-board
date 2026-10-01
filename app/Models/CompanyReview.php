@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\JobAsDescribed;
 use App\Enums\MembershipStatus;
 use App\Enums\ModerationStatus;
+use App\Enums\ReviewPart;
+use App\Support\ReviewScreening;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,8 +15,8 @@ use Illuminate\Database\Eloquent\Model;
 #[Fillable([
     'company_id', 'application_id', 'candidate_profile_id',
     'overall_rating', 'communication_rating', 'job_as_described', 'title', 'body',
-    'moderation_status', 'published_at',
-    'response_body', 'response_status', 'responded_by_id', 'responded_at',
+    'moderation_status', 'published_at', 'screening',
+    'response_body', 'response_status', 'responded_by_id', 'responded_at', 'response_screening',
 ])]
 class CompanyReview extends Model
 {
@@ -36,9 +38,21 @@ class CompanyReview extends Model
             'job_as_described' => JobAsDescribed::class,
             'moderation_status' => ModerationStatus::class,
             'published_at' => 'datetime',
+            'screening' => 'array',
             'response_status' => ModerationStatus::class,
             'responded_at' => 'datetime',
+            'response_screening' => 'array',
         ];
+    }
+
+    /**
+     * The AI's hint to staff on the current text of the review or of the
+     * company's answer, or null when there is none: the AI is off, the run
+     * failed, or it has not finished yet.
+     */
+    public function screeningOf(ReviewPart $part): ?ReviewScreening
+    {
+        return ReviewScreening::fromStored($this->getAttribute($part->screeningColumn()), $part);
     }
 
     /**
