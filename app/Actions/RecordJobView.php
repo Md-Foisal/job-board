@@ -138,12 +138,20 @@ class RecordJobView
         return false;
     }
 
+    /**
+     * One statement, so two readers arriving at once can never both read
+     * the old count. The existing value is named with its table: in the
+     * conflict branch PostgreSQL also has the proposed row in scope, and
+     * an unqualified column would be ambiguous there.
+     */
     private function increment(JobPosting $jobPosting, string $date): void
     {
+        $table = (new JobPostingDailyStat)->getTable();
+
         JobPostingDailyStat::query()->upsert(
             [['job_posting_id' => $jobPosting->id, 'date' => $date, 'views' => 1]],
             ['job_posting_id', 'date'],
-            ['views' => DB::raw('views + 1')],
+            ['views' => DB::raw($table.'.views + 1')],
         );
     }
 }
