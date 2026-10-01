@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Application;
+use App\Models\Company;
 use App\Models\Invitation;
 use App\Models\JobPosting;
 use App\Models\User;
@@ -118,10 +119,9 @@ test('settings refuse a zone that does not exist', function () {
         ->assertHasErrors('timezone');
 });
 
-test('the invitation email gives the expiry in a named zone', function () {
-    $inviter = User::factory()->create(['timezone' => 'Asia/Dhaka']);
+test('the invitation email gives the expiry in the company\'s zone, named', function () {
     $invitation = Invitation::factory()->create([
-        'invited_by_id' => $inviter->id,
+        'company_id' => Company::factory()->create(['timezone' => 'Asia/Dhaka'])->id,
         'email' => 'nadia@example.com',
         'expires_at' => Carbon::parse('2026-10-09 17:41:00', 'UTC'),
     ]);
@@ -135,7 +135,7 @@ test('the invitation email gives the expiry in a named zone', function () {
 test('the invitation email uses the invitee\'s own zone when they have an account', function () {
     User::factory()->create(['email' => 'nadia@example.com', 'timezone' => 'Europe/London']);
     $invitation = Invitation::factory()->create([
-        'invited_by_id' => User::factory()->create(['timezone' => 'Asia/Dhaka'])->id,
+        'company_id' => Company::factory()->create(['timezone' => 'Asia/Dhaka'])->id,
         'email' => 'nadia@example.com',
         'expires_at' => Carbon::parse('2026-10-09 17:41:00', 'UTC'),
     ]);

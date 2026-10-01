@@ -28,6 +28,10 @@ use InvalidArgumentException;
  * arrived in the range, however long afterwards each one moved on. Views,
  * hires and the time to hire are counted on the day they happened.
  *
+ * Days are the company's own, in its time zone, so everyone on the team
+ * sees the same numbers wherever they are; daily views are stored that
+ * way when they are counted (RecordJobView).
+ *
  * Every figure comes from our own tables; nothing here is sent anywhere.
  */
 class JobPerformance
@@ -71,7 +75,7 @@ class JobPerformance
             throw new InvalidArgumentException("Unsupported range of {$days} days.");
         }
 
-        $key = 'job-performance:'.$company->id.':'.($jobPosting->id ?? 'all').':'.$days;
+        $key = 'job-performance:'.$company->id.':'.($jobPosting->id ?? 'all').':'.$days.':'.$company->timezone;
 
         return JobPerformanceReport::fromArray(
             Cache::remember($key, self::CACHE_SECONDS, fn () => $this->build($company, $jobPosting, $days)->toArray()),
@@ -109,7 +113,12 @@ class JobPerformance
 
     private function build(Company $company, ?JobPosting $jobPosting, int $days): JobPerformanceReport
     {
-        $from = CarbonImmutable::today()->subDays($days - 1);
+        $zone = $company->timezone;
+
+        // $from is the first day's midnight in the company's zone; queries
+        // take it as the UTC moment it is, since that is what is stored.
+        $from = CarbonImmutable::today($zone)->subDays($days - 1);
+        $start = $from->utc();
         $now = CarbonImmutable::now();
 
         $jobIds = $jobPosting !== null
@@ -118,7 +127,7 @@ class JobPerformance
 
         $inScope = fn () => Application::query()->whereIn('job_posting_id', $jobIds);
 
-        $cohortQuery = $inScope()->whereBetween('created_at', [$from, $now]);
+        $cohortQuery = $inScope()->whereBetween('created_at', [$start, $now]);
 
         $cohort = $cohortQuery->clone()
             ->with([
@@ -143,7 +152,7 @@ class JobPerformance
             ->filter(fn (Application $application) => $firstResponses->has($application->id))
             ->map(fn (Application $application) => round($application->created_at->diffInMinutes($firstResponses[$application->id]) / 60, 1));
 
-        $hireDays = $this->hireDays($jobIds, $from, $now);
+        $hireDays = $this->hireDays($jobIds, $start, $now);
 
         $waiting = $inScope()
             ->where('outcome_status', ApplicationOutcomeStatus::Active)
@@ -162,7 +171,7 @@ class JobPerformance
             viewsCountedSince: $this->viewsCountedSince($jobIds),
             dailyViews: $dailyViews,
             applications: $cohort->count(),
-            dailyApplications: $this->dailyApplications($cohort, $from, $days),
+            dailyApplications: $this->dailyApplications($cohort, $from, $days, $zone),
             applyRate: $views >= self::MIN_VIEWS_FOR_RATE ? round($cohort->count() / $views * 100, 1) : null,
             funnel: $this->funnel($cohort, $events),
             rejectedUnseen: $this->rejectedUnseen($cohort, $events),
@@ -173,9 +182,9 @@ class JobPerformance
             oldestWaitingSince: $oldestWaiting !== null ? CarbonImmutable::parse($oldestWaiting) : null,
             hires: $hireDays->count(),
             timeToHireMedianDays: $this->median($hireDays),
-            timeToFillDays: $this->timeToFill($jobIds),
+            timeToFillDays: $this->timeToFill($jobIds, $zone),
             saves: DB::table('saved_jobs')->whereIn('job_posting_id', $jobIds)->count(),
-            job: $jobPosting !== null ? $this->jobState($jobPosting, $now) : null,
+            job: $jobPosting !== null ? $this->jobState($jobPosting, $now, $zone) : null,
         );
     }
 
@@ -205,9 +214,9 @@ class JobPerformance
     /**
      * @return array<string, int>
      */
-    private function dailyApplications(Collection $cohort, CarbonImmutable $from, int $days): array
+    private function dailyApplications(Collection $cohort, CarbonImmutable $from, int $days, string $zone): array
     {
-        $counted = $cohort->countBy(fn (Application $application) => $application->created_at->toDateString());
+        $counted = $cohort->countBy(fn (Application $application) => $application->created_at->setTimezone($zone)->toDateString());
 
         return $this->everyDay($from, $days, fn (string $date) => $counted[$date] ?? 0);
     }
@@ -310,13 +319,13 @@ class JobPerformance
      *
      * @return Collection<int, float>
      */
-    private function hireDays(Collection $jobIds, CarbonImmutable $from, CarbonImmutable $now): Collection
+    private function hireDays(Collection $jobIds, CarbonImmutable $start, CarbonImmutable $now): Collection
     {
         return ApplicationEvent::query()
             ->join('applications', 'applications.id', '=', 'application_events.application_id')
             ->whereIn('applications.job_posting_id', $jobIds)
             ->standingDecisions(ApplicationOutcomeStatus::Hired)
-            ->whereBetween('application_events.created_at', [$from, $now])
+            ->whereBetween('application_events.created_at', [$start, $now])
             ->get(['applications.created_at as applied_at', 'application_events.created_at as hired_at'])
             ->map(fn ($hire) => round(CarbonImmutable::parse($hire->applied_at)->diffInHours(CarbonImmutable::parse($hire->hired_at)) / 24, 1));
     }
@@ -327,7 +336,7 @@ class JobPerformance
      *
      * @return array<int, int>
      */
-    private function timeToFill(Collection $jobIds): array
+    private function timeToFill(Collection $jobIds, string $zone): array
     {
         $firstHires = ApplicationEvent::query()
             ->join('applications', 'applications.id', '=', 'application_events.application_id')
@@ -342,7 +351,8 @@ class JobPerformance
             ->whereNotNull('published_at')
             ->get(['id', 'published_at'])
             ->mapWithKeys(fn (JobPosting $job) => [
-                $job->id => (int) $job->published_at->startOfDay()->diffInDays(CarbonImmutable::parse($firstHires[$job->id])->startOfDay()),
+                $job->id => (int) $job->published_at->setTimezone($zone)->startOfDay()
+                    ->diffInDays(CarbonImmutable::parse($firstHires[$job->id])->setTimezone($zone)->startOfDay()),
             ])
             ->all();
     }
@@ -350,7 +360,7 @@ class JobPerformance
     /**
      * @return array{status: string, published_at: ?CarbonImmutable, live_days: ?int, expires_in_days: ?int}
      */
-    private function jobState(JobPosting $jobPosting, CarbonImmutable $now): array
+    private function jobState(JobPosting $jobPosting, CarbonImmutable $now, string $zone): array
     {
         $status = match (true) {
             $jobPosting->availability_status === AvailabilityStatus::Draft => 'draft',
@@ -367,7 +377,7 @@ class JobPerformance
             'status' => $status,
             'published_at' => $jobPosting->published_at,
             'live_days' => $jobPosting->published_at !== null
-                ? (int) $jobPosting->published_at->startOfDay()->diffInDays($liveUntil->startOfDay())
+                ? (int) $jobPosting->published_at->setTimezone($zone)->startOfDay()->diffInDays($liveUntil->setTimezone($zone)->startOfDay())
                 : null,
             'expires_in_days' => in_array($status, ['live', 'in_review'], true)
                 ? (int) ceil($now->diffInHours($jobPosting->expires_at) / 24)

@@ -14,9 +14,10 @@ return new class extends Migration
      * know who any one viewer was. So there is no user id, IP address or
      * session id here, and nothing to erase when an account is.
      *
-     * The date is the calendar day in the application's timezone. The
-     * unique pair is what lets every view after the first in a day become
-     * an increment of the same row instead of a new one.
+     * The date is the calendar day in the posting company's own time
+     * zone, the day its analytics are read in. The unique pair is what
+     * lets every view after the first in a day become an increment of the
+     * same row instead of a new one.
      */
     public function up(): void
     {

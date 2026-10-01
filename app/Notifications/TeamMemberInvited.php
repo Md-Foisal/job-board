@@ -25,11 +25,12 @@ class TeamMemberInvited extends Notification
         $company = $this->invitation->company->name;
 
         // The invitee may have no account, and so no zone of their own;
-        // the inviter's stands in, and is named, so the time is never
-        // read in the wrong zone.
-        $zone = LocalTime::zoneFor(
-            User::firstWhere('email', $this->invitation->email) ?? $this->invitation->invitedBy,
-        );
+        // the company's stands in, and is named, so the time is never read
+        // in the wrong zone.
+        $invitee = User::firstWhere('email', $this->invitation->email);
+        $zone = LocalTime::isValid($invitee?->timezone)
+            ? $invitee->timezone
+            : $this->invitation->company->timezone;
 
         return (new MailMessage)
             ->subject(__('You have been invited to join :company', ['company' => $company]))

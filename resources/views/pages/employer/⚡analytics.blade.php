@@ -203,6 +203,13 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
                 </flux:text>
             @endif
 
+            <flux:text size="sm">
+                {{ __('Days run from midnight to midnight in your company\'s time zone, :zone.', ['zone' => \App\Support\LocalTime::label($company->timezone)]) }}
+                @can('update', $company)
+                    <flux:link :href="route('employer.company.edit', $company)">{{ __('Change it') }}</flux:link>
+                @endcan
+            </flux:text>
+
             <div class="grid gap-4 lg:grid-cols-2" wire:key="trends-{{ $job }}-{{ $range }}">
                 <x-trend-chart :title="__('Views per day')" :series="$report->dailyViews" :value-label="__('Views')" />
                 <x-trend-chart :title="__('Applications per day')" :series="$report->dailyApplications" :value-label="__('Applications')" type="bar" />

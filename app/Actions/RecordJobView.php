@@ -24,7 +24,8 @@ use function Illuminate\Support\defer;
  * it leaves out what would inflate it: crawlers, pages a browser fetched in
  * advance, the company's own people looking at their posting, platform
  * staff, a posting the public cannot see, and the same browser session
- * opening the same job again on the same day.
+ * opening the same job again on the same day. The day is the company's,
+ * in its own time zone, as everything on its analytics page is.
  *
  * The decision is made during the request, because it needs the session,
  * which is saved before the response goes out. The write itself waits
@@ -35,8 +36,9 @@ use function Illuminate\Support\defer;
 class RecordJobView
 {
     /**
-     * Postings this session has already been counted for, and the day
-     * that list belongs to; a new day starts a new list.
+     * Postings this session has already been counted for, each with the
+     * day it was counted on. Per posting rather than one day for the whole
+     * list, because two companies' days need not be the same day.
      */
     private const SESSION_KEY = 'job_views_counted';
 
@@ -53,7 +55,7 @@ class RecordJobView
             );
         }
 
-        $date = today()->toDateString();
+        $date = today($jobPosting->company->timezone)->toDateString();
 
         if (! $this->counts($jobPosting, $request) || $this->alreadyCounted($jobPosting, $request, $date)) {
             return;
@@ -123,17 +125,18 @@ class RecordJobView
      */
     private function alreadyCounted(JobPosting $jobPosting, Request $request, string $date): bool
     {
-        $counted = $request->session()->get(self::SESSION_KEY);
+        // Every zone's today lies within a day of UTC's, so anything older
+        // than the day before yesterday can no longer match and is dropped.
+        $stale = today()->subDays(2)->toDateString();
 
-        $jobIds = ($counted['date'] ?? null) === $date ? $counted['jobs'] : [];
+        $counted = collect($request->session()->get(self::SESSION_KEY, []))
+            ->filter(fn ($day, $jobId) => is_int($jobId) && is_string($day) && $day >= $stale);
 
-        if (in_array($jobPosting->id, $jobIds, true)) {
+        if ($counted->get($jobPosting->id) === $date) {
             return true;
         }
 
-        $jobIds[] = $jobPosting->id;
-
-        $request->session()->put(self::SESSION_KEY, ['date' => $date, 'jobs' => $jobIds]);
+        $request->session()->put(self::SESSION_KEY, $counted->put($jobPosting->id, $date)->all());
 
         return false;
     }

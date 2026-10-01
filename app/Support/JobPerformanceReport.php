@@ -83,6 +83,9 @@ final readonly class JobPerformanceReport
      */
     public function viewsCoverRange(): bool
     {
-        return $this->viewsCountedSince !== null && $this->viewsCountedSince->lte($this->from);
+        // Both are days, compared as days: $from carries the company's
+        // zone, the first counted day does not.
+        return $this->viewsCountedSince !== null
+            && $this->viewsCountedSince->toDateString() <= $this->from->toDateString();
     }
 }

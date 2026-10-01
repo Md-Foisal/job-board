@@ -10,6 +10,8 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Skill;
+use App\Support\ClosingDate;
+use App\Support\LocalTime;
 use App\Support\PublicCache;
 use App\Support\SubmissionLimits;
 use Flux\Flux;
@@ -69,7 +71,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
 
         if ($jobPosting === null) {
             $this->authorize('create', [JobPosting::class, $company]);
-            $this->expiresAt = now()->addMonth()->toDateString();
+            $this->expiresAt = ClosingDate::monthAfter($company)->setTimezone($company->timezone)->toDateString();
 
             return;
         }
@@ -89,7 +91,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
         $this->salaryCurrency = $jobPosting->salary_currency;
         $this->salaryPeriod = $jobPosting->salary_period?->value;
         $this->salaryNegotiable = $jobPosting->salary_negotiable;
-        $this->expiresAt = $jobPosting->expires_at->toDateString();
+        $this->expiresAt = ClosingDate::day($jobPosting)->toDateString();
         $this->categories = $jobPosting->categories->pluck('id')->all();
         $this->skills = $jobPosting->skills
             ->mapWithKeys(fn ($skill) => [$skill->id => $skill->pivot->importance->value])
@@ -207,7 +209,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             'salaryCurrency' => ['nullable', 'string', 'size:3'],
             'salaryPeriod' => ['nullable', Rule::enum(SalaryPeriod::class)],
             'expiresAt' => $publish
-                ? ['required', 'date', 'after:today']
+                ? ['required', 'date', 'after:'.ClosingDate::today($this->company)]
                 : ['nullable', 'date'],
             'categories' => ['array'],
             'categories.*' => ['integer', 'exists:categories,id'],
@@ -267,7 +269,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                 // A draft nobody can see still needs a closing date in the
                 // column, so an unfinished one gets the same month-out
                 // default the form starts with. Publishing re-checks it.
-                'expires_at' => $validated['expiresAt'] ?: now()->addMonth()->toDateString(),
+                'expires_at' => filled($validated['expiresAt'])
+                    ? ClosingDate::endOf($validated['expiresAt'], $this->company)
+                    : ClosingDate::monthAfter($this->company),
                 'categories' => $validated['categories'] ?? [],
                 'skills' => $validated['skills'] ?? [],
                 'screening_questions' => $validated['screeningQuestions'] ?? [],
@@ -469,7 +473,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
 
         <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:heading size="lg">{{ __('Closing date') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('The posting closes itself on this date, so nobody applies to something already filled.') }}</flux:text>
+            <flux:text class="mt-1">{{ __('Applications are taken until the end of this day in your company\'s time zone, :zone, and then the posting closes itself, so nobody applies to something already filled.', ['zone' => LocalTime::label($company->timezone)]) }}</flux:text>
 
             <div class="mt-6">
                 <flux:input type="date" wire:model="expiresAt" :label="__('Accept applications until')" required />
