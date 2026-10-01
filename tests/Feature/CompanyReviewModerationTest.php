@@ -231,3 +231,18 @@ test('staff who once applied never see their own review in the queue', function 
     expect(CompanyReviewResource::getEloquentQuery()->pluck('id')->all())->toBe([])
         ->and(CompanyReviewResource::canView($this->review))->toBeFalse();
 });
+
+test('the approve prompt says only the writer is told, and counts the open reports', function () {
+    $this->actingAs($this->staff);
+
+    Livewire::test(ManageCompanyReviews::class)
+        ->mountAction(TestAction::make('approve')->table($this->review))
+        ->assertMountedActionModalSee("It goes on Acme Hiring's page straight away, and the writer is told.")
+        ->assertMountedActionModalDontSee('the company are told');
+
+    $this->review->reports()->create(['reporter_id' => User::factory()->create()->id, 'reason' => 'Unfair']);
+
+    Livewire::test(ManageCompanyReviews::class)
+        ->mountAction(TestAction::make('approve')->table($this->review))
+        ->assertMountedActionModalSee('Its open report will be closed as not upheld.');
+});

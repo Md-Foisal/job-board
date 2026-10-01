@@ -1,12 +1,15 @@
 <?php
 
+use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\MembershipRole;
+use App\Enums\SkillImportance;
 use App\Models\Application;
 use App\Models\ApplicationEvent;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
+use App\Models\Skill;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -71,6 +74,32 @@ test('small numbers say there is not enough data rather than showing noise', fun
         ->assertSee('Not enough data yet: it needs 3 answered applications.')
         ->assertSee('No hires in this period.')
         ->assertSee('No applications in this period.');
+});
+
+test('applications left out of the match spread, and hires of earlier applicants, are explained', function () {
+    $laravel = Skill::create(['name' => 'Laravel', 'slug' => 'laravel']);
+    $this->job->skills()->attach([$laravel->id => ['importance' => SkillImportance::Required]]);
+
+    Application::factory()->for($this->job)->create()
+        ->candidateProfile->skills()->attach([$laravel->id => ['proficiency' => 'advanced']]);
+    Application::factory()->count(2)->for($this->job)->create();
+
+    $earlier = Application::factory()->for($this->job)->create([
+        'created_at' => now()->subDays(45),
+        'outcome_status' => ApplicationOutcomeStatus::Hired,
+    ]);
+    ApplicationEvent::forceCreate([
+        'application_id' => $earlier->id,
+        'from_outcome_status' => ApplicationOutcomeStatus::Active->value,
+        'to_outcome_status' => ApplicationOutcomeStatus::Hired->value,
+        'created_at' => now()->subDays(3),
+    ]);
+
+    analyticsPage($this, $this->job->slug)
+        ->assertSee('2 applications have no score, because the posting or the applicant lists no skills.')
+        ->assertSeeInOrder(['Hired', '0'])
+        ->assertSee('One hire in this period; a typical time needs 3.')
+        ->assertSee('Counted on the day of the hire, so it can include someone who applied before this period.');
 });
 
 test('a range that is not offered falls back to thirty days', function () {

@@ -133,10 +133,21 @@ new class extends Component
             'jobAsDescribed' => ['required', Rule::enum(JobAsDescribed::class)],
             'title' => ['required', 'string', 'max:100'],
             'body' => ['required', 'string', 'min:50', 'max:2000'],
-        ], attributes: [
+        ], [
+            'overallRating.required' => __('Choose how the process went, from 1 to 5.'),
+            'communicationRating.required' => __('Choose how well they kept you informed, from 1 to 5.'),
+            'jobAsDescribed.required' => __('Choose whether the job was what the posting said.'),
+            'title.required' => __('Give your review a headline.'),
+            'title.max' => __('Keep the headline to 100 characters.'),
+            'body.required' => __('Say what happened during the process.'),
+            'body.min' => __('Write at least 50 characters about what happened.'),
+            'body.max' => __('Keep it to 2,000 characters.'),
+        ], [
             'overallRating' => __('overall rating'),
             'communicationRating' => __('communication rating'),
             'jobAsDescribed' => __('answer'),
+            'title' => __('headline'),
+            'body' => __('what happened'),
         ]);
 
         $submit($this->application, [
@@ -268,7 +279,7 @@ new class extends Component
                 @if ($flags !== [] && $review->moderation_status !== ModerationStatus::Approved)
                     <flux:callout variant="warning" icon="exclamation-triangle" class="mt-4">
                         <flux:callout.text>
-                            {{ __('Your review seems to contain :things. Reviews that could identify someone or point elsewhere are not published — editing it out now saves a round trip.', [
+                            {{ __('Your review seems to contain :things. Reviews that could identify someone or point elsewhere are not published, so take it out now rather than wait to be asked.', [
                                 'things' => collect($flags)->map(fn ($flag) => ReviewTextFlags::label($flag))->join(', ', __(' and ')),
                             ]) }}
                         </flux:callout.text>
@@ -295,7 +306,7 @@ new class extends Component
                     <div class="space-y-6">
                         <div>
                             <flux:heading size="lg">{{ __('Delete your review?') }}</flux:heading>
-                            <flux:subheading>{{ __('It disappears from the company page, along with any answer the company wrote. This cannot be undone.') }}</flux:subheading>
+                            <flux:subheading>{{ __('It is deleted for good, along with any answer the company wrote, and comes off the company page if it is there. This cannot be undone.') }}</flux:subheading>
                         </div>
 
                         <div class="flex gap-2">

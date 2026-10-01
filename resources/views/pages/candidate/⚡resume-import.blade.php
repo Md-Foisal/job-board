@@ -581,6 +581,14 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
         </div>
     @elseif ($aiStatus === 'done')
         <flux:text size="sm" class="mt-6">{{ __('The AI read your CV. Its suggestions are included below; check each one before adding it.') }}</flux:text>
+    @elseif ($hasSomething)
+        <flux:text size="sm" class="mt-6">
+            {{ __('We pick out skills and profile links. Add your work history and education yourself, on the') }}
+            <flux:link :href="route('candidate.experience.index')" wire:navigate>{{ __('Experience') }}</flux:link>
+            {{ __('and') }}
+            <flux:link :href="route('candidate.education.index')" wire:navigate>{{ __('Education') }}</flux:link>
+            {{ __('pages.') }}
+        </flux:text>
     @endif
 
     @if (! $hasSomething)

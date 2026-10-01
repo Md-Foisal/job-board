@@ -34,7 +34,7 @@
         <x-theme-toggle />
 
         @guest
-            <a href="{{ route('register') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">For Employers</a>
+            <a href="{{ route('register') }}" class="hidden text-sm text-zinc-600 hover:text-brand-700 sm:inline dark:text-zinc-400 dark:hover:text-brand-400">For Employers</a>
             <a href="{{ route('login') }}" class="text-sm text-zinc-600 hover:text-brand-700 dark:text-zinc-400 dark:hover:text-brand-400">Log in</a>
             <a href="{{ route('register') }}" class="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700">
                 Sign up

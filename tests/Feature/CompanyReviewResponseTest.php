@@ -350,3 +350,19 @@ test('answers and staff decisions leave the time the review was written alone', 
 
     expect($this->review->fresh()->updated_at->equalTo($written))->toBeTrue();
 });
+
+test('the answers tab offers only the answer\'s decisions, the review\'s own tab only the review\'s', function () {
+    withResponse($this->review, ModerationStatus::Pending);
+    $this->actingAs($this->staff);
+
+    Livewire::test(ManageCompanyReviews::class)
+        ->set('activeTab', 'responses')
+        ->assertActionVisible(TestAction::make('approveResponse')->table($this->review))
+        ->assertActionVisible(TestAction::make('rejectResponse')->table($this->review))
+        ->assertActionHidden(TestAction::make('reject')->table($this->review))
+        ->assertActionHidden(TestAction::make('approve')->table($this->review));
+
+    Livewire::test(ManageCompanyReviews::class)
+        ->set('activeTab', ModerationStatus::Approved->value)
+        ->assertActionVisible(TestAction::make('reject')->table($this->review));
+});

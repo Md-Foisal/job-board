@@ -142,6 +142,22 @@ test('the form holds a review to the length and ratings it promises', function (
     'headline of spaces only' => [['title' => '     '], 'title'],
 ]);
 
+test('an empty form says what each answer needs, in the words the form uses', function () {
+    reviewForm($this)->call('open')
+        ->call('save')
+        ->assertSee('Choose how the process went, from 1 to 5.')
+        ->assertSee('Choose how well they kept you informed, from 1 to 5.')
+        ->assertSee('Choose whether the job was what the posting said.')
+        ->assertSee('Give your review a headline.')
+        ->assertSee('Say what happened during the process.')
+        ->assertDontSee('The title field')
+        ->assertDontSee('The body field');
+
+    fillReview(reviewForm($this)->call('open'), validReview(['body' => str_repeat('a', 49)]))
+        ->call('save')
+        ->assertSee('Write at least 50 characters about what happened.');
+});
+
 test('spaces around the text are not stored', function () {
     fillReview(reviewForm($this)->call('open'), validReview([
         'title' => '   Slow   but fair  ',

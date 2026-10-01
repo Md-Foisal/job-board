@@ -28,6 +28,10 @@
         </a>
     </main>
 
+    {{-- Livewire only injects its assets into 200 responses, so an error
+         page has to load them itself, or Alpine never starts and the
+         theme switch does nothing. --}}
+    @livewireScripts
     @fluxScripts
 </body>
 

@@ -112,3 +112,10 @@ test('the terms of service set out the review rules, and what moderation never d
         ->assertSee('as clearly false only when our own records contradict it, such as a')
         ->assertSee('or hide a review, and reporting one does not take it down. An answer');
 });
+
+test('an error page loads Livewire itself, since it is never injected into one', function () {
+    $this->get('/no-such-page')
+        ->assertNotFound()
+        ->assertSee("This page doesn't exist")
+        ->assertSee('livewire.js', false);
+});

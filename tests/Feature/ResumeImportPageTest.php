@@ -56,7 +56,8 @@ test('the page shows what the CV suggests, all ticked when the profile is empty'
         ->assertDontSee('Everything this CV suggests is already on your profile.')
         ->assertSee('Laravel')
         ->assertSee('https://www.linkedin.com/in/karim-rahman')
-        ->assertDontSee('Docker');
+        ->assertDontSee('Docker')
+        ->assertSee('We pick out skills and profile links. Add your work history and education yourself');
 
     importPage($candidate, $document)
         ->assertSet('chosenSkills', Skill::whereIn('name', ['Laravel', 'PHP'])->orderBy('name')->pluck('id')->all())

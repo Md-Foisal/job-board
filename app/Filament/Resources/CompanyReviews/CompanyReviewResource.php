@@ -291,6 +291,7 @@ class CompanyReviewResource extends Resource
                 TextColumn::make('title')
                     ->searchable()
                     ->limit(60)
+                    ->wrap()
                     ->description(fn (CompanyReview $record) => $record->company->name),
                 TextColumn::make('overall_rating')
                     ->label('Overall')
@@ -367,7 +368,9 @@ class CompanyReviewResource extends Resource
 
     /**
      * Also offered on a rejected review, so a wrong rejection can be
-     * undone from the Rejected tab.
+     * undone from the Rejected tab. Not on the Responses tab, where the
+     * row is about the answer: the review's Reject next to the answer's
+     * made two Reject buttons on one row.
      */
     public static function approveAction(): Action
     {
@@ -376,12 +379,15 @@ class CompanyReviewResource extends Resource
             ->icon(Heroicon::OutlinedCheck)
             ->color('success')
             ->authorize('moderate')
-            ->visible(fn (CompanyReview $record) => $record->moderation_status !== ModerationStatus::Approved)
+            ->visible(fn (CompanyReview $record, $livewire) => $record->moderation_status !== ModerationStatus::Approved
+                && static::partShownOn($livewire) === ReviewPart::Review)
             ->requiresConfirmation()
             ->modalHeading('Publish this review?')
             ->modalDescription(fn (CompanyReview $record) => $record->open_reports_count > 0
-                ? "It goes on {$record->company->name}'s page straight away, and its {$record->open_reports_count} open report(s) will be closed as not upheld. Read them first."
-                : "It goes on {$record->company->name}'s page straight away. The writer and the company are told.")
+                ? "It goes on {$record->company->name}'s page straight away, and the writer is told. "
+                    .((int) $record->open_reports_count === 1 ? 'Its open report' : "Its {$record->open_reports_count} open reports")
+                    .' will be closed as not upheld. Read them first.'
+                : "It goes on {$record->company->name}'s page straight away, and the writer is told.")
             ->action(function (CompanyReview $record) {
                 app(ModerateCompanyReview::class)->approve($record, auth()->user());
 
@@ -400,7 +406,8 @@ class CompanyReviewResource extends Resource
             ->icon(Heroicon::OutlinedXMark)
             ->color('danger')
             ->authorize('moderate')
-            ->visible(fn (CompanyReview $record) => $record->moderation_status !== ModerationStatus::Rejected)
+            ->visible(fn (CompanyReview $record, $livewire) => $record->moderation_status !== ModerationStatus::Rejected
+                && static::partShownOn($livewire) === ReviewPart::Review)
             ->modalHeading('Keep this review off the company page?')
             ->modalDescription('Only for one of the reasons below, whatever the review says about the company — never because it is negative. The writer is told why and can edit it.')
             ->schema(fn () => static::rejectionFields())

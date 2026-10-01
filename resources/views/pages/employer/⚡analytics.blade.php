@@ -259,6 +259,11 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
                                 </div>
                             @endforeach
                         </dl>
+                        @if ($report->applications > $scored)
+                            <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
+                                {{ trans_choice('{1} 1 application has no score, because the posting or the applicant lists no skills.|[2,*] :count applications have no score, because the posting or the applicant lists no skills.', $report->applications - $scored, ['count' => $report->applications - $scored]) }}
+                            </p>
+                        @endif
                     @endif
                 </section>
             </div>
@@ -295,6 +300,9 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
                                 <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ __('From application to hire, over :count hires in this period', ['count' => $report->hires]) }}</span>
                             @else
                                 <span class="text-zinc-600 dark:text-zinc-400">{{ trans_choice('{0} No hires in this period.|{1} One hire in this period; a typical time needs :min.|[2,*] :count hires in this period; a typical time needs :min.', $report->hires, ['count' => $report->hires, 'min' => \App\Services\JobPerformance::MIN_VALUES_FOR_MEDIAN]) }}</span>
+                            @endif
+                            @if ($report->hires > 0)
+                                <span class="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{{ __('Counted on the day of the hire, so it can include someone who applied before this period.') }}</span>
                             @endif
                         </dd>
                     </div>

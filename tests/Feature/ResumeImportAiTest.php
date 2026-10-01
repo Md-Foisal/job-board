@@ -95,7 +95,8 @@ test('where the plan allows it, the AI reading is offered with who will read the
     aiPage($candidate, cvFor($candidate))
         ->assertSee('Read with AI')
         ->assertSee("Your CV is sent to Anthropic to be read. Anthropic doesn't train on it and, by default, deletes it within 30 days.")
-        ->assertDontSee('does not keep it');
+        ->assertDontSee('does not keep it')
+        ->assertDontSee('Add your work history and education yourself');
 });
 
 test('a scanned PDF can still be read by the AI, but a Word file with no text cannot', function () {
