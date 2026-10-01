@@ -54,6 +54,11 @@ class CompanyReview extends Model
         return $this->belongsTo(Application::class);
     }
 
+    public function candidateProfile()
+    {
+        return $this->belongsTo(CandidateProfile::class);
+    }
+
     public function respondedBy()
     {
         return $this->belongsTo(User::class, 'responded_by_id');

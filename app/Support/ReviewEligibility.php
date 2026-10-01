@@ -59,6 +59,22 @@ final readonly class ReviewEligibility
 
     private function __construct(public string $reason) {}
 
+    /**
+     * How a reason reads to staff checking a review's proof.
+     */
+    public static function describe(string $reason): string
+    {
+        return match ($reason) {
+            self::DECIDED => 'Told of a hire or rejection',
+            self::INTERVIEWED => 'Reached the interview stage',
+            self::UNANSWERED => 'No reply in the first '.self::UNANSWERED_DAYS.' days',
+            self::ALREADY_REVIEWED => 'Already reviewed this company',
+            self::INSIDER => 'Is or was on the company team',
+            self::WITHDRAWN => 'Withdrew before anything happened',
+            self::IN_PROGRESS => 'Nothing yet to review',
+        };
+    }
+
     public static function of(Application $application): self
     {
         $hasReviewed = CompanyReview::query()
@@ -74,7 +90,7 @@ final readonly class ReviewEligibility
             return new self(self::INSIDER);
         }
 
-        return new self(self::experience($application));
+        return new self(self::basisOf($application));
     }
 
     /**
@@ -91,7 +107,7 @@ final readonly class ReviewEligibility
             ->latest('id')
             ->get()
             ->first(fn (Application $application) => in_array(
-                self::experience($application),
+                self::basisOf($application),
                 [self::DECIDED, self::INTERVIEWED, self::UNANSWERED],
                 true,
             ));
@@ -104,9 +120,10 @@ final readonly class ReviewEligibility
 
     /**
      * What the application itself gives the candidate to describe, apart
-     * from who they are and what they have already written.
+     * from who they are and what they have already written. Staff read it
+     * as the proof behind a review.
      */
-    private static function experience(Application $application): string
+    public static function basisOf(Application $application): string
     {
         // A decision still inside its undo window has not reached the
         // candidate yet, so it cannot be what they are reviewing.

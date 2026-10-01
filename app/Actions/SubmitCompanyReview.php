@@ -61,6 +61,9 @@ class SubmitCompanyReview
                 'title' => trim($data['title']),
                 'body' => trim($data['body']),
                 'moderation_status' => ModerationStatus::Pending,
+                // The published text is gone, so is its date: readers will
+                // see the month the new text is approved.
+                'published_at' => null,
             ])->save();
 
             return [$review, $wasPending];

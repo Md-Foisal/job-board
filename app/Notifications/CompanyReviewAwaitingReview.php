@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -31,6 +32,6 @@ class CompanyReviewAwaitingReview extends Notification
             ->line(__('An applicant wrote a review of :company\'s hiring process. It stays hidden until someone on the team approves it.', [
                 'company' => $this->review->company->name,
             ]))
-            ->action(__('Open the admin panel'), route('filament.admin.pages.dashboard'));
+            ->action(__('Open the review queue'), CompanyReviewResource::getUrl('index'));
     }
 }

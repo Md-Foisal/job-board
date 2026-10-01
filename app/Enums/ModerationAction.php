@@ -17,6 +17,11 @@ enum ModerationAction: string
     case ApproveJobPosting = 'approve_job_posting';
     case RejectJobPosting = 'reject_job_posting';
 
+    case ApproveCompanyReview = 'approve_company_review';
+    case RejectCompanyReview = 'reject_company_review';
+    case ApproveReviewResponse = 'approve_review_response';
+    case RejectReviewResponse = 'reject_review_response';
+
     case DismissReports = 'dismiss_reports';
 
     case VerifyCompany = 'verify_company';
@@ -34,6 +39,10 @@ enum ModerationAction: string
         return match ($this) {
             self::ApproveJobPosting => 'Approved job posting',
             self::RejectJobPosting => 'Rejected job posting',
+            self::ApproveCompanyReview => 'Approved company review',
+            self::RejectCompanyReview => 'Rejected company review',
+            self::ApproveReviewResponse => 'Approved company response to a review',
+            self::RejectReviewResponse => 'Rejected company response to a review',
             self::DismissReports => 'Dismissed reports',
             self::VerifyCompany => 'Verified company',
             self::RevokeCompanyVerification => 'Revoked company verification',
@@ -55,6 +64,8 @@ enum ModerationAction: string
     {
         return in_array($this, [
             self::RejectJobPosting,
+            self::RejectCompanyReview,
+            self::RejectReviewResponse,
             self::RevokeCompanyVerification,
             self::RequestCompanyDocuments,
             self::BanCompany,

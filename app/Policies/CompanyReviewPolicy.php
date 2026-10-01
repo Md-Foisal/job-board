@@ -45,6 +45,17 @@ class CompanyReviewPolicy
     }
 
     /**
+     * Approving or rejecting a review. Staff step aside from reviews of
+     * the company they work for, and from their own.
+     */
+    public function moderate(User $user, CompanyReview $review): bool
+    {
+        return $user->isActiveStaff()
+            && ! $user->worksAt($review->company)
+            && ! $review->isWrittenBy($user);
+    }
+
+    /**
      * The company's one public answer comes from the people who speak
      * for it, and only to a review that is actually public.
      */

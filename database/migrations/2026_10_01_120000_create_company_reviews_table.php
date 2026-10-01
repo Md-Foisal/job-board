@@ -22,8 +22,8 @@ return new class extends Migration
      *
      * The review and the response are moderated separately, because a
      * company's answer can expose a reviewer just as easily as the review
-     * can. published_at records the first approval and is what readers
-     * are shown, by month.
+     * can. published_at is when the current text was approved, shown to
+     * readers by month; an edit clears it.
      */
     public function up(): void
     {

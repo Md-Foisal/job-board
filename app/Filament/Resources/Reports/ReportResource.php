@@ -59,7 +59,7 @@ class ReportResource extends Resource
 
     protected static bool $hasTitleCaseModelLabel = false;
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $slug = 'moderation/reports';
 

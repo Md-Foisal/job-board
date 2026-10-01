@@ -2,6 +2,7 @@
 
 use App\Actions\SubmitCompanyReview;
 use App\Enums\JobAsDescribed;
+use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Models\Application;
 use App\Models\CompanyReview;
@@ -56,6 +57,19 @@ new class extends Component
             ->where('candidate_profile_id', $this->application->candidate_profile_id)
             ->with('application.jobPosting:id,title')
             ->first();
+    }
+
+    /**
+     * Why staff held the review back, as it was written to the writer.
+     */
+    #[Computed]
+    public function rejectionReason(): ?string
+    {
+        return $this->review?->moderationEvents()
+            ->where('action', ModerationAction::RejectCompanyReview->value)
+            ->latest('created_at')
+            ->latest('id')
+            ->value('reason');
     }
 
     #[Computed]
@@ -242,9 +256,13 @@ new class extends Component
                         {{ __('Someone on our team reads every review before it appears. Your name, the job and the outcome are never shown with it — only "Verified applicant" and the month.') }}
                     </flux:text>
                 @elseif ($review->moderation_status === ModerationStatus::Rejected)
-                    <flux:text class="mt-4">
-                        {{ __('Our team did not publish this review. You can edit it and send it for another check.') }}
-                    </flux:text>
+                    <flux:callout variant="danger" icon="x-circle" class="mt-4">
+                        <flux:callout.heading>{{ __('Our team did not publish this review') }}</flux:callout.heading>
+                        @if ($this->rejectionReason !== null)
+                            <flux:callout.text class="whitespace-pre-line">{{ $this->rejectionReason }}</flux:callout.text>
+                        @endif
+                        <flux:callout.text>{{ __('You can edit it and send it for another check.') }}</flux:callout.text>
+                    </flux:callout>
                 @endif
 
                 @php($flags = ReviewTextFlags::in($review->title, $review->body))

@@ -208,7 +208,7 @@ test('editing a published review sends it back to staff', function () {
 
     expect($review->title)->toBe('Updated after a second look')
         ->and($review->moderation_status)->toBe(ModerationStatus::Pending)
-        ->and($review->published_at)->not->toBeNull();
+        ->and($review->published_at)->toBeNull();
 
     Notification::assertSentTo($staff, CompanyReviewAwaitingReview::class);
 });
