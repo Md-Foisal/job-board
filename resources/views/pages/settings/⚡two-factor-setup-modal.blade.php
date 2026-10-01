@@ -258,21 +258,7 @@ new class extends Component {
                         </span>
                     </div>
 
-                    <div
-                        class="flex items-center space-x-2"
-                        x-data="{
-                            copied: false,
-                            async copy() {
-                                try {
-                                    await navigator.clipboard.writeText('{{ $manualSetupKey }}');
-                                    this.copied = true;
-                                    setTimeout(() => this.copied = false, 1500);
-                                } catch (e) {
-                                    console.warn('Could not copy to clipboard');
-                                }
-                            }
-                        }"
-                    >
+                    <div class="flex flex-col gap-2" x-data="copyText">
                         <div class="flex items-stretch w-full border rounded-xl dark:border-stone-700">
                             @empty($manualSetupKey)
                                 <div class="flex items-center justify-center w-full p-3 bg-stone-100 dark:bg-stone-700">
@@ -287,18 +273,22 @@ new class extends Component {
                                 />
 
                                 <button
-                                    @click="copy()"
+                                    type="button"
+                                    @click="copy(@js($manualSetupKey))"
+                                    aria-label="{{ __('Copy setup key') }}"
                                     class="px-3 transition-colors border-l cursor-pointer border-stone-200 dark:border-stone-600"
                                 >
-                                    <flux:icon.document-duplicate x-show="!copied" variant="outline"></flux:icon>
+                                    <flux:icon.document-duplicate x-show="copyState !== 'copied'" variant="outline"></flux:icon>
                                     <flux:icon.check
-                                        x-show="copied"
+                                        x-show="copyState === 'copied'"
                                         variant="solid"
                                         class="text-green-500"
                                     ></flux:icon>
                                 </button>
                             @endempty
                         </div>
+
+                        <p role="status" class="text-sm text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the key and copy it yourself.")) })[copyState] ?? ''"></p>
                     </div>
                 </div>
             @endif

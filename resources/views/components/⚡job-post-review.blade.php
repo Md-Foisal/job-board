@@ -201,27 +201,29 @@ new class extends Component
                     <flux:text class="mt-2">{{ __('The AI found nothing it would change in this posting.') }}</flux:text>
                 @else
                     @if ($shown->suggestedTitle !== null)
-                        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" x-data="{ copied: false }">
+                        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" x-data="copyText">
                             <span class="text-zinc-500 dark:text-zinc-400">{{ __('A clearer title:') }}</span>
                             <span x-ref="text" class="font-medium text-zinc-900 dark:text-zinc-100">{{ $shown->suggestedTitle }}</span>
-                            <flux:button size="xs" variant="ghost" icon="clipboard" x-on:click="navigator.clipboard?.writeText($refs.text.innerText).then(() => { copied = true; setTimeout(() => copied = false, 2000) })">
-                                <span x-show="!copied">{{ __('Copy') }}</span>
-                                <span x-show="copied" x-cloak>{{ __('Copied') }}</span>
+                            <flux:button size="xs" variant="ghost" icon="clipboard" x-on:click="copy($refs.text.innerText)">
+                                <span x-show="copyState !== 'copied'">{{ __('Copy') }}</span>
+                                <span x-show="copyState === 'copied'" x-cloak>{{ __('Copied') }}</span>
                             </flux:button>
+                            <span role="status" class="text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></span>
                         </div>
                     @endif
 
                     @if ($shown->issues !== [])
                         <ol class="mt-3 flex flex-col divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
                             @foreach ($shown->issues as $issue)
-                                <li class="py-3 first:pt-0" x-data="{ copied: false }">
+                                <li class="py-3 first:pt-0" x-data="copyText">
                                     <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __(\App\Enums\JobPostReviewArea::from($issue['area'])->label()) }}</span>
                                     <p class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">{{ $issue['problem'] }}</p>
                                     <p x-ref="text" class="mt-1 whitespace-pre-line text-zinc-700 dark:text-zinc-300">{{ $issue['suggestion'] }}</p>
-                                    <flux:button class="mt-2" size="xs" variant="ghost" icon="clipboard" x-on:click="navigator.clipboard?.writeText($refs.text.innerText).then(() => { copied = true; setTimeout(() => copied = false, 2000) })">
-                                        <span x-show="!copied">{{ __('Copy suggestion') }}</span>
-                                        <span x-show="copied" x-cloak>{{ __('Copied') }}</span>
+                                    <flux:button class="mt-2" size="xs" variant="ghost" icon="clipboard" x-on:click="copy($refs.text.innerText)">
+                                        <span x-show="copyState !== 'copied'">{{ __('Copy suggestion') }}</span>
+                                        <span x-show="copyState === 'copied'" x-cloak>{{ __('Copied') }}</span>
                                     </flux:button>
+                                    <p role="status" class="mt-1 text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></p>
                                 </li>
                             @endforeach
                         </ol>

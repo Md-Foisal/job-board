@@ -1,6 +1,6 @@
 <x-layouts::guest :title="$jobPosting->title.' at '.$jobPosting->company->name">
-    {{-- Google-for-Jobs structured data (claude/14 step 5: no route of its
-         own, emitted inside this page's HTML). Built and safely encoded in
+    {{-- Google-for-Jobs structured data: no route of its own, emitted
+         inside this page's HTML. Built and safely encoded in
          App\Services\JobPostingStructuredData. --}}
     @if ($structuredData)
         <script type="application/ld+json">{!! $structuredData !!}</script>
@@ -78,7 +78,7 @@
             </div>
         </header>
 
-        <div class="mt-6 flex flex-wrap items-center gap-3" x-data="{ copied: false }">
+        <div class="mt-6 flex flex-wrap items-center gap-3" x-data="copyText">
             @if (auth()->check() && auth()->user()->isCandidate())
                 @if ($jobPosting->isPubliclyVisible())
                     <flux:button href="{{ route('jobs.apply', $jobPosting) }}" variant="primary" wire:navigate>Apply now</flux:button>
@@ -91,13 +91,20 @@
             <flux:button
                 variant="ghost"
                 icon="link"
-                x-on:click="navigator.clipboard.writeText(window.location.href); copied = true; setTimeout(() => copied = false, 2000)"
+                x-on:click="copy(window.location.href)"
             >
-                <span x-show="!copied">Share</span>
-                <span x-show="copied" x-cloak>Link copied</span>
+                <span x-show="copyState !== 'copied'">Share</span>
+                <span x-show="copyState === 'copied'" x-cloak>Link copied</span>
             </flux:button>
 
             <livewire:report-button :reportable="$jobPosting" :key="'report-'.$jobPosting->id" />
+
+            <span
+                role="status"
+                class="text-sm text-red-600 dark:text-red-400"
+                x-bind:class="copyState === 'failed' ? '' : 'sr-only'"
+                x-text="({ copied: @js('Link copied'), failed: @js("Couldn't copy the link — copy it from your browser's address bar.") })[copyState] ?? ''"
+            ></span>
         </div>
 
         @if (auth()->check() && auth()->user()->isCandidate() && $jobPosting->isPubliclyVisible())
