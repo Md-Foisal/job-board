@@ -118,6 +118,21 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Reviewing a job posting">
+        <p>
+            If its plan includes it, a company's owners and managers can ask our
+            AI to suggest improvements to one of its job postings. Only then is the
+            following sent to Anthropic, which reads it on our behalf as our
+            processor: the posting as the company wrote it, and totals for it such
+            as views and applications. Nothing about any applicant is sent &mdash;
+            no names, CVs, answers or individual match scores. The suggestions are
+            shown to the company's team for a day and then deleted; they never
+            change the posting, and an edited posting is reviewed again before it
+            goes live. Anthropic handles what we send the same way as a CV it
+            reads, above.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="Keeping and deleting it">
         <p>
             You can delete your account from your account settings. Deletion is

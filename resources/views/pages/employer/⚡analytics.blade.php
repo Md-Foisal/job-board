@@ -330,6 +330,8 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
                         @endcan
                     @endif
                 </section>
+
+                <livewire:job-post-review :job-posting="$selected" :key="'ai-review-'.$selected->id" />
             @endif
         </div>
     @endif
