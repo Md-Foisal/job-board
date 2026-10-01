@@ -58,6 +58,7 @@ class CompanyReviewResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->moderatableBy(auth()->user())
             ->with(['company', 'application.jobPosting'])
             ->withCount(['reports as open_reports_count' => fn (Builder $query) => $query
                 ->where('review_status', ReportStatus::Pending->value)]);
@@ -65,7 +66,7 @@ class CompanyReviewResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $waiting = static::getModel()::query()->where('moderation_status', ModerationStatus::Pending->value)->count();
+        $waiting = static::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value)->count();
 
         return $waiting > 0 ? (string) $waiting : null;
     }
@@ -75,8 +76,10 @@ class CompanyReviewResource extends Resource
         return 'warning';
     }
 
-    // Seeing the queue is a matter of being active staff; each decision
-    // asks the policy's moderate() ability for the record in hand.
+    // Seeing the queue is a matter of being active staff. Each review --
+    // opening it as much as deciding on it -- asks the policy's moderate()
+    // ability, so staff never see the proof behind a review of their own
+    // employer; the query leaves those rows out to begin with.
 
     public static function canViewAny(): bool
     {
@@ -85,7 +88,7 @@ class CompanyReviewResource extends Resource
 
     public static function canView(Model $record): bool
     {
-        return static::canViewAny();
+        return auth()->user()?->can('moderate', $record) ?? false;
     }
 
     public static function canCreate(): bool
@@ -275,6 +278,7 @@ class CompanyReviewResource extends Resource
                     ->options(collect(ReviewRejectionReason::cases())
                         ->mapWithKeys(fn (ReviewRejectionReason $reason) => [$reason->value => $reason->label()])
                         ->all())
+                    ->helperText('"Clearly false or misleading" only when our own records contradict it -- such as "they never replied" against replies on file -- never because the company disputes it.')
                     ->required(),
                 Textarea::make('note')
                     ->label('Note to the writer (optional)')

@@ -10,10 +10,8 @@ use App\Models\CompanyReview;
 use App\Models\ModerationEvent;
 use App\Models\User;
 use App\Notifications\CompanyReviewApproved;
-use App\Notifications\CompanyReviewPublished;
 use App\Notifications\CompanyReviewRejected;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 
 /**
  * Staff decisions on a company review, each one written to the trail.
@@ -50,9 +48,11 @@ class ModerateCompanyReview
         });
 
         // After the commit, never inside it: a mail cannot be recalled if
-        // the decision rolls back.
+        // the decision rolls back. The company is not mailed: a mail on the
+        // day a review goes up would date it to the day, which the public
+        // page deliberately does not, and the company knows when it turned
+        // whom down.
         $review->candidateProfile->user->notify(new CompanyReviewApproved($review));
-        Notification::send($review->company->decisionMakers(), new CompanyReviewPublished($review));
 
         return $event;
     }

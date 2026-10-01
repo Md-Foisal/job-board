@@ -10,7 +10,6 @@ use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Company;
-use App\Models\CompanyReview;
 use App\Models\Report;
 use Carbon\CarbonInterface;
 use Filament\Support\Icons\Heroicon;
@@ -41,7 +40,7 @@ class ModerationQueuesOverview extends StatsOverviewWidget
     {
         $postings = JobPostingResource::getEloquentQuery()->awaitingReview();
 
-        $reviews = CompanyReview::query()->where('moderation_status', ModerationStatus::Pending->value);
+        $reviews = CompanyReviewResource::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value);
 
         $companies = Company::query()
             ->whereNull('verified_at')

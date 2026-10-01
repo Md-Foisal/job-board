@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\JobAsDescribed;
+use App\Enums\MembershipStatus;
 use App\Enums\ModerationStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -37,6 +39,24 @@ class CompanyReview extends Model
             'response_status' => ModerationStatus::class,
             'responded_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The reviews a staff member may see in the panel: not those about the
+     * company they work for, and not their own. The panel shows the
+     * application behind a review, and someone on the company's team can
+     * look that application up from the other side -- together they name
+     * the writer.
+     */
+    public function scopeModeratableBy(Builder $query, User $staff): Builder
+    {
+        return $query
+            ->whereNotIn('company_reviews.company_id', Membership::query()
+                ->where('user_id', $staff->id)
+                ->where('status', MembershipStatus::Active->value)
+                ->select('company_id'))
+            ->when($staff->candidateProfile !== null, fn (Builder $query) => $query
+                ->where('company_reviews.candidate_profile_id', '!=', $staff->candidateProfile->id));
     }
 
     public function company()

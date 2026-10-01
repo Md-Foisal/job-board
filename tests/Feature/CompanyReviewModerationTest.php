@@ -8,6 +8,7 @@ use App\Enums\ModerationAction;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReviewRejectionReason;
+use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
 use App\Filament\Widgets\ModerationQueuesOverview;
 use App\Models\Application;
@@ -18,7 +19,6 @@ use App\Models\Membership;
 use App\Models\User;
 use App\Notifications\CompanyReviewApproved;
 use App\Notifications\CompanyReviewAwaitingReview;
-use App\Notifications\CompanyReviewPublished;
 use App\Notifications\CompanyReviewRejected;
 use Carbon\CarbonImmutable;
 use Filament\Actions\Testing\TestAction;
@@ -65,7 +65,7 @@ test('the review page shows staff the proof behind it', function () {
         ->assertMountedActionModalDontSee($this->writer->name);
 });
 
-test('approving publishes the review, records it, closes reports and tells the writer and the company', function () {
+test('approving publishes the review, records it, closes reports and tells the writer but not the company', function () {
     $owner = employerUser($this->company, MembershipRole::Owner);
     $member = employerUser($this->company, MembershipRole::Member);
     $report = $this->review->reports()->create(['reporter_id' => User::factory()->create()->id, 'reason' => 'Unfair']);
@@ -85,12 +85,8 @@ test('approving publishes the review, records it, closes reports and tells the w
         ->and($report->fresh()->review_status)->toBe(ReportStatus::Reviewed);
 
     Notification::assertSentTo($this->writer, CompanyReviewApproved::class);
-    Notification::assertSentTo($owner, CompanyReviewPublished::class, function ($notification) use ($owner) {
-        $mail = implode(' ', $notification->toMail($owner)->introLines);
-
-        return ! str_contains($mail, $this->writer->name) && ! str_contains($mail, 'Backend Developer');
-    });
-    Notification::assertNotSentTo($member, CompanyReviewPublished::class);
+    Notification::assertNothingSentTo($owner);
+    Notification::assertNothingSentTo($member);
 });
 
 test('a reject needs one of the listed reasons', function () {
@@ -130,7 +126,7 @@ test('rejecting keeps the review, records why, closes reports and tells only the
         ->and($report->fresh()->review_status)->toBe(ReportStatus::Actioned);
 
     Notification::assertSentTo($this->writer, CompanyReviewRejected::class, fn ($notification) => $notification->reason === $expected);
-    Notification::assertNotSentTo($owner, CompanyReviewPublished::class);
+    Notification::assertNothingSentTo($owner);
 
     $this->actingAs($this->writer)
         ->get(route('candidate.applications.show', $this->application))
@@ -169,19 +165,15 @@ test('an edited review is dated by the approval of its new text', function () {
     expect($this->review->fresh()->published_at->format('Y-m'))->toBe('2027-02');
 });
 
-test('staff step aside from reviews of their own employer and from their own reviews', function () {
+test('staff step aside from deciding on reviews of their own employer and on their own reviews', function () {
     $insider = staffWithTwoFactor();
     Membership::factory()->for($insider)->for($this->company)->create();
 
-    $this->actingAs($insider->fresh());
-    Livewire::test(ManageCompanyReviews::class)
-        ->assertActionHidden(TestAction::make('approve')->table($this->review))
-        ->assertActionHidden(TestAction::make('reject')->table($this->review));
-
     $writerStaff = $this->writer;
-    $writerStaff->forceFill(['staff_role' => $this->staff->staff_role, 'two_factor_confirmed_at' => now(), 'two_factor_secret' => encrypt('secret')])->save();
+    $writerStaff->forceFill(['staff_role' => $this->staff->staff_role])->save();
 
-    expect($writerStaff->fresh()->can('moderate', $this->review))->toBeFalse()
+    expect($insider->fresh()->can('moderate', $this->review))->toBeFalse()
+        ->and($writerStaff->fresh()->can('moderate', $this->review))->toBeFalse()
         ->and($this->staff->can('moderate', $this->review))->toBeTrue();
 });
 
@@ -209,4 +201,33 @@ test('the staff dashboard counts the reviews waiting, oldest first', function ()
     Livewire::test(ModerationQueuesOverview::class)
         ->assertSee('Company reviews to check')
         ->assertSee('Oldest waiting 1 day');
+});
+
+test('staff on the company team never see its reviews or the proof behind them', function () {
+    $insider = staffWithTwoFactor();
+    Membership::factory()->for($insider)->for($this->company)->create();
+    $elsewhere = CompanyReview::factory()->create();
+
+    $this->actingAs($insider->fresh());
+
+    Livewire::test(ManageCompanyReviews::class)
+        ->assertCanSeeTableRecords([$elsewhere])
+        ->assertCanNotSeeTableRecords([$this->review]);
+
+    $this->get('/admin/moderation/reviews')
+        ->assertOk()
+        ->assertDontSee('Slow but polite')
+        ->assertDontSee('Backend Developer');
+
+    expect(CompanyReviewResource::canView($this->review))->toBeFalse()
+        ->and(CompanyReviewResource::getNavigationBadge())->toBe('1');
+
+});
+
+test('staff who once applied never see their own review in the queue', function () {
+    $this->writer->forceFill(['staff_role' => $this->staff->staff_role])->save();
+    $this->actingAs($this->writer->fresh());
+
+    expect(CompanyReviewResource::getEloquentQuery()->pluck('id')->all())->toBe([])
+        ->and(CompanyReviewResource::canView($this->review))->toBeFalse();
 });
