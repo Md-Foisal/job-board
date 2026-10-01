@@ -63,6 +63,16 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * The plan whose limits apply to this person's own AI tools, a key of
+     * config/plans.php. There are no subscriptions yet, so everyone is on
+     * the default plan.
+     */
+    public function plan(): string
+    {
+        return config('plans.default');
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string
@@ -216,6 +226,16 @@ class User extends Authenticatable implements FilamentUser
             ->where('company_id', $company->id)
             ->where('status', MembershipStatus::Active)
             ->exists();
+    }
+
+    /**
+     * Whether this user is, or ever was, on the company's team. Unlike
+     * worksAt() an ended membership counts too: its row stays behind
+     * after someone leaves, and so does what they know from the inside.
+     */
+    public function hasWorkedAt(Company $company): bool
+    {
+        return $this->memberships()->where('company_id', $company->id)->exists();
     }
 
     /**

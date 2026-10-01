@@ -52,7 +52,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/account/restore', [AccountRestoreController::class, 'store'])->name('account.restore.store');
 });
 
-// Job alert unsubscribe (claude/14 route 45): no sign-in, the signature is
+// Job alert unsubscribe: no sign-in, the signature is
 // the proof. POST is the one-click request a mail client sends, so it is
 // kept out of CSRF checks in bootstrap/app.php -- it carries no session.
 Route::middleware('signed')->group(function () {
@@ -68,34 +68,43 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
 
+    // Filling the profile from a CV in the library: the page reads the
+    // file, suggests what it found, and adds only what the candidate ticks.
+    Route::livewire('/profile/import/{document}', 'pages::candidate.resume-import')
+        ->whereNumber('document')->name('resume-import');
+
     Route::get('/preferences', [CandidatePreferenceController::class, 'edit'])->name('preferences.edit');
     Route::patch('/preferences', [CandidatePreferenceController::class, 'update'])->name('preferences.update');
 
     // Education records: list + add/edit/delete are all Livewire actions
-    // inside this one page component (CRUD-in-modal, claude/14 step 3b) --
+    // inside this one page component (CRUD-in-modal) --
     // no separate store/update/destroy HTTP routes are needed the way a
     // plain Blade+Controller resource would need them.
     Route::livewire('/education', 'pages::candidate.education')->name('education.index');
 
-    // Experience records: same CRUD-in-modal pattern as Education (claude/14 step 3b)
+    // Experience records: same CRUD-in-modal pattern as Education.
     Route::livewire('/experience', 'pages::candidate.experience')->name('experience.index');
 
     // Document library: same CRUD-in-modal pattern, plus a plain Policy-gated
-    // download route (claude/14 step 7 security fix -- a private-disk file must
-    // be served through an owner-only check, never a guessable public URL).
+    // download route: a private-disk file must be served through an
+    // owner-only check, never a guessable public URL.
     Route::livewire('/documents', 'pages::candidate.documents')->name('documents.index');
     Route::get('/documents/{document}/download', DocumentDownloadController::class)->name('documents.download');
 
+    // A CV made from the profile: previewed here, then saved into the
+    // document library or downloaded as a PDF.
+    Route::livewire('/cv-builder', 'pages::candidate.cv-builder')->name('cv-builder');
+
     // Skill selection: unlike Education/Experience/Documents this is a
-    // singleton "edit your skill set, then Save" page (claude/14 route 17
-    // -- GET/PATCH .edit/.update, "pivot bulk sync"), not incremental
+    // singleton "edit your skill set, then Save" page (one pivot sync on
+    // Save), not incremental
     // per-item CRUD -- so one Route::livewire() name is enough, matching
     // Preferences' edit/update naming even though Livewire handles both
     // verbs through this single route. Still Livewire (not Blade like
     // Preferences) because the search-as-you-type autocomplete needs it.
     Route::livewire('/skills', 'pages::candidate.skills')->name('skills.edit');
 
-    // Both plain Blade+Controller list pages (claude/14 routes 19 & 21) --
+    // Both plain Blade+Controller list pages --
     // auto-scoped to the signed-in candidate, no filter/sort requirements,
     // so no Livewire reactivity is needed.
     Route::get('/applications', [CandidateApplicationController::class, 'index'])->name('applications.index');
@@ -109,7 +118,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
     Route::delete('/saved-jobs/unavailable', [CandidateSavedJobController::class, 'pruneUnavailable'])->name('saved-jobs.prune');
 
-    // Job alerts (claude/14 route 22): CRUD-in-modal like Education, so
+    // Job alerts: CRUD-in-modal like Education, so
     // one Livewire page handles list, create, edit, pause and delete.
     Route::livewire('/job-alerts', 'pages::candidate.job-alerts')->name('job-alerts.index');
 });
@@ -188,6 +197,9 @@ Route::middleware(['auth', 'company.member'])
          */
         Route::livewire('/jobs/{jobPosting:slug}/edit', 'pages::employer.job-form')->name('jobs.edit');
         Route::livewire('/jobs/{jobPosting:slug}/applications', 'pages::employer.applications')->name('jobs.applications');
+
+        Route::livewire('/analytics', 'pages::employer.analytics')->name('analytics');
+        Route::livewire('/reviews', 'pages::employer.reviews')->name('reviews');
 
         Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
         Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');

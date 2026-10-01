@@ -3,6 +3,7 @@
 use App\Console\Commands\AnonymizeDeletedUsers;
 use App\Console\Commands\ExpireInvitations;
 use App\Console\Commands\ExpireJobPostings;
+use App\Console\Commands\PruneExpiredCache;
 use App\Console\Commands\SendJobAlerts;
 use Illuminate\Support\Facades\Schedule;
 
@@ -18,3 +19,8 @@ Schedule::command(SendJobAlerts::class)->dailyAt('08:00')->timezone('Asia/Dhaka'
 
 // Nightly, while few people are on: accounts past their grace period.
 Schedule::command(AnonymizeDeletedUsers::class)->dailyAt('03:00')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();
+
+// Hourly: the database cache store only drops an expired entry when the
+// same key is read again, and AI drafts and explanations about a person
+// must not outlive their hour or day.
+Schedule::command(PruneExpiredCache::class)->hourly()->withoutOverlapping()->onOneServer();

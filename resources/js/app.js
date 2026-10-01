@@ -1,6 +1,10 @@
+import copyText from './copy-text'
+import performanceChart from './performance-chart'
 import richTextEditor from './rich-text-editor'
 
 document.addEventListener('alpine:init', () => {
+    window.Alpine.data('copyText', copyText)
+    window.Alpine.data('performanceChart', performanceChart)
     window.Alpine.data('richTextEditor', richTextEditor)
 })
 

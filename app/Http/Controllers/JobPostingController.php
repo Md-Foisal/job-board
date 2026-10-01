@@ -2,15 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\RecordJobView;
 use App\Models\JobPosting;
-use App\Models\JobView;
+use App\Services\EmployerResponsiveness;
 use App\Services\JobPostingStructuredData;
+use App\Support\ReviewSummary;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class JobPostingController extends Controller
 {
-    public function show(JobPosting $jobPosting, JobPostingStructuredData $structuredData): View
-    {
+    public function show(
+        Request $request,
+        JobPosting $jobPosting,
+        JobPostingStructuredData $structuredData,
+        RecordJobView $recordView,
+        EmployerResponsiveness $responsiveness,
+    ): View {
         $this->authorize('view', $jobPosting);
 
         $jobPosting->load([
@@ -33,10 +41,12 @@ class JobPostingController extends Controller
             'screeningQuestions',
         ]);
 
-        $this->recordView($jobPosting);
+        $recordView($jobPosting, $request);
 
         return view('jobs.show', [
             'jobPosting' => $jobPosting,
+            'reviewSummary' => ReviewSummary::of($jobPosting->company),
+            'responsivePercent' => $responsiveness->percentFor($jobPosting->company),
             // Only a publicly visible posting carries JSON-LD. A company
             // member previewing their own draft sees the same page, but
             // must not emit markup telling Google the job is live.
@@ -44,25 +54,5 @@ class JobPostingController extends Controller
                 ? $structuredData->toJson($jobPosting)
                 : null,
         ]);
-    }
-
-    /**
-     * Recently-viewed side effect for the candidate dashboard -- one row
-     * per (user, job), upserted so repeat visits just bump viewed_at
-     * rather than piling up rows. Guests write nothing (no User row to
-     * attach to).
-     */
-    private function recordView(JobPosting $jobPosting): void
-    {
-        $user = auth()->user();
-
-        if (! $user || ! $user->isCandidate()) {
-            return;
-        }
-
-        JobView::updateOrCreate(
-            ['user_id' => $user->id, 'job_posting_id' => $jobPosting->id],
-            ['viewed_at' => now()],
-        );
     }
 }

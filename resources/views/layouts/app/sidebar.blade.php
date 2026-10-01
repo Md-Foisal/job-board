@@ -53,6 +53,10 @@
                                 :current="request()->routeIs('candidate.documents.*')" wire:navigate>
                                 {{ __('Documents') }}
                             </flux:sidebar.item>
+                            <flux:sidebar.item icon="document-plus" :href="route('candidate.cv-builder')"
+                                :current="request()->routeIs('candidate.cv-builder')" wire:navigate>
+                                {{ __('CV Builder') }}
+                            </flux:sidebar.item>
                             <flux:sidebar.item icon="tag" :href="route('candidate.skills.edit')"
                                 :current="request()->routeIs('candidate.skills.*')" wire:navigate>
                                 {{ __('Skills') }}

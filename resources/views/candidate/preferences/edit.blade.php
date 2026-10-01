@@ -1,27 +1,19 @@
 <x-layouts::app :title="__('Job preferences')">
     <div class="mx-auto max-w-2xl">
         <flux:heading size="xl" level="1">{{ __('Job preferences') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Helps us and employers match you to the right roles.') }}</flux:subheading>
+        <flux:subheading size="lg" class="mb-6">{{ __('Each job page compares the job with these. Only you see them.') }}</flux:subheading>
         <flux:separator variant="subtle" class="mb-6" />
 
         <form method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             @csrf
             @method('PATCH')
 
-            <flux:checkbox
-                name="is_actively_searching"
-                value="1"
-                :checked="old('is_actively_searching', $preference?->is_actively_searching ?? true)"
-                :label="__('Actively searching')"
-                :description="__('Shows employers you are currently open to offers')"
-            />
-
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <flux:input
                     name="desired_salary_min"
                     type="number"
                     min="0"
-                    :label="__('Desired salary, min')"
+                    :label="__('Desired monthly salary, min')"
                     :value="old('desired_salary_min', $preference?->desired_salary_min)"
                 />
 
@@ -29,7 +21,7 @@
                     name="desired_salary_max"
                     type="number"
                     min="0"
-                    :label="__('Desired salary, max')"
+                    :label="__('Desired monthly salary, max')"
                     :value="old('desired_salary_max', $preference?->desired_salary_max)"
                 />
             </div>

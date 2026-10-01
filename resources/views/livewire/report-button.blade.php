@@ -6,7 +6,12 @@
 
         <flux:modal :name="$this->modalName()" class="max-w-md">
             <div class="space-y-6">
-                <flux:heading size="lg">{{ __('Report this :subject', ['subject' => $this->subjectNoun()]) }}</flux:heading>
+                <div class="space-y-2">
+                    <flux:heading size="lg">{{ __('Report this :subject', ['subject' => $this->subjectNoun()]) }}</flux:heading>
+                    @if ($this->note())
+                        <flux:text>{{ $this->note() }}</flux:text>
+                    @endif
+                </div>
 
                 <flux:select wire:model="reason" :label="__('Reason')" :placeholder="__('Choose a reason')">
                     @foreach ($this->reasons as $value => $label)

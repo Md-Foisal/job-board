@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 /**
  * Starting the candidate side after registering for the other one -- the
  * same empty profile registration makes, created on request instead.
- * Being a candidate is derived from this row existing (claude/13, 4-c),
- * so creating it is the whole act.
+ * Being a candidate is derived from this row existing, so creating it is
+ * the whole act.
  */
 class StartCandidateProfileController extends Controller
 {

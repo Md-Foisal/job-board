@@ -16,9 +16,8 @@ new #[Layout('layouts::app')] #[Title('Skills')] class extends Component {
     /**
      * skill_id => proficiency value. Built up locally as the candidate
      * searches/adds/removes/re-rates skills, then written to the pivot
-     * table in one go on Save -- claude/14 route 17 ("GET/PATCH ...
-     * pivot bulk sync"), claude/15's reasoning for why no Action class
-     * is needed here (a single belongsToMany relation, one sync() call).
+     * table in one go on Save. No Action class is needed here: it is a
+     * single belongsToMany relation and one sync() call.
      *
      * @var array<int, string>
      */

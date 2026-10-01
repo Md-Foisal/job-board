@@ -138,7 +138,7 @@ class JobPostingResource extends Resource
                                 $history = $record->company->postingModerationRecord();
 
                                 if ($history['approved'] === 0 && $history['rejected'] === 0) {
-                                    return 'New employer -- nothing approved yet';
+                                    return 'New employer — nothing approved yet';
                                 }
 
                                 return "{$history['approved']} approved · {$history['rejected']} rejected";
@@ -179,7 +179,7 @@ class JobPostingResource extends Resource
                                 $by = $event->admin?->name ?? 'a former staff member';
                                 $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
 
-                                return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
+                                return $event->reason ? "{$line} — \"{$event->reason}\"" : $line;
                             })
                             ->placeholder('Never reviewed')
                             ->columnSpanFull(),

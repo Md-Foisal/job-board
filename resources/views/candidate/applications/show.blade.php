@@ -22,7 +22,7 @@
             </div>
 
             <div class="flex shrink-0 items-center gap-2">
-                <x-application-status :application="$application" />
+                <x-application-status :application="$application" for-candidate />
             </div>
         </div>
 
@@ -41,7 +41,7 @@
         <ol class="relative border-s border-zinc-200 dark:border-zinc-800">
             <x-timeline-item :label="__('You applied')" :at="$application->created_at" highlight />
 
-            @foreach ($application->events as $event)
+            @foreach ($application->eventsForCandidate() as $event)
                 @php
                     $company = $application->jobPosting->company->name;
                     $byCandidate = $event->changed_by_id === auth()->id();
@@ -62,6 +62,8 @@
                 <x-timeline-item :label="$line" :at="$event->created_at" />
             @endforeach
         </ol>
+
+        <livewire:company-review :application="$application" />
 
         @can('withdraw', $application)
             <flux:separator variant="subtle" class="my-8" />

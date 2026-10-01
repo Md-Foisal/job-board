@@ -3,16 +3,19 @@
 namespace App\Livewire;
 
 use App\Enums\ReportStatus;
+use App\Enums\ReviewRejectionReason;
 use App\Models\Company;
+use App\Models\CompanyReview;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 
 /**
- * Isolated "report this" action, embedded on job detail and company
- * profile -- a small modal form rather than a dedicated page, per the
- * established page inventory (Report has no page of its own).
+ * Isolated "report this" action, embedded on job detail, the company
+ * profile and each review on it -- a small modal form rather than a
+ * dedicated page, per the established page inventory (Report has no page
+ * of its own).
  */
 class ReportButton extends Component
 {
@@ -30,9 +33,19 @@ class ReportButton extends Component
     /**
      * Worded to fit a company as well as a posting: the same button sits
      * on both pages.
+     *
+     * A review can only be taken down on a fixed list of grounds, so a
+     * report on one names one of them. There is no "Other": the list is
+     * every ground there is, and disagreeing with a review is not one.
      */
     public function getReasonsProperty(): array
     {
+        if ($this->reportable instanceof CompanyReview) {
+            return collect(ReviewRejectionReason::cases())
+                ->mapWithKeys(fn (ReviewRejectionReason $reason) => [$reason->value => $reason->label()])
+                ->all();
+        }
+
         return [
             'spam' => __('Spam or fake'),
             'scam' => __('Scam or fraud'),
@@ -98,7 +111,22 @@ class ReportButton extends Component
 
     public function subjectNoun(): string
     {
-        return $this->reportable instanceof Company ? __('company') : __('listing');
+        return match (true) {
+            $this->reportable instanceof Company => __('company'),
+            $this->reportable instanceof CompanyReview => __('review'),
+            default => __('listing'),
+        };
+    }
+
+    /**
+     * Said before the report is sent, not after: a reported review stays
+     * up, and someone expecting it to vanish should know that first.
+     */
+    public function note(): ?string
+    {
+        return $this->reportable instanceof CompanyReview
+            ? __('The review stays up while our team reads it, and comes down only if it breaks one of these rules. Disagreeing with what it says is not enough.')
+            : null;
     }
 
     public function render()

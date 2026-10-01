@@ -50,7 +50,7 @@ class Skill extends Model
     /**
      * Partial, case-insensitive name match -- same idiom as
      * JobPostingQueryBuilder::keyword(), used for the skill-selection
-     * page's live-as-you-type autocomplete (claude/14 route 17).
+     * page's live-as-you-type autocomplete.
      */
     public function scopeSearch(Builder $query, string $term): Builder
     {

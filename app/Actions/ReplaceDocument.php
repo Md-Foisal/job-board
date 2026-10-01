@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
  * a slot (CV, work sample, certificate) while keeping every past
  * Application's resume_document_id pointing at an intact snapshot.
  *
- * claude/13's rule: deleting/replacing from the library must never change
+ * Deleting or replacing from the library must never change
  * what an already-submitted Application shows. Updating the existing
  * Document row in place would break that (every old Application would
  * suddenly point at the new file). So this creates a brand-new Document

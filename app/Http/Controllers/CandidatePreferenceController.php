@@ -29,12 +29,6 @@ class CandidatePreferenceController extends Controller
             'available_from' => ['nullable', 'date'],
         ]);
 
-        // An unchecked checkbox is simply absent from the request body (the
-        // browser never sends it), so it can't go through validate() as a
-        // "boolean" rule the way the other fields do -- $request->boolean()
-        // is the standard way to read it, defaulting to false when missing.
-        $validated['is_actively_searching'] = $request->boolean('is_actively_searching');
-
         // Preference is a singleton per candidate profile, created here on
         // first save rather than provisioned eagerly at registration --
         // most candidates won't touch this page until they mean to.

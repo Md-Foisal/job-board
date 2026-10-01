@@ -11,6 +11,7 @@ use App\Models\Application;
 use App\Models\ApplicationNote;
 use App\Models\CandidatePreference;
 use App\Models\Company;
+use App\Models\CompanyReview;
 use App\Models\Document;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
@@ -40,7 +41,13 @@ function candidateWithEverything(): array
     Storage::disk('public')->put('avatars/sakib.jpg', 'x');
 
     $profile = $user->candidateProfile;
-    $profile->forceFill(['headline' => 'Laravel developer', 'bio' => 'I live in Dhaka.', 'cover_photo_path' => 'covers/sakib.jpg'])->save();
+    $profile->forceFill([
+        'headline' => 'Laravel developer',
+        'bio' => 'I live in Dhaka.',
+        'phone' => '+880 1712-345678',
+        'location' => 'Dhaka, Bangladesh',
+        'cover_photo_path' => 'covers/sakib.jpg',
+    ])->save();
     Storage::disk('public')->put('covers/sakib.jpg', 'x');
 
     CandidatePreference::factory()->for($profile)->create();
@@ -80,6 +87,8 @@ test('a candidate is emptied of everything personal while the application stays 
         ->and($user->trashed())->toBeTrue()
         ->and($profile->headline)->toBeNull()
         ->and($profile->bio)->toBeNull()
+        ->and($profile->phone)->toBeNull()
+        ->and($profile->location)->toBeNull()
         ->and($profile->cover_photo_path)->toBeNull()
         ->and(CandidatePreference::count())->toBe(0)
         ->and(EducationRecord::count())->toBe(0)
@@ -222,4 +231,47 @@ test('the employer still sees the application of someone who erased their accoun
     app(ChangeApplicationStage::class)($application->fresh(), $manager, ApplicationStage::Shortlisted);
 
     Notification::assertNothingSent();
+});
+
+test('a writer\'s reviews go with them, answers included, while other reviews of the company stay', function () {
+    $company = Company::factory()->create();
+    $writer = candidateUser();
+    $written = CompanyReview::factory()
+        ->for(Application::factory()->for(JobPosting::factory()->for($company))->for($writer->candidateProfile)->state(['outcome_status' => ApplicationOutcomeStatus::Rejected]))
+        ->published()
+        ->create(['response_body' => 'Thank you.', 'response_status' => 'approved', 'responded_at' => now()]);
+    $someoneElses = CompanyReview::factory()
+        ->for(Application::factory()->for(JobPosting::factory()->for($company))->state(['outcome_status' => ApplicationOutcomeStatus::Rejected]))
+        ->published()
+        ->create();
+
+    app(AnonymizeUser::class)($writer);
+
+    expect(CompanyReview::find($written->id))->toBeNull()
+        ->and(CompanyReview::find($someoneElses->id))->not->toBeNull()
+        ->and(Application::find($written->application_id))->not->toBeNull();
+});
+
+test('an answer written for a company stays as the company\'s, with nothing linking it to the person', function () {
+    $company = Company::factory()->create();
+    $manager = employerUser($company, MembershipRole::Manager);
+    $review = CompanyReview::factory()
+        ->for(Application::factory()->for(JobPosting::factory()->for($company))->state(['outcome_status' => ApplicationOutcomeStatus::Rejected]))
+        ->published()
+        ->create([
+            'response_body' => 'We have changed how we reply.',
+            'response_status' => 'approved',
+            'responded_by_id' => $manager->id,
+            'responded_at' => now()->subDay(),
+        ]);
+    $written = $review->fresh()->updated_at;
+    $this->travel(1)->hour();
+
+    app(AnonymizeUser::class)($manager);
+
+    $review->refresh();
+    expect($review->responded_by_id)->toBeNull()
+        ->and($review->response_body)->toBe('We have changed how we reply.')
+        ->and($review->hasPublishedResponse())->toBeTrue()
+        ->and($review->updated_at->equalTo($written))->toBeTrue();
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\ReplaceUploadedImage;
+use App\Support\ContactDetails;
 use App\Support\ImageUploads;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,12 +15,12 @@ class CandidateProfileController extends Controller
     {
         $candidateProfile = $request->user()->candidateProfile;
 
-        // The profile page bills itself as "what companies see when they
-        // look you up", so it needs read-only summaries of every section a
-        // real candidate profile has -- not just the identity card fields
-        // that live directly on CandidateProfile. Education/Experience/
+        // The profile page shows the candidate everything about them in one
+        // place, so it needs read-only summaries of every section a real
+        // candidate profile has -- not just the identity card fields that
+        // live directly on CandidateProfile. Education/Experience/
         // Documents/Skills each already have their own dedicated CRUD page
-        // (claude/14 step 3b) and stay that way here; this view only reads
+        // and stay that way here; this view only reads
         // them, it never edits them.
         return view('candidate.profile.edit', [
             'user' => $request->user(),
@@ -38,9 +39,13 @@ class CandidateProfileController extends Controller
             'cover_photo' => ['nullable', ...ImageUploads::rules(ImageUploads::COVER)],
             'headline' => ['nullable', 'string', 'max:255'],
             'bio' => ['nullable', 'string', 'max:5000'],
-            'portfolio_url' => ['nullable', 'url', 'max:255'],
-            'github_url' => ['nullable', 'url', 'max:255'],
-            'linkedin_url' => ['nullable', 'url', 'max:255'],
+            'portfolio_url' => ['nullable', 'url:http,https', 'max:255'],
+            'github_url' => ['nullable', 'url:http,https', 'max:255'],
+            'linkedin_url' => ['nullable', 'url:http,https', 'max:255'],
+            'phone' => ContactDetails::phoneRules(),
+            'location' => ContactDetails::locationRules(),
+        ], [
+            'phone.regex' => __('Enter a phone number using digits, with an optional + and country code.'),
         ]);
 
         $user = $request->user();

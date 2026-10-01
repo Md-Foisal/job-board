@@ -5,7 +5,7 @@
                 {{ __('Join :company', ['company' => $invitation->company->name]) }}
             </flux:heading>
             <flux:text>
-                {{ __(':inviter invited :email to join as :role.', [
+                {{ __(':inviter invited :email to join as a :role.', [
                     'inviter' => $invitation->invitedBy?->name ?? $invitation->company->name,
                     'email' => $invitation->email,
                     'role' => \Illuminate\Support\Str::lower($invitation->role->label()),

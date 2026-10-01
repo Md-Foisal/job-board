@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Switching a job alert off from the email, without signing in
- * (claude/14 route 45). The signed URL is the proof of who asked.
+ * Switching a job alert off from the email, without signing in. The
+ * signed URL is the proof of who asked.
  *
  * Opening the link only asks; the POST does it. Mail scanners and link
  * previews open every link in a message, and an alert that switched off

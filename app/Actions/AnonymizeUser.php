@@ -6,6 +6,7 @@ use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\InvitationStatus;
 use App\Enums\MembershipStatus;
 use App\Models\ApplicationNote;
+use App\Models\CompanyReview;
 use App\Models\Invitation;
 use App\Models\JobView;
 use App\Models\ScreeningAnswer;
@@ -17,24 +18,27 @@ use Illuminate\Support\Str;
 
 /**
  * Erases a person's personal data while keeping the record of what
- * happened -- claude/12's rule: anonymise, don't delete.
+ * happened: anonymise, don't delete.
  *
  * What goes: everything that says who they were or what they wrote about
- * themselves -- name, email, photos, profile, preferences, education,
+ * themselves -- name, email, phone, photos, profile, preferences, education,
  * experience, every uploaded file, cover letters, screening answers, the
- * notes employers wrote about them, alerts, saved jobs, viewing history,
+ * notes employers wrote about them, their reviews of companies (with the
+ * companies' answers to them), alerts, saved jobs, viewing history,
  * sessions and reset tokens.
  *
  * What stays: the rows other records point to, emptied -- the user row as
  * "Deleted user", the candidate profile, the applications with their
  * stages and history -- so a company's hiring numbers and the platform's
  * statistics do not change when someone leaves. Reports they filed and
- * decisions they took still point at the same, now anonymous, row.
+ * decisions they took still point at the same, now anonymous, row. An
+ * answer they wrote to a review on a company's behalf stays: it speaks for
+ * the company, so only the link to them goes.
  *
  * This overrides the application snapshot rule on purpose: the snapshot
  * protects an employer from a candidate quietly rewriting what was sent,
  * not from the candidate asking to be forgotten. Erasure is a legal
- * constraint (claude/13, Constraints) and sits above product rules.
+ * obligation and sits above product rules.
  */
 class AnonymizeUser
 {
@@ -74,6 +78,11 @@ class AnonymizeUser
                 ScreeningAnswer::whereIn('application_id', $applicationIds)->update(['answer_text' => '']);
                 ApplicationNote::whereIn('application_id', $applicationIds)->delete();
 
+                // A review is the writer's own account of their experience;
+                // averages and the reviews count simply lose it, as when the
+                // writer deletes it themselves.
+                CompanyReview::where('candidate_profile_id', $profile->id)->delete();
+
                 foreach ($profile->documents()->withTrashed()->get() as $document) {
                     $files[] = ['local', $document->file_path];
                     $document->forceFill(['original_filename' => null])->save();
@@ -92,6 +101,8 @@ class AnonymizeUser
                     'portfolio_url' => null,
                     'github_url' => null,
                     'linkedin_url' => null,
+                    'phone' => null,
+                    'location' => null,
                     'cover_photo_path' => null,
                 ])->save();
             }
@@ -102,6 +113,11 @@ class AnonymizeUser
             }
 
             $user->memberships()->update(['status' => MembershipStatus::Inactive]);
+
+            // Left out of updated_at on purpose, as every answer is: the
+            // staff queue ages reviews by it.
+            DB::table('company_reviews')->where('responded_by_id', $user->id)->update(['responded_by_id' => null]);
+
             $user->jobAlerts()->delete();
             $user->savedJobs()->detach();
             JobView::where('user_id', $user->id)->delete();

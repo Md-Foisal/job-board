@@ -3,8 +3,10 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\AccountStatus;
+use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Company;
@@ -38,6 +40,10 @@ class ModerationQueuesOverview extends StatsOverviewWidget
     {
         $postings = JobPostingResource::getEloquentQuery()->awaitingReview();
 
+        $reviews = CompanyReviewResource::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value);
+
+        $responses = CompanyReviewResource::getEloquentQuery()->where('response_status', ModerationStatus::Pending->value);
+
         $companies = Company::query()
             ->whereNull('verified_at')
             ->where('account_status', AccountStatus::Active->value);
@@ -49,6 +55,20 @@ class ModerationQueuesOverview extends StatsOverviewWidget
                 $postings->min('submitted_at'),
                 JobPostingResource::getUrl('index'),
                 Heroicon::OutlinedRectangleStack,
+            ),
+            $this->queueStat(
+                'Company reviews to check',
+                $reviews->count(),
+                $reviews->min('updated_at'),
+                CompanyReviewResource::getUrl('index'),
+                Heroicon::OutlinedChatBubbleLeftRight,
+            ),
+            $this->queueStat(
+                'Company responses to check',
+                $responses->count(),
+                $responses->min('responded_at'),
+                CompanyReviewResource::getUrl('index', ['tab' => 'responses']),
+                Heroicon::OutlinedChatBubbleBottomCenterText,
             ),
             $this->queueStat(
                 'Reported things',

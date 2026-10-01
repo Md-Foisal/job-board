@@ -182,3 +182,26 @@ test('each invitation sent counts towards the company allowance', function () {
 
     expect(RateLimiter::attempts(SubmissionLimits::invitationKey($company)))->toBe(1);
 });
+
+test('a limit message says 1 hour, not 1 hours, and plural from two', function () {
+    $company = Company::factory()->create(['name' => 'Acme']);
+    RateLimiter::hit(SubmissionLimits::jobPostingKey($company), 3600);
+
+    expect(SubmissionLimits::jobPostingLimitMessage($company)['text'])
+        ->toContain('You can add more in 1 hour;');
+
+    RateLimiter::clear(SubmissionLimits::jobPostingKey($company));
+    RateLimiter::hit(SubmissionLimits::jobPostingKey($company), 3 * 3600);
+
+    expect(SubmissionLimits::jobPostingLimitMessage($company)['text'])
+        ->toBe('Acme can start up to '.SubmissionLimits::JOB_POSTINGS_PER_DAY.' new postings a day. You can add more in 3 hours; existing postings can still be edited.');
+});
+
+test('the sign-up limit says 1 minute when a minute is left', function () {
+    foreach (range(1, SubmissionLimits::REGISTRATIONS_PER_HOUR) as $_) {
+        RateLimiter::hit(SubmissionLimits::registrationKey('127.0.0.1'), 60);
+    }
+
+    $this->post(route('register.store'), registrationPayload('late@example.com'))
+        ->assertSessionHasErrors(['email' => 'Too many accounts have been created from this network recently. Please try again in 1 minute.']);
+});

@@ -153,7 +153,7 @@ class UserResource extends Resource
                                 $by = $event->admin?->name ?? 'a former staff member';
                                 $line = "{$event->action->label()} by {$by}, {$event->created_at->diffForHumans()}";
 
-                                return $event->reason ? "{$line} -- \"{$event->reason}\"" : $line;
+                                return $event->reason ? "{$line} — \"{$event->reason}\"" : $line;
                             })
                             ->placeholder('Never')
                             ->columnSpanFull(),
@@ -247,8 +247,8 @@ class UserResource extends Resource
     }
 
     /**
-     * Erasing someone's personal data on their request (claude/13,
-     * question 3: "handle requests to delete data"). It cannot be undone,
+     * Erasing someone's personal data on their request, which privacy law
+     * obliges the platform to honour. It cannot be undone,
      * so it asks three times over: a reason, an explicit acknowledgement,
      * and the staff member's password.
      */

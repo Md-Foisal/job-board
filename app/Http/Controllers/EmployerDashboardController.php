@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
@@ -20,13 +21,16 @@ class EmployerDashboardController extends Controller
      */
     public function index(Company $company): View
     {
-        // "Waiting on you" is just applications still sitting at the first
-        // stage, so it needs no column of its own: an application that has
-        // been looked at has been moved.
+        // "Waiting on you" is just open applications still sitting at the
+        // first stage, so it needs no column of its own: an application
+        // that has been looked at has been moved, and one that was turned
+        // down or withdrawn is not waiting on anyone.
         $jobPostings = $company->jobPostings()
             ->withCount([
                 'applications',
-                'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'applications as new_applications_count' => fn ($query) => $query
+                    ->where('stage', ApplicationStage::New)
+                    ->where('outcome_status', ApplicationOutcomeStatus::Active),
                 'reports as open_reporters_count' => fn ($query) => $query
                     ->where('review_status', ReportStatus::Pending)
                     ->select(DB::raw('count(distinct reporter_id)')),
@@ -46,6 +50,12 @@ class EmployerDashboardController extends Controller
                 && $jobPosting->open_reporters_count < Report::HIDE_AFTER_REPORTERS)->count(),
             'applicationCount' => $jobPostings->sum('applications_count'),
             'newApplicationCount' => $jobPostings->sum('new_applications_count'),
+            // Counted for the people who can answer. The company hears of a
+            // new review here, by count and not by mail: a mail would date
+            // it to the day, which the public page deliberately does not.
+            'reviewsAwaitingResponse' => auth()->user()->canManage($company)
+                ? $company->reviews()->published()->awaitingResponse()->count()
+                : 0,
         ]);
     }
 }

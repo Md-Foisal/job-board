@@ -14,12 +14,15 @@ class CandidateDashboardController extends Controller
     /**
      * The completion % counts
      * $user->candidateProfile's own filled fields, computed on every
-     * request rather than stored (claude/13's decision -- there is no
-     * "completion" column to go stale the moment a field changes). This
-     * mirrors the model's #[Fillable(...)] set exactly, so a future field
-     * added there is a one-line addition here too. Labeled (not a bare
-     * list) because the dashboard names the specific missing items, not
-     * just a percentage -- a number alone gives no next action.
+     * request rather than stored -- there is no "completion" column to
+     * go stale the moment a field changes. This
+     * mirrors the model's #[Fillable(...)] set, so a future field added
+     * there is a one-line addition here too -- except phone and location:
+     * companies never see those on the profile, they only go on CVs the
+     * candidate builds, so a missing one is not a gap in what an employer
+     * looks at. Labeled (not a bare list) because the dashboard names
+     * the specific missing items, not just a percentage -- a number alone
+     * gives no next action.
      */
     private const PROFILE_FIELD_LABELS = [
         'headline' => 'Headline',
@@ -63,13 +66,17 @@ class CandidateDashboardController extends Controller
         // specific missing piece, not just a number.
         $missingProfileItems = $allChecks->reject(fn (bool $filled) => $filled)->keys()->values();
 
+        // A decision still inside its undo window has not reached the
+        // candidate yet, so to them the application is still open.
         $activeApplicationCount = Application::query()
             ->where('candidate_profile_id', $candidateProfile->id)
-            ->where('outcome_status', ApplicationOutcomeStatus::Active)
+            ->where(fn ($query) => $query
+                ->where('outcome_status', ApplicationOutcomeStatus::Active)
+                ->orWhere('decided_at', '>', now()->subMinutes(Application::UNDO_MINUTES)))
             ->count();
 
         // One JobView row per (user, job posting) -- already deduped at the
-        // write side (recordView() upserts on that pair), so this is just
+        // write side (RecordJobView upserts on that pair), so this is just
         // the 6 most recently touched rows, not a dedupe-on-read job here.
         // Only what is still public: a posting rewritten after approval,
         // taken down or hidden since it was viewed must not be shown here

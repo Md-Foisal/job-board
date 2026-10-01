@@ -75,6 +75,15 @@ function employerUser(?Company $company = null, MembershipRole $role = Membershi
     return $user;
 }
 
+/**
+ * Skill names in alphabetical order, for comparing which skills were found
+ * without caring about the order they were found in.
+ */
+function skillNames(iterable $skills): array
+{
+    return collect($skills)->pluck('name')->sort()->values()->all();
+}
+
 function staffUser(StaffRole $role = StaffRole::Moderator): User
 {
     return User::factory()->create(['staff_role' => $role]);

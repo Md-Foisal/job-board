@@ -85,17 +85,21 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
 
         $to = ApplicationStage::from($stage);
 
-        $this->jobPosting->applications()
+        // Closed applications are left where they are, as on the single
+        // application page: their candidate already has an answer.
+        $open = $this->jobPosting->applications()
             ->whereIn('id', $this->selected)
-            ->get()
-            ->each(fn (Application $application) => $changeStage($application, auth()->user(), $to));
+            ->where('outcome_status', ApplicationOutcomeStatus::Active)
+            ->get();
 
-        $moved = count($this->selected);
+        $open->each(fn (Application $application) => $changeStage($application, auth()->user(), $to));
+
+        $moved = $open->count();
         $this->reset('selected');
         unset($this->applications);
 
         Flux::toast(variant: 'success', text: trans_choice(
-            '{1} One application moved to :stage|[2,*] :count applications moved to :stage',
+            '{0} None of those applications is still open, so nothing moved|{1} One application moved to :stage|[2,*] :count applications moved to :stage',
             $moved,
             ['stage' => $to->label()],
         ));

@@ -11,14 +11,21 @@
 
     @param \App\Models\Application $application
     @param bool $showStage  false to show only the outcome badge.
+    @param bool $forCandidate  true on the candidate's own pages, where a
+                               decision still inside its undo window has not
+                               been made yet.
 --}}
-@props(['application', 'showStage' => true])
+@props(['application', 'showStage' => true, 'forCandidate' => false])
 
-<flux:badge :color="$application->outcome_status->color()">
-    {{ $application->outcome_status->label() }}
+@php
+    $outcome = $forCandidate ? $application->outcomeForCandidate() : $application->outcome_status;
+@endphp
+
+<flux:badge :color="$outcome->color()">
+    {{ $outcome->label() }}
 </flux:badge>
 
-@if ($showStage && $application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active)
+@if ($showStage && $outcome === \App\Enums\ApplicationOutcomeStatus::Active)
     <flux:badge color="zinc" variant="pill">
         {{ $application->stage->label() }}
     </flux:badge>

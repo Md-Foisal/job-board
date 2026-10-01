@@ -24,7 +24,7 @@ class UpdateCompanyRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'identity_type' => ['required', Rule::enum(IdentityType::class)],
             'description' => ['nullable', 'string', 'max:20000'],
-            'website_url' => ['nullable', 'url', 'max:255'],
+            'website_url' => ['nullable', 'url:http,https', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
             'size' => ['nullable', Rule::in(['1-10', '11-50', '51-200', '200+'])],
             'logo' => ['nullable', ...ImageUploads::rules(ImageUploads::LOGO)],

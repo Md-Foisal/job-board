@@ -50,8 +50,9 @@ class Report extends Model
 
     /**
      * The company a report ultimately concerns -- itself if the subject
-     * is a company, its owner if the subject is a job posting. Staff use
-     * this to recuse themselves from reports about their own employer.
+     * is a company, the one it is about if the subject is a job posting
+     * or a review. Staff use this to recuse themselves from reports about
+     * their own employer.
      */
     public function subjectCompany(): ?Company
     {
@@ -59,7 +60,7 @@ class Report extends Model
 
         return match (true) {
             $subject instanceof Company => $subject,
-            $subject instanceof JobPosting => $subject->company,
+            $subject instanceof JobPosting, $subject instanceof CompanyReview => $subject->company,
             default => null,
         };
     }

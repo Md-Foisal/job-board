@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\DuplicateJobPosting;
+use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
 use App\Enums\ReportStatus;
@@ -31,7 +32,9 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             ->when($this->filter !== 'all', fn ($query) => $query->where('availability_status', $this->filter))
             ->withCount([
                 'applications',
-                'applications as new_applications_count' => fn ($query) => $query->where('stage', ApplicationStage::New),
+                'applications as new_applications_count' => fn ($query) => $query
+                    ->where('stage', ApplicationStage::New)
+                    ->where('outcome_status', ApplicationOutcomeStatus::Active),
                 'reports as open_reporters_count' => fn ($query) => $query
                     ->where('review_status', ReportStatus::Pending)
                     ->select(DB::raw('count(distinct reporter_id)')),
@@ -190,44 +193,53 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                 </a>
                             </td>
                             <td class="px-5 py-4 text-end">
-                                @can('update', $jobPosting)
-                                    <flux:dropdown position="bottom" align="end">
-                                        <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" :aria-label="__('Actions for :title', ['title' => $jobPosting->title])" />
+                                <div class="flex items-center justify-end gap-1">
+                                    <flux:button
+                                        size="sm"
+                                        variant="ghost"
+                                        icon="chart-bar"
+                                        :href="route('employer.analytics', ['company' => $this->company, 'job' => $jobPosting->slug])"
+                                        :aria-label="__('Stats for :title', ['title' => $jobPosting->title])"
+                                        :tooltip="__('Stats')"
+                                        wire:navigate
+                                    />
+                                    @can('update', $jobPosting)
+                                        <flux:dropdown position="bottom" align="end">
+                                            <flux:button size="sm" variant="ghost" icon="ellipsis-horizontal" :aria-label="__('Actions for :title', ['title' => $jobPosting->title])" />
 
-                                        <flux:menu>
-                                            <flux:menu.item icon="pencil" :href="route('employer.jobs.edit', ['company' => $this->company, 'jobPosting' => $jobPosting])" wire:navigate>
-                                                {{ __('Edit') }}
-                                            </flux:menu.item>
-
-                                            <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $jobPosting->id }})">
-                                                {{ __('Duplicate') }}
-                                            </flux:menu.item>
-
-                                            <flux:menu.item icon="calendar" wire:click="extend({{ $jobPosting->id }})">
-                                                {{ __('Extend by a month') }}
-                                            </flux:menu.item>
-
-                                            <flux:menu.separator />
-
-                                            @if ($jobPosting->availability_status === AvailabilityStatus::Active)
-                                                <flux:menu.item
-                                                    variant="danger"
-                                                    icon="x-circle"
-                                                    wire:click="close({{ $jobPosting->id }})"
-                                                    wire:confirm="{{ __('Close this posting? Candidates will no longer be able to apply.') }}"
-                                                >
-                                                    {{ __('Close') }}
+                                            <flux:menu>
+                                                <flux:menu.item icon="pencil" :href="route('employer.jobs.edit', ['company' => $this->company, 'jobPosting' => $jobPosting])" wire:navigate>
+                                                    {{ __('Edit') }}
                                                 </flux:menu.item>
-                                            @else
-                                                <flux:menu.item icon="arrow-path" wire:click="reopen({{ $jobPosting->id }})">
-                                                    {{ __('Reopen') }}
+
+                                                <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $jobPosting->id }})">
+                                                    {{ __('Duplicate') }}
                                                 </flux:menu.item>
-                                            @endif
-                                        </flux:menu>
-                                    </flux:dropdown>
-                                @else
-                                    <flux:text size="sm" class="text-zinc-400">&mdash;</flux:text>
-                                @endcan
+
+                                                <flux:menu.item icon="calendar" wire:click="extend({{ $jobPosting->id }})">
+                                                    {{ __('Extend by a month') }}
+                                                </flux:menu.item>
+
+                                                <flux:menu.separator />
+
+                                                @if ($jobPosting->availability_status === AvailabilityStatus::Active)
+                                                    <flux:menu.item
+                                                        variant="danger"
+                                                        icon="x-circle"
+                                                        wire:click="close({{ $jobPosting->id }})"
+                                                        wire:confirm="{{ __('Close this posting? Candidates will no longer be able to apply.') }}"
+                                                    >
+                                                        {{ __('Close') }}
+                                                    </flux:menu.item>
+                                                @else
+                                                    <flux:menu.item icon="arrow-path" wire:click="reopen({{ $jobPosting->id }})">
+                                                        {{ __('Reopen') }}
+                                                    </flux:menu.item>
+                                                @endif
+                                            </flux:menu>
+                                        </flux:dropdown>
+                                    @endcan
+                                </div>
                             </td>
                         </tr>
                     @endforeach

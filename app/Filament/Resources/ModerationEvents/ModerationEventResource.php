@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ModerationEvents;
 use App\Enums\ModerationAction;
 use App\Filament\Resources\ModerationEvents\Pages\ListModerationEvents;
 use App\Models\Company;
+use App\Models\CompanyReview;
 use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
@@ -49,7 +50,7 @@ class ModerationEventResource extends Resource
 
     protected static bool $hasTitleCaseModelLabel = false;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $slug = 'moderation/log';
 
@@ -62,6 +63,7 @@ class ModerationEventResource extends Resource
             'admin',
             'subject' => fn (MorphTo $morphTo) => $morphTo->constrain([
                 User::class => fn (Builder $query) => $query->withTrashed(),
+                CompanyReview::class => fn (Builder $query) => $query->with('company:id,name'),
             ]),
         ]);
     }
@@ -101,6 +103,7 @@ class ModerationEventResource extends Resource
         return match (true) {
             $event->subject instanceof JobPosting => "Posting: {$event->subject->title}",
             $event->subject instanceof Company => "Company: {$event->subject->name}",
+            $event->subject instanceof CompanyReview => "Review of {$event->subject->company->name}",
             $event->subject instanceof User => "Person: {$event->subject->name}",
             default => 'No longer exists',
         };
@@ -169,6 +172,7 @@ class ModerationEventResource extends Resource
                     ->options([
                         (new JobPosting)->getMorphClass() => 'Postings',
                         (new Company)->getMorphClass() => 'Companies',
+                        (new CompanyReview)->getMorphClass() => 'Company reviews',
                         (new User)->getMorphClass() => 'People',
                     ]),
                 Filter::make('created_at')

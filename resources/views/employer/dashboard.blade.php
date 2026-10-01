@@ -1,8 +1,14 @@
 <x-layouts::employer :company="$company" :title="$company->name">
     <div class="mx-auto flex max-w-5xl flex-col gap-8">
-        <div>
-            <flux:heading size="xl" class="font-display">{{ $company->name }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Where your hiring stands today.') }}</flux:text>
+        <div class="flex flex-wrap items-end justify-between gap-4">
+            <div>
+                <flux:heading size="xl" class="font-display">{{ $company->name }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Where your hiring stands today.') }}</flux:text>
+            </div>
+
+            <flux:button icon="chart-bar" :href="route('employer.analytics', $company)" wire:navigate>
+                {{ __('Analytics') }}
+            </flux:button>
         </div>
 
         <div class="grid gap-4 sm:grid-cols-3">
@@ -19,6 +25,17 @@
                 <div class="mt-1 font-display text-3xl font-semibold tabular-nums text-brand-700 dark:text-brand-400">{{ $newApplicationCount }}</div>
             </div>
         </div>
+
+        @if ($reviewsAwaitingResponse > 0)
+            <flux:callout icon="chat-bubble-left-right">
+                <flux:callout.text>
+                    {{ trans_choice(':count review of your hiring process is waiting for an answer.|:count reviews of your hiring process are waiting for an answer.', $reviewsAwaitingResponse, ['count' => $reviewsAwaitingResponse]) }}
+                </flux:callout.text>
+                <x-slot name="actions">
+                    <flux:button size="sm" :href="route('employer.reviews', ['company' => $company, 'show' => 'waiting'])" wire:navigate>{{ __('Read and answer') }}</flux:button>
+                </x-slot>
+            </flux:callout>
+        @endif
 
         <div>
             <flux:heading size="lg">{{ __('Your job postings') }}</flux:heading>

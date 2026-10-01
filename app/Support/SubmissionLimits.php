@@ -31,6 +31,10 @@ use Illuminate\Support\Facades\RateLimiter;
  *   an address the company typed in. GitHub caps organisation invitations
  *   at fifty a day for the same reason: without it, a company set up a
  *   minute ago could use our mail server to write to anyone.
+ * - Company review saves are counted per candidate, edits included: a
+ *   review that enters the moderation queue mails every staff member, and
+ *   deleting and rewriting one would otherwise do that without end. Ten
+ *   leaves room to write a review and correct it several times.
  */
 final class SubmissionLimits
 {
@@ -41,6 +45,15 @@ final class SubmissionLimits
     public const JOB_POSTINGS_PER_DAY = 20;
 
     public const INVITATIONS_PER_DAY = 50;
+
+    public const REVIEW_SAVES_PER_DAY = 10;
+
+    /**
+     * Per company, since any of its owners and managers can answer. Each
+     * save sends the response back to staff, so this is also what keeps a
+     * save-and-delete loop from flooding the queue.
+     */
+    public const RESPONSE_SAVES_PER_DAY = 20;
 
     public static function registrationKey(string $ip): string
     {
@@ -62,6 +75,16 @@ final class SubmissionLimits
         return 'invitations:'.$company->id;
     }
 
+    public static function reviewSaveKey(User $candidate): string
+    {
+        return 'company-review-saves:'.$candidate->id;
+    }
+
+    public static function responseSaveKey(Company $company): string
+    {
+        return 'review-response-saves:'.$company->id;
+    }
+
     /**
      * The same words wherever a new posting is refused -- the form and the
      * duplicate action -- so the two can never drift apart.
@@ -72,10 +95,9 @@ final class SubmissionLimits
     {
         return [
             'heading' => __("You've reached today's posting limit"),
-            'text' => __(':company can start up to :limit new postings a day. You can add more in :hours hours; existing postings can still be edited.', [
+            'text' => trans_choice('{1} :company can start up to :limit new postings a day. You can add more in 1 hour; existing postings can still be edited.|[2,*] :company can start up to :limit new postings a day. You can add more in :count hours; existing postings can still be edited.', self::hoursUntilAvailable(self::jobPostingKey($company)), [
                 'company' => $company->name,
                 'limit' => self::JOB_POSTINGS_PER_DAY,
-                'hours' => self::hoursUntilAvailable(self::jobPostingKey($company)),
             ]),
         ];
     }
