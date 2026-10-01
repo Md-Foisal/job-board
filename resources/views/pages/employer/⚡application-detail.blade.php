@@ -2,6 +2,7 @@
 
 use App\Actions\ChangeApplicationOutcome;
 use App\Actions\ChangeApplicationStage;
+use App\Actions\UndoApplicationOutcome;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Models\Application;
@@ -114,8 +115,29 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         unset($this->timeline);
 
         Flux::toast(variant: 'success', text: $to === ApplicationOutcomeStatus::Hired
-            ? __('Marked as hired. We have let the candidate know.')
-            : __('Application rejected. We have let the candidate know.'));
+            ? __('Marked as hired. The candidate is told in :minutes minutes; you can undo it until then.', ['minutes' => Application::UNDO_MINUTES])
+            : __('Application rejected. The candidate is told in :minutes minutes; you can undo it until then.', ['minutes' => Application::UNDO_MINUTES]));
+    }
+
+    public function undoDecision(UndoApplicationOutcome $undo): void
+    {
+        abort_unless(auth()->user()->canManage($this->company), 403);
+
+        // A page left open past the window still shows the button; the
+        // click then meets a decision that is already final.
+        if ($undo($this->application, auth()->user()) === null) {
+            $this->application->refresh();
+
+            Flux::toast(variant: 'warning', text: __('Too late to undo: the candidate has been told.'));
+
+            return;
+        }
+
+        $this->application->refresh();
+        $this->stage = $this->application->stage->value;
+        unset($this->timeline);
+
+        Flux::toast(variant: 'success', text: __('Decision undone. The candidate will not be told, and the application is open again.'));
     }
 
     public function addNote(): void
@@ -235,14 +257,14 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <div class="min-w-0">
                 <flux:heading size="lg">{{ __('Decision') }}</flux:heading>
-                <flux:text class="mt-1">{{ __('Final. The candidate is told by email either way.') }}</flux:text>
+                <flux:text class="mt-1">{{ __('The candidate is told by email either way, :minutes minutes after you decide. Until then you can undo it.', ['minutes' => Application::UNDO_MINUTES]) }}</flux:text>
             </div>
 
             <div class="flex gap-2">
                 <flux:button
                     variant="danger"
                     wire:click="decide('{{ ApplicationOutcomeStatus::Rejected->value }}')"
-                    wire:confirm="{{ __('Reject this application? The candidate will be told, and this cannot be undone.') }}"
+                    wire:confirm="{{ __('Reject this application? The candidate is told in :minutes minutes, and you can undo it until then.', ['minutes' => Application::UNDO_MINUTES]) }}"
                     wire:loading.attr="disabled"
                     wire:target="decide"
                 >
@@ -252,13 +274,28 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 <flux:button
                     variant="primary"
                     wire:click="decide('{{ ApplicationOutcomeStatus::Hired->value }}')"
-                    wire:confirm="{{ __('Mark this candidate as hired? They will be told, and this cannot be undone.') }}"
+                    wire:confirm="{{ __('Mark this candidate as hired? They are told in :minutes minutes, and you can undo it until then.', ['minutes' => Application::UNDO_MINUTES]) }}"
                     wire:loading.attr="disabled"
                     wire:target="decide"
                 >
                     {{ __('Mark as hired') }}
                 </flux:button>
             </div>
+        </div>
+    @endcan
+
+    @can('undoOutcome', $this->application)
+        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-warning-300 bg-warning-50 p-6 dark:border-warning-700 dark:bg-warning-950">
+            <div class="min-w-0">
+                <flux:heading size="lg">{{ __('Marked as :outcome', ['outcome' => $this->application->outcome_status->label()]) }}</flux:heading>
+                <flux:text class="mt-1">
+                    {{ __('The candidate is told :when. Until then you can undo it.', ['when' => $this->application->decided_at->addMinutes(Application::UNDO_MINUTES)->diffForHumans()]) }}
+                </flux:text>
+            </div>
+
+            <flux:button wire:click="undoDecision" wire:loading.attr="disabled" wire:target="undoDecision">
+                {{ __('Undo') }}
+            </flux:button>
         </div>
     @endcan
 
@@ -408,7 +445,11 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 <li class="flex justify-between gap-4">
                     <span class="text-zinc-700 dark:text-zinc-300">
                         {{ $event->changedBy?->name ?? __('The candidate') }}
-                        {{ __('moved this to :stage', ['stage' => $movedTo]) }}
+                        @if ($event->to_outcome_status === \App\Enums\ApplicationOutcomeStatus::Active->value)
+                            {{ __('undid the :outcome decision', ['outcome' => strtolower(\App\Enums\ApplicationOutcomeStatus::tryFrom((string) $event->from_outcome_status)?->label() ?? '')]) }}
+                        @else
+                            {{ __('moved this to :stage', ['stage' => $movedTo]) }}
+                        @endif
                     </span>
                     <span class="shrink-0 text-zinc-500 dark:text-zinc-500">{{ $event->created_at->diffForHumans() }}</span>
                 </li>

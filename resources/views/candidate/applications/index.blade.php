@@ -31,7 +31,7 @@
                         </div>
 
                         <div class="flex shrink-0 items-center gap-2">
-                            <x-application-status :application="$application" />
+                            <x-application-status :application="$application" for-candidate />
                         </div>
                     </a>
                 @endforeach

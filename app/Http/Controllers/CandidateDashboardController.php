@@ -66,9 +66,13 @@ class CandidateDashboardController extends Controller
         // specific missing piece, not just a number.
         $missingProfileItems = $allChecks->reject(fn (bool $filled) => $filled)->keys()->values();
 
+        // A decision still inside its undo window has not reached the
+        // candidate yet, so to them the application is still open.
         $activeApplicationCount = Application::query()
             ->where('candidate_profile_id', $candidateProfile->id)
-            ->where('outcome_status', ApplicationOutcomeStatus::Active)
+            ->where(fn ($query) => $query
+                ->where('outcome_status', ApplicationOutcomeStatus::Active)
+                ->orWhere('decided_at', '>', now()->subMinutes(Application::UNDO_MINUTES)))
             ->count();
 
         // One JobView row per (user, job posting) -- already deduped at the

@@ -84,7 +84,8 @@ class JobPerformance
      *
      * Defined by what the change is, not by who made it. The candidate's
      * only change is withdrawing, so a withdrawal is never an answer, and
-     * that stays true when an account behind an event is later erased.
+     * that stays true when an account behind an event is later erased. A
+     * decision that was undone is no answer either.
      * The company-wide responsiveness figure reads this same method.
      *
      * @param  Builder<Application>  $applications
@@ -96,10 +97,10 @@ class JobPerformance
             ->whereIn('application_id', $applications->clone()->select('applications.id'))
             ->where(fn (Builder $query) => $query
                 ->whereNotNull('to_stage')
-                ->orWhereIn('to_outcome_status', [
-                    ApplicationOutcomeStatus::Hired->value,
-                    ApplicationOutcomeStatus::Rejected->value,
-                ]))
+                ->orWhere(fn (Builder $decision) => $decision->standingDecisions(
+                    ApplicationOutcomeStatus::Hired,
+                    ApplicationOutcomeStatus::Rejected,
+                )))
             ->groupBy('application_id')
             ->selectRaw('application_id, min(created_at) as first_response_at')
             ->pluck('first_response_at', 'application_id')
@@ -147,7 +148,10 @@ class JobPerformance
         $waiting = $inScope()
             ->where('outcome_status', ApplicationOutcomeStatus::Active)
             ->where('stage', ApplicationStage::New)
-            ->whereDoesntHave('events');
+            // An open application can carry no standing decision, so a
+            // stage move is the only touch left to look for; an undone
+            // decision is no touch.
+            ->whereDoesntHave('events', fn (Builder $events) => $events->whereNotNull('to_stage'));
 
         $oldestWaiting = $waiting->clone()->min('created_at');
 
@@ -236,8 +240,9 @@ class JobPerformance
         $furthest = $cohort->map(function (Application $application) use ($events) {
             $applicationEvents = $events->get($application->id, collect());
 
-            if ($application->outcome_status === ApplicationOutcomeStatus::Hired
-                || $applicationEvents->contains('to_outcome_status', ApplicationOutcomeStatus::Hired->value)) {
+            // The current outcome, not the history: a hire that was undone
+            // is not a hire.
+            if ($application->outcome_status === ApplicationOutcomeStatus::Hired) {
                 return self::HIRED_RANK;
             }
 
@@ -310,7 +315,7 @@ class JobPerformance
         return ApplicationEvent::query()
             ->join('applications', 'applications.id', '=', 'application_events.application_id')
             ->whereIn('applications.job_posting_id', $jobIds)
-            ->where('application_events.to_outcome_status', ApplicationOutcomeStatus::Hired->value)
+            ->standingDecisions(ApplicationOutcomeStatus::Hired)
             ->whereBetween('application_events.created_at', [$from, $now])
             ->get(['applications.created_at as applied_at', 'application_events.created_at as hired_at'])
             ->map(fn ($hire) => round(CarbonImmutable::parse($hire->applied_at)->diffInHours(CarbonImmutable::parse($hire->hired_at)) / 24, 1));
@@ -327,7 +332,7 @@ class JobPerformance
         $firstHires = ApplicationEvent::query()
             ->join('applications', 'applications.id', '=', 'application_events.application_id')
             ->whereIn('applications.job_posting_id', $jobIds)
-            ->where('application_events.to_outcome_status', ApplicationOutcomeStatus::Hired->value)
+            ->standingDecisions(ApplicationOutcomeStatus::Hired)
             ->groupBy('applications.job_posting_id')
             ->selectRaw('applications.job_posting_id, min(application_events.created_at) as first_hire_at')
             ->pluck('first_hire_at', 'job_posting_id');

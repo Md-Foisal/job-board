@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\JobPosting;
 use App\Notifications\ApplicationOutcomeDecided;
 use App\Notifications\ApplicationStageChanged;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
@@ -45,7 +46,9 @@ test('a manager can hire, and the decision is recorded and told to the candidate
     Notification::assertSentTo($application->candidateProfile->user, ApplicationOutcomeDecided::class);
 })->with([MembershipRole::Owner, MembershipRole::Manager]);
 
-test('a rejection is never quiet: the candidate is always told', function () {
+test('a rejection is never quiet: the candidate is always told, after the undo window', function () {
+    $this->freezeSecond();
+
     detailPage($this, employerUser($this->company, MembershipRole::Manager))
         ->call('decide', ApplicationOutcomeStatus::Rejected->value);
 
@@ -56,16 +59,20 @@ test('a rejection is never quiet: the candidate is always told', function () {
     Notification::assertSentTo($candidate, ApplicationOutcomeDecided::class, function ($notification) use ($candidate) {
         $mail = $notification->toMail($candidate);
 
-        return $mail->subject === 'Your application to '.$this->company->name
-            && str_contains(implode(' ', $mail->introLines), 'decided not to go ahead with your application for Backend Developer');
+        return $notification instanceof ShouldQueue
+            && $notification->delay->equalTo(now()->addMinutes(Application::UNDO_MINUTES))
+            && $mail->subject === 'Your application for Backend Developer at '.$this->company->name
+            && $mail->introLines === [
+                'Thank you for applying for Backend Developer at '.$this->company->name.'. They have reviewed your application and decided not to move forward with it.',
+                'This does not affect any of your other applications, and you can keep applying to jobs here.',
+            ];
     });
 });
 
 test('the hire email says so plainly', function () {
     $candidate = $this->application->candidateProfile->user;
-    $this->application->update(['outcome_status' => ApplicationOutcomeStatus::Hired]);
 
-    $mail = (new ApplicationOutcomeDecided($this->application))->toMail($candidate);
+    $mail = (new ApplicationOutcomeDecided($this->application, ApplicationOutcomeStatus::Hired, now()))->toMail($candidate);
 
     expect($mail->subject)->toBe('Good news from '.$this->company->name)
         ->and($mail->introLines[0])->toContain('as hired')
@@ -169,13 +176,26 @@ test('a batch move leaves closed applications where they are', function () {
         ->and($this->application->events()->count())->toBe(0);
 });
 
-test('the candidate sees the decision on their own timeline', function () {
+test('the candidate sees the decision only once the undo window has passed', function () {
     app(ChangeApplicationOutcome::class)($this->application, employerUser($this->company, MembershipRole::Owner), ApplicationOutcomeStatus::Rejected);
+    $candidate = $this->application->candidateProfile->user;
+    $line = $this->company->name.' marked this application as Rejected';
 
-    $this->actingAs($this->application->candidateProfile->user)
+    $this->actingAs($candidate)
         ->get(route('candidate.applications.show', $this->application))
         ->assertOk()
-        ->assertSee($this->company->name.' marked this application as Rejected');
+        ->assertDontSee($line)
+        ->assertSee('Active');
+
+    $this->travel(Application::UNDO_MINUTES + 1)->minutes();
+
+    $this->actingAs($candidate)
+        ->get(route('candidate.applications.show', $this->application))
+        ->assertSee($line);
+
+    $this->actingAs($candidate)
+        ->get(route('candidate.applications.index'))
+        ->assertSee('Rejected');
 });
 
 test('a turned-down or withdrawn application at New is no longer waiting on the company', function () {

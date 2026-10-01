@@ -80,14 +80,24 @@ class ApplicationPolicy
     }
 
     /**
-     * Hiring or turning someone down is final and is written to the
-     * candidate straight away, so it stays with the people who answer for
-     * the hire, as moving a whole batch does.
+     * Hiring or turning someone down becomes final and is written to the
+     * candidate, so it stays with the people who answer for the hire, as
+     * moving a whole batch does.
      */
     public function decideOutcome(User $user, Application $application): bool
     {
         return $user->canManage($application->jobPosting->company)
             && $application->outcome_status === ApplicationOutcomeStatus::Active;
+    }
+
+    /**
+     * Whoever may decide may take a decision back, but only while the
+     * candidate has not yet been told.
+     */
+    public function undoOutcome(User $user, Application $application): bool
+    {
+        return $user->canManage($application->jobPosting->company)
+            && $application->decisionIsUndoable();
     }
 
     /**

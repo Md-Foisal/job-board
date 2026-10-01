@@ -11,16 +11,19 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * The company's final answer on an application: hired, or not.
+ * The company's answer on an application: hired, or not.
  *
  * It is the other half of the ghosting-killer. Stage moves tell a
  * candidate they are still in the running; without this, the only way an
  * application ever ended was the candidate giving up on it. So a decision
  * always reaches the candidate -- there is no quiet rejection.
  *
- * An outcome is final. It is only ever taken from an active application,
- * and once set, the stage stops moving, so a candidate who has been told
- * "no" is never told afterwards that they moved forward.
+ * The decision is saved at once, but the email waits out the undo window
+ * (Application::UNDO_MINUTES) and is dropped if the decision was taken
+ * back in the meantime. Once the window has passed the decision is
+ * final: it is only ever taken from an active application, and the stage
+ * stops moving, so a candidate who has been told "no" is never told
+ * afterwards that they moved forward.
  */
 class ChangeApplicationOutcome
 {
@@ -40,6 +43,7 @@ class ChangeApplicationOutcome
             }
 
             $application->outcome_status = $to;
+            $application->decided_at = now();
             $application->save();
 
             return $application->events()->create([
@@ -56,7 +60,10 @@ class ChangeApplicationOutcome
         $candidate = $application->candidateProfile->user;
 
         if (! $candidate->trashed()) {
-            $candidate->notify(new ApplicationOutcomeDecided($application));
+            $candidate->notify(
+                (new ApplicationOutcomeDecided($application, $to, $application->decided_at))
+                    ->delay(now()->addMinutes(Application::UNDO_MINUTES)),
+            );
         }
 
         return $event;
