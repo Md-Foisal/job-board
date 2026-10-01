@@ -34,7 +34,10 @@ class CompanyReviewPolicy
 
     /**
      * Only the writer can take a review down. The company never can --
-     * it can answer or report, but not silence.
+     * it can answer or report, but not silence. Staff do not delete
+     * either: they reject, which takes the review out of public view and
+     * leaves the decision and its reason on the record. The other way a
+     * review disappears is its writer's account being erased.
      */
     public function delete(User $user, CompanyReview $review): bool
     {

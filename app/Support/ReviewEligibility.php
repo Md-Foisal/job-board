@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Models\Application;
+use App\Models\CompanyReview;
 use App\Services\JobPerformance;
 use Carbon\CarbonImmutable;
 
@@ -32,11 +33,17 @@ final readonly class ReviewEligibility
 
     public const UNANSWERED = 'unanswered';
 
+    /**
+     * The candidate already has a review of this company, from this
+     * application or another one: one voice per person per company. A
+     * newer experience goes into that review by editing it.
+     */
     public const ALREADY_REVIEWED = 'already_reviewed';
 
     /**
-     * Anyone who is or was on the company's team: an undisclosed insider
-     * review is exactly the kind of fake review the rules are there for.
+     * Anyone who is or was on the company's team. They saw the hiring
+     * process from the inside, so their account is not an applicant's,
+     * whatever badge it would carry.
      */
     public const INSIDER = 'insider';
 
@@ -54,7 +61,12 @@ final readonly class ReviewEligibility
 
     public static function of(Application $application): self
     {
-        if ($application->review()->exists()) {
+        $hasReviewed = CompanyReview::query()
+            ->where('company_id', $application->jobPosting->company_id)
+            ->where('candidate_profile_id', $application->candidate_profile_id)
+            ->exists();
+
+        if ($hasReviewed) {
             return new self(self::ALREADY_REVIEWED);
         }
 

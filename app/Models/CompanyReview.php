@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Fillable([
-    'company_id', 'application_id',
+    'company_id', 'application_id', 'candidate_profile_id',
     'overall_rating', 'communication_rating', 'job_as_described', 'title', 'body',
     'moderation_status', 'published_at',
     'response_body', 'response_status', 'responded_by_id', 'responded_at',
@@ -65,7 +65,7 @@ class CompanyReview extends Model
     public function isWrittenBy(User $user): bool
     {
         return $user->candidateProfile !== null
-            && $this->application->candidate_profile_id === $user->candidateProfile->id;
+            && $this->candidate_profile_id === $user->candidateProfile->id;
     }
 
     public function reports()

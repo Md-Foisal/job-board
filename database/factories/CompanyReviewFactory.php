@@ -25,6 +25,7 @@ class CompanyReviewFactory extends Factory
             // its own: a review about a company the writer never applied
             // to is exactly what the table is built to rule out.
             'company_id' => fn (array $attributes) => Application::find($attributes['application_id'])->jobPosting->company_id,
+            'candidate_profile_id' => fn (array $attributes) => Application::find($attributes['application_id'])->candidate_profile_id,
             'overall_rating' => fake()->numberBetween(1, 5),
             'communication_rating' => fake()->numberBetween(1, 5),
             'job_as_described' => fake()->randomElement(JobAsDescribed::cases()),

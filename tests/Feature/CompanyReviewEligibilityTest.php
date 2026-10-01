@@ -186,10 +186,48 @@ test('one application gives one review', function () {
         ->and(fn () => CompanyReview::factory()->for($this->application)->create())->toThrow(QueryException::class);
 });
 
+test('a second application to the same company does not give a second review', function () {
+    decideOutcome($this->application, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+    CompanyReview::factory()->for($this->application)->create();
+
+    $second = Application::factory()
+        ->for(JobPosting::factory()->for($this->company))
+        ->create(['candidate_profile_id' => $this->candidate->candidateProfile->id]);
+    decideOutcome($second, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+
+    expect(reviewReason($second))->toBe(ReviewEligibility::ALREADY_REVIEWED)
+        ->and($this->candidate->can('create', [CompanyReview::class, $second->fresh()]))->toBeFalse()
+        ->and(fn () => CompanyReview::factory()->for($second)->create())->toThrow(QueryException::class);
+});
+
+test('a review of one company does not use up a review of another', function () {
+    decideOutcome($this->application, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+    CompanyReview::factory()->for($this->application)->create();
+
+    $elsewhere = Application::factory()
+        ->create(['candidate_profile_id' => $this->candidate->candidateProfile->id]);
+    decideOutcome($elsewhere, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+
+    expect(reviewReason($elsewhere))->toBe(ReviewEligibility::DECIDED);
+});
+
+test('a review that staff rejected still counts as the one review', function () {
+    decideOutcome($this->application, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+    CompanyReview::factory()->for($this->application)->create(['moderation_status' => ModerationStatus::Rejected]);
+
+    $second = Application::factory()
+        ->for(JobPosting::factory()->for($this->company))
+        ->create(['candidate_profile_id' => $this->candidate->candidateProfile->id]);
+    decideOutcome($second, ApplicationOutcomeStatus::Rejected, $this->recruiter);
+
+    expect(reviewReason($second))->toBe(ReviewEligibility::ALREADY_REVIEWED);
+});
+
 test('a review belongs to the company the application leads to, and waits for staff', function () {
     $review = CompanyReview::factory()->create();
 
     expect($review->company_id)->toBe($review->application->jobPosting->company_id)
+        ->and($review->candidate_profile_id)->toBe($review->application->candidate_profile_id)
         ->and($review->moderation_status)->toBe(ModerationStatus::Pending)
         ->and($review->published_at)->toBeNull()
         ->and($review->company->reviews->sole()->is($review))->toBeTrue()
