@@ -24,9 +24,8 @@ class DocumentPolicy
     }
 
     /**
-     * Gates the download route (claude/14 step 7 security fix -- a
-     * Policy-checked route, not a guessable public-disk URL, is what
-     * actually keeps a CV private).
+     * Gates the download route. A policy-checked route, not a guessable
+     * public-disk URL, is what actually keeps a CV private.
      */
     public function download(User $user, Document $document): bool
     {

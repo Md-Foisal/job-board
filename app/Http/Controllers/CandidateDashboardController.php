@@ -14,8 +14,8 @@ class CandidateDashboardController extends Controller
     /**
      * The completion % counts
      * $user->candidateProfile's own filled fields, computed on every
-     * request rather than stored (claude/13's decision -- there is no
-     * "completion" column to go stale the moment a field changes). This
+     * request rather than stored -- there is no "completion" column to
+     * go stale the moment a field changes. This
      * mirrors the model's #[Fillable(...)] set, so a future field added
      * there is a one-line addition here too -- except phone and location:
      * companies never see those on the profile, they only go on CVs the

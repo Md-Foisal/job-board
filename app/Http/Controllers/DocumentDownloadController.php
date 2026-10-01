@@ -6,12 +6,11 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Single-action controller (claude/15's "thin Controller" convention) --
- * this route exists purely as the claude/14 step-7 security fix: a
- * Policy-gated download endpoint so a candidate's CV/document can never be
- * fetched by guessing its storage path. The file itself lives on the
- * `local` (private) disk, never `public` -- see 04_roadmap.md's storage
- * disk decision.
+ * A thin single-action controller: a policy-gated download endpoint so a
+ * candidate's CV or document can never be fetched by guessing its storage
+ * path. The file itself lives on the `local` (private) disk, never
+ * `public`, because a file on the public disk is served to anyone who
+ * knows its URL.
  */
 class DocumentDownloadController extends Controller
 {

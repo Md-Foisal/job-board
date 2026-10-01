@@ -11,11 +11,10 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * schema.org JobPosting structured data (JSON-LD) for the job detail
- * page. This is what makes a posting eligible for Google for Jobs --
- * claude/12's research is why SEO counts as core here rather than a
- * later polish step, and claude/14 step 5 deliberately gives it no
- * route of its own (unlike sitemap.xml): it is emitted inside route
- * 3's own HTML.
+ * page. This is what makes a posting eligible for Google for Jobs, where
+ * job seekers start many searches, so it is part of the page rather than
+ * a later polish step. It has no route of its own (unlike sitemap.xml):
+ * it is emitted inside the job page's own HTML.
  *
  * It lives in a class rather than the Blade view because the shape is
  * conditional -- remote roles describe where applicants may live,

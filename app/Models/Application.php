@@ -104,7 +104,7 @@ class Application extends Model
      * The CV exactly as it was sent. Including removed ones is the point:
      * a candidate taking a CV out of their library (or an upload pushing
      * an old one out) must not take it away from an employer who already
-     * received it -- the application is a snapshot (claude/13, question 4).
+     * received it -- the application is a snapshot of what was sent.
      */
     public function resumeDocument()
     {

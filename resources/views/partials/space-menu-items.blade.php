@@ -1,7 +1,7 @@
 {{-- Every space this person can switch to, and the two ways to open a new
-     one. claude/13 (question 4-c): picking a side at registration only
-     decides which relationship comes first -- "if they pick wrong nothing
-     breaks, they can build the other one too". These last two items are
+     one. Picking a side at registration only decides which relationship
+     comes first -- if they pick wrong nothing breaks, they can build the
+     other one too. These last two items are
      where they do that. Shared by the company workspace's switcher and
      the account menu everywhere else, so both list the same spaces. --}}
 @php

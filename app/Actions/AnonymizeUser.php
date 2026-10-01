@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 
 /**
  * Erases a person's personal data while keeping the record of what
- * happened -- claude/12's rule: anonymise, don't delete.
+ * happened: anonymise, don't delete.
  *
  * What goes: everything that says who they were or what they wrote about
  * themselves -- name, email, phone, photos, profile, preferences, education,
@@ -38,7 +38,7 @@ use Illuminate\Support\Str;
  * This overrides the application snapshot rule on purpose: the snapshot
  * protects an employer from a candidate quietly rewriting what was sent,
  * not from the candidate asking to be forgotten. Erasure is a legal
- * constraint (claude/13, Constraints) and sits above product rules.
+ * obligation and sits above product rules.
  */
 class AnonymizeUser
 {
