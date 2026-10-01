@@ -15,12 +15,12 @@ class CandidateProfileController extends Controller
     {
         $candidateProfile = $request->user()->candidateProfile;
 
-        // The profile page bills itself as "what companies see when they
-        // look you up", so it needs read-only summaries of every section a
-        // real candidate profile has -- not just the identity card fields
-        // that live directly on CandidateProfile. Education/Experience/
+        // The profile page shows the candidate everything about them in one
+        // place, so it needs read-only summaries of every section a real
+        // candidate profile has -- not just the identity card fields that
+        // live directly on CandidateProfile. Education/Experience/
         // Documents/Skills each already have their own dedicated CRUD page
-        // (claude/14 step 3b) and stay that way here; this view only reads
+        // and stay that way here; this view only reads
         // them, it never edits them.
         return view('candidate.profile.edit', [
             'user' => $request->user(),

@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Your profile')">
     <div class="mx-auto max-w-3xl">
         <flux:heading size="xl" level="1">{{ __('Your profile') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('This is what companies see when they look you up.') }}</flux:subheading>
+        <flux:subheading size="lg" class="mb-6">{{ __('Everything about you in one place. When you apply, the company sees your name, headline, bio and skills, with the CV you attach.') }}</flux:subheading>
 
         <div
             x-data="{
@@ -352,12 +352,11 @@
 
         {{-- Everything below is read-only here on purpose: Education,
              Experience, Skills and Documents each already have their own
-             dedicated CRUD page (claude/14 step 3b -- modal-based add/edit/
-             delete). Duplicating that editing UI here would just be a
+             dedicated CRUD page (modal-based add/edit/delete).
+             Duplicating that editing UI here would just be a
              second, out-of-sync place to do the same thing. This page's
-             job is to show the candidate the same complete picture a
-             company sees, with a "Manage" link into the real editor for
-             each section. --}}
+             job is to show the candidate their whole profile at a glance,
+             with a "Manage" link into the real editor for each section. --}}
 
         {{-- Education --}}
         <div class="mt-6 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">

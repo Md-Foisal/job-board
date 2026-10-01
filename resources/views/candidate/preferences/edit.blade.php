@@ -8,14 +8,6 @@
             @csrf
             @method('PATCH')
 
-            <flux:checkbox
-                name="is_actively_searching"
-                value="1"
-                :checked="old('is_actively_searching', $preference?->is_actively_searching ?? true)"
-                :label="__('Actively searching')"
-                :description="__('Shows employers you are currently open to offers')"
-            />
-
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <flux:input
                     name="desired_salary_min"
