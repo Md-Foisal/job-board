@@ -52,3 +52,23 @@ test('shows categories with their active job posting count', function () {
     $response->assertOk();
     $response->assertSee('Engineering');
 });
+
+test('lists every category with an open job, and none without one', function () {
+    $job = JobPosting::factory()->create();
+    $names = ['Accounts', 'Biology', 'Catering', 'Dentistry', 'Energy', 'Fashion', 'Gardening', 'Hospitality', 'Insurance', 'Journalism'];
+
+    foreach ($names as $name) {
+        $job->categories()->attach(Category::create(['name' => $name, 'slug' => strtolower($name)]));
+    }
+
+    Category::create(['name' => 'Unused Field', 'slug' => 'unused-field']);
+    JobPosting::factory()->draft()->create()->categories()->attach(Category::create(['name' => 'Draft-only Field', 'slug' => 'draft-only-field']));
+
+    $response = $this->get(route('home'))->assertOk();
+
+    foreach ($names as $name) {
+        $response->assertSee($name);
+    }
+
+    $response->assertDontSee('Unused Field')->assertDontSee('Draft-only Field');
+});
