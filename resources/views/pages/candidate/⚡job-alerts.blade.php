@@ -56,7 +56,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             $this->create();
             $this->fillCriteria(JobSearchCriteria::from(request()->query()));
             [$skillNames, $categoryNames] = JobSearchCriteria::names([$this->criteria()]);
-            $this->name = Str::limit(implode(', ', JobSearchCriteria::describe($this->criteria(), $skillNames, $categoryNames)), 90);
+            $this->name = Str::limit(Str::ucfirst(implode(', ', JobSearchCriteria::describe($this->criteria(), $skillNames, $categoryNames))), 90);
         }
     }
 

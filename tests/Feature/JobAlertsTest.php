@@ -54,6 +54,13 @@ test('the search page hands its filters to a new alert', function () {
     expect($candidate->jobAlerts()->sole()->criteria)->toBe(['q' => 'Designer', 'workplaceType' => 'remote']);
 });
 
+test('the suggested name for an alert starts with a capital, whatever the search starts with', function () {
+    Livewire::actingAs(candidateUser())
+        ->withQueryParams(['create' => 1, 'currency' => 'EUR', 'location' => 'Lisbon'])
+        ->test('pages::candidate.job-alerts')
+        ->assertSet('name', 'In Lisbon, paid in EUR');
+});
+
 test('the search page offers an alert for the search on screen, but not to employers', function () {
     Livewire::actingAs(candidateUser())
         ->withQueryParams(['q' => 'Designer'])
