@@ -26,6 +26,15 @@ test('views are summed per day over every posting, with the busiest day in words
         ->assertSee('role="img"', false);
 });
 
+test('a day is one point, whether its rows came from the model or from a counted view', function () {
+    [$one, $two] = JobPosting::factory()->count(2)->create();
+    JobPostingDailyStat::create(['job_posting_id' => $one->id, 'date' => '2026-09-28', 'views' => 40]);
+    JobPostingDailyStat::query()->insert(['job_posting_id' => $two->id, 'date' => '2026-09-28', 'views' => 2]);
+
+    Livewire::test(PlatformActivityChart::class)
+        ->assertSee('Job views: 42 in the last 30 days, most on 28 Sep (42).');
+});
+
 test('every day of the range has a point, oldest first, and an empty day is zero', function () {
     $posting = JobPosting::factory()->create();
     JobPostingDailyStat::create(['job_posting_id' => $posting->id, 'date' => '2026-10-01', 'views' => 7]);

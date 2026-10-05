@@ -227,3 +227,13 @@ test('a failed count is reported and the visitor still gets the page', function 
 
     Exceptions::assertReported(QueryException::class);
 });
+
+test('a view adds to the day\'s row even when that row was written through the model', function () {
+    $job = JobPosting::factory()->create();
+    JobPostingDailyStat::create(['job_posting_id' => $job->id, 'date' => today()->toDateString(), 'views' => 40]);
+
+    $this->get(route('jobs.show', $job))->assertOk();
+
+    expect(viewsOn($job))->toBe([today()->toDateString() => 41])
+        ->and(JobPostingDailyStat::count())->toBe(1);
+});
