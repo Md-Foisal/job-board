@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\User;
 use Carbon\CarbonInterface;
 use DateTimeZone;
+use Exception;
 
 /**
  * Which time zone a moment is shown in, and the conversion itself.
@@ -24,16 +25,24 @@ final class LocalTime
     public const COOKIE = 'timezone';
 
     /**
-     * Names IANA has replaced that Chrome, Safari and Node still report,
-     * because they take their names from CLDR rather than from IANA. A
-     * server's own time zone list may not know the old ones at all --
+     * Older names that Chrome, Safari and Node still report, because they
+     * take their names from CLDR, which keeps the first name a zone ever
+     * had (CLDR common/bcp47/timezone.xml marks each with its IANA name).
+     * A server's own time zone list may not know the old ones at all --
      * Debian and Ubuntu moved them to a separate tzdata-legacy package --
      * so they are turned into the current name before anything else.
      */
     private const RENAMED = [
         'Africa/Asmera' => 'Africa/Asmara',
+        'America/Buenos_Aires' => 'America/Argentina/Buenos_Aires',
+        'America/Catamarca' => 'America/Argentina/Catamarca',
         'America/Coral_Harbour' => 'America/Atikokan',
+        'America/Cordoba' => 'America/Argentina/Cordoba',
         'America/Godthab' => 'America/Nuuk',
+        'America/Indianapolis' => 'America/Indiana/Indianapolis',
+        'America/Jujuy' => 'America/Argentina/Jujuy',
+        'America/Louisville' => 'America/Kentucky/Louisville',
+        'America/Mendoza' => 'America/Argentina/Mendoza',
         'Asia/Calcutta' => 'Asia/Kolkata',
         'Asia/Katmandu' => 'Asia/Kathmandu',
         'Asia/Rangoon' => 'Asia/Yangon',
@@ -110,11 +119,28 @@ final class LocalTime
      * Every name this server can convert to, old ones included where its
      * time zone data still carries them.
      *
+     * Only names that open as a zone. PHP built against the system's time
+     * zone data, as on Debian and Ubuntu, lists every file in the zoneinfo
+     * folder, and some of those are not zones at all: "leapseconds" is
+     * listed but cannot be opened, and accepting it from a cookie would
+     * break every page for that account.
+     *
      * @return array<int, string>
      */
     public static function identifiers(): array
     {
-        return self::$identifiers ??= DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC);
+        return self::$identifiers ??= array_values(array_filter(
+            DateTimeZone::listIdentifiers(DateTimeZone::ALL_WITH_BC),
+            static function (string $zone): bool {
+                try {
+                    new DateTimeZone($zone);
+
+                    return true;
+                } catch (Exception) {
+                    return false;
+                }
+            },
+        ));
     }
 
     /**

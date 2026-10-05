@@ -45,6 +45,15 @@ test('a zone chosen by hand is not replaced by the browser\'s', function () {
     expect($user->fresh()->timezone)->toBe('Europe/London');
 });
 
+test('every zone name the server accepts opens as a zone', function () {
+    foreach (LocalTime::identifiers() as $zone) {
+        expect(fn () => new DateTimeZone($zone))->not->toThrow(Exception::class);
+    }
+
+    expect(LocalTime::canonical('leapseconds'))->toBeNull()
+        ->and(LocalTime::zonesAtHour(8))->not->toBeEmpty();
+});
+
 test('a made-up zone in the cookie is ignored', function () {
     $user = candidateUser();
 
@@ -55,15 +64,20 @@ test('a made-up zone in the cookie is ignored', function () {
     expect($user->fresh()->timezone)->toBeNull();
 });
 
-test('the old names Chrome and Safari still report are kept under their current name', function () {
+test('the old names Chrome and Safari still report are kept under their current name', function (string $reported, string $current) {
     $user = candidateUser();
 
     $this->actingAs($user)
-        ->withUnencryptedCookie(LocalTime::COOKIE, 'Asia/Calcutta')
+        ->withUnencryptedCookie(LocalTime::COOKIE, $reported)
         ->get(route('dashboard'));
 
-    expect($user->fresh()->timezone)->toBe('Asia/Kolkata');
-});
+    expect($user->fresh()->timezone)->toBe($current);
+})->with([
+    'Kolkata' => ['Asia/Calcutta', 'Asia/Kolkata'],
+    'Buenos Aires' => ['America/Buenos_Aires', 'America/Argentina/Buenos_Aires'],
+    'Indianapolis' => ['America/Indianapolis', 'America/Indiana/Indianapolis'],
+    'Louisville' => ['America/Louisville', 'America/Kentucky/Louisville'],
+]);
 
 test('the application history shows the time in the candidate\'s zone', function () {
     $application = applicationAt('2026-10-02 17:41:00');
@@ -151,6 +165,17 @@ test('a zone is labelled with the offset in force on the day shown, not today\'s
 
     expect(LocalTime::label('Europe/London'))->toBe('Europe/London (GMT+01:00)')
         ->and(LocalTime::label('Europe/London', at: Carbon::parse('2026-11-02 12:00', 'UTC')))->toBe('Europe/London (GMT+00:00)');
+});
+
+test('opening the staff panel keeps a staff member\'s zone with their browser too', function () {
+    $staff = staffWithTwoFactor();
+
+    $this->actingAs($staff)
+        ->withUnencryptedCookie(LocalTime::COOKIE, 'Europe/Berlin')
+        ->get('/admin/moderation/log')
+        ->assertOk();
+
+    expect($staff->fresh()->timezone)->toBe('Europe/Berlin');
 });
 
 test('the staff panel formats times in the staff member\'s zone', function () {

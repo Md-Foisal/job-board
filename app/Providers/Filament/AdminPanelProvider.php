@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
 use App\Http\Middleware\LoadStaffMemberships;
+use App\Http\Middleware\SyncTimezone;
 use App\Http\Responses\AdminLogoutResponse;
 use Filament\Actions\Action;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse;
@@ -98,10 +99,13 @@ class AdminPanelProvider extends PanelProvider
             ])
             // Persistent, so the checks also run on every Livewire request a
             // panel page makes -- which is how every table action is sent.
+            // The panel has its own stack rather than the web group, so the
+            // time zone sync is listed here as well.
             ->authMiddleware([
                 Authenticate::class,
                 EnsureStaffHasTwoFactor::class,
                 LoadStaffMemberships::class,
+                SyncTimezone::class,
             ], isPersistent: true);
     }
 }
