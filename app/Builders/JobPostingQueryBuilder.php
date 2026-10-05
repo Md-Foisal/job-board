@@ -3,6 +3,7 @@
 namespace App\Builders;
 
 use App\Enums\EmploymentType;
+use App\Enums\SkillImportance;
 use App\Enums\WorkplaceType;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -141,9 +142,35 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * Every sort ends on the id, newest first: many postings share a date
-     * or a salary, and tied rows may come back in any order -- a paginated
-     * list would then repeat some postings and skip others between pages.
+     * The postings that share most of the candidate's skills first, by the
+     * same weighting as the match score shown on each card: a required
+     * skill counts twice, a nice-to-have once. A posting that lists no
+     * skills has no score at all, so it comes after every scored one,
+     * 0% included.
+     *
+     * @param  array<int, int>  $skillIds
+     */
+    public function bestMatchFirst(array $skillIds): self
+    {
+        $weight = 'case when job_posting_skill.importance = ? then 2 else 1 end';
+        $mine = implode(', ', array_fill(0, count($skillIds), '?'));
+
+        $score = "(select sum(({$weight}) * (case when job_posting_skill.skill_id in ({$mine}) then 1 else 0 end)) * 1.0 / sum({$weight})"
+            .' from job_posting_skill where job_posting_skill.job_posting_id = '.$this->qualifyColumn('id').')';
+
+        return $this->orderByRaw("coalesce({$score}, -1) desc", [
+            SkillImportance::Required->value,
+            ...array_values($skillIds),
+            SkillImportance::Required->value,
+        ]);
+    }
+
+    /**
+     * Every sort ends on the date posted and then the id, newest first:
+     * many postings share a salary or a match, and tied rows may come back
+     * in any order -- a paginated list would then repeat some postings and
+     * skip others between pages. "Newest" is the date the posting went
+     * out, the one candidates are shown, not the day its draft was begun.
      *
      * Pay is sorted only within one currency. Postings in it come first,
      * by pay, those with no figure after them; everything else follows,
@@ -154,8 +181,10 @@ class JobPostingQueryBuilder extends Builder
      * that may be null: MySQL and SQLite put nulls first in an ascending
      * sort, PostgreSQL puts them first in a descending one, so "high to
      * low" would open with negotiable postings on one of them.
+     *
+     * @param  array<int, int>  $skillIds  the candidate's skills, for "best match"
      */
-    public function sortBy(string $field, ?string $currency = null): self
+    public function sortBy(string $field, ?string $currency = null, array $skillIds = []): self
     {
         if (in_array($field, ['salary_high', 'salary_low'], true) && $currency !== null) {
             $high = $field === 'salary_high';
@@ -169,9 +198,11 @@ class JobPostingQueryBuilder extends Builder
                 ->orderByRaw("case when {$inCurrency} then {$pay} else 0 end ".($high ? 'desc' : 'asc'), [$currency]);
         }
 
-        if ($field === 'newest' || in_array($field, ['salary_high', 'salary_low'], true)) {
-            $this->orderByDesc($this->qualifyColumn('created_at'));
+        if ($field === 'match' && $skillIds !== []) {
+            $this->bestMatchFirst($skillIds);
         }
+
+        $this->orderByDesc($this->qualifyColumn('published_at'));
 
         return $this->orderByDesc($this->qualifyColumn('id'));
     }

@@ -42,6 +42,7 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
             'matchScores' => $this->matchScores($jobPostings->getCollection()),
             'payCurrency' => $this->payCurrency(),
             'payCurrencies' => $this->payCurrencyOptions(),
+            'canSortByMatch' => $this->canSortByMatch(),
         ];
     }
 }; ?>
@@ -63,6 +64,9 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
 
         <flux:select wire:model.live="sort" size="sm" class="max-w-xs" :aria-label="__('Sort')">
             <flux:select.option value="newest">{{ __('Newest') }}</flux:select.option>
+            @if ($canSortByMatch)
+                <flux:select.option value="match">{{ __('Best match') }}</flux:select.option>
+            @endif
             @if ($payCurrency)
                 <flux:select.option value="salary_high">{{ __('Pay in :currency: high to low', ['currency' => $payCurrency]) }}</flux:select.option>
                 <flux:select.option value="salary_low">{{ __('Pay in :currency: low to high', ['currency' => $payCurrency]) }}</flux:select.option>

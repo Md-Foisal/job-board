@@ -65,6 +65,9 @@
         @if ($jobPosting->location_city)
             <span class="text-zinc-500 dark:text-zinc-500">{{ $jobPosting->location_city }}</span>
         @endif
+        @if ($jobPosting->published_at)
+            <time class="text-zinc-500 dark:text-zinc-500" datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
+        @endif
     </div>
 
     @php $pay = $jobPosting->payRange(); @endphp

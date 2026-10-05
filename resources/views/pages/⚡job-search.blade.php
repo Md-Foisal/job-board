@@ -29,6 +29,7 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
             'employmentTypes' => EmploymentType::cases(),
             'payCurrency' => $this->payCurrency(),
             'payCurrencies' => $this->payCurrencyOptions(),
+            'canSortByMatch' => $this->canSortByMatch(),
             // Guests too: the link signs them in and brings them back
             // with the search intact. Employers have no alerts to keep.
             'canCreateAlert' => ! auth()->check() || auth()->user()->isCandidate(),
@@ -107,6 +108,9 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
 
                 <flux:select wire:model.live="sort" size="sm" :aria-label="__('Sort')">
                     <flux:select.option value="newest">{{ __('Newest') }}</flux:select.option>
+                    @if ($canSortByMatch)
+                        <flux:select.option value="match">{{ __('Best match') }}</flux:select.option>
+                    @endif
                     @if ($payCurrency)
                         <flux:select.option value="salary_high">{{ __('Pay in :currency: high to low', ['currency' => $payCurrency]) }}</flux:select.option>
                         <flux:select.option value="salary_low">{{ __('Pay in :currency: low to high', ['currency' => $payCurrency]) }}</flux:select.option>

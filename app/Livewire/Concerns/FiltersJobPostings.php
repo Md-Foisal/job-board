@@ -60,17 +60,19 @@ trait FiltersJobPostings
     }
 
     /**
-     * The pay sorts exist only once a currency is chosen, so clearing it
-     * must not leave the sort pointing at an option that is gone.
+     * The pay sorts exist only once a currency is chosen, and "best match"
+     * only for a candidate with skills, so the sort never points at an
+     * option the page is not offering -- after the currency is cleared, or
+     * from a link someone else shared.
      */
     public function mountFiltersJobPostings(): void
     {
-        $this->forgetPaySortWithoutCurrency();
+        $this->forgetUnavailableSort();
     }
 
     public function updatedCurrency(): void
     {
-        $this->forgetPaySortWithoutCurrency();
+        $this->forgetUnavailableSort();
     }
 
     protected function filteredQuery(): JobPostingQueryBuilder
@@ -81,7 +83,16 @@ trait FiltersJobPostings
             ->active()
             ->with(['company:id,name,slug,logo_path,verified_at', 'skills:id,name'])
             ->matching($criteria)
-            ->sortBy($this->sort, $criteria['currency'] ?? null);
+            ->sortBy($this->sort, $criteria['currency'] ?? null, $this->sort === 'match' ? $this->candidateSkillIds()->all() : []);
+    }
+
+    /**
+     * Whether "best match" can be offered: only a candidate who has listed
+     * skills has anything to be matched on.
+     */
+    protected function canSortByMatch(): bool
+    {
+        return $this->candidateSkillIds()->isNotEmpty();
     }
 
     /**
@@ -120,9 +131,15 @@ trait FiltersJobPostings
         return array_intersect_key(SalaryCurrencies::options(), array_flip($codes));
     }
 
-    private function forgetPaySortWithoutCurrency(): void
+    private function forgetUnavailableSort(): void
     {
-        if ($this->payCurrency() === null && in_array($this->sort, ['salary_high', 'salary_low'], true)) {
+        $available = match ($this->sort) {
+            'salary_high', 'salary_low' => $this->payCurrency() !== null,
+            'match' => $this->canSortByMatch(),
+            default => true,
+        };
+
+        if (! $available) {
             $this->sort = 'newest';
         }
     }
@@ -182,7 +199,7 @@ trait FiltersJobPostings
     public function resetFilters(): void
     {
         $this->reset(['q', 'skill', 'category', 'currency', 'salaryMin', 'salaryMax', 'location', 'workplaceType', 'employmentType', 'experience']);
-        $this->forgetPaySortWithoutCurrency();
+        $this->forgetUnavailableSort();
         $this->resetPage();
     }
 }

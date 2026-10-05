@@ -54,7 +54,7 @@ class CompanyController extends Controller
         // one query instead of an extra one per card.
         $jobPostings = $company->jobPostings()
             ->active()
-            ->latest('created_at')
+            ->latest('published_at')
             ->latest('id')
             ->get()
             ->each(fn ($jobPosting) => $jobPosting->setRelation('company', $company));

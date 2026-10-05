@@ -28,7 +28,10 @@
                         <span class="shrink-0 rounded-full bg-danger-50 px-2.5 py-1 text-xs font-medium text-danger-700 dark:bg-danger-950 dark:text-danger-300">
                             Expired
                         </span>
-                    @elseif ($jobPosting->expires_at->diffInDays(now()) <= 3)
+                    {{-- Counted from now to the closing moment: Carbon's diff is
+                         signed, and the other way round it is negative for
+                         every open posting, so the badge would never leave. --}}
+                    @elseif (now()->diffInDays($jobPosting->expires_at) <= 3)
                         <span class="shrink-0 rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700 dark:bg-warning-950 dark:text-warning-300">
                             Expires {{ $jobPosting->expires_at->diffForHumans() }}
                         </span>
@@ -73,6 +76,11 @@
                     </span>
                     @if ($jobPosting->location_city)
                         <span class="text-zinc-500 dark:text-zinc-500">{{ $jobPosting->location_city }}</span>
+                    @endif
+                    @if ($jobPosting->published_at)
+                        <span class="text-zinc-500 dark:text-zinc-500">
+                            {{ __('Posted') }} <time datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
+                        </span>
                     @endif
                 </div>
             </div>

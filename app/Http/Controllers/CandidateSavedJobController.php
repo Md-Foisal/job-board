@@ -22,7 +22,7 @@ class CandidateSavedJobController extends Controller
         $jobPostings = $request->user()->savedJobs()
             ->active()
             ->with('company')
-            ->latest('job_postings.created_at')
+            ->latest('job_postings.published_at')
             ->latest('job_postings.id')
             ->get();
 

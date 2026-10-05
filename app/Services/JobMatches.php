@@ -42,7 +42,7 @@ class JobMatches
             ->whereHas('skills', fn ($query) => $query->whereIn('skills.id', $skillIds))
             ->whereDoesntHave('applications', fn ($query) => $query->where('candidate_profile_id', $candidateProfile->id))
             ->with(['company:id,name,slug,logo_path,verified_at', 'skills:id,name'])
-            ->latest('created_at')
+            ->latest('published_at')
             ->latest('id')
             ->limit(self::CANDIDATES_TO_SCORE)
             ->get()

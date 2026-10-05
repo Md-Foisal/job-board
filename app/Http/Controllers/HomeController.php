@@ -25,7 +25,7 @@ class HomeController extends Controller
         return view('home', [
             'jobPostings' => PublicCache::models('home:postings', JobPosting::class, fn () => JobPosting::with('company:id,name,slug,logo_path,verified_at')
                 ->active()
-                ->latest('created_at')
+                ->latest('published_at')
                 ->latest('id')
                 ->take(self::RECENT_OPENINGS_COUNT)
                 ->get(), ['company']),
