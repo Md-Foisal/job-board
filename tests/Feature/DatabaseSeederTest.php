@@ -17,6 +17,7 @@ use App\Support\ReviewSummary;
 use Database\Seeders\Demo\Catalogue;
 use Database\Seeders\DemoAccountsSeeder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use PragmaRX\Google2FA\Google2FA;
 
@@ -112,6 +113,17 @@ test('a fresh seed can be looked at from every side', function () {
     expect($applications->every(fn (Application $application) => $application->created_at->gte($application->jobPosting->published_at)))->toBeTrue()
         ->and($applications->filter(fn (Application $application) => $application->created_at->lt(now()->subDay()))->count())
         ->toBeGreaterThan(intdiv($applications->count(), 2));
+
+    // Every company was set up by someone of its own place, whose zone it
+    // took; and a closing date is the end of a day in the company's zone,
+    // the past one of the expired demo posting included.
+    $owners = Company::query()->with('memberships.user')->get()
+        ->flatMap(fn (Company $company) => $company->memberships->map(fn ($membership) => [$membership->user, $company]));
+    $expired = $demoCompany->jobPostings()->where('availability_status', 'expired')->sole();
+
+    expect($owners->every(fn (array $pair) => $pair[0]->timezone === $pair[1]->timezone))->toBeTrue()
+        ->and($owners->every(fn (array $pair) => str_starts_with($pair[0]->email, Str::slug($pair[0]->name, '.')) || str_ends_with($pair[0]->email, '@jobboard.test')))->toBeTrue()
+        ->and($expired->expires_at->setTimezone($demoCompany->timezone)->format('H:i:s'))->toBe('23:59:59');
 
     // The company page has reviews with averages, the mark, and one review
     // waiting in the staff queue.

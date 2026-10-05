@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\Membership;
 use App\Models\User;
 use Database\Seeders\Demo\Catalogue;
+use Database\Seeders\Demo\People;
 use Illuminate\Database\Seeder;
 
 class CompanySeeder extends Seeder
@@ -24,9 +25,27 @@ class CompanySeeder extends Seeder
             Membership::factory()
                 ->owner()
                 ->for($company)
-                ->for(User::factory()->state(['name' => Catalogue::personName($details['locale'])]), 'user')
+                ->for(self::owner($details), 'user')
                 ->create(['job_title' => self::OWNER_TITLES[array_rand(self::OWNER_TITLES)]]);
         }
+    }
+
+    /**
+     * The person who set the company up: named as people are where it is,
+     * with an address made from the name, and the company's zone as their
+     * own, since a company starts with its creator's.
+     *
+     * @param  array<string, mixed>  $details
+     */
+    private static function owner(array $details): User
+    {
+        $name = Catalogue::personName($details['locale']);
+
+        return User::factory()->create([
+            'name' => $name,
+            'email' => People::email($name),
+            'timezone' => $details['timezone'],
+        ]);
     }
 
     /**

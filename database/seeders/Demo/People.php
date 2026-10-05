@@ -357,9 +357,10 @@ final class People
     }
 
     /**
-     * An address made from the name, as most people's are.
+     * An address made from the name, as most people's are, never one
+     * already taken.
      */
-    private static function email(string $name): string
+    public static function email(string $name): string
     {
         $base = Str::slug($name, '.');
         $domains = ['example.com', 'example.org', 'example.net'];

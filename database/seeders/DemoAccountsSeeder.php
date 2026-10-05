@@ -202,7 +202,10 @@ class DemoAccountsSeeder extends Seeder
         $open = $post('customer-support-specialist', 40, [
             'expires_at' => ClosingDate::endOf(now($company->timezone)->addDays(20)->toDateString(), $company),
         ]);
-        $post('qa-tester-junior', 33, ['availability_status' => AvailabilityStatus::Expired, 'expires_at' => now()->subDays(3)]);
+        $post('qa-tester-junior', 33, [
+            'availability_status' => AvailabilityStatus::Expired,
+            'expires_at' => ClosingDate::endOf(now($company->timezone)->subDays(3)->toDateString(), $company),
+        ]);
         $post('content-writer', 20, ['availability_status' => AvailabilityStatus::Closed]);
         $post('office-manager', 2, ['availability_status' => AvailabilityStatus::Draft, 'published_at' => null]);
 
@@ -227,12 +230,16 @@ class DemoAccountsSeeder extends Seeder
     {
         $skills = $posting->skills()->pluck('skills.id');
 
+        // Days are the company's own, as RecordJobView counts them.
+        $today = today($posting->company->timezone);
+
         foreach (range(39, 0) as $daysAgo) {
-            $weekend = now()->subDays($daysAgo)->isWeekend();
+            $day = $today->subDays($daysAgo);
+            $weekend = $day->isWeekend();
 
             JobPostingDailyStat::create([
                 'job_posting_id' => $posting->id,
-                'date' => today()->subDays($daysAgo)->toDateString(),
+                'date' => $day->toDateString(),
                 'views' => $weekend ? random_int(3, 9) : random_int(10, 28),
             ]);
         }
