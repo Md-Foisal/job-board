@@ -5,6 +5,7 @@ use App\Enums\ModerationStatus;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Notifications\JobAlertMatches;
+use Illuminate\Console\Command;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
@@ -179,11 +180,40 @@ test('unsubscribing from an alert that was deleted still says so plainly', funct
     $this->post($url)->assertOk();
 });
 
-test('alerts go out every morning, Dhaka time', function () {
+test('alerts are checked every hour, for the people whose 8 o\'clock it is', function () {
     $event = collect(app(Schedule::class)->events())
         ->first(fn ($event) => str_contains($event->command ?? '', 'job-alerts:send'));
 
     expect($event)->not->toBeNull()
-        ->and($event->expression)->toBe('0 8 * * *')
-        ->and($event->timezone)->toBe('Asia/Dhaka');
+        ->and($event->expression)->toBe('0 * * * *')
+        ->and($event->command)->toContain('--local-hour=8');
+});
+
+test('an alert goes out in its owner\'s morning, and not before', function () {
+    // 02:00 UTC is 08:00 in Dhaka, and still 22:00 the night before in New York.
+    $this->travelTo(now()->setDate(2026, 10, 5)->setTime(2, 0));
+    Notification::fake();
+    postingPublished('Laravel Developer');
+
+    $inDhaka = alertFor();
+    $inDhaka->user->forceFill(['timezone' => 'Asia/Dhaka'])->save();
+    $inNewYork = alertFor();
+    $inNewYork->user->forceFill(['timezone' => 'America/New_York'])->save();
+    $noZone = alertFor();
+
+    $this->artisan('job-alerts:send', ['--local-hour' => 8])->assertSuccessful();
+
+    Notification::assertSentTo($inDhaka->user, JobAlertMatches::class);
+    Notification::assertNotSentTo($inNewYork->user, JobAlertMatches::class);
+    Notification::assertNotSentTo($noZone->user, JobAlertMatches::class);
+
+    // 08:00 UTC: an account with no zone yet is treated as UTC.
+    $this->travelTo(now()->setTime(8, 0));
+    $this->artisan('job-alerts:send', ['--local-hour' => 8]);
+
+    Notification::assertSentTo($noZone->user, JobAlertMatches::class);
+});
+
+test('an hour outside the day is refused', function () {
+    $this->artisan('job-alerts:send', ['--local-hour' => 24])->assertExitCode(Command::INVALID);
 });

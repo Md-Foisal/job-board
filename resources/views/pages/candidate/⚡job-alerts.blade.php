@@ -261,7 +261,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
             <flux:input wire:model="name" :label="__('Name')" :placeholder="__('Laravel jobs in Dhaka')" />
 
-            <flux:radio.group wire:model="frequency" variant="segmented" :label="__('Email me')">
+            <flux:radio.group wire:model="frequency" variant="segmented" :label="__('Email me')" :description="__('Sent around 8 in the morning, your time.')">
                 @foreach ($frequencies as $option)
                     <flux:radio value="{{ $option->value }}" :label="$option->label()" />
                 @endforeach

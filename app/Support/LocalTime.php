@@ -118,6 +118,23 @@ final class LocalTime
     }
 
     /**
+     * Every zone where it is $hour o'clock right now -- 08:30 in Kolkata
+     * and 08:45 in Kathmandu count as 8. Hourly work for "8 in the
+     * morning, everyone's own" asks for these.
+     *
+     * @return array<int, string>
+     */
+    public static function zonesAtHour(int $hour): array
+    {
+        $now = now();
+
+        return array_values(array_filter(
+            self::identifiers(),
+            fn (string $zone) => $now->setTimezone($zone)->hour === $hour,
+        ));
+    }
+
+    /**
      * Current names only, grouped by region for a select, each labelled
      * with its offset today: "Dhaka (GMT+06:00)" under "Asia".
      *
