@@ -10,9 +10,9 @@ use App\Enums\WorkplaceType;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\User;
+use App\Support\SalaryCurrencies;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
-use Symfony\Component\Intl\Currencies;
 
 /**
  * @extends Factory<JobPosting>
@@ -62,7 +62,7 @@ class JobPostingFactory extends Factory
             'min_experience_years' => $this->faker->numberBetween(0, 10),
             'salary_min' => $negotiable ? null : $min,
             'salary_max' => $negotiable ? null : $min + $this->faker->numberBetween((int) ($spread / 2), $spread),
-            'salary_currency' => $negotiable ? null : $this->faker->randomElement(Currencies::getCurrencyCodes()),
+            'salary_currency' => $negotiable ? null : $this->faker->randomElement(SalaryCurrencies::codes()),
             'salary_period' => $negotiable ? null : $period,
             'salary_negotiable' => $negotiable,
             'availability_status' => AvailabilityStatus::Active,

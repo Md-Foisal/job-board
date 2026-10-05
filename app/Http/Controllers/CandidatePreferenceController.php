@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\EmploymentType;
 use App\Enums\WorkplaceType;
+use App\Rules\CurrencyInUse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -23,7 +24,8 @@ class CandidatePreferenceController extends Controller
         $validated = $request->validate([
             'desired_salary_min' => ['nullable', 'integer', 'min:0'],
             'desired_salary_max' => ['nullable', 'integer', 'min:0', 'gte:desired_salary_min'],
-            'desired_salary_currency' => ['nullable', 'string', 'size:3'],
+            // A floor with no currency cannot be compared with any job.
+            'desired_salary_currency' => ['required_with:desired_salary_min,desired_salary_max', 'nullable', 'string', new CurrencyInUse],
             'preferred_workplace_type' => ['nullable', Rule::enum(WorkplaceType::class)],
             'preferred_employment_type' => ['nullable', Rule::enum(EmploymentType::class)],
             'available_from' => ['nullable', 'date'],

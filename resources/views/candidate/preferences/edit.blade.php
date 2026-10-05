@@ -26,14 +26,18 @@
                 />
             </div>
 
-            <flux:input
+            @php $currency = old('desired_salary_currency', $preference?->desired_salary_currency); @endphp
+
+            <flux:select
                 name="desired_salary_currency"
                 :label="__('Currency')"
-                :description="__('3-letter code, e.g. USD, BDT')"
-                maxlength="3"
-                class="uppercase"
-                :value="old('desired_salary_currency', $preference?->desired_salary_currency)"
-            />
+                :description="__('A job that pays in another currency is not compared with your salary.')"
+            >
+                <flux:select.option value="">{{ __('Not set') }}</flux:select.option>
+                @foreach (\App\Support\SalaryCurrencies::options($currency) as $code => $label)
+                    <flux:select.option :value="$code" :selected="$currency === $code">{{ $label }}</flux:select.option>
+                @endforeach
+            </flux:select>
 
             <flux:select
                 name="preferred_workplace_type"

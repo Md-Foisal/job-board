@@ -169,6 +169,27 @@ class JobPosting extends Model
             && ! $this->isHiddenByReports();
     }
 
+    /**
+     * The pay as a candidate reads it, "BDT 50,000–80,000", or null when no
+     * figure is given. Either end may be left open on the form, so a single
+     * figure reads "From …" or "Up to …" rather than as a range to nothing.
+     */
+    public function payRange(): ?string
+    {
+        if ($this->salary_negotiable || ($this->salary_min === null && $this->salary_max === null)) {
+            return null;
+        }
+
+        $amount = fn (int $figure): string => trim($this->salary_currency.' '.number_format($figure));
+
+        return match (true) {
+            $this->salary_min === $this->salary_max => $amount($this->salary_min),
+            $this->salary_max === null => __('From :amount', ['amount' => $amount($this->salary_min)]),
+            $this->salary_min === null => __('Up to :amount', ['amount' => $amount($this->salary_max)]),
+            default => $amount($this->salary_min).'–'.number_format($this->salary_max),
+        };
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class);

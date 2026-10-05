@@ -6,8 +6,8 @@ use App\Enums\EmploymentType;
 use App\Enums\WorkplaceType;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
+use App\Support\SalaryCurrencies;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Symfony\Component\Intl\Currencies;
 
 /**
  * @extends Factory<CandidatePreference>
@@ -23,7 +23,7 @@ class CandidatePreferenceFactory extends Factory
             'candidate_profile_id' => CandidateProfile::factory(),
             'desired_salary_min' => $min,
             'desired_salary_max' => $max,
-            'desired_salary_currency' => fake()->randomElement(Currencies::getCurrencyCodes()),
+            'desired_salary_currency' => fake()->randomElement(SalaryCurrencies::codes()),
             'preferred_workplace_type' => fake()->randomElement(WorkplaceType::cases()),
             'preferred_employment_type' => fake()->randomElement(EmploymentType::cases()),
             'is_actively_searching' => fake()->boolean(70),
