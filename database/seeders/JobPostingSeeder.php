@@ -28,7 +28,13 @@ class JobPostingSeeder extends Seeder
             }
 
             foreach ($details['roles'] as $roleKey => $overrides) {
-                $posting = self::createPosting($company, $roleKey, $details, $overrides, CarbonImmutable::now()->subDays(random_int(1, 27)), [
+                // Some day in the last four weeks, during the poster's
+                // working hours rather than at the minute of seeding.
+                $publishedAt = CarbonImmutable::now($company->timezone)->subDays(random_int(1, 27))
+                    ->setTime(random_int(8, 18), random_int(0, 59))
+                    ->utc();
+
+                $posting = self::createPosting($company, $roleKey, $details, $overrides, $publishedAt, [
                     'posted_by_id' => $company->memberships->first()?->user_id,
                 ]);
 

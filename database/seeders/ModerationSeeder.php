@@ -19,6 +19,8 @@ use App\Models\JobPosting;
 use App\Models\Report;
 use App\Models\User;
 use App\Support\ClosingDate;
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\Catalogue;
 use Database\Seeders\Demo\Postings;
 use Illuminate\Database\Eloquent\Model;
@@ -30,7 +32,8 @@ use Illuminate\Support\Collection;
  * can see, made through the same actions staff use, so the log, the trust
  * tier and the report counts agree with each other the way they would in
  * real use. Needs the demo staff accounts, so it runs after them and does
- * nothing without them.
+ * nothing without them. Decisions about older things are dated back to
+ * when they would have been made, so the log reads as weeks of work.
  */
 class ModerationSeeder extends Seeder
 {
@@ -92,12 +95,13 @@ class ModerationSeeder extends Seeder
         $trusted = $companies->shift();
         foreach ($trusted->jobPostings->take(Company::TRUSTED_AFTER_APPROVALS) as $posting) {
             $this->resubmit($posting);
-            app(ApproveJobPosting::class)($posting, $moderator);
+            $this->at(CarbonImmutable::instance($posting->published_at)->addMinutes(random_int(20, 240)),
+                fn () => app(ApproveJobPosting::class)($posting, $moderator));
         }
-        app(VerifyCompany::class)($trusted, $moderator);
+        $this->at(now()->subDays(random_int(10, 40)), fn () => app(VerifyCompany::class)($trusted, $moderator));
 
         $verified = $companies->shift();
-        app(VerifyCompany::class)($verified, $moderator);
+        $this->at(now()->subDays(random_int(3, 9)), fn () => app(VerifyCompany::class)($verified, $moderator));
 
         // The posting queue, one of them past the review target so the
         // dashboard shows what overdue looks like.
@@ -114,15 +118,17 @@ class ModerationSeeder extends Seeder
 
         // Reports staff already looked at and found nothing in.
         $dismissed = $companies->get(2)->jobPostings->last();
-        $this->report($dismissed, 1, 'Other');
-        app(DismissReports::class)($dismissed->reports()->first(), $moderator, 'Checked the company site; the role is real.');
+        $reportedAt = min(CarbonImmutable::instance($dismissed->published_at)->addDay(), now()->subHours(8));
+        $this->at($reportedAt, fn () => $this->report($dismissed, 1, 'Other'));
+        $this->at($reportedAt->addHours(5), fn () => app(DismissReports::class)($dismissed->reports()->first(), $moderator, 'Checked the company site; the role is real.'));
 
+        // Recent, so none of its postings went up after the ban.
         $banned = $companies->last();
-        $this->report($banned, 2, 'Scam or fraud');
-        app(BanCompany::class)($banned, $superAdmin, 'Asked applicants to pay a registration fee.');
+        $this->at(now()->subHours(16), fn () => $this->report($banned, 2, 'Scam or fraud'));
+        $this->at(now()->subHours(7), fn () => app(BanCompany::class)($banned, $superAdmin, 'Asked applicants to pay a registration fee.'));
 
         $suspended = $this->reporters->last();
-        app(SuspendUser::class)($suspended, $superAdmin, 'Sent the same abusive message to several employers.');
+        $this->at(now()->subDay()->subHours(5), fn () => app(SuspendUser::class)($suspended, $superAdmin, 'Sent the same abusive message to several employers.'));
     }
 
     private function submittedPosting(Company $company, string $roleKey): JobPosting
@@ -181,6 +187,20 @@ class ModerationSeeder extends Seeder
     {
         $posting->moderation_status = ModerationStatus::Pending;
         $posting->saveQuietly();
+    }
+
+    /**
+     * Run $action as if it were $moment, so what it records is dated then.
+     */
+    private function at(CarbonImmutable $moment, callable $action): mixed
+    {
+        Carbon::setTestNow($moment);
+
+        try {
+            return $action();
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     /**

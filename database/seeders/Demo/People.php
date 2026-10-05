@@ -178,8 +178,10 @@ final class People
         }
 
         $current = $profile->experienceRecords()->orderByRaw('end_date is null desc')->latest('start_date')->first();
+        // Whole years, counted the way the bio counts them: seven years and
+        // eight months is still "seven years", or the two would disagree.
         $years = $profile->experienceRecords()->get()->sum(fn (ExperienceRecord $job) => $job->start_date->diffInMonths($job->end_date ?? now())) / 12;
-        $line = 'I have '.self::YEARS[max(1, min(10, (int) round($years)))].' of experience'
+        $line = 'I have '.self::YEARS[max(1, min(10, (int) floor($years)))].' of experience'
             .($current ? ', most recently as '.$current->job_title.' at '.$current->company_name : '').'.';
 
         return strtr(self::pick(Catalogue::people()['cover']), [

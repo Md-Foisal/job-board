@@ -146,11 +146,17 @@ class DemoAccountsSeeder extends Seeder
 
             $reviewer = $posting->company->decisionMakers()->first();
 
-            // Each step a few days after the last, never later than now,
-            // with the clock set so the timeline and the email agree.
+            // Each step a few days after the last, in the reviewer's
+            // working day and never later than now, with the clock set so
+            // the timeline and the email agree.
             foreach ($steps as $step => $stage) {
                 if ($reviewer) {
-                    $this->at(min($appliedAt[$index]->addDays(2 + $step * 4), now()->subHour()),
+                    $movedAt = $appliedAt[$index]->addDays(2 + $step * 4)
+                        ->setTimezone($posting->company->timezone)
+                        ->setTime(random_int(9, 17), random_int(0, 59))
+                        ->utc();
+
+                    $this->at(min($movedAt, now()->subHour()),
                         fn () => app(ChangeApplicationStage::class)($application->refresh(), $reviewer, $stage));
                 }
             }
@@ -262,8 +268,12 @@ class DemoAccountsSeeder extends Seeder
 
         $applications = [];
 
+        // Days ago each applied, oldest first: uneven, as applications
+        // arrive, and still coming in this week.
+        $daysAgo = [1 => 37, 35, 35, 31, 28, 27, 24, 20, 17, 17, 12, 9, 6, 3];
+
         foreach (range(1, 14) as $index) {
-            $appliedAt = now()->subDays(36 - $index * 2)->setTime(random_int(8, 20), random_int(0, 59));
+            $appliedAt = now()->subDays($daysAgo[$index])->setTime(random_int(8, 20), random_int(0, 59));
 
             // Mostly people near the office, and with the posting's skills
             // to different degrees, so every match bucket has someone in it.
@@ -313,6 +323,16 @@ class DemoAccountsSeeder extends Seeder
                     break;
             }
         }
+
+        // Others have saved it without applying yet.
+        User::query()
+            ->whereHas('candidateProfile', fn ($query) => $query->whereNotIn('id', collect($applications)->pluck('candidate_profile_id')))
+            ->where('email', '!=', 'candidate@jobboard.test')
+            ->whereNull('anonymized_at')
+            ->inRandomOrder()
+            ->take(6)
+            ->get()
+            ->each(fn (User $user) => $user->savedJobs()->attach($posting->id));
 
         $this->seedReviews($posting, $applications, $reviewer);
     }
