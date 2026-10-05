@@ -2,29 +2,23 @@
 
 namespace Database\Seeders;
 
-use App\Models\CandidatePreference;
-use App\Models\CandidateProfile;
-use App\Models\Document;
-use App\Models\EducationRecord;
-use App\Models\ExperienceRecord;
-use Database\Seeders\Concerns\SeedsCandidateSkills;
+use Database\Seeders\Demo\Catalogue;
+use Database\Seeders\Demo\People;
 use Illuminate\Database\Seeder;
 
 class CandidateProfileSeeder extends Seeder
 {
-    use SeedsCandidateSkills;
-
     /**
-     * Run the database seeds.
+     * People with complete profiles who have not applied for anything
+     * yet, from every line of work, including ones no seeded company is
+     * hiring for right now.
      */
     public function run(): void
     {
-        CandidateProfile::factory(10)
-            ->has(CandidatePreference::factory(), 'preference')
-            ->has(EducationRecord::factory()->count(2))
-            ->has(ExperienceRecord::factory()->count(2))
-            ->has(Document::factory()->count(2))
-            ->create()
-            ->each(fn (CandidateProfile $profile) => $this->attachSkills($profile));
+        $families = array_keys(Catalogue::people()['families']);
+
+        foreach (range(1, 10) as $ignored) {
+            People::unrenderedCv(People::candidate($families[array_rand($families)]));
+        }
     }
 }

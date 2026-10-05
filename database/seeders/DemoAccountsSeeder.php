@@ -8,18 +8,15 @@ use App\Enums\AlertFrequency;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
-use App\Enums\DocumentType;
 use App\Enums\JobAsDescribed;
 use App\Enums\ModerationStatus;
 use App\Enums\ReviewPart;
 use App\Enums\StaffRole;
 use App\Models\Application;
 use App\Models\ApplicationEvent;
-use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\CompanyReview;
-use App\Models\Document;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
@@ -28,10 +25,12 @@ use App\Models\Membership;
 use App\Models\User;
 use App\Support\ClosingDate;
 use App\Support\ReviewScreening;
+use Carbon\Carbon;
 use Carbon\CarbonImmutable;
-use Database\Seeders\Concerns\SeedsCandidateSkills;
 use Database\Seeders\Demo\Catalogue;
+use Database\Seeders\Demo\People;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * One account per role with a password everyone on the team knows, so a
@@ -41,8 +40,6 @@ use Illuminate\Database\Seeder;
  */
 class DemoAccountsSeeder extends Seeder
 {
-    use SeedsCandidateSkills;
-
     public const PASSWORD = 'password';
 
     /**
@@ -73,23 +70,28 @@ class DemoAccountsSeeder extends Seeder
             return;
         }
 
-        $this->staff('Super Admin', 'superadmin@jobboard.test', StaffRole::SuperAdmin);
-        $this->staff('Moderator', 'moderator@jobboard.test', StaffRole::Moderator);
+        // Seeded CVs are real files; the ones from the last seed belong to
+        // rows that no longer exist.
+        Storage::disk('local')->deleteDirectory(People::CV_FOLDER);
+
+        $demo = Catalogue::demo();
+
+        $this->staff($demo['staff']['superadmin'], 'superadmin@jobboard.test', StaffRole::SuperAdmin);
+        $this->staff($demo['staff']['moderator'], 'moderator@jobboard.test', StaffRole::Moderator);
 
         // The website shares the owner's email domain, so the verification
         // queue shows a matching domain for this company.
-        $employer = User::factory()->create(['name' => 'Demo Employer', 'email' => 'employer@jobboard.test']);
-        $company = CompanySeeder::create(self::DEMO_COMPANY_SLUG, Catalogue::demo()['company'], ['website_url' => 'https://jobboard.test']);
-        Membership::factory()->owner()->for($company)->for($employer, 'user')->create();
+        $employer = User::factory()->create(['name' => $demo['employer']['name'], 'email' => 'employer@jobboard.test', 'timezone' => $demo['company']['timezone']]);
+        $company = CompanySeeder::create(self::DEMO_COMPANY_SLUG, $demo['company'], ['website_url' => 'https://jobboard.test']);
+        Membership::factory()->owner()->for($company)->for($employer, 'user')->create(['job_title' => $demo['employer']['job_title']]);
 
-        $candidate = User::factory()->create(['name' => 'Demo Candidate', 'email' => 'candidate@jobboard.test']);
-        $profile = CandidateProfile::factory()
-            ->for($candidate)
-            ->has(CandidatePreference::factory(), 'preference')
+        $candidate = User::factory()->create(['name' => $demo['candidate']['name'], 'email' => 'candidate@jobboard.test', 'timezone' => 'Europe/London']);
+        $profile = People::writtenCandidate($candidate, [
+            ...$demo['candidate'],
             // Ofcom keeps 07700 900000-900999 for fiction, so the demo
             // number can never ring a real phone.
-            ->create(['phone' => '+44 7700 900123', 'location' => 'London, United Kingdom']);
-        $this->attachSkills($profile, 5, 8);
+            'contact' => ['phone' => '+44 7700 900123'],
+        ]);
         $this->seedCandidateActivity($candidate, $profile);
         $this->seedJobAlerts($candidate, $profile);
         $this->seedCompanyLifecycle($company, $employer);
@@ -109,33 +111,48 @@ class DemoAccountsSeeder extends Seeder
      * A candidate with no history shows empty lists on every page they
      * own, which makes the candidate side look unfinished in every fresh
      * database. The demo one gets applications at different stages, with
-     * the timeline entries a real review leaves, plus saved and viewed jobs.
+     * the timeline entries a real review leaves, plus saved and viewed
+     * jobs, all in their own line of work. The applications went to the
+     * longest-open of those jobs, so a review had time to happen.
      */
     private function seedCandidateActivity(User $candidate, CandidateProfile $profile): void
     {
-        $postings = JobPosting::query()->active()->with('company')->inRandomOrder()->limit(8)->get();
+        [$fitting, $others] = JobPosting::query()->active()->with('company')->get()->shuffle()
+            ->partition(fn (JobPosting $posting) => in_array(People::familyOf($posting), ['fullstack', 'backend', 'frontend'], true));
 
-        if ($postings->count() < 8) {
+        if ($fitting->count() < 3 || $fitting->count() + $others->count() < 8) {
             return;
         }
 
-        $resume = Document::factory()->create([
-            'candidate_profile_id' => $profile->id,
-            'document_type' => DocumentType::Cv,
-        ]);
+        $applied = $fitting->sortBy('published_at')->take(3)->values();
+        $postings = $applied->concat($fitting->diff($applied))->concat($others)->values();
+        $appliedAt = $applied->map(fn (JobPosting $posting) => min(
+            CarbonImmutable::instance($posting->published_at)->addHours(random_int(4, 48)),
+            now()->subHours(2),
+        ));
 
-        foreach ([ApplicationStage::New, ApplicationStage::Shortlisted, ApplicationStage::Interview] as $index => $stage) {
-            $posting = $postings[$index];
+        $resume = People::renderCv($profile, $appliedAt->min()->subDays(3));
+
+        foreach ([[], [ApplicationStage::Shortlisted], [ApplicationStage::Shortlisted, ApplicationStage::Interview]] as $index => $steps) {
+            $posting = $applied[$index];
             $application = Application::factory()->create([
                 'job_posting_id' => $posting->id,
                 'candidate_profile_id' => $profile->id,
                 'resume_document_id' => $resume->id,
+                'cover_letter' => People::coverLetter($profile, $posting),
+                'created_at' => $appliedAt[$index],
+                'updated_at' => $appliedAt[$index],
             ]);
 
             $reviewer = $posting->company->decisionMakers()->first();
 
-            if ($stage !== ApplicationStage::New && $reviewer) {
-                app(ChangeApplicationStage::class)($application, $reviewer, $stage);
+            // Each step a few days after the last, never later than now,
+            // with the clock set so the timeline and the email agree.
+            foreach ($steps as $step => $stage) {
+                if ($reviewer) {
+                    $this->at(min($appliedAt[$index]->addDays(2 + $step * 4), now()->subHour()),
+                        fn () => app(ChangeApplicationStage::class)($application->refresh(), $reviewer, $stage));
+                }
             }
         }
 
@@ -155,7 +172,7 @@ class DemoAccountsSeeder extends Seeder
      */
     private function seedJobAlerts(User $candidate, CandidateProfile $profile): void
     {
-        $skillId = $profile->skills()->value('skills.id');
+        $skillId = $profile->skills()->wherePivot('proficiency', 'advanced')->value('skills.id');
 
         JobAlert::factory()->for($candidate)->create([
             'name' => 'Jobs that use my top skill',
@@ -191,7 +208,7 @@ class DemoAccountsSeeder extends Seeder
 
         $leaver = User::factory()->create(['name' => 'Former Applicant', 'email' => 'former-applicant@jobboard.test']);
         $profile = CandidateProfile::factory()->for($leaver)->create();
-        Application::factory()->create(['job_posting_id' => $open->id, 'candidate_profile_id' => $profile->id]);
+        Application::factory()->create(['job_posting_id' => $open->id, 'candidate_profile_id' => $profile->id, 'created_at' => now()->subDays(9)]);
 
         app(AnonymizeUser::class)($leaver);
 
@@ -240,7 +257,10 @@ class DemoAccountsSeeder extends Seeder
 
         foreach (range(1, 14) as $index) {
             $appliedAt = now()->subDays(36 - $index * 2)->setTime(random_int(8, 20), random_int(0, 59));
-            $profile = CandidateProfile::factory()->create();
+
+            // Mostly people near the office, and with the posting's skills
+            // to different degrees, so every match bucket has someone in it.
+            $profile = People::candidate('support', random_int(1, 10) <= 8 ? 'uk' : null, withSkills: false);
             $profile->skills()->syncWithoutDetaching(
                 $skills->random(random_int(0, $skills->count()))
                     ->mapWithKeys(fn (int $id) => [$id => ['proficiency' => 'intermediate']])
@@ -249,7 +269,10 @@ class DemoAccountsSeeder extends Seeder
             $application = Application::factory()->create([
                 'job_posting_id' => $posting->id,
                 'candidate_profile_id' => $profile->id,
+                'resume_document_id' => People::renderCv($profile, $appliedAt->subDay())->id,
+                'cover_letter' => People::coverLetter($profile, $posting),
                 'created_at' => $appliedAt,
+                'updated_at' => $appliedAt,
             ]);
             $applications[$index] = $application;
 
@@ -344,11 +367,24 @@ class DemoAccountsSeeder extends Seeder
      */
     private function seedDeletedAccount(): User
     {
-        $user = User::factory()->create(['name' => 'Deleted Candidate', 'email' => 'deleted@jobboard.test']);
-        CandidateProfile::factory()->for($user)->create();
+        $user = People::candidate('data', 'de', ['name' => Catalogue::demo()['deleted'], 'email' => 'deleted@jobboard.test'])->user;
         $user->forceFill(['deleted_at' => now()->subDays(5)])->save();
 
         return $user;
+    }
+
+    /**
+     * Run an action as if it happened at the given moment.
+     */
+    private function at(CarbonImmutable $moment, callable $action): mixed
+    {
+        Carbon::setTestNow($moment);
+
+        try {
+            return $action();
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     private function staff(string $name, string $email, StaffRole $role): User
