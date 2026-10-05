@@ -60,6 +60,20 @@ test('a fresh seed can be looked at from every side', function () {
         ->and($report->firstResponseMedianHours)->not->toBeNull()
         ->and($report->viewsCoverRange())->toBeFalse();
 
+    // Postings read like real ones: written descriptions with their own
+    // categories and skills, pay in the company's currency, and dates in
+    // the past rather than all at the moment of seeding.
+    $live = JobPosting::query()->active()->with(['company', 'categories', 'skills'])->get();
+
+    expect($live)->not->toBeEmpty()
+        ->and($live->every(fn (JobPosting $posting) => str_contains($posting->description, '<h3>')))->toBeTrue()
+        ->and($live->every(fn (JobPosting $posting) => $posting->categories->isNotEmpty() && $posting->skills->isNotEmpty()))->toBeTrue()
+        ->and($live->every(fn (JobPosting $posting) => $posting->published_at->isPast()))->toBeTrue()
+        ->and($live->pluck('published_at')->map->toDateString()->unique()->count())->toBeGreaterThan(5)
+        ->and($live->pluck('salary_currency')->filter()->unique()->count())->toBeGreaterThan(3)
+        ->and(Company::query()->where('website_url', 'like', '%.example')->count())->toBeGreaterThanOrEqual(10)
+        ->and(User::query()->where('email', 'test@example.com')->exists())->toBeFalse();
+
     // The company page has reviews with averages, the mark, and one review
     // waiting in the staff queue.
     expect(ReviewSummary::of($demoCompany)->hasAverages())->toBeTrue()

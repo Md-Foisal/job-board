@@ -7,11 +7,11 @@ use App\Actions\ChangeApplicationStage;
 use App\Enums\AlertFrequency;
 use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
+use App\Enums\AvailabilityStatus;
 use App\Enums\DocumentType;
 use App\Enums\JobAsDescribed;
 use App\Enums\ModerationStatus;
 use App\Enums\ReviewPart;
-use App\Enums\SkillImportance;
 use App\Enums\StaffRole;
 use App\Models\Application;
 use App\Models\ApplicationEvent;
@@ -25,11 +25,12 @@ use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
 use App\Models\JobView;
 use App\Models\Membership;
-use App\Models\Skill;
 use App\Models\User;
+use App\Support\ClosingDate;
 use App\Support\ReviewScreening;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Concerns\SeedsCandidateSkills;
+use Database\Seeders\Demo\Catalogue;
 use Illuminate\Database\Seeder;
 
 /**
@@ -62,7 +63,7 @@ class DemoAccountsSeeder extends Seeder
         'demo-recovery-code-8',
     ];
 
-    public const DEMO_COMPANY_SLUG = 'demo-hiring-co';
+    public const DEMO_COMPANY_SLUG = 'fernhill-software';
 
     public function run(): void
     {
@@ -78,11 +79,7 @@ class DemoAccountsSeeder extends Seeder
         // The website shares the owner's email domain, so the verification
         // queue shows a matching domain for this company.
         $employer = User::factory()->create(['name' => 'Demo Employer', 'email' => 'employer@jobboard.test']);
-        $company = Company::factory()->create([
-            'name' => 'Demo Hiring Co',
-            'slug' => self::DEMO_COMPANY_SLUG,
-            'website_url' => 'https://jobboard.test',
-        ]);
+        $company = CompanySeeder::create(self::DEMO_COMPANY_SLUG, Catalogue::demo()['company'], ['website_url' => 'https://jobboard.test']);
         Membership::factory()->owner()->for($company)->for($employer, 'user')->create();
 
         $candidate = User::factory()->create(['name' => 'Demo Candidate', 'email' => 'candidate@jobboard.test']);
@@ -101,7 +98,7 @@ class DemoAccountsSeeder extends Seeder
         $this->command?->table(['Role', 'Email', 'Password'], [
             ['Super admin', 'superadmin@jobboard.test', self::PASSWORD],
             ['Moderator', 'moderator@jobboard.test', self::PASSWORD],
-            ['Employer (owner of Demo Hiring Co)', 'employer@jobboard.test', self::PASSWORD],
+            ['Employer (owner of '.$company->name.')', 'employer@jobboard.test', self::PASSWORD],
             ['Candidate', 'candidate@jobboard.test', self::PASSWORD],
             ['Deleted candidate (sign in to restore)', $deleted->email, self::PASSWORD],
         ]);
@@ -180,10 +177,17 @@ class DemoAccountsSeeder extends Seeder
      */
     private function seedCompanyLifecycle(Company $company, User $employer): void
     {
-        $open = JobPosting::factory()->for($company)->create(['title' => 'Customer Support Specialist', 'posted_by_id' => $employer->id]);
-        JobPosting::factory()->for($company)->expired()->create(['title' => 'Junior QA Tester', 'posted_by_id' => $employer->id]);
-        JobPosting::factory()->for($company)->closed()->create(['title' => 'Content Writer', 'posted_by_id' => $employer->id]);
-        JobPosting::factory()->for($company)->draft()->create(['title' => 'Office Manager', 'posted_by_id' => $employer->id]);
+        $details = Catalogue::demo()['company'];
+        $post = fn (string $role, int $daysAgo, array $attributes = []) => JobPostingSeeder::createPosting(
+            $company, $role, $details, [], CarbonImmutable::now()->subDays($daysAgo), ['posted_by_id' => $employer->id, ...$attributes], negotiable: false
+        );
+
+        $open = $post('customer-support-specialist', 40, [
+            'expires_at' => ClosingDate::endOf(now($company->timezone)->addDays(20)->toDateString(), $company),
+        ]);
+        $post('qa-tester-junior', 33, ['availability_status' => AvailabilityStatus::Expired, 'expires_at' => now()->subDays(3)]);
+        $post('content-writer', 20, ['availability_status' => AvailabilityStatus::Closed]);
+        $post('office-manager', 2, ['availability_status' => AvailabilityStatus::Draft, 'published_at' => null]);
 
         $leaver = User::factory()->create(['name' => 'Former Applicant', 'email' => 'former-applicant@jobboard.test']);
         $profile = CandidateProfile::factory()->for($leaver)->create();
@@ -204,12 +208,7 @@ class DemoAccountsSeeder extends Seeder
      */
     private function seedAnalytics(JobPosting $posting, User $reviewer): void
     {
-        $posting->update(['published_at' => now()->subDays(40), 'expires_at' => now()->addDays(20)]);
-
-        $skills = Skill::query()->inRandomOrder()->limit(4)->pluck('id');
-        $posting->skills()->sync($skills->mapWithKeys(fn (int $id, int $index) => [
-            $id => ['importance' => $index < 2 ? SkillImportance::Required : SkillImportance::NiceToHave],
-        ]));
+        $skills = $posting->skills()->pluck('skills.id');
 
         foreach (range(39, 0) as $daysAgo) {
             $weekend = now()->subDays($daysAgo)->isWeekend();
