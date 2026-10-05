@@ -78,6 +78,8 @@ it('filters by the staff member\'s own days, not UTC ones', function () {
     Livewire::test(ListModerationEvents::class)
         ->filterTable('created_at', ['from' => '2026-10-03', 'until' => '2026-10-03'])
         ->assertCanSeeTableRecords([$late])
+        ->assertSee('From 3 Oct 2026')
         ->filterTable('created_at', ['from' => '2026-10-02', 'until' => '2026-10-02'])
-        ->assertCanNotSeeTableRecords([$late]);
+        ->assertCanNotSeeTableRecords([$late])
+        ->assertSee('No decisions match these filters');
 });
