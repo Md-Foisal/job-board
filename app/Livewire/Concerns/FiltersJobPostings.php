@@ -6,6 +6,8 @@ use App\Builders\JobPostingQueryBuilder;
 use App\Models\JobPosting;
 use App\Services\MatchScoreCalculator;
 use App\Support\JobSearchCriteria;
+use App\Support\PublicCache;
+use App\Support\SalaryCurrencies;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Url;
 
@@ -25,6 +27,9 @@ trait FiltersJobPostings
 
     #[Url]
     public ?int $category = null;
+
+    #[Url]
+    public ?string $currency = null;
 
     #[Url]
     public ?int $salaryMin = null;
@@ -54,13 +59,72 @@ trait FiltersJobPostings
         }
     }
 
+    /**
+     * The pay sorts exist only once a currency is chosen, so clearing it
+     * must not leave the sort pointing at an option that is gone.
+     */
+    public function mountFiltersJobPostings(): void
+    {
+        $this->forgetPaySortWithoutCurrency();
+    }
+
+    public function updatedCurrency(): void
+    {
+        $this->forgetPaySortWithoutCurrency();
+    }
+
     protected function filteredQuery(): JobPostingQueryBuilder
     {
+        $criteria = $this->criteria();
+
         return JobPosting::query()
             ->active()
             ->with(['company:id,name,slug,logo_path,verified_at', 'skills:id,name'])
-            ->matching($this->criteria())
-            ->sortBy($this->sort);
+            ->matching($criteria)
+            ->sortBy($this->sort, $criteria['currency'] ?? null);
+    }
+
+    /**
+     * The currency the pay filter and the pay sort work in, once it is a
+     * real one.
+     */
+    protected function payCurrency(): ?string
+    {
+        return $this->criteria()['currency'] ?? null;
+    }
+
+    /**
+     * Only the currencies open postings are actually paid in, rather than
+     * all 150: the list stays short, and every choice in it has postings
+     * behind it. A currency already chosen stays in it even if its last
+     * posting has closed.
+     *
+     * @return array<string, string>
+     */
+    protected function payCurrencyOptions(): array
+    {
+        $codes = PublicCache::remember('pay-currencies', fn () => JobPosting::query()
+            ->active()
+            ->whereNotNull('salary_currency')
+            ->distinct()
+            ->orderBy('salary_currency')
+            ->pluck('salary_currency')
+            ->all());
+
+        $chosen = $this->payCurrency();
+
+        if ($chosen !== null && ! in_array($chosen, $codes, true)) {
+            $codes[] = $chosen;
+        }
+
+        return array_intersect_key(SalaryCurrencies::options(), array_flip($codes));
+    }
+
+    private function forgetPaySortWithoutCurrency(): void
+    {
+        if ($this->payCurrency() === null && in_array($this->sort, ['salary_high', 'salary_low'], true)) {
+            $this->sort = 'newest';
+        }
     }
 
     /**
@@ -77,6 +141,7 @@ trait FiltersJobPostings
             'location' => $this->location,
             'workplaceType' => $this->workplaceType,
             'employmentType' => $this->employmentType,
+            'currency' => $this->currency,
             'salaryMin' => $this->salaryMin,
             'salaryMax' => $this->salaryMax,
             'experience' => $this->experience,
@@ -116,7 +181,8 @@ trait FiltersJobPostings
 
     public function resetFilters(): void
     {
-        $this->reset(['q', 'skill', 'category', 'salaryMin', 'salaryMax', 'location', 'workplaceType', 'employmentType', 'experience']);
+        $this->reset(['q', 'skill', 'category', 'currency', 'salaryMin', 'salaryMax', 'location', 'workplaceType', 'employmentType', 'experience']);
+        $this->forgetPaySortWithoutCurrency();
         $this->resetPage();
     }
 }

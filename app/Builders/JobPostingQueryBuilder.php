@@ -29,11 +29,23 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * Postings whose monthly-normalised pay range overlaps the range the
-     * candidate asked for.
+     * Postings that state their pay in this currency.
      */
-    public function salaryBetween(?int $min, ?int $max): self
+    public function paidIn(string $currency): self
     {
+        return $this->where($this->qualifyColumn('salary_currency'), $currency);
+    }
+
+    /**
+     * Postings in the given currency whose monthly-normalised pay range
+     * overlaps the range the candidate asked for. The currency is not
+     * optional: there are no exchange rates here, so 50,000 means nothing
+     * until it is known to be taka rather than yen.
+     */
+    public function salaryBetween(string $currency, ?int $min, ?int $max): self
+    {
+        $this->paidIn($currency);
+
         if ($min !== null) {
             $this->where('salary_max_monthly', '>=', $min);
         }
@@ -103,8 +115,10 @@ class JobPostingQueryBuilder extends Builder
             $this->category($criteria['category']);
         }
 
-        if (isset($criteria['salaryMin']) || isset($criteria['salaryMax'])) {
-            $this->salaryBetween($criteria['salaryMin'] ?? null, $criteria['salaryMax'] ?? null);
+        if (isset($criteria['currency'])) {
+            isset($criteria['salaryMin']) || isset($criteria['salaryMax'])
+                ? $this->salaryBetween($criteria['currency'], $criteria['salaryMin'] ?? null, $criteria['salaryMax'] ?? null)
+                : $this->paidIn($criteria['currency']);
         }
 
         if (isset($criteria['location'])) {
@@ -130,15 +144,34 @@ class JobPostingQueryBuilder extends Builder
      * Every sort ends on the id, newest first: many postings share a date
      * or a salary, and tied rows may come back in any order -- a paginated
      * list would then repeat some postings and skip others between pages.
+     *
+     * Pay is sorted only within one currency. Postings in it come first,
+     * by pay, those with no figure after them; everything else follows,
+     * newest first, rather than being ranked by numbers in other units.
+     * Without a currency a pay sort is simply newest first.
+     *
+     * Each step is a CASE that sorts a known value, never a bare column
+     * that may be null: MySQL and SQLite put nulls first in an ascending
+     * sort, PostgreSQL puts them first in a descending one, so "high to
+     * low" would open with negotiable postings on one of them.
      */
-    public function sortBy(string $field): self
+    public function sortBy(string $field, ?string $currency = null): self
     {
-        match ($field) {
-            'newest' => $this->orderByDesc('created_at'),
-            'salary_high' => $this->orderByDesc('salary_max_monthly'),
-            'salary_low' => $this->orderBy('salary_min_monthly'),
-            default => null,
-        };
+        if (in_array($field, ['salary_high', 'salary_low'], true) && $currency !== null) {
+            $high = $field === 'salary_high';
+            $inCurrency = $this->qualifyColumn('salary_currency').' = ?';
+            $pay = $high
+                ? 'coalesce('.$this->qualifyColumn('salary_max_monthly').', '.$this->qualifyColumn('salary_min_monthly').')'
+                : 'coalesce('.$this->qualifyColumn('salary_min_monthly').', '.$this->qualifyColumn('salary_max_monthly').')';
+
+            $this->orderByRaw("case when {$inCurrency} then 0 else 1 end", [$currency])
+                ->orderByRaw("case when {$inCurrency} and {$pay} is not null then 0 else 1 end", [$currency])
+                ->orderByRaw("case when {$inCurrency} then {$pay} else 0 end ".($high ? 'desc' : 'asc'), [$currency]);
+        }
+
+        if ($field === 'newest' || in_array($field, ['salary_high', 'salary_low'], true)) {
+            $this->orderByDesc($this->qualifyColumn('created_at'));
+        }
 
         return $this->orderByDesc($this->qualifyColumn('id'));
     }

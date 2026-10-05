@@ -40,11 +40,11 @@ test('category filters postings within the given category', function () {
 });
 
 test('salaryBetween returns only postings whose range overlaps the given range', function () {
-    $cheap = JobPosting::factory()->create(['salary_min' => 20000, 'salary_max' => 30000, 'salary_negotiable' => false, 'salary_period' => SalaryPeriod::Monthly]);
-    $mid = JobPosting::factory()->create(['salary_min' => 50000, 'salary_max' => 70000, 'salary_negotiable' => false, 'salary_period' => SalaryPeriod::Monthly]);
-    $expensive = JobPosting::factory()->create(['salary_min' => 100000, 'salary_max' => 150000, 'salary_negotiable' => false, 'salary_period' => SalaryPeriod::Monthly]);
+    $cheap = JobPosting::factory()->create(['salary_min' => 20000, 'salary_max' => 30000, 'salary_negotiable' => false, 'salary_currency' => 'BDT', 'salary_period' => SalaryPeriod::Monthly]);
+    $mid = JobPosting::factory()->create(['salary_min' => 50000, 'salary_max' => 70000, 'salary_negotiable' => false, 'salary_currency' => 'BDT', 'salary_period' => SalaryPeriod::Monthly]);
+    $expensive = JobPosting::factory()->create(['salary_min' => 100000, 'salary_max' => 150000, 'salary_negotiable' => false, 'salary_currency' => 'BDT', 'salary_period' => SalaryPeriod::Monthly]);
 
-    $result = JobPosting::query()->salaryBetween(40000, 80000)->get();
+    $result = JobPosting::query()->salaryBetween('BDT', 40000, 80000)->get();
 
     expect($result->pluck('id'))->toContain($mid->id)
         ->and($result->pluck('id'))->not->toContain($cheap->id)
@@ -92,10 +92,10 @@ test('experience filters out postings that require more years than the candidate
 });
 
 test('sortBy orders postings correctly', function () {
-    $cheap = JobPosting::factory()->create(['salary_min' => 20000, 'salary_max' => 25000, 'salary_negotiable' => false, 'salary_period' => SalaryPeriod::Monthly]);
-    $expensive = JobPosting::factory()->create(['salary_min' => 90000, 'salary_max' => 120000, 'salary_negotiable' => false, 'salary_period' => SalaryPeriod::Monthly]);
+    $cheap = JobPosting::factory()->create(['salary_min' => 20000, 'salary_max' => 25000, 'salary_negotiable' => false, 'salary_currency' => 'BDT', 'salary_period' => SalaryPeriod::Monthly]);
+    $expensive = JobPosting::factory()->create(['salary_min' => 90000, 'salary_max' => 120000, 'salary_negotiable' => false, 'salary_currency' => 'BDT', 'salary_period' => SalaryPeriod::Monthly]);
 
-    $result = JobPosting::query()->sortBy('salary_high')->get();
+    $result = JobPosting::query()->sortBy('salary_high', 'BDT')->get();
 
     expect($result->first()->id)->toBe($expensive->id);
 });

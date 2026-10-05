@@ -27,6 +27,8 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
             'categories' => PublicCache::lookupModels('categories', Category::class, fn () => Category::orderBy('name')->get()),
             'workplaceTypes' => WorkplaceType::cases(),
             'employmentTypes' => EmploymentType::cases(),
+            'payCurrency' => $this->payCurrency(),
+            'payCurrencies' => $this->payCurrencyOptions(),
             // Guests too: the link signs them in and brings them back
             // with the search intact. Employers have no alerts to keep.
             'canCreateAlert' => ! auth()->check() || auth()->user()->isCandidate(),
@@ -72,10 +74,21 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
 
             <flux:input wire:model.live.debounce.400ms="location" placeholder="City" />
 
-            <div class="grid grid-cols-2 gap-2">
-                <flux:input wire:model.live.debounce.400ms="salaryMin" type="number" placeholder="Min salary" />
-                <flux:input wire:model.live.debounce.400ms="salaryMax" type="number" placeholder="Max salary" />
-            </div>
+            <flux:select wire:model.live="currency" :aria-label="__('Pay currency')">
+                <flux:select.option value="">{{ __('Pay in any currency') }}</flux:select.option>
+                @foreach ($payCurrencies as $code => $label)
+                    <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+                @endforeach
+            </flux:select>
+
+            {{-- Amounts mean nothing until their currency is known, so they
+                 are asked for only once one is chosen. --}}
+            @if ($payCurrency)
+                <div class="grid grid-cols-2 gap-2">
+                    <flux:input wire:model.live.debounce.400ms="salaryMin" type="number" min="1" :placeholder="__('Min / month')" :aria-label="__('Minimum pay a month, in :currency', ['currency' => $payCurrency])" />
+                    <flux:input wire:model.live.debounce.400ms="salaryMax" type="number" min="1" :placeholder="__('Max / month')" :aria-label="__('Maximum pay a month, in :currency', ['currency' => $payCurrency])" />
+                </div>
+            @endif
 
             <flux:input wire:model.live.debounce.400ms="experience" type="number" placeholder="Min years experience" />
 
@@ -92,10 +105,12 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
                     {{ $jobPostings->total() }} {{ \Illuminate\Support\Str::plural('opening', $jobPostings->total()) }}
                 </p>
 
-                <flux:select wire:model.live="sort" size="sm">
-                    <flux:select.option value="newest">Newest</flux:select.option>
-                    <flux:select.option value="salary_high">Salary: high to low</flux:select.option>
-                    <flux:select.option value="salary_low">Salary: low to high</flux:select.option>
+                <flux:select wire:model.live="sort" size="sm" :aria-label="__('Sort')">
+                    <flux:select.option value="newest">{{ __('Newest') }}</flux:select.option>
+                    @if ($payCurrency)
+                        <flux:select.option value="salary_high">{{ __('Pay in :currency: high to low', ['currency' => $payCurrency]) }}</flux:select.option>
+                        <flux:select.option value="salary_low">{{ __('Pay in :currency: low to high', ['currency' => $payCurrency]) }}</flux:select.option>
+                    @endif
                 </flux:select>
             </div>
 
