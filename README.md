@@ -194,6 +194,12 @@ Next:
 - **Launch,** with AI off.
 - **After launch:** paid plans, which is when the AI features can be turned on.
 
+## License
+
+The code is public so it can be read and reviewed, but it is not open source. You may run it on your
+own computer to evaluate it. You may not deploy it, reuse it in another project or offer it as a
+service. See [LICENSE](LICENSE).
+
 ## Author
 
 Built by Md. Foisal, a self-taught web developer from Feni, Bangladesh.

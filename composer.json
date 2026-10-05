@@ -1,13 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "md-foisal/job-board",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "A job board where a company's silence shows. Laravel, Livewire, Filament.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "filament",
+        "job-board"
     ],
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
         "php": "^8.4",
         "dompdf/dompdf": "^3",
