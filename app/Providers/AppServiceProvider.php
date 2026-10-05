@@ -10,7 +10,9 @@ use App\Models\Skill;
 use App\Observers\FlushLookupCache;
 use App\Observers\FlushPublicCache;
 use App\Services\MatchScoreCalculator;
+use App\Support\LocalTime;
 use Carbon\CarbonImmutable;
+use Filament\Support\Facades\FilamentTimezone;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -56,6 +58,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureDefaults(): void
     {
         Date::use(CarbonImmutable::class);
+
+        // The staff panel shows times in the staff member's own zone, as
+        // the rest of the product does. A closure, because which person is
+        // signed in is not known yet while providers boot.
+        FilamentTimezone::set(fn (): string => LocalTime::zone());
 
         // Outside production, turn Eloquent's two silent-wrong-data behaviors
         // into loud ones: assigning an attribute that is not fillable, and

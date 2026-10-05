@@ -454,9 +454,10 @@ test('a run that never reports back is shown as failed, and can be tried again',
         ->assertSee('Try again');
 });
 
-test('when the month\'s allowance is used, the page says when it comes back', function () {
+test('when the month\'s allowance is used, the page says when it comes back, in the reader\'s time', function () {
     $this->travelTo(now()->setDate(2026, 10, 12));
     $karim = karimCandidate();
+    $karim->forceFill(['timezone' => 'Asia/Dhaka'])->save();
 
     foreach (range(1, 3) as $ignored) {
         AiUsage::create(['user_id' => $karim->id, 'feature' => AiFeature::MatchExplanation, 'provider' => 'anthropic', 'model' => 'm', 'input_tokens' => 1, 'output_tokens' => 1]);
@@ -464,7 +465,7 @@ test('when the month\'s allowance is used, the page says when it comes back', fu
 
     Livewire::actingAs($karim)
         ->test('match-breakdown', ['jobPosting' => explainedPosting(['expires_at' => now()->addWeek()])])
-        ->assertSee("You've used this month's AI explanations. They reset on 1 November.")
+        ->assertSee("You've used this month's AI explanations. They reset on 1 November at 6:00 am.")
         ->assertDontSee('Explain my match');
 });
 

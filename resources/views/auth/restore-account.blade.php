@@ -5,7 +5,7 @@
             <flux:text>
                 {{ __(':email is switched off and will be erased for good on :date. Restore it to carry on where you left off.', [
                     'email' => $email,
-                    'date' => $erasesAt->toFormattedDateString(),
+                    'date' => \App\Support\LocalTime::of($erasesAt)->toFormattedDateString(),
                 ]) }}
             </flux:text>
         </div>

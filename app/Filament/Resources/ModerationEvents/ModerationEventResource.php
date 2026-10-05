@@ -10,15 +10,18 @@ use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
 use BackedEnum;
+use Carbon\CarbonImmutable;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -180,12 +183,22 @@ class ModerationEventResource extends Resource
                         DatePicker::make('from'),
                         DatePicker::make('until'),
                     ])
+                    // The days are the staff member's own, as the times in the
+                    // table are, so each is turned into its UTC span first.
                     ->query(fn (Builder $query, array $data) => $query
-                        ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->whereDate('created_at', '>=', $date))
-                        ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->whereDate('created_at', '<=', $date))),
+                        ->when($data['from'] ?? null, fn (Builder $query, $date) => $query->where('created_at', '>=', CarbonImmutable::parse($date, FilamentTimezone::get())->startOfDay()->utc()))
+                        ->when($data['until'] ?? null, fn (Builder $query, $date) => $query->where('created_at', '<', CarbonImmutable::parse($date, FilamentTimezone::get())->startOfDay()->addDay()->utc())))
+                    // A custom filter has no indicator of its own, so without
+                    // these the filter button would count it as off.
+                    ->indicateUsing(fn (array $data): array => array_values(array_filter([
+                        filled($data['from'] ?? null) ? Indicator::make('From '.CarbonImmutable::parse($data['from'])->format('j M Y'))->removeField('from') : null,
+                        filled($data['until'] ?? null) ? Indicator::make('Until '.CarbonImmutable::parse($data['until'])->format('j M Y'))->removeField('until') : null,
+                    ]))),
             ])
-            ->emptyStateHeading('No decisions yet')
-            ->emptyStateDescription('Every approval, rejection, dismissal, verification, ban and suspension will be recorded here.')
+            ->emptyStateHeading(fn (Table $table): string => $table->isFiltered() ? 'No decisions match these filters' : 'No decisions yet')
+            ->emptyStateDescription(fn (Table $table): string => $table->isFiltered()
+                ? 'Try a wider date range, or clear the filters.'
+                : 'Every approval, rejection, dismissal, verification, ban and suspension will be recorded here.')
             ->recordActions([
                 ViewAction::make(),
             ]);

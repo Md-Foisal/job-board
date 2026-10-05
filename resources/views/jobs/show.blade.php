@@ -28,7 +28,10 @@
                         <span class="shrink-0 rounded-full bg-danger-50 px-2.5 py-1 text-xs font-medium text-danger-700 dark:bg-danger-950 dark:text-danger-300">
                             Expired
                         </span>
-                    @elseif ($jobPosting->expires_at->diffInDays(now()) <= 3)
+                    {{-- Counted from now to the closing moment: Carbon's diff is
+                         signed, and the other way round it is negative for
+                         every open posting, so the badge would never leave. --}}
+                    @elseif (now()->diffInDays($jobPosting->expires_at) <= 3)
                         <span class="shrink-0 rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700 dark:bg-warning-950 dark:text-warning-300">
                             Expires {{ $jobPosting->expires_at->diffForHumans() }}
                         </span>
@@ -74,6 +77,11 @@
                     @if ($jobPosting->location_city)
                         <span class="text-zinc-500 dark:text-zinc-500">{{ $jobPosting->location_city }}</span>
                     @endif
+                    @if ($jobPosting->published_at)
+                        <span class="text-zinc-500 dark:text-zinc-500">
+                            {{ __('Posted') }} <time datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
+                        </span>
+                    @endif
                 </div>
             </div>
         </header>
@@ -111,13 +119,17 @@
             <livewire:match-breakdown :job-posting="$jobPosting" :key="'match-'.$jobPosting->id" defer />
         @endif
 
-        @if ($jobPosting->salary_negotiable || $jobPosting->salary_min || $jobPosting->salary_max)
+        @php $pay = $jobPosting->payRange(); @endphp
+
+        @if ($jobPosting->salary_negotiable || $pay)
             <p class="mt-6 font-display text-lg font-semibold tabular-nums text-brand-700 dark:text-brand-400">
                 @if ($jobPosting->salary_negotiable)
                     Salary: Negotiable
                 @else
-                    {{ $jobPosting->salary_currency }} {{ number_format($jobPosting->salary_min) }}–{{ number_format($jobPosting->salary_max) }}
-                    <span class="font-normal text-zinc-500 dark:text-zinc-500">/ {{ \Illuminate\Support\Str::lower($jobPosting->salary_period->label()) }}</span>
+                    {{ $pay }}
+                    @if ($jobPosting->salary_period)
+                        <span class="font-normal text-zinc-500 dark:text-zinc-500">/ {{ \Illuminate\Support\Str::lower($jobPosting->salary_period->label()) }}</span>
+                    @endif
                 @endif
             </p>
         @endif

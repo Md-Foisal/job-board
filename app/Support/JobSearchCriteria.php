@@ -17,7 +17,7 @@ final class JobSearchCriteria
 {
     public const KEYS = [
         'q', 'skill', 'category', 'location', 'workplaceType',
-        'employmentType', 'salaryMin', 'salaryMax', 'experience',
+        'employmentType', 'currency', 'salaryMin', 'salaryMax', 'experience',
     ];
 
     private const INTEGERS = ['skill', 'category', 'salaryMin', 'salaryMax', 'experience'];
@@ -26,6 +26,10 @@ final class JobSearchCriteria
      * Keeps only the known filters that are actually set. Anything that is
      * not a valid value -- a workplace type that does not exist, a salary
      * that is not a number -- is dropped rather than trusted.
+     *
+     * Pay figures are kept only with the currency they are in: amounts in
+     * different currencies are never compared, so a figure on its own
+     * matches nothing in particular and is dropped too.
      *
      * @return array<string, int|string>
      */
@@ -48,12 +52,17 @@ final class JobSearchCriteria
             $value = match ($key) {
                 'workplaceType' => WorkplaceType::tryFrom((string) $value)?->value,
                 'employmentType' => EmploymentType::tryFrom((string) $value)?->value,
+                'currency' => SalaryCurrencies::isInUse(strtoupper((string) $value)) ? strtoupper($value) : null,
                 default => $value,
             };
 
             if ($value !== null && $value !== '') {
                 $criteria[$key] = $value;
             }
+        }
+
+        if (! isset($criteria['currency'])) {
+            unset($criteria['salaryMin'], $criteria['salaryMax']);
         }
 
         return $criteria;
@@ -96,11 +105,14 @@ final class JobSearchCriteria
             $parts[] = __('in :city', ['city' => $criteria['location']]);
         }
 
-        if (isset($criteria['salaryMin']) || isset($criteria['salaryMax'])) {
+        if (isset($criteria['currency'])) {
+            $currency = $criteria['currency'];
+
             $parts[] = match (true) {
-                isset($criteria['salaryMin'], $criteria['salaryMax']) => __('pay :min–:max a month', ['min' => number_format($criteria['salaryMin']), 'max' => number_format($criteria['salaryMax'])]),
-                isset($criteria['salaryMin']) => __('pay from :min a month', ['min' => number_format($criteria['salaryMin'])]),
-                default => __('pay up to :max a month', ['max' => number_format($criteria['salaryMax'])]),
+                isset($criteria['salaryMin'], $criteria['salaryMax']) => __('pay :currency :min–:max a month', ['currency' => $currency, 'min' => number_format($criteria['salaryMin']), 'max' => number_format($criteria['salaryMax'])]),
+                isset($criteria['salaryMin']) => __('pay from :currency :min a month', ['currency' => $currency, 'min' => number_format($criteria['salaryMin'])]),
+                isset($criteria['salaryMax']) => __('pay up to :currency :max a month', ['currency' => $currency, 'max' => number_format($criteria['salaryMax'])]),
+                default => __('paid in :currency', ['currency' => $currency]),
             };
         }
 

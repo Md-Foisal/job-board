@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Skill;
+use Database\Seeders\Demo\Catalogue;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -13,22 +14,7 @@ class SkillSeeder extends Seeder
      */
     public function run(): void
     {
-        $skills = [
-            'Laravel',
-            'PHP',
-            'JavaScript',
-            'React',
-            'Vue.js',
-            'Python',
-            'MySQL',
-            'HTML',
-            'CSS',
-            'Git',
-            'Node.js',
-            'TypeScript',
-        ];
-
-        foreach ($skills as $name) {
+        foreach (Catalogue::SKILLS as $name) {
             Skill::create([
                 'name' => $name,
                 'slug' => Str::slug($name),

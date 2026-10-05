@@ -6,6 +6,7 @@ use App\Actions\CreateCompany;
 use App\Http\Requests\StoreCompanyRequest;
 use App\Models\Company;
 use App\Services\EmployerResponsiveness;
+use App\Support\LocalTime;
 use App\Support\ReviewSummary;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,12 @@ class CompanyController extends Controller
 
     public function store(StoreCompanyRequest $request, CreateCompany $createCompany): RedirectResponse
     {
-        $company = $createCompany($request->user(), $request->validated());
+        // The creator's own zone is the best first guess for the company's;
+        // it can be changed on the company profile.
+        $company = $createCompany($request->user(), [
+            ...$request->validated(),
+            'timezone' => LocalTime::zone(),
+        ]);
 
         return redirect()
             ->route('employer.dashboard', $company)
@@ -48,7 +54,7 @@ class CompanyController extends Controller
         // one query instead of an extra one per card.
         $jobPostings = $company->jobPostings()
             ->active()
-            ->latest('created_at')
+            ->latest('published_at')
             ->latest('id')
             ->get()
             ->each(fn ($jobPosting) => $jobPosting->setRelation('company', $company));

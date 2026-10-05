@@ -6,6 +6,7 @@ use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\LocalTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,7 @@ class CreateCompany
                 'name' => $data['name'],
                 'slug' => $this->availableSlug($data['name']),
                 'identity_type' => $data['identity_type'],
+                'timezone' => $data['timezone'] ?? LocalTime::zoneFor($owner),
             ]);
 
             $company->memberships()->create([

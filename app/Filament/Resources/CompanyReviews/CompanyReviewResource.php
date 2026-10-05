@@ -23,6 +23,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -144,7 +145,7 @@ class CompanyReviewResource extends Resource
                             ->state(fn (CompanyReview $record) => ReviewEligibility::describe(ReviewEligibility::basisOf($record->application))),
                         TextEntry::make('applied_for')
                             ->label('Applied for')
-                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->format('j M Y')}"),
+                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->setTimezone(FilamentTimezone::get())->format('j M Y')}"),
                         TextEntry::make('flags')
                             ->label('Text contains')
                             ->state(fn (CompanyReview $record) => collect(ReviewTextFlags::in($record->title, $record->body))
@@ -183,7 +184,7 @@ class CompanyReviewResource extends Resource
                         TextEntry::make('job_as_described')->label('Job as described')
                             ->formatStateUsing(fn ($state) => $state->label()),
                         TextEntry::make('updated_at')->label('Last written')->since(),
-                        TextEntry::make('published_at')->label('Published')->date('F Y')->placeholder('Not yet'),
+                        TextEntry::make('published_at')->label('Published')->dateTime('F Y')->placeholder('Not yet'),
                         TextEntry::make('title')->columnSpanFull(),
                         TextEntry::make('body')->columnSpanFull()->extraAttributes(['class' => 'whitespace-pre-line']),
                     ]),

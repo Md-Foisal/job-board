@@ -65,3 +65,21 @@ it('names an erased person as they are now, not as something gone', function () 
         ->assertSee('Person: Deleted user')
         ->assertDontSee('No longer exists');
 });
+
+it('filters by the staff member\'s own days, not UTC ones', function () {
+    $staff = staffWithTwoFactor();
+    $staff->forceFill(['timezone' => 'Asia/Dhaka'])->save();
+
+    // 20:00 UTC on 2 October is 02:00 on 3 October in Dhaka.
+    $this->travelTo(now()->setDate(2026, 10, 2)->setTime(20, 0));
+    $late = app(ApproveJobPosting::class)(JobPosting::factory()->pendingModeration()->create(), $staff);
+    $this->actingAs($staff);
+
+    Livewire::test(ListModerationEvents::class)
+        ->filterTable('created_at', ['from' => '2026-10-03', 'until' => '2026-10-03'])
+        ->assertCanSeeTableRecords([$late])
+        ->assertSee('From 3 Oct 2026')
+        ->filterTable('created_at', ['from' => '2026-10-02', 'until' => '2026-10-02'])
+        ->assertCanNotSeeTableRecords([$late])
+        ->assertSee('No decisions match these filters');
+});

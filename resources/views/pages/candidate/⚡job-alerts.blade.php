@@ -6,8 +6,10 @@ use App\Enums\WorkplaceType;
 use App\Models\Category;
 use App\Models\JobAlert;
 use App\Models\Skill;
+use App\Rules\CurrencyInUse;
 use App\Support\JobSearchCriteria;
 use App\Support\PublicCache;
+use App\Support\SalaryCurrencies;
 use Flux\Flux;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -36,6 +38,8 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
     public ?string $employmentType = null;
 
+    public ?string $currency = null;
+
     public ?int $salaryMin = null;
 
     public ?int $salaryMax = null;
@@ -52,7 +56,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             $this->create();
             $this->fillCriteria(JobSearchCriteria::from(request()->query()));
             [$skillNames, $categoryNames] = JobSearchCriteria::names([$this->criteria()]);
-            $this->name = Str::limit(implode(', ', JobSearchCriteria::describe($this->criteria(), $skillNames, $categoryNames)), 90);
+            $this->name = Str::limit(Str::ucfirst(implode(', ', JobSearchCriteria::describe($this->criteria(), $skillNames, $categoryNames))), 90);
         }
     }
 
@@ -112,11 +116,14 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             'location' => ['nullable', 'string', 'max:100'],
             'workplaceType' => ['nullable', Rule::enum(WorkplaceType::class)],
             'employmentType' => ['nullable', Rule::enum(EmploymentType::class)],
+            // Amounts are only ever compared within one currency.
+            'currency' => ['required_with:salaryMin,salaryMax', 'nullable', 'string', new CurrencyInUse],
             'salaryMin' => ['nullable', 'integer', 'min:1'],
             'salaryMax' => ['nullable', 'integer', 'min:1', 'gte:salaryMin'],
             'experience' => ['nullable', 'integer', 'min:1', 'max:50'],
         ], attributes: [
             'q' => __('keywords'),
+            'currency' => __('pay currency'),
             'salaryMin' => __('minimum pay'),
             'salaryMax' => __('maximum pay'),
             'experience' => __('years of experience'),
@@ -173,6 +180,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             'location' => $this->location,
             'workplaceType' => $this->workplaceType,
             'employmentType' => $this->employmentType,
+            'currency' => $this->currency,
             'salaryMin' => $this->salaryMin,
             'salaryMax' => $this->salaryMax,
             'experience' => $this->experience,
@@ -187,6 +195,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
         $this->location = $criteria['location'] ?? '';
         $this->workplaceType = $criteria['workplaceType'] ?? null;
         $this->employmentType = $criteria['employmentType'] ?? null;
+        $this->currency = $criteria['currency'] ?? null;
         $this->salaryMin = $criteria['salaryMin'] ?? null;
         $this->salaryMax = $criteria['salaryMax'] ?? null;
         $this->experience = $criteria['experience'] ?? null;
@@ -194,7 +203,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
     private function resetForm(): void
     {
-        $this->reset(['editingId', 'name', 'frequency', 'q', 'skill', 'category', 'location', 'workplaceType', 'employmentType', 'salaryMin', 'salaryMax', 'experience']);
+        $this->reset(['editingId', 'name', 'frequency', 'q', 'skill', 'category', 'location', 'workplaceType', 'employmentType', 'currency', 'salaryMin', 'salaryMax', 'experience']);
         $this->resetValidation();
     }
 }; ?>
@@ -261,7 +270,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
             <flux:input wire:model="name" :label="__('Name')" :placeholder="__('Laravel jobs in Dhaka')" />
 
-            <flux:radio.group wire:model="frequency" variant="segmented" :label="__('Email me')">
+            <flux:radio.group wire:model="frequency" variant="segmented" :label="__('Email me')" :description="__('Sent around 8 in the morning, your time.')">
                 @foreach ($frequencies as $option)
                     <flux:radio value="{{ $option->value }}" :label="$option->label()" />
                 @endforeach
@@ -304,10 +313,17 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             <flux:input wire:model="location" :label="__('City')" />
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <flux:select wire:model="currency" :label="__('Pay currency')">
+                    <flux:select.option value="">{{ __('Any currency') }}</flux:select.option>
+                    @foreach (SalaryCurrencies::options($currency) as $code => $label)
+                        <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+                    @endforeach
+                </flux:select>
                 <flux:input wire:model="salaryMin" type="number" :label="__('Min pay / month')" />
                 <flux:input wire:model="salaryMax" type="number" :label="__('Max pay / month')" />
-                <flux:input wire:model="experience" type="number" :label="__('Your years of experience')" />
             </div>
+
+            <flux:input wire:model="experience" type="number" :label="__('Your years of experience')" class="sm:max-w-xs" />
 
             <div class="flex justify-end gap-2">
                 <flux:button wire:click="closeModal" variant="ghost">{{ __('Cancel') }}</flux:button>

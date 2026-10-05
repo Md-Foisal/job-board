@@ -76,7 +76,7 @@ class JobPostingStructuredData
             // never reaches this class (the view only emits it for a
             // publicly visible posting) -- the fallback is so a
             // half-migrated row degrades instead of throwing.
-            'datePosted' => ($jobPosting->published_at ?? $jobPosting->created_at)->toDateString(),
+            'datePosted' => ($jobPosting->published_at ?? $jobPosting->created_at)->toAtomString(),
             'validThrough' => $jobPosting->expires_at->toAtomString(),
             'directApply' => true,
             'hiringOrganization' => $this->organization($company),

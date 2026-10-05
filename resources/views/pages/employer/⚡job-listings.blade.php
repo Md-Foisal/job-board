@@ -7,6 +7,7 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ReportStatus;
 use App\Models\Company;
 use App\Models\JobPosting;
+use App\Support\ClosingDate;
 use App\Support\SubmissionLimits;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -65,7 +66,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
         // Reopening something already past its date would put it straight
         // back into the expired pile, so the date moves with it.
         if ($jobPosting->expires_at->isPast()) {
-            $jobPosting->expires_at = now()->addMonth();
+            $jobPosting->expires_at = ClosingDate::monthAfter($this->company);
         }
 
         $jobPosting->availability_status = AvailabilityStatus::Active;
@@ -80,11 +81,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
         $jobPosting = $this->find($jobPostingId);
         $this->authorize('extend', $jobPosting);
 
-        // Extend from today rather than from the old date: a posting that
-        // lapsed last month should get a full month, not three days.
-        $from = $jobPosting->expires_at->isPast() ? now() : $jobPosting->expires_at;
-
-        $jobPosting->expires_at = $from->addMonth();
+        $jobPosting->expires_at = ClosingDate::monthAfter($this->company, $jobPosting->expires_at);
 
         if ($jobPosting->availability_status === AvailabilityStatus::Expired) {
             $jobPosting->availability_status = AvailabilityStatus::Active;
@@ -94,7 +91,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
 
         unset($this->jobPostings);
         Flux::toast(variant: 'success', text: __('Closing date moved to :date.', [
-            'date' => $jobPosting->expires_at->toFormattedDateString(),
+            'date' => ClosingDate::day($jobPosting, $this->company)->toFormattedDateString(),
         ]));
     }
 
@@ -174,7 +171,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                             <td class="px-5 py-4">
                                 <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $jobPosting->title }}</div>
                                 <div class="text-zinc-500 dark:text-zinc-500">
-                                    {{ __('Closes :date', ['date' => $jobPosting->expires_at->toFormattedDateString()]) }}
+                                    {{ __('Closes :date', ['date' => ClosingDate::day($jobPosting, $company)->toFormattedDateString()]) }}
                                 </div>
                             </td>
                             <td class="px-5 py-4">

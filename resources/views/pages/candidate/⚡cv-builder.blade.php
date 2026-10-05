@@ -514,7 +514,7 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                     <flux:text size="sm">{{ __('The AI suggestions are below the preview.') }}</flux:text>
                 @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
                     <flux:text size="sm">
-                        {{ __("You've used this month's AI suggestions. They reset on :date.", ['date' => now()->startOfMonth()->addMonth()->format('j F')]) }}
+                        {{ __("You've used this month's AI suggestions. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
                     </flux:text>
                 @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
                     <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">

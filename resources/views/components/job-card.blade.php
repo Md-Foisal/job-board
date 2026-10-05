@@ -65,15 +65,22 @@
         @if ($jobPosting->location_city)
             <span class="text-zinc-500 dark:text-zinc-500">{{ $jobPosting->location_city }}</span>
         @endif
+        @if ($jobPosting->published_at)
+            <time class="text-zinc-500 dark:text-zinc-500" datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
+        @endif
     </div>
 
-    @if ($jobPosting->salary_negotiable || $jobPosting->salary_min || $jobPosting->salary_max)
+    @php $pay = $jobPosting->payRange(); @endphp
+
+    @if ($jobPosting->salary_negotiable || $pay)
         <p class="font-display text-sm font-semibold tabular-nums text-brand-700 dark:text-brand-400">
             @if ($jobPosting->salary_negotiable)
                 Negotiable
             @else
-                {{ $jobPosting->salary_currency }} {{ number_format($jobPosting->salary_min) }}–{{ number_format($jobPosting->salary_max) }}
-                <span class="font-normal text-zinc-500 dark:text-zinc-500">/ {{ \Illuminate\Support\Str::lower($jobPosting->salary_period->label()) }}</span>
+                {{ $pay }}
+                @if ($jobPosting->salary_period)
+                    <span class="font-normal text-zinc-500 dark:text-zinc-500">/ {{ \Illuminate\Support\Str::lower($jobPosting->salary_period->label()) }}</span>
+                @endif
             @endif
         </p>
     @endif

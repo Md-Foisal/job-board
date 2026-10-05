@@ -25,13 +25,16 @@ class HomeController extends Controller
         return view('home', [
             'jobPostings' => PublicCache::models('home:postings', JobPosting::class, fn () => JobPosting::with('company:id,name,slug,logo_path,verified_at')
                 ->active()
-                ->latest('created_at')
+                ->latest('published_at')
                 ->latest('id')
                 ->take(self::RECENT_OPENINGS_COUNT)
                 ->get(), ['company']),
+            // Every category someone could find a job in: a guest has no
+            // other list of them, and an empty one leads to an empty page.
             'categories' => PublicCache::models('home:categories', Category::class, fn () => Category::withCount(['jobPostings' => fn ($query) => $query->active()])
+                ->whereHas('jobPostings', fn ($query) => $query->active())
                 ->orderByDesc('job_postings_count')
-                ->take(8)
+                ->orderBy('name')
                 ->get()),
             ...PublicCache::remember('home:counts', fn () => [
                 'openJobsCount' => JobPosting::active()->count(),

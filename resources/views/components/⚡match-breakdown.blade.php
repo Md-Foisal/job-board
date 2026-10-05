@@ -447,7 +447,7 @@ new class extends Component
                     </div>
                 @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
                     <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => now()->startOfMonth()->addMonth()->format('j F')]) }}
+                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
                     </p>
                 @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
                     <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">

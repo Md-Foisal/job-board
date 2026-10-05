@@ -40,6 +40,9 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
         return [
             'jobPostings' => $jobPostings,
             'matchScores' => $this->matchScores($jobPostings->getCollection()),
+            'payCurrency' => $this->payCurrency(),
+            'payCurrencies' => $this->payCurrencyOptions(),
+            'canSortByMatch' => $this->canSortByMatch(),
         ];
     }
 }; ?>
@@ -52,10 +55,22 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
     <div class="mt-6 flex flex-wrap items-center gap-3">
         <flux:input wire:model.live.debounce.400ms="location" placeholder="Filter by city" class="max-w-xs" />
 
-        <flux:select wire:model.live="sort" size="sm" class="max-w-xs">
-            <flux:select.option value="newest">Newest</flux:select.option>
-            <flux:select.option value="salary_high">Salary: high to low</flux:select.option>
-            <flux:select.option value="salary_low">Salary: low to high</flux:select.option>
+        <flux:select wire:model.live="currency" size="sm" class="max-w-xs" :aria-label="__('Pay currency')">
+            <flux:select.option value="">{{ __('Pay in any currency') }}</flux:select.option>
+            @foreach ($payCurrencies as $code => $label)
+                <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+            @endforeach
+        </flux:select>
+
+        <flux:select wire:model.live="sort" size="sm" class="max-w-xs" :aria-label="__('Sort')">
+            <flux:select.option value="newest">{{ __('Newest') }}</flux:select.option>
+            @if ($canSortByMatch)
+                <flux:select.option value="match">{{ __('Best match') }}</flux:select.option>
+            @endif
+            @if ($payCurrency)
+                <flux:select.option value="salary_high">{{ __('Pay in :currency: high to low', ['currency' => $payCurrency]) }}</flux:select.option>
+                <flux:select.option value="salary_low">{{ __('Pay in :currency: low to high', ['currency' => $payCurrency]) }}</flux:select.option>
+            @endif
         </flux:select>
 
         <a href="{{ route('jobs.index') }}" class="text-sm text-brand-700 hover:underline dark:text-brand-400" wire:navigate>

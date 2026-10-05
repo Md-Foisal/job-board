@@ -10,7 +10,11 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\Skill;
+use App\Rules\CurrencyInUse;
+use App\Support\ClosingDate;
+use App\Support\LocalTime;
 use App\Support\PublicCache;
+use App\Support\SalaryCurrencies;
 use App\Support\SubmissionLimits;
 use Flux\Flux;
 use Illuminate\Support\Facades\RateLimiter;
@@ -44,7 +48,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
 
     public ?string $salaryMax = null;
 
-    public ?string $salaryCurrency = 'BDT';
+    public ?string $salaryCurrency = null;
 
     public ?string $salaryPeriod = 'monthly';
 
@@ -69,7 +73,8 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
 
         if ($jobPosting === null) {
             $this->authorize('create', [JobPosting::class, $company]);
-            $this->expiresAt = now()->addMonth()->toDateString();
+            $this->expiresAt = ClosingDate::monthAfter($company)->setTimezone($company->timezone)->toDateString();
+            $this->salaryCurrency = $this->lastCurrencyUsed();
 
             return;
         }
@@ -87,14 +92,33 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
         $this->salaryMin = (string) $jobPosting->salary_min;
         $this->salaryMax = (string) $jobPosting->salary_max;
         $this->salaryCurrency = $jobPosting->salary_currency;
-        $this->salaryPeriod = $jobPosting->salary_period?->value;
+        // The select has no empty option: holding nothing, it would show
+        // "Hourly" while saving no period. A negotiable posting stores none,
+        // so it reopens on monthly, the default for a new posting.
+        $this->salaryPeriod = $jobPosting->salary_period?->value ?? SalaryPeriod::Monthly->value;
         $this->salaryNegotiable = $jobPosting->salary_negotiable;
-        $this->expiresAt = $jobPosting->expires_at->toDateString();
+        $this->expiresAt = ClosingDate::day($jobPosting)->toDateString();
         $this->categories = $jobPosting->categories->pluck('id')->all();
         $this->skills = $jobPosting->skills
             ->mapWithKeys(fn ($skill) => [$skill->id => $skill->pivot->importance->value])
             ->all();
         $this->screeningQuestions = $jobPosting->screeningQuestions->pluck('question_text')->all();
+    }
+
+    /**
+     * Most companies pay in one currency, so a new posting starts with the
+     * one their last posting used rather than making them find it again in
+     * a list of 150. A company's first posting starts with none: the product
+     * is used worldwide, so there is no fair default.
+     */
+    private function lastCurrencyUsed(): ?string
+    {
+        $code = $this->company->jobPostings()
+            ->whereNotNull('salary_currency')
+            ->latest('id')
+            ->value('salary_currency');
+
+        return SalaryCurrencies::isInUse($code) ? $code : null;
     }
 
     #[Computed]
@@ -189,6 +213,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             ? ['required', ...$rules]
             : ['nullable', ...$rules];
 
+        $negotiable = Rule::excludeIf($this->salaryNegotiable);
+        $withPay = $publish ? ['required_with:salaryMin,salaryMax'] : [];
+
         return [
             // Even a draft needs this: it is how the posting is told apart
             // from the others in the list you come back to.
@@ -202,12 +229,17 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             'locationCountry' => $required(['string', 'max:255']),
             'locationCity' => ['nullable', 'string', 'max:255'],
             'minExperienceYears' => ['nullable', 'integer', 'min:0', 'max:50'],
-            'salaryMin' => ['nullable', 'integer', 'min:0'],
-            'salaryMax' => ['nullable', 'integer', 'min:0', 'gte:salaryMin'],
-            'salaryCurrency' => ['nullable', 'string', 'size:3'],
-            'salaryPeriod' => ['nullable', Rule::enum(SalaryPeriod::class)],
+            // Negotiable hides the pay fields, so whatever they still hold is
+            // left out entirely: never saved, and never an error on a field
+            // the employer can no longer see.
+            'salaryMin' => [$negotiable, 'nullable', 'integer', 'min:0'],
+            'salaryMax' => [$negotiable, 'nullable', 'integer', 'min:0', 'gte:salaryMin'],
+            // A figure without a currency means nothing to a candidate, and
+            // without one the job cannot be compared with their preference.
+            'salaryCurrency' => [$negotiable, ...$withPay, 'nullable', 'string', new CurrencyInUse],
+            'salaryPeriod' => [$negotiable, ...$withPay, 'nullable', Rule::enum(SalaryPeriod::class)],
             'expiresAt' => $publish
-                ? ['required', 'date', 'after:today']
+                ? ['required', 'date', 'after:'.ClosingDate::today($this->company)]
                 : ['nullable', 'date'],
             'categories' => ['array'],
             'categories.*' => ['integer', 'exists:categories,id'],
@@ -248,6 +280,12 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             throw $e;
         }
 
+        // Livewire sets properties straight from the browser, past the
+        // middleware that turns an empty field into null, so a cleared
+        // number arrives as "" -- which PostgreSQL refuses for an integer
+        // column.
+        $number = fn (mixed $value): ?int => blank($value) ? null : (int) $value;
+
         $jobPosting = $saveJobPosting(
             $this->company,
             auth()->user(),
@@ -258,16 +296,18 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                 'workplace_type' => $validated['workplaceType'],
                 'location_city' => $validated['locationCity'] ?? null,
                 'location_country' => $validated['locationCountry'],
-                'min_experience_years' => $validated['minExperienceYears'] ?? null,
-                'salary_min' => $this->salaryNegotiable ? null : ($validated['salaryMin'] ?? null),
-                'salary_max' => $this->salaryNegotiable ? null : ($validated['salaryMax'] ?? null),
-                'salary_currency' => $validated['salaryCurrency'] ?? null,
+                'min_experience_years' => $number($validated['minExperienceYears'] ?? null),
+                'salary_min' => $number($validated['salaryMin'] ?? null),
+                'salary_max' => $number($validated['salaryMax'] ?? null),
+                'salary_currency' => blank($validated['salaryCurrency'] ?? null) ? null : $validated['salaryCurrency'],
                 'salary_period' => $validated['salaryPeriod'] ?? null,
                 'salary_negotiable' => $this->salaryNegotiable,
                 // A draft nobody can see still needs a closing date in the
                 // column, so an unfinished one gets the same month-out
                 // default the form starts with. Publishing re-checks it.
-                'expires_at' => $validated['expiresAt'] ?: now()->addMonth()->toDateString(),
+                'expires_at' => filled($validated['expiresAt'])
+                    ? ClosingDate::endOf($validated['expiresAt'], $this->company)
+                    : ClosingDate::monthAfter($this->company),
                 'categories' => $validated['categories'] ?? [],
                 'skills' => $validated['skills'] ?? [],
                 'screening_questions' => $validated['screeningQuestions'] ?? [],
@@ -384,7 +424,11 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     </div>
 
                     <div class="grid gap-6 sm:grid-cols-2">
-                        <flux:input wire:model="salaryCurrency" :label="__('Currency')" maxlength="3" placeholder="BDT" />
+                        <flux:select wire:model="salaryCurrency" :label="__('Currency')" :placeholder="__('Choose a currency')">
+                            @foreach (SalaryCurrencies::options($salaryCurrency) as $code => $label)
+                                <flux:select.option value="{{ $code }}">{{ $label }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
 
                         <flux:select wire:model="salaryPeriod" :label="__('Per')">
                             @foreach (SalaryPeriod::cases() as $period)
@@ -469,7 +513,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
 
         <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:heading size="lg">{{ __('Closing date') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('The posting closes itself on this date, so nobody applies to something already filled.') }}</flux:text>
+            <flux:text class="mt-1">{{ __('Applications are taken until the end of this day in your company\'s time zone, :zone, and then the posting closes itself, so nobody applies to something already filled.', ['zone' => LocalTime::label($company->timezone)]) }}</flux:text>
 
             <div class="mt-6">
                 <flux:input type="date" wire:model="expiresAt" :label="__('Accept applications until')" required />

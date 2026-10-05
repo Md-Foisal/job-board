@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\IdentityType;
 use App\Support\ImageUploads;
+use DateTimeZone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -27,6 +28,8 @@ class UpdateCompanyRequest extends FormRequest
             'website_url' => ['nullable', 'url:http,https', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
             'size' => ['nullable', Rule::in(['1-10', '11-50', '51-200', '200+'])],
+            // Left as it is when the field is not sent at all.
+            'timezone' => ['sometimes', 'required', 'string', Rule::in(DateTimeZone::listIdentifiers())],
             'logo' => ['nullable', ...ImageUploads::rules(ImageUploads::LOGO)],
             'cover_photo' => ['nullable', ...ImageUploads::rules(ImageUploads::COVER)],
         ];
@@ -37,6 +40,7 @@ class UpdateCompanyRequest extends FormRequest
         return [
             'identity_type' => 'type',
             'website_url' => 'website',
+            'timezone' => 'time zone',
         ];
     }
 }

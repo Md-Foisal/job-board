@@ -13,9 +13,10 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command(ExpireJobPostings::class)->everyMinute()->withoutOverlapping()->onOneServer();
 Schedule::command(ExpireInvitations::class)->everyMinute()->withoutOverlapping()->onOneServer();
 
-// Once a day, in the morning where the candidates are. Weekly alerts ride
-// the same run and simply wait until their week is up (JobAlert::due()).
-Schedule::command(SendJobAlerts::class)->dailyAt('08:00')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();
+// Every hour, for the people whose morning it is: each candidate hears at
+// about 8 their own time, wherever they are. Weekly alerts ride the same
+// runs and simply wait until their week is up (JobAlert::due()).
+Schedule::command(SendJobAlerts::class, ['--local-hour' => 8])->hourly()->withoutOverlapping()->onOneServer();
 
 // Nightly, while few people are on: accounts past their grace period.
 Schedule::command(AnonymizeDeletedUsers::class)->dailyAt('03:00')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();
