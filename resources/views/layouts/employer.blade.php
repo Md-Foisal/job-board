@@ -35,6 +35,7 @@
 </head>
 
 <body class="flex min-h-screen flex-col bg-canvas text-ink antialiased">
+    @include('partials.svg-defs')
     @include('partials.employer-topbar', ['company' => $company])
 
     <div class="flex flex-1">

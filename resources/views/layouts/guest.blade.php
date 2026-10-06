@@ -4,6 +4,7 @@
     @include('partials.head')
 </head>
 <body class="min-h-screen bg-canvas text-ink antialiased">
+    @include('partials.svg-defs')
     @include('partials.navbar')
 
     @include('partials.flash-toasts')

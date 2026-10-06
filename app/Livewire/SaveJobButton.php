@@ -17,6 +17,12 @@ class SaveJobButton extends Component
 
     public bool $saved = false;
 
+    /**
+     * Icon only, for a job card, where the title needs the room. The job
+     * page keeps the labelled button.
+     */
+    public bool $compact = false;
+
     public function mount(JobPosting $jobPosting): void
     {
         $this->jobPosting = $jobPosting;

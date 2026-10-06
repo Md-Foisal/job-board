@@ -5,83 +5,74 @@
      with unpredictable click behavior. The "stretched link" pattern below
      (an invisible full-card <a> underneath, real links layered on top with
      z-10) makes the whole card clickable to the job while still letting the
-     company name click through to its own destination. --}}
-<div
-    class="group relative flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-brand-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-brand-700"
->
-    <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0" aria-label="{{ $jobPosting->title }}"></a>
+     company name and the save button do their own thing. --}}
+@php
+    $where = collect([$jobPosting->location_city, $jobPosting->workplace_type->label()])->filter()->implode(' · ');
+    $pay = $jobPosting->payRange();
+@endphp
 
-    @if ($showSaveButton)
-        <div class="absolute right-4 top-4 z-10">
-            <livewire:save-job-button :job-posting="$jobPosting" :key="'save-'.$jobPosting->id" />
-        </div>
-    @endif
+<div class="group relative flex flex-col gap-4 rounded-card border border-line bg-canvas p-5 transition duration-200 ease-brand hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift">
+    <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0 rounded-card" aria-label="{{ $jobPosting->title }}" wire:navigate></a>
 
-    {{-- Reserve room for the absolute Save button (below) when it's shown --
-         truncate on the title needs the button's width excluded from its
-         available space, or long titles render underneath the button
-         instead of stopping short of it. --}}
-    <div class="flex items-start gap-3 {{ $showSaveButton ? 'pr-28' : '' }}">
-        <div class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 text-sm font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-            @if ($jobPosting->company->logo_path)
-                <img src="{{ \Illuminate\Support\Facades\Storage::url($jobPosting->company->logo_path) }}" alt="{{ $jobPosting->company->name }}" class="size-full object-cover">
-            @else
-                {{ \Illuminate\Support\Str::of($jobPosting->company->name)->substr(0, 1) }}
-            @endif
-        </div>
+    <div class="flex items-start gap-3">
+        <x-company-logo :company="$jobPosting->company" />
+
         <div class="min-w-0 flex-1">
-            {{-- The title gets the whole line. The match badge used to sit
-                 beside it and squeezed titles into "Police and Sheriffs
-                 Patrol ..." -- the one thing on the card people scan for,
-                 cut short to make room for a secondary number. It sits
-                 with the other tags below instead. --}}
-            <h3 class="truncate font-display text-base font-semibold text-zinc-900 group-hover:text-brand-700 dark:text-zinc-100 dark:group-hover:text-brand-400">
+            {{-- Two lines before it gives up: the title is the one thing on
+                 the card people scan for, and a phone has room for little
+                 more than half of "Business Development Manager" on one. --}}
+            <h3 class="line-clamp-2 text-subheading text-ink group-hover:text-sunset-small">
                 {{ $jobPosting->title }}
             </h3>
-            <div class="flex max-w-full items-center gap-1">
+            <div class="mt-0.5 flex max-w-full items-center gap-1">
                 <a
                     href="{{ route('companies.show', $jobPosting->company) }}"
                     wire:navigate
-                    class="relative z-10 block w-fit max-w-full truncate text-sm text-zinc-600 hover:text-brand-700 hover:underline dark:text-zinc-400 dark:hover:text-brand-400"
+                    class="relative z-10 block w-fit max-w-full truncate text-sm text-ink-muted hover:text-ink hover:underline"
                 >
                     {{ $jobPosting->company->name }}
                 </a>
                 @if ($jobPosting->company->verified_at)
-                    <x-verified-badge />
+                    <x-verified-badge class="relative z-10" />
                 @endif
             </div>
         </div>
+
+        @if ($showSaveButton)
+            <div class="relative z-10 -me-1 -mt-1">
+                <livewire:save-job-button :job-posting="$jobPosting" compact :key="'save-'.$jobPosting->id" />
+            </div>
+        @endif
     </div>
 
-    <div class="flex flex-wrap items-center gap-2 text-xs">
+    {{-- Where comes first: it rules a job in or out before anything else
+         on the card does. --}}
+    <div class="flex flex-wrap items-center gap-1.5">
         <x-match-score :score="$matchScore" size="md" />
 
-        <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            {{ $jobPosting->workplace_type->label() }}
-        </span>
-        <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-            {{ $jobPosting->employment_type->label() }}
-        </span>
-        @if ($jobPosting->location_city)
-            <span class="text-zinc-500 dark:text-zinc-500">{{ $jobPosting->location_city }}</span>
+        @if ($where !== '')
+            <x-chip>
+                <flux:icon.map-pin variant="micro" class="size-3.5" aria-hidden="true" />
+                {{ $where }}
+            </x-chip>
         @endif
-        @if ($jobPosting->published_at)
-            <time class="text-zinc-500 dark:text-zinc-500" datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
-        @endif
+        <x-chip>{{ $jobPosting->employment_type->label() }}</x-chip>
     </div>
 
-    @php $pay = $jobPosting->payRange(); @endphp
-
-    @if ($jobPosting->salary_negotiable || $pay)
-        <p class="font-display text-sm font-semibold tabular-nums text-brand-700 dark:text-brand-400">
-            @if ($jobPosting->salary_negotiable)
-                Negotiable
-            @else
+    <div class="mt-auto flex items-baseline justify-between gap-3 border-t border-line pt-3">
+        @if ($jobPosting->salary_negotiable)
+            <p class="text-sm text-ink-muted">{{ __('Pay negotiable') }}</p>
+        @elseif ($pay)
+            <p class="min-w-0 text-sm font-semibold tabular-nums text-ink">
                 {{ $pay }}
                 @if ($jobPosting->salary_period)
                     <span class="font-normal text-ink-muted">{{ $jobPosting->salary_period->per() }}</span>
                 @endif
-            @endif
-        </p>
-    @endif
+            </p>
+        @endif
+
+        @if ($jobPosting->published_at)
+            <time class="ms-auto shrink-0 text-meta text-ink-muted" datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
+        @endif
+    </div>
 </div>

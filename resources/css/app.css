@@ -81,6 +81,13 @@
     --color-sunset-ink-2: #db2777;
     --color-sunset-ink-3: #7c3aed;
 
+    /* The text set, for coloured text at any size: links, labels, skill
+       chips. Every point along it, not only the stops, holds 4.5:1 on the
+       canvas (5.2), the surface (5.0) and brand-50 (4.9). */
+    --color-sunset-text-1: #c2410c;
+    --color-sunset-text-2: #be185d;
+    --color-sunset-text-3: #7c3aed;
+
     /* Status colours: conventional (green good, amber attention, red bad)
        and kept apart from the brand, so a warning never reads as a link. */
     --color-success-50: oklch(0.97 0.03 145);
@@ -160,6 +167,12 @@
         --color-sunset-ink-2: #f472b6;
         --color-sunset-ink-3: #a78bfa;
 
+        /* At least 6.8:1 on the dark canvas and surface, 5.6:1 on
+           brand-950. */
+        --color-sunset-text-1: #fbbf24;
+        --color-sunset-text-2: #f472b6;
+        --color-sunset-text-3: #a78bfa;
+
         --color-accent: #ededef;
         --color-accent-content: #fb923c;
         --color-accent-foreground: #0a0a0b;
@@ -175,6 +188,34 @@
    carry white text. */
 @utility bg-sunset {
     background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+}
+
+/*
+ * Coloured text is never a flat brand colour: it is the Sunset gradient.
+ * text-sunset is the brighter set for headings of 24px and above;
+ * text-sunset-small is the darker text set for everything smaller. An
+ * underline would take the transparent text colour, so it gets its own.
+ * Icons and status colours (green, amber, red) stay solid.
+ */
+@utility text-sunset-small {
+    background-image: linear-gradient(120deg, var(--color-sunset-text-1) 0%, var(--color-sunset-text-2) 55%, var(--color-sunset-text-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration-color: var(--color-sunset-text-2);
+}
+
+/*
+ * The same gradient on an icon, through the shared paint server in
+ * partials/svg-defs: the fill of a solid icon, the stroke of an outline
+ * one. On the element itself, inside it, or on a .group's hover.
+ */
+:is(svg.icon-sunset, .icon-sunset svg, .group:hover .icon-sunset-on-hover svg):not([fill='none']) {
+    fill: url(#sunset-icon);
+}
+
+:is(svg.icon-sunset, .icon-sunset svg, .group:hover .icon-sunset-on-hover svg)[fill='none'] {
+    stroke: url(#sunset-icon);
 }
 
 /* Gradient text. Only for headings of 24px and above (see the ink set). */
@@ -308,4 +349,145 @@ select:focus[data-flux-control] {
 .prose-editor :where(strong),
 .prose-content :where(strong) {
     @apply font-semibold text-zinc-900 dark:text-zinc-100;
+}
+
+/*
+ * Home hero. Two dot layers on a 22px grid: faint dots everywhere, and the
+ * same dots in the Sunset ink colours shown only inside a soft circle
+ * around --spot-x/--spot-y, which follow the mouse. Registered so the
+ * spot can drift by animation on screens without a pointer to follow.
+ */
+@property --spot-x {
+    syntax: '<length-percentage>';
+    inherits: true;
+    initial-value: 30%;
+}
+
+@property --spot-y {
+    syntax: '<length-percentage>';
+    inherits: true;
+    initial-value: 45%;
+}
+
+.hero-spotlight {
+    --hero-dot: rgb(0 0 0 / 0.07);
+}
+
+.dark .hero-spotlight {
+    --hero-dot: rgb(255 255 255 / 0.08);
+}
+
+.hero-dots {
+    background-image: radial-gradient(var(--hero-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.hero-dots-lit {
+    background-image: linear-gradient(120deg, var(--color-sunset-ink-1) 0%, var(--color-sunset-ink-2) 50%, var(--color-sunset-ink-3) 100%);
+    -webkit-mask-image: radial-gradient(#000 1.7px, transparent 1.9px), radial-gradient(260px circle at var(--spot-x) var(--spot-y), #000 0%, rgb(0 0 0 / 0.6) 40%, transparent 75%);
+    -webkit-mask-size: 22px 22px, 100% 100%;
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(#000 1.7px, transparent 1.9px), radial-gradient(260px circle at var(--spot-x) var(--spot-y), #000 0%, rgb(0 0 0 / 0.6) 40%, transparent 75%);
+    mask-size: 22px 22px, 100% 100%;
+    mask-composite: intersect;
+}
+
+@media (hover: none) {
+    .hero-spotlight {
+        animation: hero-spot-drift 16s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes hero-spot-drift {
+    0% { --spot-x: 15%; --spot-y: 30%; }
+    50% { --spot-x: 75%; --spot-y: 65%; }
+    100% { --spot-x: 40%; --spot-y: 20%; }
+}
+
+/* The turning word: a one-line window over a column of words, the first
+   repeated at the end so the turn back to it is seamless. */
+.hero-words {
+    display: inline-block;
+    height: 1.25em;
+    overflow: hidden;
+    vertical-align: -0.27em;
+}
+
+.hero-words-track {
+    display: flex;
+    flex-direction: column;
+    animation: hero-words 10s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+.hero-words-track > span {
+    display: block;
+    height: 1.25em;
+    line-height: 1.25em;
+}
+
+@keyframes hero-words {
+    0%, 18% { transform: translateY(0); }
+    25%, 43% { transform: translateY(-1.25em); }
+    50%, 68% { transform: translateY(-2.5em); }
+    75%, 93% { transform: translateY(-3.75em); }
+    100% { transform: translateY(-5em); }
+}
+
+/* The rising column of openings, faded at both ends. */
+.hero-feed {
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+}
+
+.hero-feed-track {
+    animation: hero-feed 40s linear infinite;
+}
+
+.hero-feed:hover .hero-feed-track,
+.hero-feed:focus-within .hero-feed-track {
+    animation-play-state: paused;
+}
+
+@keyframes hero-feed {
+    to { transform: translateY(-50%); }
+}
+
+/* The example match on the home page fills in once it scrolls into view. */
+.match-demo-ring {
+    stroke-dasharray: var(--ring-full);
+    stroke-dashoffset: var(--ring-full);
+    transition: stroke-dashoffset 2.2s var(--ease-brand) 0.3s;
+}
+
+.match-demo.is-shown .match-demo-ring {
+    stroke-dashoffset: var(--ring-rest);
+}
+
+.match-demo-number,
+.match-demo-chip {
+    opacity: 0.3;
+    transition: opacity 0.5s ease var(--chip-delay, 1.8s);
+}
+
+.match-demo.is-shown .match-demo-number,
+.match-demo.is-shown .match-demo-chip {
+    opacity: 1;
+}
+
+/* The hero's pause button stops every animation in it (WCAG 2.2.2). */
+.hero-spotlight.is-paused,
+.hero-spotlight.is-paused * {
+    animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-dots-lit {
+        display: none;
+    }
+
+    .hero-spotlight,
+    .hero-words-track,
+    .hero-feed-track {
+        animation: none !important;
+    }
 }

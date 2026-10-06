@@ -6,14 +6,7 @@
     and the posting form for anyone who can already post.
 --}}
 @php
-    $visitor = auth()->user();
-    $postingCompany = $visitor?->activeCompanies->first(fn ($company) => $visitor->canManage($company));
-
-    $postJobUrl = match (true) {
-        $visitor === null => route('register', ['as' => 'employer']),
-        $postingCompany !== null => route('employer.jobs.create', $postingCompany),
-        default => route('companies.create'),
-    };
+    $postJobUrl = \App\Support\PostJobLink::for(auth()->user());
 
     $steps = [
         ['icon' => 'building-office-2', 'title' => __('Set up your company'), 'text' => __('Add your name, logo and what you do. Our staff check that the company is real before it gets the Verified badge.')],

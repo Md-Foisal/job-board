@@ -3,12 +3,16 @@
 <a
     href="{{ route('categories.show', $category) }}"
     wire:navigate
-    class="group flex items-center justify-between rounded-lg border border-zinc-200 bg-white px-4 py-3 transition hover:border-brand-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-brand-700"
+    class="group flex items-center gap-3 rounded-card border border-line bg-canvas p-3 transition duration-200 ease-brand hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift sm:p-4"
 >
-    <span class="text-sm font-medium text-zinc-800 group-hover:text-brand-700 dark:text-zinc-200 dark:group-hover:text-brand-400">
+    <span class="icon-sunset-on-hover flex size-9 shrink-0 items-center justify-center rounded-control bg-surface text-ink ring-1 ring-line sm:size-10" aria-hidden="true">
+        <flux:icon :name="\App\Support\CategoryIcon::for($category)" class="size-5" />
+    </span>
+    <span class="min-w-0 flex-1 text-sm font-medium leading-snug text-ink sm:text-body">
         {{ $category->name }}
     </span>
-    <span class="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold tabular-nums text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-        {{ $category->job_postings_count }}
+    <span class="font-mono text-meta tabular-nums text-ink-muted">
+        <span aria-hidden="true">{{ number_format($category->job_postings_count) }}</span>
+        <span class="sr-only">{{ trans_choice(':count open job|:count open jobs', $category->job_postings_count) }}</span>
     </span>
 </a>
