@@ -160,13 +160,11 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
     </div>
 
     @if ($this->applications->isEmpty())
-        <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:text>{{ __('No applications here yet.') }}</flux:text>
-        </div>
+        <x-empty-state icon="inbox" :heading="__('No applications here yet.')" />
     @else
-        <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card padding="none" class="overflow-hidden">
             @can('bulkUpdateStage', [\App\Models\Application::class, $this->jobPosting])
-                <div class="flex items-center gap-4 border-b border-zinc-200 bg-zinc-50 px-5 py-3 dark:border-zinc-800 dark:bg-zinc-950">
+                <div class="flex items-center gap-4 border-b border-line bg-surface px-5 py-3">
                     <flux:checkbox
                         wire:click="toggleAll"
                         :checked="count($selected) === $this->applications->count()"
@@ -177,7 +175,7 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
                 </div>
             @endcan
 
-            <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <ul class="divide-y divide-line">
                 @foreach ($this->applications as $application)
                     <li wire:key="application-{{ $application->id }}" class="flex flex-wrap items-center gap-4 px-5 py-4">
                         @can('bulkUpdateStage', [\App\Models\Application::class, $this->jobPosting])
@@ -191,12 +189,12 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
                         <div class="min-w-0 flex-1">
                             <a
                                 href="{{ route('employer.applications.show', ['company' => $this->company, 'application' => $application]) }}"
-                                class="font-medium text-zinc-900 hover:text-brand-700 dark:text-zinc-100 dark:hover:text-brand-400"
+                                class="font-medium text-ink hover:text-sunset-small"
                                 wire:navigate
                             >
                                 {{ $application->candidateProfile->user->name }}
                             </a>
-                            <div class="text-sm text-zinc-500 dark:text-zinc-500">
+                            <div class="text-sm text-ink-muted">
                                 {{ __('Applied :date', ['date' => $application->created_at->diffForHumans()]) }}
                             </div>
                         </div>
@@ -207,6 +205,6 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
                     </li>
                 @endforeach
             </ul>
-        </div>
+        </x-card>
     @endif
 </div>

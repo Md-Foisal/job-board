@@ -359,7 +359,7 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
          required attributes stay for the asterisk and for screen readers;
          what people read is the app's own inline error. --}}
     <form wire:submit="saveAndPublish" novalidate class="flex flex-col gap-8">
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('The role') }}</flux:heading>
 
             <div class="mt-6 flex flex-col gap-6">
@@ -377,9 +377,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     <flux:input type="number" wire:model="minExperienceYears" :label="__('Minimum experience (years)')" min="0" />
                 </div>
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Where') }}</flux:heading>
 
             <div class="mt-6 flex flex-col gap-6">
@@ -408,9 +408,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     />
                 </div>
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Pay') }}</flux:heading>
             <flux:text class="mt-1">{{ __('Most candidates will not apply without it.') }}</flux:text>
 
@@ -438,16 +438,16 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     </div>
                 @endunless
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Skills') }}</flux:heading>
             <flux:text class="mt-1">{{ __('These decide the match percentage candidates see.') }}</flux:text>
 
             <div class="mt-6 flex flex-col gap-4">
                 @foreach ($this->chosenSkills as $skill)
                     <div wire:key="skill-{{ $skill->id }}" class="flex items-center gap-3">
-                        <span class="flex-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ $skill->name }}</span>
+                        <span class="flex-1 text-sm font-medium text-ink">{{ $skill->name }}</span>
 
                         <flux:select wire:model="skills.{{ $skill->id }}" size="sm" class="w-44" :aria-label="__('How important is :skill', ['skill' => $skill->name])">
                             @foreach (SkillImportance::cases() as $importance)
@@ -477,9 +477,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     @endif
                 </div>
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Categories') }}</flux:heading>
 
             <div class="mt-6 flex flex-wrap gap-x-6 gap-y-3">
@@ -487,9 +487,9 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     <flux:checkbox wire:model="categories" value="{{ $category->id }}" :label="$category->name" wire:key="category-{{ $category->id }}" />
                 @endforeach
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Screening questions') }}</flux:heading>
             <flux:text class="mt-1">
                 {{ __('The sharpest tool you have: the wrong candidates either do not apply, or rule themselves out in one line.') }}
@@ -509,16 +509,16 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
                     </flux:button>
                 </div>
             </div>
-        </div>
+        </x-card>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Closing date') }}</flux:heading>
             <flux:text class="mt-1">{{ __('Applications are taken until the end of this day in your company\'s time zone, :zone, and then the posting closes itself, so nobody applies to something already filled.', ['zone' => LocalTime::label($company->timezone)]) }}</flux:text>
 
             <div class="mt-6">
                 <flux:input type="date" wire:model="expiresAt" :label="__('Accept applications until')" required />
             </div>
-        </div>
+        </x-card>
 
         <div class="flex flex-wrap justify-end gap-2">
             <flux:button variant="ghost" type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save">

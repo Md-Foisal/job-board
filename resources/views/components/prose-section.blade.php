@@ -8,6 +8,6 @@
 @props(['heading'])
 
 <section class="space-y-3">
-    <h2 class="font-display text-xl font-semibold text-zinc-900 dark:text-zinc-100">{{ $heading }}</h2>
+    <h2 class="font-display text-xl font-semibold text-ink">{{ $heading }}</h2>
     {{ $slot }}
 </section>

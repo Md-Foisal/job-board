@@ -73,11 +73,13 @@
                                 @foreach ($jobPostings as $jobPosting)
                                     @php $pay = $jobPosting->payRange(); @endphp
                                     <li class="pb-3">
-                                        <a
+                                        <x-card
+                                            as="a"
+                                            padding="none"
                                             href="{{ route('jobs.show', $jobPosting) }}"
                                             wire:navigate
-                                            @if ($copy) tabindex="-1" @endif
-                                            class="flex items-center gap-3 rounded-card border border-line bg-canvas px-4 py-3.5 transition-colors hover:border-line-strong"
+                                            :tabindex="$copy ? '-1' : null"
+                                            class="flex items-center gap-3 px-4 py-3.5 transition-colors hover:border-line-strong"
                                         >
                                             <x-company-logo :company="$jobPosting->company" size="sm" />
                                             <span class="min-w-0 flex-1">
@@ -87,7 +89,7 @@
                                                 </span>
                                             </span>
                                             <x-chip class="shrink-0">{{ $jobPosting->workplace_type->label() }}</x-chip>
-                                        </a>
+                                        </x-card>
                                     </li>
                                 @endforeach
                             </ul>
@@ -148,7 +150,7 @@
             :class="shown && 'is-shown'"
         >
             <div class="flex items-center gap-3">
-                <span class="flex size-11 items-center justify-center rounded-xl bg-indigo-50 font-semibold text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200">L</span>
+                <x-icon-tile icon="code-bracket" />
                 <div class="min-w-0 flex-1">
                     <p class="font-semibold text-ink">{{ __('Laravel Developer') }}</p>
                     <p class="text-sm text-ink-muted">{{ __('Example job · Hybrid') }}</p>

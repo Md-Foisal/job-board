@@ -4,7 +4,7 @@
         <flux:subheading size="lg" class="mb-6">{{ __('Each job page compares the job with these. Only you see them.') }}</flux:subheading>
         <flux:separator variant="subtle" class="mb-6" />
 
-        <form method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card as="form" method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6">
             @csrf
             @method('PATCH')
 
@@ -79,6 +79,6 @@
             <div class="flex items-center gap-4">
                 <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
             </div>
-        </form>
+        </x-card>
     </div>
 </x-layouts::app>

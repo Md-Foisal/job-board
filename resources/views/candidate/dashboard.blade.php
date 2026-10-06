@@ -5,41 +5,39 @@
         <flux:separator variant="subtle" class="mb-6" />
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-500">{{ __('Profile completion') }}</p>
-                <p class="mt-2 font-display text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $profileCompletionPercent }}%</p>
+            <x-card>
+                <p class="text-sm font-medium text-ink-muted">{{ __('Profile completion') }}</p>
+                <p class="mt-2 font-display text-3xl font-bold text-ink">{{ $profileCompletionPercent }}%</p>
 
-                <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div class="h-full rounded-full bg-brand-600 dark:bg-brand-500" style="width: {{ $profileCompletionPercent }}%"></div>
-                </div>
+                <x-meter :percent="$profileCompletionPercent" size="sm" class="mt-3" />
 
                 @if ($profileCompletionPercent < 100)
                     {{-- Naming what's missing (not just the %) gives an actual
                          next action -- a bare number tells you how far but not
                          what to do about it. --}}
-                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-500">
+                    <p class="mt-3 text-sm text-ink-muted">
                         {{ __('Missing:') }}
                         {{ $missingProfileItems->take(3)->join(', ') }}
                         @if ($missingProfileItems->count() > 3)
                             {{ __('+:count more', ['count' => $missingProfileItems->count() - 3]) }}
                         @endif
                     </p>
-                    <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="mt-1 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
+                    <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="mt-1 inline-block text-sm text-sunset-small hover:underline">
                         {{ __('Complete your profile') }} &rarr;
                     </a>
                 @else
-                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-500">{{ __('Your profile is fully filled out.') }}</p>
+                    <p class="mt-3 text-sm text-ink-muted">{{ __('Your profile is fully filled out.') }}</p>
                 @endif
-            </div>
+            </x-card>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-500">{{ __('Active applications') }}</p>
-                <p class="mt-2 font-display text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $activeApplicationCount }}</p>
+            <x-card>
+                <p class="text-sm font-medium text-ink-muted">{{ __('Active applications') }}</p>
+                <p class="mt-2 font-display text-3xl font-bold text-ink">{{ $activeApplicationCount }}</p>
 
-                <a href="{{ route('candidate.applications.index') }}" wire:navigate class="mt-3 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
+                <a href="{{ route('candidate.applications.index') }}" wire:navigate class="mt-3 inline-block text-sm text-sunset-small hover:underline">
                     {{ __('View all applications') }} &rarr;
                 </a>
-            </div>
+            </x-card>
         </div>
 
         <flux:heading size="lg" level="2" class="mb-1 mt-10">{{ __('Jobs that match your skills') }}</flux:heading>
@@ -48,19 +46,11 @@
         @if (! $hasSkills)
             {{-- Nothing to match on yet, so nothing is guessed: the only
                  useful thing to show is how to get a real list. --}}
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
+            <x-empty-state icon="sparkles" :level="3" :heading="__('See the jobs that fit you')" :action-href="route('candidate.skills.edit')" :action-label="__('Add skills')">
                 {{ __('Add your skills and we will show the open jobs that fit you, with how well each one matches.') }}
-                <a href="{{ route('candidate.skills.edit') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Add skills') }} &rarr;
-                </a>
-            </div>
+            </x-empty-state>
         @elseif ($matches->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __('No open job asks for your skills right now.') }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse all open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="magnifying-glass" :level="3" :heading="__('No open job asks for your skills right now.')" :action-href="route('jobs.index')" :action-label="__('Browse all open roles')" />
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($matches as $match)
@@ -73,12 +63,7 @@
         <flux:subheading class="mb-6">{{ __('Jobs you looked at, in case you want another look.') }}</flux:subheading>
 
         @if ($recentlyViewedJobs->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __("You haven't viewed any jobs yet.") }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="eye" :level="3" :heading="__('You haven\'t viewed any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')" />
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($recentlyViewedJobs as $jobPosting)

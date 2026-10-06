@@ -154,22 +154,22 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
         </flux:button>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+    <x-card padding="none" class="overflow-hidden">
         <table class="w-full text-sm">
             <caption class="sr-only">{{ __('Team members') }}</caption>
-            <thead class="border-b border-zinc-200 bg-zinc-50 text-start dark:border-zinc-800 dark:bg-zinc-800/50">
+            <thead class="border-b border-line bg-surface text-start">
                 <tr>
-                    <th scope="col" class="px-5 py-3 text-start font-medium text-zinc-600 dark:text-zinc-400">{{ __('Member') }}</th>
-                    <th scope="col" class="px-5 py-3 text-start font-medium text-zinc-600 dark:text-zinc-400">{{ __('Role') }}</th>
-                    <th scope="col" class="px-5 py-3 text-end font-medium text-zinc-600 dark:text-zinc-400">{{ __('Actions') }}</th>
+                    <th scope="col" class="px-5 py-3 text-start font-medium text-ink-muted">{{ __('Member') }}</th>
+                    <th scope="col" class="px-5 py-3 text-start font-medium text-ink-muted">{{ __('Role') }}</th>
+                    <th scope="col" class="px-5 py-3 text-end font-medium text-ink-muted">{{ __('Actions') }}</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <tbody class="divide-y divide-line">
                 @foreach ($this->members as $membership)
                     <tr wire:key="membership-{{ $membership->id }}" @class(['opacity-60' => $membership->status === \App\Enums\MembershipStatus::Inactive])>
                         <td class="px-5 py-4">
-                            <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $membership->user->name }}</div>
-                            <div class="text-zinc-500 dark:text-zinc-500">{{ $membership->user->email }}</div>
+                            <div class="font-medium text-ink">{{ $membership->user->name }}</div>
+                            <div class="text-ink-muted">{{ $membership->user->email }}</div>
                         </td>
                         <td class="px-5 py-4">
                             @if ($membership->status === \App\Enums\MembershipStatus::Inactive)
@@ -207,26 +207,26 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                                     </flux:menu>
                                 </flux:dropdown>
                             @else
-                                <flux:text size="sm" class="text-zinc-400">&mdash;</flux:text>
+                                <flux:text size="sm">&mdash;</flux:text>
                             @endcan
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-    </div>
+    </x-card>
 
     @if ($this->pendingInvitations->isNotEmpty())
         <div>
             <flux:heading size="lg">{{ __('Waiting to accept') }}</flux:heading>
 
-            <div class="mt-4 overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-                <ul class="divide-y divide-zinc-200 dark:divide-zinc-800">
+            <x-card padding="none" class="mt-4 overflow-hidden">
+                <ul class="divide-y divide-line">
                     @foreach ($this->pendingInvitations as $invitation)
                         <li wire:key="invitation-{{ $invitation->id }}" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                             <div>
-                                <div class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $invitation->email }}</div>
-                                <div class="text-sm text-zinc-500 dark:text-zinc-500">
+                                <div class="text-sm font-medium text-ink">{{ $invitation->email }}</div>
+                                <div class="text-sm text-ink-muted">
                                     {{ __('Invited as a :role, expires :date', [
                                         'role' => \Illuminate\Support\Str::lower($invitation->role->label()),
                                         'date' => \App\Support\LocalTime::of($invitation->expires_at)->format(\App\Support\DateFormat::DAY),
@@ -246,7 +246,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                         </li>
                     @endforeach
                 </ul>
-            </div>
+            </x-card>
         </div>
     @endif
 

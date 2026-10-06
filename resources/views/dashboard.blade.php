@@ -8,10 +8,8 @@
         <flux:subheading>{{ __('You can set up either side now and add the other whenever you need it.') }}</flux:subheading>
 
         <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-                <div class="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                    <flux:icon name="user" variant="mini" />
-                </div>
+            <x-card class="flex flex-col gap-4">
+                <x-icon-tile icon="user" />
                 <div class="flex-1">
                     <flux:heading>{{ __('Find a job') }}</flux:heading>
                     <flux:text class="mt-1">{{ __('Build a profile once, apply in a few clicks, and see where every application stands.') }}</flux:text>
@@ -20,18 +18,16 @@
                     @csrf
                     <flux:button type="submit" variant="primary" class="w-full">{{ __('Start a candidate profile') }}</flux:button>
                 </form>
-            </div>
+            </x-card>
 
-            <div class="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
-                <div class="flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                    <flux:icon name="building-office" variant="mini" />
-                </div>
+            <x-card class="flex flex-col gap-4">
+                <x-icon-tile icon="building-office" />
                 <div class="flex-1">
                     <flux:heading>{{ __('Hire') }}</flux:heading>
                     <flux:text class="mt-1">{{ __('Set up your company, post jobs and review applicants with your team.') }}</flux:text>
                 </div>
                 <flux:button :href="route('companies.create')" class="w-full">{{ __('Create a company') }}</flux:button>
-            </div>
+            </x-card>
         </div>
     </div>
 </x-layouts::app>

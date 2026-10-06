@@ -117,9 +117,9 @@ new #[Layout('layouts::app')] #[Title('Skills')] class extends Component {
         <div
             x-show="open"
             x-cloak
-            class="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border border-zinc-200 bg-white text-left shadow-lg dark:border-zinc-800 dark:bg-zinc-900"
+            class="absolute z-20 mt-2 w-full overflow-hidden rounded-control border border-line bg-canvas text-left shadow-lift"
         >
-            <div wire:loading.delay wire:target="q" class="px-4 py-3 text-sm text-zinc-400 dark:text-zinc-500">
+            <div wire:loading.delay wire:target="q" class="px-4 py-3 text-sm text-ink-muted">
                 {{ __('Searching…') }}
             </div>
 
@@ -130,13 +130,13 @@ new #[Layout('layouts::app')] #[Title('Skills')] class extends Component {
                             type="button"
                             wire:click="add({{ $skill->id }})"
                             x-on:click="open = false"
-                            class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition hover:bg-brand-50 dark:hover:bg-brand-950"
+                            class="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition hover:bg-surface"
                     >
-                        <flux:icon name="tag" variant="micro" class="text-zinc-400" />
-                        <span class="text-zinc-800 dark:text-zinc-200">{{ $skill->name }}</span>
+                        <flux:icon name="tag" variant="micro" class="text-ink-muted" />
+                        <span class="text-ink">{{ $skill->name }}</span>
                     </button>
                     @empty
-                        <p class="px-4 py-3 text-sm text-zinc-500 dark:text-zinc-500">
+                        <p class="px-4 py-3 text-sm text-ink-muted">
                             {{ __('No matching skills.') }}
                     </p>
                 @endforelse
@@ -147,12 +147,10 @@ new #[Layout('layouts::app')] #[Title('Skills')] class extends Component {
 
     <div class="mt-6 space-y-3">
         @forelse ($this->selectedSkills as $skill)
-            <div wire:key="skill-{{ $skill->id }}" class="flex items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900">
+            <x-card padding="sm" wire:key="skill-{{ $skill->id }}" class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
-                    <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon name="tag" variant="mini" />
-                    </div>
-                    <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $skill->name }}</p>
+                    <x-icon-tile icon="tag" size="sm" />
+                    <p class="font-medium text-ink">{{ $skill->name }}</p>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -164,11 +162,11 @@ new #[Layout('layouts::app')] #[Title('Skills')] class extends Component {
 
                     <flux:button wire:click="remove({{ $skill->id }})" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
                 </div>
-            </div>
+            </x-card>
         @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No skills added yet — search above to add one.') }}</p>
-            </div>
+            <x-empty-state icon="tag" :heading="__('No skills added yet')">
+                {{ __('Search above to add one.') }}
+            </x-empty-state>
         @endforelse
     </div>
 

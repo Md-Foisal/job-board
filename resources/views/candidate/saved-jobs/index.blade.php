@@ -22,19 +22,11 @@
         @if ($jobPostings->isEmpty() && $unavailableCount > 0)
             {{-- Saying "you haven't saved any" here would contradict the
                  line just above it. --}}
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __('None of the jobs you saved is open right now.') }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="bookmark" :heading="__('None of the jobs you saved is open right now.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')" />
         @elseif ($jobPostings->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __("You haven't saved any jobs yet.") }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="bookmark" :heading="__('You haven\'t saved any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')">
+                {{ __('Save a job from its card or its page and it waits for you here.') }}
+            </x-empty-state>
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($jobPostings as $jobPosting)

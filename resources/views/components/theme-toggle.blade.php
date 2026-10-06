@@ -16,7 +16,7 @@
     x-cloak
     x-bind:aria-pressed="$flux.dark.toString()"
     aria-label="{{ __('Dark theme') }}"
-    {{ $attributes->class(['inline-flex size-9 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-ink transition-colors duration-150 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent dark:hover:bg-zinc-800']) }}
+    {{ $attributes->class(['inline-flex size-9 shrink-0 items-center justify-center rounded-control border border-line bg-surface text-ink transition-colors duration-150 hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent']) }}
 >
     <span class="flex" x-show="! $flux.dark"><flux:icon.moon class="size-[18px]" /></span>
     <span class="flex" x-show="$flux.dark"><flux:icon.sun class="size-[18px]" /></span>

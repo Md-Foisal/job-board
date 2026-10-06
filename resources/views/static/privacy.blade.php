@@ -69,11 +69,11 @@
         </p>
         <p>
             Anthropic does not use what we send it to train its models
-            (<a href="https://privacy.claude.com/en/articles/7996868" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: model training</a>).
+            (<a href="https://privacy.claude.com/en/articles/7996868" class="font-medium text-sunset-small hover:underline">Anthropic: model training</a>).
             By default it deletes it within 30 days. If its automated safety systems
             flag it as breaking Anthropic's Usage Policy, it may keep it for up to
             two years
-            (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: data retention</a>).
+            (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-sunset-small hover:underline">Anthropic: data retention</a>).
         </p>
     </x-prose-section>
 

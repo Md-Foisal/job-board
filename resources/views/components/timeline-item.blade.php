@@ -16,11 +16,11 @@
 @php($local = \App\Support\LocalTime::of($at))
 
 <li class="ms-6 pb-8 last:pb-0">
-    <span class="absolute -start-1.5 mt-1.5 size-3 rounded-full {{ $highlight ? 'bg-brand-600 dark:bg-brand-500' : 'bg-zinc-300 dark:bg-zinc-700' }}"></span>
+    <span class="absolute -start-1.5 mt-1.5 size-3 rounded-full {{ $highlight ? 'bg-sunset' : 'bg-line-strong' }}"></span>
 
-    <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
+    <p class="font-medium text-ink">{{ $label }}</p>
 
-    <time class="text-sm text-zinc-500 dark:text-zinc-500" datetime="{{ $local->toIso8601String() }}">
+    <time class="text-sm text-ink-muted" datetime="{{ $local->toIso8601String() }}">
         {{ $local->format(\App\Support\DateFormat::MOMENT) }}
     </time>
 </li>

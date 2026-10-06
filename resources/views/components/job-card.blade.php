@@ -11,7 +11,7 @@
     $pay = $jobPosting->payRange();
 @endphp
 
-<div class="group relative flex flex-col gap-4 rounded-card border border-line bg-canvas p-5 transition duration-200 ease-brand hover:-translate-y-0.5 hover:border-line-strong hover:shadow-lift">
+<x-card interactive class="group relative flex flex-col gap-4">
     <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0 rounded-card" aria-label="{{ $jobPosting->title }}" wire:navigate></a>
 
     <div class="flex items-start gap-3">
@@ -75,4 +75,4 @@
             <time class="ms-auto shrink-0 text-meta text-ink-muted" datetime="{{ $jobPosting->published_at->toAtomString() }}">{{ $jobPosting->published_at->diffForHumans() }}</time>
         @endif
     </div>
-</div>
+</x-card>

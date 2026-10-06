@@ -22,7 +22,7 @@
                  "rejected" leaves the employer guessing what to fix. --}}
             @if ($detailed)
                 @if ($jobPosting->latestRejection?->reason)
-                    <flux:text size="sm" class="mt-2 max-w-sm whitespace-pre-line text-red-700 dark:text-red-400">{{ $jobPosting->latestRejection->reason }}</flux:text>
+                    <flux:text size="sm" class="mt-2 max-w-sm whitespace-pre-line text-danger-700 dark:text-danger-300">{{ $jobPosting->latestRejection->reason }}</flux:text>
                 @endif
                 <flux:text size="sm" class="mt-1">{{ __('Edit and publish again to send it back for review.') }}</flux:text>
             @endif

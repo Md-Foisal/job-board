@@ -118,7 +118,7 @@ new #[Title('Account settings')] class extends Component {
     <flux:heading class="sr-only">{{ __('Account settings') }}</flux:heading>
 
     <x-pages::settings.layout :heading="__('Account')" :subheading="__('Your name, email address and time zone.')">
-        <form wire:submit="updateProfileInformation" class="mt-6 w-full space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card as="form" wire:submit="updateProfileInformation" class="mt-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
             <div>
@@ -143,9 +143,9 @@ new #[Title('Account settings')] class extends Component {
                     {{ __('Save') }}
                 </flux:button>
             </div>
-        </form>
+        </x-card>
 
-        <form wire:submit="updateTimezone" class="mt-6 w-full space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card as="form" wire:submit="updateTimezone" class="mt-6 w-full space-y-6">
             <flux:select
                 wire:model="timezone"
                 :label="__('Time zone')"
@@ -168,7 +168,7 @@ new #[Title('Account settings')] class extends Component {
                     {{ __('Save') }}
                 </flux:button>
             </div>
-        </form>
+        </x-card>
 
         @if ($this->showDeleteUser)
             <livewire:pages::settings.delete-user-form />

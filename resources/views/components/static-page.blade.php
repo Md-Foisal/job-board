@@ -9,9 +9,9 @@
 
 <x-layouts::guest :title="$heading">
     <article class="mx-auto max-w-2xl px-6 py-12">
-        <h1 class="font-display text-3xl font-bold text-zinc-900 dark:text-zinc-50">{{ $heading }}</h1>
+        <h1 class="font-display text-3xl font-bold text-ink">{{ $heading }}</h1>
 
-        <div class="mt-6 space-y-6 text-zinc-700 dark:text-zinc-300">
+        <div class="mt-6 space-y-6 text-ink-soft">
             {{ $slot }}
         </div>
     </article>

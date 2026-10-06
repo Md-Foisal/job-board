@@ -50,7 +50,7 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
 <div class="mx-auto max-w-6xl px-6 py-10">
     <x-breadcrumb :items="[['label' => $categoryModel->name]]" />
 
-    <h1 class="mt-2 font-display text-2xl font-bold text-zinc-900 dark:text-zinc-50">{{ $categoryModel->name }} jobs</h1>
+    <h1 class="mt-2 font-display text-2xl font-bold text-ink">{{ $categoryModel->name }} jobs</h1>
 
     <div class="mt-6 flex flex-wrap items-center gap-3">
         <flux:input wire:model.live.debounce.400ms="location" placeholder="Filter by city" class="max-w-xs" />
@@ -73,19 +73,19 @@ new #[Layout('layouts::guest')] #[Title('Category jobs')] class extends Componen
             @endif
         </flux:select>
 
-        <a href="{{ route('jobs.index') }}" class="text-sm text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
+        <a href="{{ route('jobs.index') }}" class="text-sm text-sunset-small hover:underline" wire:navigate>
             Search all categories &rarr;
         </a>
     </div>
 
-    <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
+    <p class="mt-4 text-sm text-ink-muted">
         {{ $jobPostings->total() }} {{ \Illuminate\Support\Str::plural('opening', $jobPostings->total()) }} in {{ $categoryModel->name }}
     </p>
 
     @if ($jobPostings->isEmpty())
-        <div class="mt-6 rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-            No open {{ $categoryModel->name }} positions right now — check back soon.
-        </div>
+        <x-empty-state icon="briefcase" class="mt-6" :heading="__('No open :category positions right now', ['category' => $categoryModel->name])" :action-href="route('jobs.index')" :action-label="__('Browse all open roles')">
+            {{ __('Check back soon, or look through the roles open in every field.') }}
+        </x-empty-state>
     @else
         <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($jobPostings as $jobPosting)

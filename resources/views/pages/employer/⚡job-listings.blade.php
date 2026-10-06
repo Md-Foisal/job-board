@@ -150,27 +150,36 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
     </flux:radio.group>
 
     @if ($this->jobPostings->isEmpty())
-        <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:text>{{ __('Nothing here yet.') }}</flux:text>
-        </div>
+        @if ($this->filter === 'all')
+            <x-empty-state icon="briefcase" :heading="__('No job postings yet')">
+                {{ __('Post a job and it shows up here, with how many people have applied.') }}
+                @can('create', [\App\Models\JobPosting::class, $this->company])
+                    <x-slot:actions>
+                        <flux:button :href="route('employer.jobs.create', $this->company)" variant="primary" size="sm" wire:navigate>{{ __('Post a job') }}</flux:button>
+                    </x-slot:actions>
+                @endcan
+            </x-empty-state>
+        @else
+            <x-empty-state icon="funnel" :heading="__('No postings with this status')" />
+        @endif
     @else
-        <div class="overflow-hidden rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card padding="none" class="overflow-hidden">
             <table class="w-full text-sm">
                 <caption class="sr-only">{{ __('Job postings') }}</caption>
-                <thead class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
+                <thead class="border-b border-line bg-surface">
                     <tr>
-                        <th scope="col" class="px-5 py-3 text-start font-medium text-zinc-600 dark:text-zinc-400">{{ __('Job') }}</th>
-                        <th scope="col" class="px-5 py-3 text-start font-medium text-zinc-600 dark:text-zinc-400">{{ __('Status') }}</th>
-                        <th scope="col" class="px-5 py-3 text-end font-medium text-zinc-600 dark:text-zinc-400">{{ __('Applications') }}</th>
-                        <th scope="col" class="px-5 py-3 text-end font-medium text-zinc-600 dark:text-zinc-400">{{ __('Actions') }}</th>
+                        <th scope="col" class="px-5 py-3 text-start font-medium text-ink-muted">{{ __('Job') }}</th>
+                        <th scope="col" class="px-5 py-3 text-start font-medium text-ink-muted">{{ __('Status') }}</th>
+                        <th scope="col" class="px-5 py-3 text-end font-medium text-ink-muted">{{ __('Applications') }}</th>
+                        <th scope="col" class="px-5 py-3 text-end font-medium text-ink-muted">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-800">
+                <tbody class="divide-y divide-line">
                     @foreach ($this->jobPostings as $jobPosting)
                         <tr wire:key="job-{{ $jobPosting->id }}">
                             <td class="px-5 py-4">
-                                <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $jobPosting->title }}</div>
-                                <div class="text-zinc-500 dark:text-zinc-500">
+                                <div class="font-medium text-ink">{{ $jobPosting->title }}</div>
+                                <div class="text-ink-muted">
                                     {{ __('Closes :date', ['date' => ClosingDate::day($jobPosting, $company)->format(\App\Support\DateFormat::DAY)]) }}
                                 </div>
                             </td>
@@ -180,12 +189,12 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                             <td class="px-5 py-4 text-end tabular-nums">
                                 <a
                                     href="{{ route('employer.jobs.applications', ['company' => $this->company, 'jobPosting' => $jobPosting]) }}"
-                                    class="text-zinc-700 hover:text-brand-700 hover:underline dark:text-zinc-300 dark:hover:text-brand-400"
+                                    class="text-ink-soft hover:text-sunset-small hover:underline"
                                     wire:navigate
                                 >
                                     {{ $jobPosting->applications_count }}
                                     @if ($jobPosting->new_applications_count > 0)
-                                        <span class="text-brand-700 dark:text-brand-400">({{ $jobPosting->new_applications_count }} {{ __('new') }})</span>
+                                        <span class="text-sunset-small">({{ $jobPosting->new_applications_count }} {{ __('new') }})</span>
                                     @endif
                                 </a>
                             </td>
@@ -242,6 +251,6 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                     @endforeach
                 </tbody>
             </table>
-        </div>
+        </x-card>
     @endif
 </div>

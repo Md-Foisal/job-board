@@ -4,7 +4,9 @@
     "interactive" is for a card that is itself a link or opens one: it
     lifts on hover, so the whole surface reads as clickable. "subtle"
     puts the card on the surface colour, for a panel that sits beside
-    the main content rather than being part of it.
+    the main content rather than being part of it. "padding" is sm, md
+    or lg, or none for a card whose contents reach its edges: a table, a
+    cover photo, a list with its own dividers.
 --}}
 @props([
     'as' => 'div',

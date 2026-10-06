@@ -218,7 +218,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         </div>
     </div>
 
-    <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <x-card>
         <div class="flex flex-wrap items-end gap-4">
             @can('updateStage', $this->application)
                 <flux:select wire:model="stage" :label="__('Review stage')" class="w-56">
@@ -251,10 +251,10 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 </flux:button>
             @endif
         </div>
-    </div>
+    </x-card>
 
     @can('decideOutcome', $this->application)
-        <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card class="flex flex-wrap items-center justify-between gap-4">
             <div class="min-w-0">
                 <flux:heading size="lg">{{ __('Decision') }}</flux:heading>
                 <flux:text class="mt-1">{{ __('The candidate is told by email either way, :minutes minutes after you decide. Until then you can undo it.', ['minutes' => Application::UNDO_MINUTES]) }}</flux:text>
@@ -281,7 +281,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                     {{ __('Mark as hired') }}
                 </flux:button>
             </div>
-        </div>
+        </x-card>
     @endcan
 
     @can('undoOutcome', $this->application)
@@ -302,17 +302,17 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
     {{-- The candidate's profile is read live rather than frozen: only the CV
          and the screening answers are a snapshot of the moment they applied.
          Someone who has since added a certificate should be judged with it. --}}
-    <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <x-card>
         <flux:heading size="lg">{{ __('Candidate') }}</flux:heading>
 
         <div class="mt-4 flex flex-col gap-4 text-sm">
             @if ($candidate->bio)
-                <p class="text-zinc-700 dark:text-zinc-300">{{ $candidate->bio }}</p>
+                <p class="text-ink-soft">{{ $candidate->bio }}</p>
             @endif
 
             @if ($candidate->skills->isNotEmpty())
                 <div>
-                    <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <div class="text-xs font-medium text-ink-muted">
                         {{ __('Their skills') }}
                         @if ($this->wantedSkillIds->isNotEmpty())
                             <span class="font-normal">{{ __('(highlighted ones are what this posting asks for)') }}</span>
@@ -321,13 +321,9 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
 
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($candidate->skills as $skill)
-                            <span @class([
-                                'rounded-full px-2.5 py-1 text-xs font-medium',
-                                'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-300' => $this->wantedSkillIds->contains($skill->id),
-                                'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' => ! $this->wantedSkillIds->contains($skill->id),
-                            ])>
+                            <x-chip :variant="$this->wantedSkillIds->contains($skill->id) ? 'matched' : 'fact'">
                                 {{ $skill->name }}
-                            </span>
+                            </x-chip>
                         @endforeach
                     </div>
                 </div>
@@ -335,52 +331,49 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
 
             @if ($this->missingSkills->isNotEmpty())
                 <div>
-                    <div class="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    <div class="text-xs font-medium text-ink-muted">
                         {{ __('Asked for, not on their profile') }}
                     </div>
 
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($this->missingSkills as $skill)
-                            <span @class([
-                                'rounded-full border border-dashed px-2.5 py-1 text-xs font-medium',
-                                'border-warning-300 text-warning-700 dark:border-warning-700 dark:text-warning-300' => $skill->pivot->importance === \App\Enums\SkillImportance::Required,
-                                'border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400' => $skill->pivot->importance !== \App\Enums\SkillImportance::Required,
-                            ])>
+                            @php $required = $skill->pivot->importance === \App\Enums\SkillImportance::Required; @endphp
+                            <x-chip variant="missing" :required="$required">
                                 {{ $skill->name }}
-                                @if ($skill->pivot->importance === \App\Enums\SkillImportance::Required)
+                                @if ($required)
                                     <span class="font-normal">{{ __('(required)') }}</span>
                                 @endif
-                            </span>
+                            </x-chip>
                         @endforeach
                     </div>
                 </div>
             @endif
         </div>
-    </div>
+    </x-card>
 
     @if ($this->application->cover_letter)
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Cover letter') }}</flux:heading>
             <div class="prose-content mt-4">{!! $this->application->cover_letter !!}</div>
-        </div>
+        </x-card>
     @endif
 
     @if ($this->application->screeningAnswers->isNotEmpty())
-        <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card>
             <flux:heading size="lg">{{ __('Screening answers') }}</flux:heading>
 
             <dl class="mt-4 flex flex-col gap-4 text-sm">
                 @foreach ($this->application->screeningAnswers as $answer)
                     <div>
-                        <dt class="font-medium text-zinc-900 dark:text-zinc-100">{{ $answer->screeningQuestion->question_text }}</dt>
-                        <dd class="mt-1 text-zinc-700 dark:text-zinc-300">{{ $answer->answer_text }}</dd>
+                        <dt class="font-medium text-ink">{{ $answer->screeningQuestion->question_text }}</dt>
+                        <dd class="mt-1 text-ink-soft">{{ $answer->answer_text }}</dd>
                     </div>
                 @endforeach
             </dl>
-        </div>
+        </x-card>
     @endif
 
-    <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <x-card>
         <flux:heading size="lg">{{ __('Internal notes') }}</flux:heading>
         <flux:text class="mt-1">{{ __('Only your team sees these. The candidate never does.') }}</flux:text>
 
@@ -397,7 +390,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         @if ($this->notes->isNotEmpty())
             <ul class="mt-6 flex flex-col gap-4">
                 @foreach ($this->notes as $note)
-                    <li wire:key="note-{{ $note->id }}" class="rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                    <li wire:key="note-{{ $note->id }}" class="rounded-lg bg-surface p-4">
                         @if ($editingNoteId === $note->id)
                             <form wire:submit="saveNote" class="flex flex-col gap-3">
                                 <flux:textarea wire:model="editingNoteBody" rows="3" :aria-label="__('Edit note')" />
@@ -410,14 +403,14 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                                 </div>
                             </form>
                         @else
-                            <p class="whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $note->note }}</p>
-                            <div class="mt-2 flex items-center justify-between gap-3 text-xs text-zinc-500 dark:text-zinc-500">
+                            <p class="whitespace-pre-line text-sm text-ink-soft">{{ $note->note }}</p>
+                            <div class="mt-2 flex items-center justify-between gap-3 text-xs text-ink-muted">
                                 <span>{{ $note->author?->name ?? __('A former team member') }} &middot; {{ $note->created_at->diffForHumans() }}</span>
 
                                 @can('update', $note)
                                     <span class="flex gap-2">
-                                        <button type="button" wire:click="startEditing({{ $note->id }})" class="hover:text-brand-700 dark:hover:text-brand-400">{{ __('Edit') }}</button>
-                                        <button type="button" wire:click="deleteNote({{ $note->id }})" wire:confirm="{{ __('Delete this note?') }}" class="hover:text-red-600">{{ __('Delete') }}</button>
+                                        <button type="button" wire:click="startEditing({{ $note->id }})" class="hover:text-sunset-small">{{ __('Edit') }}</button>
+                                        <button type="button" wire:click="deleteNote({{ $note->id }})" wire:confirm="{{ __('Delete this note?') }}" class="hover:text-danger-700 dark:hover:text-danger-300">{{ __('Delete') }}</button>
                                     </span>
                                 @endcan
                             </div>
@@ -426,9 +419,9 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 @endforeach
             </ul>
         @endif
-    </div>
+    </x-card>
 
-    <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+    <x-card>
         <flux:heading size="lg">{{ __('History') }}</flux:heading>
 
         @if ($this->timeline->isEmpty())
@@ -443,7 +436,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                         : (\App\Enums\ApplicationOutcomeStatus::tryFrom((string) $event->to_outcome_status)?->label() ?? $event->to_outcome_status);
                 @endphp
                 <li class="flex justify-between gap-4">
-                    <span class="text-zinc-700 dark:text-zinc-300">
+                    <span class="text-ink-soft">
                         {{ $event->changedBy?->name ?? __('The candidate') }}
                         @if ($event->to_outcome_status === \App\Enums\ApplicationOutcomeStatus::Active->value)
                             {{ __('undid the :outcome decision', ['outcome' => strtolower(\App\Enums\ApplicationOutcomeStatus::tryFrom((string) $event->from_outcome_status)?->label() ?? '')]) }}
@@ -451,9 +444,9 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                             {{ __('moved this to :stage', ['stage' => $movedTo]) }}
                         @endif
                     </span>
-                    <span class="shrink-0 text-zinc-500 dark:text-zinc-500">{{ $event->created_at->diffForHumans() }}</span>
+                    <span class="shrink-0 text-ink-muted">{{ $event->created_at->diffForHumans() }}</span>
                 </li>
             @endforeach
         </ul>
-    </div>
+    </x-card>
 </div>

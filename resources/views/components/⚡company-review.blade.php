@@ -205,12 +205,12 @@ new class extends Component
     @if ($this->review !== null || $this->canWrite)
         <flux:separator variant="subtle" class="my-8" />
 
-        <div class="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+        <x-card>
             @if ($this->review === null)
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div class="min-w-0">
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ __('Review this hiring process') }}</p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-500">
+                        <p class="font-medium text-ink">{{ __('Review this hiring process') }}</p>
+                        <p class="text-sm text-ink-muted">
                             {{ __('Help the next applicant: how did :company handle your application?', ['company' => $application->jobPosting->company->name]) }}
                         </p>
                     </div>
@@ -222,8 +222,8 @@ new class extends Component
 
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ __('Your review of :company', ['company' => $application->jobPosting->company->name]) }}</p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-500">
+                        <p class="font-medium text-ink">{{ __('Your review of :company', ['company' => $application->jobPosting->company->name]) }}</p>
+                        <p class="text-sm text-ink-muted">
                             {{ __('About your application for :job, :month.', [
                                 'job' => $review->application->jobPosting->title,
                                 'month' => \App\Support\LocalTime::of($review->application->created_at)->format(\App\Support\DateFormat::MONTH),
@@ -245,21 +245,21 @@ new class extends Component
 
                 <dl class="mt-4 grid gap-2 text-sm sm:grid-cols-3">
                     <div>
-                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Overall') }}</dt>
-                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ __(':n out of 5', ['n' => $review->overall_rating]) }}</dd>
+                        <dt class="text-ink-muted">{{ __('Overall') }}</dt>
+                        <dd class="font-medium text-ink">{{ __(':n out of 5', ['n' => $review->overall_rating]) }}</dd>
                     </div>
                     <div>
-                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}</dt>
-                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
+                        <dt class="text-ink-muted">{{ __('Communication') }}</dt>
+                        <dd class="font-medium text-ink">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
                     </div>
                     <div>
-                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}</dt>
-                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $review->job_as_described->label() }}</dd>
+                        <dt class="text-ink-muted">{{ __('Job as described') }}</dt>
+                        <dd class="font-medium text-ink">{{ $review->job_as_described->label() }}</dd>
                     </div>
                 </dl>
 
-                <p class="mt-4 font-medium text-zinc-900 dark:text-zinc-100">{{ $review->title }}</p>
-                <p class="mt-1 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $review->body }}</p>
+                <p class="mt-4 font-medium text-ink">{{ $review->title }}</p>
+                <p class="mt-1 whitespace-pre-line text-sm text-ink-soft">{{ $review->body }}</p>
 
                 @if ($review->moderation_status === ModerationStatus::Pending)
                     <flux:text class="mt-4">
@@ -319,7 +319,7 @@ new class extends Component
                     </div>
                 </flux:modal>
             @endif
-        </div>
+        </x-card>
 
         <flux:modal wire:model="showForm" class="max-w-xl" @close="closeForm">
             <form wire:submit="save" class="space-y-6">

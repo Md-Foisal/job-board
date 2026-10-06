@@ -90,7 +90,7 @@
             <div class="mt-10 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($features as $feature)
                     <div class="flex gap-4">
-                        <flux:icon :icon="$feature['icon']" class="mt-0.5 size-6 shrink-0 text-brand-600 dark:text-brand-400" />
+                        <flux:icon :icon="$feature['icon']" class="mt-0.5 size-6 shrink-0 text-sunset-small" />
                         <div>
                             <h3 class="text-subheading text-ink">{{ $feature['title'] }}</h3>
                             <p class="mt-1.5 text-meta text-ink-muted">{{ $feature['text'] }}</p>

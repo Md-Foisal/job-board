@@ -220,18 +220,13 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
     <div class="mt-6 space-y-4">
         @forelse ($jobAlerts as $jobAlert)
-            <div wire:key="job-alert-{{ $jobAlert->id }}" @class([
-                'flex items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900',
-                'opacity-60' => ! $jobAlert->is_active,
-            ])>
+            <x-card wire:key="job-alert-{{ $jobAlert->id }}" class="flex items-start justify-between gap-4 {{ $jobAlert->is_active ? '' : 'opacity-60' }}">
                 <div class="flex min-w-0 gap-4">
-                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon name="bell" variant="mini" />
-                    </div>
+                    <x-icon-tile icon="bell" />
 
                     <div class="min-w-0">
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $jobAlert->name }}</p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
+                        <p class="font-medium text-ink">{{ $jobAlert->name }}</p>
+                        <p class="text-sm text-ink-muted">
                             {{ $descriptions[$jobAlert->id] }}
                         </p>
 
@@ -254,13 +249,14 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
                     <flux:button wire:click="edit({{ $jobAlert->id }})" variant="ghost" size="sm" icon="pencil" :aria-label="__('Edit')" />
                     <flux:button wire:click="delete({{ $jobAlert->id }})" wire:confirm="{{ __('Delete this job alert?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Delete')" />
                 </div>
-            </div>
+            </x-card>
         @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ __('No job alerts yet. Search for jobs and choose "Create job alert", or add one here.') }}
-                </p>
-            </div>
+            <x-empty-state icon="bell" :heading="__('No job alerts yet')">
+                {{ __('Search for jobs and choose "Create job alert", or add one here.') }}
+                <x-slot:actions>
+                    <flux:button wire:click="create" size="sm" icon="plus">{{ __('New alert') }}</flux:button>
+                </x-slot:actions>
+            </x-empty-state>
         @endforelse
     </div>
 

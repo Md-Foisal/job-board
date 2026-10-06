@@ -96,7 +96,7 @@ new #[Title('Security settings')] class extends Component {
     <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
 
     <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Use a long password that you do not use anywhere else.')">
-        <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card as="form" method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
                 :label="__('Current password')"
@@ -127,7 +127,7 @@ new #[Title('Security settings')] class extends Component {
                     {{ __('Save') }}
                 </flux:button>
             </div>
-        </form>
+        </x-card>
 
         @if ($canManageTwoFactor)
             <section class="mt-10">
@@ -141,7 +141,7 @@ new #[Title('Security settings')] class extends Component {
                     </flux:callout>
                 @endif
 
-                <div class="mt-4 flex w-full flex-col space-y-6 rounded-xl border border-zinc-200 bg-white p-6 text-sm dark:border-zinc-800 dark:bg-zinc-900" wire:cloak>
+                <x-card class="mt-4 flex w-full flex-col space-y-6 text-sm" wire:cloak>
                     @if ($twoFactorEnabled)
                         <div class="space-y-4">
                             <flux:text>
@@ -149,7 +149,7 @@ new #[Title('Security settings')] class extends Component {
                             </flux:text>
 
                             @if (auth()->user()->isStaff())
-                                <flux:text class="text-zinc-500">
+                                <flux:text>
                                     {{ __('Two-factor authentication cannot be switched off on a staff account.') }}
                                 </flux:text>
                             @else
@@ -183,7 +183,7 @@ new #[Title('Security settings')] class extends Component {
                             <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$requiresConfirmation" />
                         </div>
                     @endif
-                </div>
+                </x-card>
             </section>
         @endif
     </x-pages::settings.layout>

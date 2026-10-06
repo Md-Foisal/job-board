@@ -18,7 +18,7 @@
         $score === null => null,
         $score >= 70 => 'bg-success-50 text-success-700 dark:bg-success-950 dark:text-success-300',
         $score >= 35 => 'bg-warning-50 text-warning-700 dark:bg-warning-950 dark:text-warning-300',
-        default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
+        default => 'bg-surface text-ink-soft ring-1 ring-line ring-inset',
     };
 
     $padding = $size === 'md' ? 'px-2.5 py-1' : 'px-2 py-0.5';

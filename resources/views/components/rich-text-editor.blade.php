@@ -39,8 +39,8 @@
         <flux:label for="{{ $inputId }}">{{ $label }}</flux:label>
     @endif
 
-    <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-xs dark:border-white/10 dark:bg-white/10">
-        <div class="flex flex-wrap items-center gap-1 border-b border-zinc-200 bg-zinc-50 px-2 py-1.5 dark:border-white/10 dark:bg-white/5">
+    <div class="overflow-hidden rounded-lg border border-line bg-canvas shadow-xs dark:bg-white/10">
+        <div class="flex flex-wrap items-center gap-1 border-b border-line bg-surface px-2 py-1.5">
             @php
                 $tools = [
                     ['bold', __('Bold'), 'bold'],
@@ -65,7 +65,7 @@
                 <button
                     type="button"
                     x-on:mousedown.prevent="run('{{ $command }}')"
-                    x-bind:class="active.{{ $command }} ? 'bg-brand-100 text-brand-800 dark:bg-brand-900 dark:text-brand-200' : 'text-zinc-600 hover:bg-zinc-200 dark:text-zinc-300 dark:hover:bg-white/10'"
+                    x-bind:class="active.{{ $command }} ? 'bg-line text-ink' : 'text-ink-muted hover:bg-line/60 hover:text-ink'"
                     class="flex size-8 items-center justify-center rounded transition"
                     title="{{ $title }}"
                     aria-label="{{ $title }}"
@@ -89,6 +89,6 @@
     @endif
 
     @error($errorKey)
-        <flux:text size="sm" class="text-red-600 dark:text-red-400">{{ $message }}</flux:text>
+        <flux:text size="sm" class="text-danger-700 dark:text-danger-300">{{ $message }}</flux:text>
     @enderror
 </div>

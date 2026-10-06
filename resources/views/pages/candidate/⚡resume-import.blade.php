@@ -538,7 +538,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
 @endphp
 
 <div class="mx-auto max-w-2xl px-6 py-10">
-    <a href="{{ route('candidate.documents.index') }}" wire:navigate class="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200">
+    <a href="{{ route('candidate.documents.index') }}" wire:navigate class="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
         <flux:icon name="arrow-left" variant="micro" />
         {{ __('Documents') }}
     </a>
@@ -552,17 +552,11 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
 
     {{-- The AI reading: offered, running, failed, or out of allowance. --}}
     @if ($aiStatus === 'running')
-        <div wire:poll.2s="checkAi" role="status" class="mt-6 flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-5 text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
-            <flux:icon.loading variant="mini" />
-            <div>
-                <p class="font-medium">{{ __('Reading your CV…') }}</p>
-                <p class="text-sm">{{ __('This usually takes under a minute. You can stay on this page.') }}</p>
-            </div>
-        </div>
+        <x-ai-working wire:poll.2s="checkAi" class="mt-6" :heading="__('Reading your CV…')">{{ __('This usually takes under a minute. You can stay on this page.') }}</x-ai-working>
     @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $this->aiCanRead && $this->aiAvailability === \App\Enums\AiAvailability::LimitReached))
         <flux:text size="sm" class="mt-6">{{ __("You've used this month's AI readings. What we found ourselves is below.") }}</flux:text>
     @elseif ($offerAi && in_array($aiStatus, [null, 'failed'], true))
-        <div class="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+        <x-card class="mt-6">
             @if ($aiStatus === 'failed')
                 <flux:heading>{{ __("The AI couldn't read your CV this time") }}</flux:heading>
                 <flux:text size="sm" class="mt-1">{{ __('Nothing was used from your allowance. You can try again, or use what we found ourselves.') }}</flux:text>
@@ -574,11 +568,11 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                 <flux:button wire:click="readWithAi" icon="sparkles" size="sm">
                     {{ $aiStatus === 'failed' ? __('Try again') : __('Read with AI') }}
                 </flux:button>
-                <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
+                <flux:text size="sm" class="text-ink-muted">
                     {{ __("Your CV is sent to Anthropic to be read. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
                 </flux:text>
             </div>
-        </div>
+        </x-card>
     @elseif ($aiStatus === 'done')
         <flux:text size="sm" class="mt-6">{{ __('The AI read your CV. Its suggestions are included below; check each one before adding it.') }}</flux:text>
     @elseif ($hasSomething)
@@ -593,56 +587,50 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
 
     @if (! $hasSomething)
         @if (! $readable)
-            <div class="mt-6 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <flux:heading size="lg">{{ __("We couldn't read any text in this CV") }}</flux:heading>
-                <flux:text class="mt-2">
-                    {{ __('It may be a scanned image, or protected with a password. You can still fill your profile in by hand.') }}
-                </flux:text>
-                <div class="mt-4 flex flex-wrap justify-center gap-2">
+            <x-empty-state icon="document-magnifying-glass" class="mt-6" :heading="__('We couldn\'t read any text in this CV')">
+                {{ __('It may be a scanned image, or protected with a password. You can still fill your profile in by hand.') }}
+                <x-slot:actions>
                     <flux:button :href="route('candidate.profile.edit')" wire:navigate size="sm">{{ __('Profile') }}</flux:button>
                     <flux:button :href="route('candidate.experience.index')" wire:navigate size="sm">{{ __('Experience') }}</flux:button>
                     <flux:button :href="route('candidate.skills.edit')" wire:navigate size="sm">{{ __('Skills') }}</flux:button>
-                </div>
-            </div>
+                </x-slot:actions>
+            </x-empty-state>
         @elseif ($aiStatus !== 'running')
-            <div class="mt-6 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <flux:heading size="lg">{{ __('No skills or profile links found') }}</flux:heading>
-                <flux:text class="mt-2">
-                    {{ __("We looked for skills from our list and for LinkedIn, GitHub and portfolio links, and didn't find any. You can add them yourself.") }}
-                </flux:text>
-                <div class="mt-4 flex flex-wrap justify-center gap-2">
+            <x-empty-state icon="magnifying-glass" class="mt-6" :heading="__('No skills or profile links found')">
+                {{ __("We looked for skills from our list and for LinkedIn, GitHub and portfolio links, and didn't find any. You can add them yourself.") }}
+                <x-slot:actions>
                     <flux:button :href="route('candidate.skills.edit')" wire:navigate size="sm">{{ __('Add skills') }}</flux:button>
                     <flux:button :href="route('candidate.profile.edit')" wire:navigate size="sm">{{ __('Add links') }}</flux:button>
-                </div>
-            </div>
+                </x-slot:actions>
+            </x-empty-state>
         @endif
     @else
         <form wire:submit="import" class="mt-6 space-y-6">
             @if ($profileText !== [])
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     <flux:heading>{{ __('About you') }}</flux:heading>
 
                     <ul class="mt-4 space-y-4">
                         @foreach ($profileText as $field => $item)
                             <li wire:key="text-{{ $field }}">
                                 @if ($item['same'])
-                                    <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                    <div class="flex items-center gap-2 text-sm text-ink-muted">
                                         <flux:icon name="check" variant="micro" />
                                         {{ $item['label'] }} <span>· {{ __('already on your profile') }}</span>
                                     </div>
                                 @else
                                     <flux:checkbox wire:model="chosenText" value="{{ $field }}"
                                         :label="$item['current'] === null ? $item['label'] : __('Replace your :label', ['label' => strtolower($item['label'])])" />
-                                    <p class="mt-1 ml-7 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $item['suggested'] }}</p>
+                                    <p class="mt-1 ml-7 whitespace-pre-line text-sm text-ink-soft">{{ $item['suggested'] }}</p>
                                 @endif
                             </li>
                         @endforeach
                     </ul>
-                </section>
+                </x-card>
             @endif
 
             @if ($contact !== [])
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     <flux:heading>{{ __('Contact for your CVs') }}</flux:heading>
                     <flux:text size="sm">{{ __("Shown on CVs you build here. Companies don't see these on your profile.") }}</flux:text>
 
@@ -653,7 +641,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                             </li>
                         @endforeach
                     </ul>
-                </section>
+                </x-card>
             @endif
 
             @foreach ([
@@ -661,7 +649,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                 'education' => ['title' => __('Education'), 'entries' => $education, 'chosen' => 'chosenEducation', 'starts' => 'educationStarts'],
             ] as $kind => $group)
                 @if ($group['entries'] !== [])
-                    <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                    <x-card as="section">
                         <flux:heading>{{ $group['title'] }}</flux:heading>
 
                         <ul class="mt-4 space-y-4">
@@ -676,7 +664,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                                 @endphp
                                 <li wire:key="{{ $kind }}-{{ $index }}">
                                     @if ($entry['has'])
-                                        <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                        <div class="flex items-center gap-2 text-sm text-ink-muted">
                                             <flux:icon name="check" variant="micro" />
                                             {{ $title }} <span>· {{ __('already on your profile') }}</span>
                                         </div>
@@ -689,21 +677,21 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                                             </div>
                                         @endif
                                         @error($group['starts'].'.'.$index)
-                                            <p class="mt-1 ml-7 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                            <p class="mt-1 ml-7 text-sm text-danger-700 dark:text-danger-300">{{ $message }}</p>
                                         @enderror
                                         @if ($kind === 'experience' && $entry['description'])
-                                            <p class="mt-1 ml-7 whitespace-pre-line text-sm text-zinc-600 dark:text-zinc-400">{{ $entry['description'] }}</p>
+                                            <p class="mt-1 ml-7 whitespace-pre-line text-sm text-ink-muted">{{ $entry['description'] }}</p>
                                         @endif
                                     @endif
                                 </li>
                             @endforeach
                         </ul>
-                    </section>
+                    </x-card>
                 @endif
             @endforeach
 
             @if ($skills !== [] || $unmatchedSkills !== [])
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     <flux:heading>{{ __('Skills') }}</flux:heading>
                     <flux:text size="sm">{{ __('Skills from our list that your CV mentions. New ones are added at intermediate level; you can change that on the Skills page.') }}</flux:text>
 
@@ -711,7 +699,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                         @foreach ($skills as $skill)
                             <li wire:key="skill-{{ $skill['id'] }}">
                                 @if ($skill['has'])
-                                    <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                    <div class="flex items-center gap-2 text-sm text-ink-muted">
                                         <flux:icon name="check" variant="micro" />
                                         {{ $skill['name'] }}
                                         <span>· {{ __('already on your profile') }}</span>
@@ -728,18 +716,18 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                             {{ __('Not on our list, so not added: :skills.', ['skills' => implode(', ', $unmatchedSkills)]) }}
                         </flux:text>
                     @endif
-                </section>
+                </x-card>
             @endif
 
             @if ($links !== [])
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     <flux:heading>{{ __('Links') }}</flux:heading>
 
                     <ul class="mt-4 space-y-3">
                         @foreach ($links as $field => $link)
                             <li wire:key="link-{{ $field }}">
                                 @if ($link['same'])
-                                    <div class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                                    <div class="flex items-center gap-2 text-sm text-ink-muted">
                                         <flux:icon name="check" variant="micro" />
                                         {{ $link['label'] }}: <span class="break-all">{{ $link['suggested'] }}</span>
                                         <span>· {{ __('already on your profile') }}</span>
@@ -755,7 +743,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
                             </li>
                         @endforeach
                     </ul>
-                </section>
+                </x-card>
             @endif
 
             <div class="flex flex-wrap items-center justify-end gap-2">

@@ -118,17 +118,15 @@ new #[Layout('layouts::app')] #[Title('Experience')] class extends Component {
 
     <div class="mt-6 space-y-4">
         @forelse ($experienceRecords as $record)
-            <div wire:key="experience-{{ $record->id }}" class="flex items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+            <x-card wire:key="experience-{{ $record->id }}" class="flex items-start justify-between gap-4">
                 <div class="flex gap-4">
-                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon name="briefcase" variant="mini" />
-                    </div>
+                    <x-icon-tile icon="briefcase" />
 
                     <div>
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $record->job_title }}</p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $record->company_name }}</p>
+                        <p class="font-medium text-ink">{{ $record->job_title }}</p>
+                        <p class="text-sm text-ink-muted">{{ $record->company_name }}</p>
 
-                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+                        <p class="mt-1 text-sm text-ink-muted">
                             {{ $record->start_date->format(\App\Support\DateFormat::MONTH) }} &mdash; {{ $record->end_date?->format(\App\Support\DateFormat::MONTH) ?? __('Present') }}
                         </p>
 
@@ -142,11 +140,13 @@ new #[Layout('layouts::app')] #[Title('Experience')] class extends Component {
                     <flux:button wire:click="edit({{ $record->id }})" variant="ghost" size="sm" icon="pencil" :aria-label="__('Edit')" />
                     <flux:button wire:click="delete({{ $record->id }})" wire:confirm="{{ __('Remove this experience record?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
                 </div>
-            </div>
+            </x-card>
         @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any experience yet.") }}</p>
-            </div>
+            <x-empty-state icon="briefcase" :heading="__('You haven\'t added any experience yet.')">
+                <x-slot:actions>
+                    <flux:button wire:click="create" size="sm" icon="plus">{{ __('Add experience') }}</flux:button>
+                </x-slot:actions>
+            </x-empty-state>
         @endforelse
     </div>
 

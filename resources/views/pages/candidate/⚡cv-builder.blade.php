@@ -405,24 +405,23 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
     <flux:subheading>{{ __('A CV made from your profile. Change your profile and the CV follows.') }}</flux:subheading>
 
     @if (! $cv->hasContent())
-        <div class="mt-6 rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-            <flux:heading size="lg">{{ __('Nothing to build a CV from yet') }}</flux:heading>
-            <flux:text class="mt-2">{{ __('Add at least one role, course or skill to your profile, and your CV appears here.') }}</flux:text>
-            <div class="mt-4 flex flex-wrap justify-center gap-2">
+        <x-empty-state icon="document-text" class="mt-6" :heading="__('Nothing to build a CV from yet')">
+            {{ __('Add at least one role, course or skill to your profile, and your CV appears here.') }}
+            <x-slot:actions>
                 <flux:button :href="route('candidate.experience.index')" wire:navigate size="sm">{{ __('Add experience') }}</flux:button>
                 <flux:button :href="route('candidate.education.index')" wire:navigate size="sm">{{ __('Add education') }}</flux:button>
                 <flux:button :href="route('candidate.skills.edit')" wire:navigate size="sm">{{ __('Add skills') }}</flux:button>
                 <flux:button :href="route('candidate.documents.index')" wire:navigate size="sm" variant="ghost">{{ __('Fill your profile from a CV') }}</flux:button>
-            </div>
-        </div>
+            </x-slot:actions>
+        </x-empty-state>
     @else
         <div class="mt-6 grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
             <div class="space-y-6">
                 {{-- What is missing --}}
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     @if ($checks === [])
                         <div class="flex items-center gap-2">
-                            <flux:icon name="check-circle" variant="mini" class="text-green-600 dark:text-green-400" />
+                            <flux:icon name="check-circle" variant="mini" class="text-success-500" />
                             <flux:heading>{{ __('Nothing missing') }}</flux:heading>
                         </div>
                         <flux:text size="sm" class="mt-1">{{ __('Every part of a CV has something in it.') }}</flux:text>
@@ -432,13 +431,13 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         <ul class="mt-3 space-y-2">
                             @foreach ($checks as $check)
                                 <li wire:key="check-{{ $loop->index }}" class="flex items-start justify-between gap-3 text-sm">
-                                    <span class="text-zinc-700 dark:text-zinc-300">{{ $check['gap']->message($check['subject']) }}</span>
-                                    <a href="{{ route($check['gap']->route()) }}" wire:navigate class="shrink-0 font-medium text-brand-700 hover:underline dark:text-brand-400">{{ __('Add') }}</a>
+                                    <span class="text-ink-soft">{{ $check['gap']->message($check['subject']) }}</span>
+                                    <a href="{{ route($check['gap']->route()) }}" wire:navigate class="shrink-0 font-medium text-sunset-small hover:underline">{{ __('Add') }}</a>
                                 </li>
                             @endforeach
                         </ul>
                     @endif
-                </section>
+                </x-card>
 
                 @if ($unsupported !== [])
                     <flux:callout variant="warning" icon="exclamation-triangle">
@@ -450,7 +449,7 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                 @endif
 
                 {{-- Options --}}
-                <section class="space-y-5 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section" class="space-y-5">
                     <flux:radio.group wire:model.live="paper" :label="__('Paper')">
                         <flux:radio value="a4" :label="__('A4')" :description="__('Most of the world')" />
                         <flux:radio value="letter" :label="__('US Letter')" :description="__('United States and Canada')" />
@@ -460,10 +459,10 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         <flux:switch wire:model.live="withPhoto" :label="__('Include my photo')"
                             :description="__('Usual in much of Europe and Asia. In the US, UK and Canada a CV normally has no photo.')" />
                     @endif
-                </section>
+                </x-card>
 
                 {{-- Save or download --}}
-                <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                <x-card as="section">
                     <div class="flex flex-wrap gap-2">
                         {{-- Flux shows a spinner and ignores clicks while each runs. --}}
                         <flux:button wire:click="save" variant="primary" icon="document-plus">{{ __('Save to my CVs') }}</flux:button>
@@ -475,13 +474,13 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                     </flux:text>
 
                     @if ($this->leavingCv && ! $this->savedDocument)
-                        <flux:text size="sm" class="mt-2 text-amber-700 dark:text-amber-400">
+                        <flux:text size="sm" class="mt-2 text-warning-700 dark:text-warning-300">
                             {{ __('You keep your :count most recent CVs, so saving moves your oldest, :name, out of your library. Applications already sent with it keep it.', ['count' => \App\Support\DocumentUploads::RECENT_CVS_KEPT, 'name' => $this->leavingCv->original_filename]) }}
                         </flux:text>
                     @endif
 
                     @if ($this->savedDocument)
-                        <div role="status" class="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-green-50 p-3 text-sm text-green-800 dark:bg-green-950 dark:text-green-200">
+                        <div role="status" class="mt-4 flex flex-wrap items-center gap-2 rounded-control bg-success-50 p-3 text-sm text-success-700 dark:bg-success-950 dark:text-success-300">
                             <flux:icon name="check-circle" variant="mini" />
                             <span>{{ __('Saved to your CVs as :name.', ['name' => $this->savedDocument->original_filename]) }}</span>
                             <a href="{{ route('candidate.documents.download', $this->savedDocument) }}" class="font-medium underline">{{ __('Download') }}</a>
@@ -490,26 +489,20 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                     @endif
 
                     @if ($buildFailed)
-                        <p role="alert" class="mt-4 text-sm text-red-600 dark:text-red-400">{{ __("We couldn't build the PDF. Nothing was saved; please try again.") }}</p>
+                        <p role="alert" class="mt-4 text-sm text-danger-700 dark:text-danger-300">{{ __("We couldn't build the PDF. Nothing was saved; please try again.") }}</p>
                     @endif
 
                     @error('build')
-                        <p role="alert" class="mt-4 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        <p role="alert" class="mt-4 text-sm text-danger-700 dark:text-danger-300">{{ $message }}</p>
                     @enderror
-                </section>
+                </x-card>
 
                 {{-- AI suggestions: offered, running, failed, or out of allowance.
                      With AI off, or a plan without it, nothing shows here. --}}
                 @php($availability = $this->aiAvailability)
 
                 @if ($aiStatus === 'running')
-                    <div wire:poll.2s="checkAi" role="status" class="flex items-center gap-3 rounded-2xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
-                        <flux:icon.loading variant="mini" />
-                        <div>
-                            <p class="font-medium">{{ __('Writing suggestions…') }}</p>
-                            <p>{{ __('This usually takes under a minute. You can stay on this page.') }}</p>
-                        </div>
-                    </div>
+                    <x-ai-working wire:poll.2s="checkAi" :heading="__('Writing suggestions…')">{{ __('This usually takes under a minute. You can stay on this page.') }}</x-ai-working>
                 @elseif ($aiStatus === 'done')
                     <flux:text size="sm">{{ __('The AI suggestions are below the preview.') }}</flux:text>
                 @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
@@ -517,7 +510,7 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         {{ __("You've used this month's AI suggestions. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format(\App\Support\DateFormat::MOMENT)]) }}
                     </flux:text>
                 @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
-                    <section class="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                    <x-card as="section">
                         @if ($aiStatus === 'failed')
                             <flux:heading>{{ __("The AI couldn't write suggestions this time") }}</flux:heading>
                             <flux:text size="sm" class="mt-1">{{ __('You can try again. Your CV above does not depend on it.') }}</flux:text>
@@ -528,31 +521,31 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         <flux:button wire:click="polish" icon="sparkles" size="sm" class="mt-3">
                             {{ $aiStatus === 'failed' ? __('Try again') : __('Improve with AI') }}
                         </flux:button>
-                        <flux:text size="sm" class="mt-2 text-zinc-500 dark:text-zinc-400">
+                        <flux:text size="sm" class="mt-2 text-ink-muted">
                             {{ __("Your headline, summary, roles, education and skills (not your name, contact details, links or photo) are sent to Anthropic. Anthropic doesn't train on them and, by default, deletes them within 30 days.") }}
                         </flux:text>
-                    </section>
+                    </x-card>
                 @endif
             </div>
 
             {{-- Preview: the same view the PDF is drawn from, isolated in a
                  frame so the page's own styles cannot change it. --}}
-            <section aria-label="{{ __('Preview') }}" class="overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 p-3 dark:border-zinc-700 dark:bg-zinc-950">
+            <x-card as="section" subtle padding="none" aria-label="{{ __('Preview') }}" class="overflow-hidden p-3">
                 <iframe
                     srcdoc="{{ $this->preview }}"
                     sandbox=""
                     title="{{ __('Preview of your CV') }}"
                     class="mx-auto block h-[80vh] w-full max-w-[210mm] rounded-lg bg-white shadow-sm"
                 ></iframe>
-            </section>
+            </x-card>
         </div>
 
         @if ($aiStatus === 'done' && ($shown = $this->shownSuggestions))
             @php($profile = auth()->user()->candidateProfile)
-            <section class="mt-6 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+            <x-card as="section" class="mt-6">
                 <div class="flex flex-wrap items-center gap-2">
                     <flux:heading size="lg">{{ __('AI suggestions') }}</flux:heading>
-                    <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — check every line') }}</span>
+                    <x-chip>{{ __('AI-generated — check every line') }}</x-chip>
                 </div>
                 <flux:text size="sm" class="mt-1">{{ __('Ticked suggestions replace that part of your profile, and the CV follows. Anything with a number you did not write starts unticked.') }}</flux:text>
                 <flux:callout variant="warning" icon="exclamation-triangle" class="mt-3">
@@ -568,21 +561,21 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                                 @if ($current)
                                     <flux:checkbox wire:model="{{ $model }}" :label="__('Use this :part', ['part' => strtolower($label)])" />
                                 @else
-                                    <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('You changed this since the AI read it, so your own text stays.') }}</p>
+                                    <p class="text-sm font-medium text-ink">{{ $label }}</p>
+                                    <p class="text-sm text-ink-muted">{{ __('You changed this since the AI read it, so your own text stays.') }}</p>
                                 @endif
                                 <div class="mt-2 grid gap-3 text-sm sm:grid-cols-2">
                                     <div>
-                                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Now') }}</p>
-                                        <p class="mt-1 whitespace-pre-line text-zinc-600 dark:text-zinc-400">{{ filled($now) ? $now : __('Nothing yet') }}</p>
+                                        <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ __('Now') }}</p>
+                                        <p class="mt-1 whitespace-pre-line text-ink-muted">{{ filled($now) ? $now : __('Nothing yet') }}</p>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Suggested') }}</p>
-                                        <p class="mt-1 whitespace-pre-line text-zinc-900 dark:text-zinc-100">{{ $item['suggested'] }}</p>
+                                        <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ __('Suggested') }}</p>
+                                        <p class="mt-1 whitespace-pre-line text-ink">{{ $item['suggested'] }}</p>
                                     </div>
                                 </div>
                                 @if ($item['new_numbers'] !== [])
-                                    <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">{{ __('Check these numbers, which your profile does not give: :numbers.', ['numbers' => implode(', ', $item['new_numbers'])]) }}</p>
+                                    <p class="mt-2 text-sm text-warning-700 dark:text-warning-300">{{ __('Check these numbers, which your profile does not give: :numbers.', ['numbers' => implode(', ', $item['new_numbers'])]) }}</p>
                                 @endif
                             </div>
                         @endif
@@ -592,22 +585,22 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         @php($record = $this->roles->get($role['id']))
                         <div wire:key="suggestion-role-{{ $role['id'] }}">
                             @if ($role['too_long'])
-                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('These bullet points are longer than a role description can be (:max characters), so they cannot be applied.', ['max' => number_format(\App\Support\CvSuggestions::DESCRIPTION_MAX)]) }}</p>
+                                <p class="text-sm font-medium text-ink">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
+                                <p class="text-sm text-ink-muted">{{ __('These bullet points are longer than a role description can be (:max characters), so they cannot be applied.', ['max' => number_format(\App\Support\CvSuggestions::DESCRIPTION_MAX)]) }}</p>
                             @elseif (! \App\Support\CvSuggestions::roleIsCurrent($role, $record))
-                                <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('You changed or removed this role since the AI read it, so your own text stays.') }}</p>
+                                <p class="text-sm font-medium text-ink">{{ __(':title at :company', ['title' => $role['title'], 'company' => $role['company']]) }}</p>
+                                <p class="text-sm text-ink-muted">{{ __('You changed or removed this role since the AI read it, so your own text stays.') }}</p>
                             @else
                                 <flux:checkbox wire:model="useRoles" value="{{ $role['id'] }}" :label="__('Use these bullet points for :title at :company', ['title' => $role['title'], 'company' => $role['company']])" />
                             @endif
                             <div class="mt-2 grid gap-3 text-sm sm:grid-cols-2">
                                 <div>
-                                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Now') }}</p>
-                                    <div class="prose-content mt-1 text-zinc-600 dark:text-zinc-400">{!! $record?->description ?: e(__('Nothing yet')) !!}</div>
+                                    <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ __('Now') }}</p>
+                                    <div class="prose-content mt-1 text-ink-muted">{!! $record?->description ?: e(__('Nothing yet')) !!}</div>
                                 </div>
                                 <div>
-                                    <p class="text-xs font-medium uppercase tracking-wide text-zinc-500">{{ __('Suggested') }}</p>
-                                    <ul class="mt-1 list-disc space-y-1 pl-5 text-zinc-900 dark:text-zinc-100">
+                                    <p class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ __('Suggested') }}</p>
+                                    <ul class="mt-1 list-disc space-y-1 pl-5 text-ink">
                                         @foreach ($role['bullets'] as $bullet)
                                             <li>{{ $bullet }}</li>
                                         @endforeach
@@ -615,15 +608,15 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                                 </div>
                             </div>
                             @if ($role['new_numbers'] !== [])
-                                <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">{{ __('Check these numbers, which this role\'s description does not give: :numbers.', ['numbers' => implode(', ', $role['new_numbers'])]) }}</p>
+                                <p class="mt-2 text-sm text-warning-700 dark:text-warning-300">{{ __('Check these numbers, which this role\'s description does not give: :numbers.', ['numbers' => implode(', ', $role['new_numbers'])]) }}</p>
                             @endif
                         </div>
                     @endforeach
 
                     @if ($shown->tips !== [])
                         <div>
-                            <p class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('Tips') }}</p>
-                            <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-zinc-700 dark:text-zinc-300">
+                            <p class="text-sm font-medium text-ink">{{ __('Tips') }}</p>
+                            <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-ink-soft">
                                 @foreach ($shown->tips as $tip)
                                     <li>{{ $tip }}</li>
                                 @endforeach
@@ -638,7 +631,7 @@ new #[Layout('layouts::app')] #[Title('CV Builder')] class extends Component {
                         <flux:button wire:click="applySuggestions" variant="primary">{{ __('Apply to my profile') }}</flux:button>
                     @endif
                 </div>
-            </section>
+            </x-card>
         @endif
     @endif
 </div>

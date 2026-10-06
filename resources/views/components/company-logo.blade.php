@@ -13,7 +13,7 @@
         'bg-sky-50 text-sky-800 dark:bg-sky-950 dark:text-sky-200',
         'bg-purple-50 text-purple-800 dark:bg-purple-950 dark:text-purple-200',
         'bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200',
-        'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300',
+        'bg-brand-50 text-sunset-small dark:bg-brand-950',
     ];
 @endphp
 
@@ -22,6 +22,7 @@
     'size-9 rounded-lg text-sm' => $size === 'sm',
     'size-11 rounded-xl text-base' => $size === 'md',
     'size-14 rounded-2xl text-xl' => $size === 'lg',
+    'size-24 rounded-3xl text-3xl' => $size === 'xl',
     $tints[$company->id % count($tints)] => ! $company->logo_path,
     'bg-canvas ring-1 ring-line' => (bool) $company->logo_path,
 ]) }} aria-hidden="true">

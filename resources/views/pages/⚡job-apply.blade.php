@@ -128,14 +128,14 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
 }; ?>
 
 <div class="mx-auto max-w-2xl px-6 py-12">
-    <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-        <a href="{{ route('jobs.show', $jobPosting) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ $jobPosting->title }}</a>
+    <nav class="text-sm text-ink-muted">
+        <a href="{{ route('jobs.show', $jobPosting) }}" class="hover:text-sunset-small" wire:navigate>{{ $jobPosting->title }}</a>
         <span class="mx-1">/</span>
-        <span class="text-zinc-700 dark:text-zinc-300">Apply</span>
+        <span class="text-ink-soft">Apply</span>
     </nav>
 
-    <h1 class="mt-2 font-display text-2xl font-bold text-zinc-900 dark:text-zinc-50">Apply to {{ $jobPosting->title }}</h1>
-    <p class="mt-1 text-zinc-500 dark:text-zinc-500">{{ $jobPosting->company->name }}</p>
+    <h1 class="mt-2 font-display text-2xl font-bold text-ink">Apply to {{ $jobPosting->title }}</h1>
+    <p class="mt-1 text-ink-muted">{{ $jobPosting->company->name }}</p>
 
     <form wire:submit="submit" class="mt-8 space-y-8">
         <div>
@@ -149,7 +149,7 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
             @if ($resumeChoice === 'new')
                 <div class="mt-3">
                     <flux:input type="file" wire:model="newResume" :accept="\App\Support\DocumentUploads::accept(\App\Enums\DocumentType::Cv)" />
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::Cv) }}</p>
+                    <p class="mt-1 text-xs text-ink-muted">{{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::Cv) }}</p>
                 </div>
             @endif
         </div>

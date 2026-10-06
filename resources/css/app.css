@@ -203,6 +203,34 @@
     background-clip: text;
     color: transparent;
     text-decoration-color: var(--color-sunset-text-2);
+
+    /* An icon inside draws with currentColor, which is now transparent,
+       so it takes the gradient through the shared paint server instead. */
+    & svg:not([fill='none']) {
+        fill: url(#sunset-icon);
+    }
+
+    & svg[fill='none'] {
+        stroke: url(#sunset-icon);
+    }
+}
+
+/*
+ * Flux's accent links (flux:link without variant or accent="false") set
+ * their colour to the flat accent-content; they are coloured text, so
+ * they take the text gradient like every other link. Flux turns the
+ * underline to currentColor on hover, which the gradient leaves
+ * transparent, so the underline keeps its own colour.
+ */
+[data-flux-link]:where([class*='accent-content']) {
+    background-image: linear-gradient(120deg, var(--color-sunset-text-1) 0%, var(--color-sunset-text-2) 55%, var(--color-sunset-text-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+[data-flux-link]:where([class*='accent-content']):hover {
+    text-decoration-color: var(--color-sunset-text-2);
 }
 
 /*
@@ -313,7 +341,7 @@ select:focus[data-flux-control] {
  */
 .prose-editor,
 .prose-content {
-    @apply text-sm leading-relaxed text-zinc-700 dark:text-zinc-300;
+    @apply text-sm leading-relaxed text-ink-soft;
 }
 
 .prose-editor :where(p, ul, ol),
@@ -323,12 +351,12 @@ select:focus[data-flux-control] {
 
 .prose-editor :where(h3),
 .prose-content :where(h3) {
-    @apply mt-4 mb-2 font-display text-base font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply mt-4 mb-2 font-display text-base font-semibold text-ink;
 }
 
 .prose-editor :where(h4),
 .prose-content :where(h4) {
-    @apply mt-3 mb-1 font-display text-sm font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply mt-3 mb-1 font-display text-sm font-semibold text-ink;
 }
 
 .prose-editor :where(ul),
@@ -343,12 +371,12 @@ select:focus[data-flux-control] {
 
 .prose-editor :where(a),
 .prose-content :where(a) {
-    @apply text-brand-700 underline dark:text-brand-400;
+    @apply text-sunset-small underline;
 }
 
 .prose-editor :where(strong),
 .prose-content :where(strong) {
-    @apply font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply font-semibold text-ink;
 }
 
 /*

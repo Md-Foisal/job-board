@@ -13,10 +13,10 @@
 --}}
 @props(['items' => []])
 
-<nav aria-label="{{ __('Breadcrumb') }}" {{ $attributes->class('text-sm text-zinc-500 dark:text-zinc-500') }}>
+<nav aria-label="{{ __('Breadcrumb') }}" {{ $attributes->class('text-sm text-ink-muted') }}>
     <a
         href="{{ route('home') }}"
-        class="inline-flex items-center hover:text-brand-700 dark:hover:text-brand-400"
+        class="inline-flex items-center hover:text-sunset-small"
         wire:navigate
         title="{{ __('Home') }}"
         aria-label="{{ __('Home') }}"
@@ -30,11 +30,11 @@
         <span class="mx-1" aria-hidden="true">/</span>
 
         @if (!empty($item['url']))
-            <a href="{{ $item['url'] }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>
+            <a href="{{ $item['url'] }}" class="hover:text-sunset-small" wire:navigate>
                 {{ $item['label'] }}
             </a>
         @else
-            <span class="text-zinc-700 dark:text-zinc-300" aria-current="page">{{ $item['label'] }}</span>
+            <span class="text-ink-soft" aria-current="page">{{ $item['label'] }}</span>
         @endif
     @endforeach
 </nav>

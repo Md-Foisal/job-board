@@ -130,20 +130,14 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 
     <div class="mt-6 space-y-4">
         @forelse ($documents as $document)
-            <div wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+            <x-card wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4">
                 <div class="flex gap-4">
-                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon :name="match ($document->document_type) {
-                            \App\Enums\DocumentType::Cv => 'document-text',
-                            \App\Enums\DocumentType::WorkSample => 'folder',
-                            \App\Enums\DocumentType::Certificate => 'shield-check',
-                        }" variant="mini" />
-                    </div>
+                    <x-icon-tile :icon="$document->document_type->icon()" />
 
                     <div>
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->original_filename }}</p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $document->document_type->label() }}</p>
-                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">{{ \App\Support\LocalTime::of($document->created_at)->format(\App\Support\DateFormat::DAY) }}</p>
+                        <p class="font-medium text-ink">{{ $document->original_filename }}</p>
+                        <p class="text-sm text-ink-muted">{{ $document->document_type->label() }}</p>
+                        <p class="mt-1 text-sm text-ink-muted">{{ \App\Support\LocalTime::of($document->created_at)->format(\App\Support\DateFormat::DAY) }}</p>
 
                         @if ($document->document_type === \App\Enums\DocumentType::Cv)
                             @if (\App\Support\CvText::supports($document))
@@ -151,7 +145,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                                     {{ __('Fill my profile from this CV') }}
                                 </flux:button>
                             @else
-                                <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+                                <p class="mt-2 text-xs text-ink-muted">
                                     {{ __('Upload this CV as PDF or DOCX to fill your profile from it.') }}
                                 </p>
                             @endif
@@ -164,11 +158,13 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                     <flux:button wire:click="replace({{ $document->id }})" variant="ghost" size="sm" icon="arrow-path" :aria-label="__('Replace')" />
                     <flux:button wire:click="delete({{ $document->id }})" wire:confirm="{{ __('Remove this document?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
                 </div>
-            </div>
+            </x-card>
         @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any documents yet.") }}</p>
-            </div>
+            <x-empty-state icon="document" :heading="__('You haven\'t added any documents yet.')">
+                <x-slot:actions>
+                    <flux:button wire:click="create" size="sm" icon="plus">{{ __('Add document') }}</flux:button>
+                </x-slot:actions>
+            </x-empty-state>
         @endforelse
     </div>
 
@@ -189,7 +185,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             <div>
                 <flux:input type="file" wire:model="file" :label="__('File')"
                     accept="{{ \App\Support\DocumentUploads::accept(\App\Enums\DocumentType::from($documentType)) }}" />
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                <p class="mt-1 text-xs text-ink-muted">
                     {{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::from($documentType)) }}
                 </p>
             </div>

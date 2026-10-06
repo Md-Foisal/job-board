@@ -39,7 +39,7 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
 }; ?>
 
 <div class="mx-auto max-w-6xl px-6 py-10">
-    <h1 class="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-50">Find your next role</h1>
+    <h1 class="font-display text-2xl font-bold text-ink">Find your next role</h1>
 
     <div class="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr]">
         <aside class="space-y-5">
@@ -102,7 +102,7 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
 
         <div>
             <div class="mb-4 flex items-center justify-between">
-                <p class="text-sm text-zinc-500 dark:text-zinc-500">
+                <p class="text-sm text-ink-muted">
                     {{ $jobPostings->total() }} {{ \Illuminate\Support\Str::plural('opening', $jobPostings->total()) }}
                 </p>
 
@@ -119,9 +119,9 @@ new #[Layout('layouts::guest')] #[Title('Job search')] class extends Component {
             </div>
 
             @if ($jobPostings->isEmpty())
-                <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                    No openings match these filters yet — try widening your search.
-                </div>
+                <x-empty-state icon="magnifying-glass" :heading="__('No openings match these filters yet')">
+                    {{ __('Try widening your search.') }}
+                </x-empty-state>
             @else
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     @foreach ($jobPostings as $jobPosting)

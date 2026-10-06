@@ -8,12 +8,12 @@
         <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
                 <flux:heading size="xl" level="1">
-                    <a href="{{ route('jobs.show', $application->jobPosting) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>
+                    <a href="{{ route('jobs.show', $application->jobPosting) }}" class="hover:text-sunset-small" wire:navigate>
                         {{ $application->jobPosting->title }}
                     </a>
                 </flux:heading>
                 <flux:subheading size="lg">
-                    <a href="{{ route('companies.show', $application->jobPosting->company) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>
+                    <a href="{{ route('companies.show', $application->jobPosting->company) }}" class="hover:text-sunset-small" wire:navigate>
                         {{ $application->jobPosting->company->name }}
                     </a>
                     &middot;
@@ -38,7 +38,7 @@
              individual staff member who made the change -- the
              candidate has no business knowing which
              person opened their CV). --}}
-        <ol class="relative border-s border-zinc-200 dark:border-zinc-800">
+        <ol class="relative border-s border-line">
             <x-timeline-item :label="__('You applied')" :at="$application->created_at" highlight />
 
             @foreach ($application->eventsForCandidate() as $event)
@@ -68,10 +68,10 @@
         @can('withdraw', $application)
             <flux:separator variant="subtle" class="my-8" />
 
-            <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-zinc-200 p-5 dark:border-zinc-800">
+            <x-card class="flex flex-wrap items-center justify-between gap-4">
                 <div class="min-w-0">
-                    <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ __('Withdraw this application') }}</p>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-500">
+                    <p class="font-medium text-ink">{{ __('Withdraw this application') }}</p>
+                    <p class="text-sm text-ink-muted">
                         {{ __('The employer stops considering you for this role. This cannot be undone.') }}
                     </p>
                 </div>
@@ -79,7 +79,7 @@
                 <flux:modal.trigger name="withdraw-application">
                     <flux:button variant="danger" size="sm">{{ __('Withdraw') }}</flux:button>
                 </flux:modal.trigger>
-            </div>
+            </x-card>
 
             {{-- A plain form post, not Livewire: withdrawing is one
                  isolated action on an otherwise static page, which has no
