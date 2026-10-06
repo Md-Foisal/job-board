@@ -1,9 +1,8 @@
 {{--
     Makes the staff panel look and behave like the rest of the product
     (partials/navbar, layouts/app/sidebar), without a separate Filament
-    theme build: the display font for the wordmark, the same surfaces for
-    the top bar, sidebar and page, and one light/dark setting shared with
-    the app.
+    theme build: the wordmark, the same surfaces for the top bar, sidebar
+    and page, and one light/dark setting shared with the app.
 
     Filament keeps its own theme choice under localStorage "theme"; the app
     (Flux) keeps it under "flux.appearance". Left alone the two drift -- an
@@ -13,9 +12,6 @@
     (filament/theme-toggle) writes both.
 --}}
 @include('partials.timezone-cookie')
-
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:700" rel="stylesheet" />
 
 <script>
     (() => {
@@ -27,9 +23,9 @@
 
 <style>
     .jb-brand {
-        font-family: 'Bricolage Grotesque', var(--font-family), sans-serif;
         font-size: 1.125rem;
         font-weight: 700;
+        letter-spacing: -0.03em;
         color: var(--primary-700);
     }
     .dark .jb-brand { color: var(--primary-400); }
