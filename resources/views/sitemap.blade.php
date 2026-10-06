@@ -10,6 +10,11 @@
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
+    <url>
+        <loc>{{ route('employers') }}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
     @foreach (['about', 'privacy', 'terms'] as $staticPage)
     <url>
         <loc>{{ route($staticPage) }}</loc>

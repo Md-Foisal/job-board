@@ -30,6 +30,11 @@ Route::view('/about', 'static.about')->name('about');
 Route::view('/privacy', 'static.privacy')->name('privacy');
 Route::view('/terms', 'static.terms')->name('terms');
 
+// The hiring side's front door, linked from the navbar and footer as
+// "For employers". A view like the pages above: the one decision on it,
+// where "Post a job" leads, depends only on who is looking.
+Route::view('/employers', 'static.employers')->name('employers');
+
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show')->withTrashed();
 Route::get('/jobs/{job_posting:slug}', [JobPostingController::class, 'show'])->name('jobs.show');
