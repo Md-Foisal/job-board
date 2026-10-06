@@ -29,7 +29,7 @@
         @elseif ($jobPosting->open_reporters_count >= \App\Models\Report::HIDE_AFTER_REPORTERS)
             {{-- Otherwise it reads as live while candidates cannot find it.
                  Who reported it, and why, stays with staff. --}}
-            <flux:badge color="orange">{{ __('Hidden for review') }}</flux:badge>
+            <flux:badge color="amber">{{ __('Hidden for review') }}</flux:badge>
             @if ($detailed)
                 <flux:text size="sm" class="mt-1 max-w-sm">{{ __('Several people reported this posting. It is out of search until our team has looked; you do not need to do anything.') }}</flux:text>
             @endif
