@@ -164,7 +164,9 @@
         --color-accent-content: #fb923c;
         --color-accent-foreground: #0a0a0b;
 
-        --shadow-lift: 0 18px 40px -22px rgb(0 0 0 / 0.8);
+        /* Read through var() by .btn-sunset. Shadow utilities copy the
+           light value in at build time, so there is no dark lift here:
+           on the dark canvas the hover border carries it instead. */
         --shadow-glow: 0 30px 60px -36px rgb(251 146 60 / 0.35);
     }
 }
