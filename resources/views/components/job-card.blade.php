@@ -1,4 +1,4 @@
-@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false])
+@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false, 'saved' => null])
 
 {{-- A <div> instead of one big <a> -- the company name below needs its own
      real link to the company profile, and nested <a> tags are invalid HTML
@@ -40,7 +40,7 @@
 
         @if ($showSaveButton)
             <div class="relative z-10 -me-1 -mt-1">
-                <livewire:save-job-button :job-posting="$jobPosting" compact :key="'save-'.$jobPosting->id" />
+                <livewire:save-job-button :job-posting="$jobPosting" compact :initially-saved="$saved" :key="'save-'.$jobPosting->id" />
             </div>
         @endif
     </div>
@@ -48,7 +48,10 @@
     {{-- Where comes first: it rules a job in or out before anything else
          on the card does. --}}
     <div class="flex flex-wrap items-center gap-1.5">
-        <x-match-score :score="$matchScore" size="md" />
+        {{-- No badge at 0%: on a page of cards, most jobs outside the
+             candidate's field would say so, and a row of "0% match" is
+             noise rather than news. Best match puts them last anyway. --}}
+        <x-match-score :score="$matchScore ?: null" size="md" />
 
         @if ($where !== '')
             <x-chip>

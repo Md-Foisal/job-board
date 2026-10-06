@@ -9,8 +9,8 @@ use Livewire\Component;
 
 /**
  * Live-as-you-type search box used in two places: the homepage hero and
- * the navbar (shown on every other guest page, since the homepage's own
- * hero search already covers it there -- see guest.blade.php). Suggests
+ * the navbar (left out on the pages that carry their own search box --
+ * see partials/navbar.blade.php). Suggests
  * a handful of matching job titles while the visitor types; it never
  * replaces the full /jobs search results page (FiltersJobPostings), it
  * just gives a faster way into it, the same way the reusable `keyword()`

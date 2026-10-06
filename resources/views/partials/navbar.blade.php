@@ -25,13 +25,14 @@
     </div>
 
     <div class="hidden flex-1 items-center gap-2 md:flex">
-        {{-- The homepage carries its own large hero search right below
-             this nav, so repeating it here would just be noise --}}
+        {{-- The homepage, the job search and the category pages carry
+             their own search box right below this nav, so a second one
+             here would only compete with it. --}}
         {{-- No standalone categories menu here by design: real job boards keep
              the navbar search-first and treat category browsing as secondary.
              Category access still exists via the homepage "browse by category"
              grid and as an in-search filter (FiltersJobPostings::$category). --}}
-        @unless (request()->routeIs('home'))
+        @unless (request()->routeIs('home', 'jobs.index', 'categories.show'))
             <livewire:job-search-autocomplete variant="compact" />
         @endunless
     </div>

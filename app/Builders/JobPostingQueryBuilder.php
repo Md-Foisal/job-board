@@ -59,11 +59,26 @@ class JobPostingQueryBuilder extends Builder
     }
 
     /**
-     * Free-text match on the title, for the candidate-facing search box.
+     * Free-text match for the candidate-facing search box, which asks for
+     * a job title, skill or company: the words can be any of the three.
      */
     public function keyword(string $term): self
     {
-        return $this->where('title', 'like', "%{$term}%");
+        $like = "%{$term}%";
+
+        return $this->where(function (Builder $query) use ($like) {
+            $query->where($this->qualifyColumn('title'), 'like', $like)
+                ->orWhereHas('company', fn (Builder $company) => $company->where('name', 'like', $like))
+                ->orWhereHas('skills', fn (Builder $skill) => $skill->where('skills.name', 'like', $like));
+        });
+    }
+
+    /**
+     * Postings published in the last given number of days.
+     */
+    public function postedWithin(int $days): self
+    {
+        return $this->where($this->qualifyColumn('published_at'), '>=', now()->subDays($days));
     }
 
     /**
