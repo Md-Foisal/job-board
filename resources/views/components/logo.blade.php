@@ -7,9 +7,10 @@
     panel, which has no Tailwind build of its own -- there, the
     "jb-brand" rules in filament/shell-head take the place of the
     classes below. Each copy gets its own ids, since several can share a
-    page.
+    page. "compact" keeps only the mark on phones, for top bars that need
+    the room; the name stays there for screen readers.
 --}}
-@props(['size' => 'md'])
+@props(['size' => 'md', 'compact' => false])
 
 @php
     $id = 'jb-logo-'.\Illuminate\Support\Str::random(8);
@@ -32,5 +33,9 @@
         <rect width="26" height="26" rx="7" fill="currentColor" mask="url(#{{ $id }}-hole)" />
         <circle cx="13" cy="13" r="6.5" fill="none" stroke="url(#{{ $id }}-ring)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30 41" transform="rotate(-90 13 13)" />
     </svg>
-    <span>{{ config('app.name') }}</span>
+    @if ($compact)
+        <span class="max-sm:sr-only">{{ config('app.name') }}</span>
+    @else
+        <span>{{ config('app.name') }}</span>
+    @endif
 </span>

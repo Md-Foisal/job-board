@@ -10,8 +10,8 @@
 --}}
 @props(['current' => null])
 
-<flux:dropdown position="bottom" align="start">
-    <flux:button variant="subtle" icon:trailing="chevrons-up-down" class="max-w-52">
+<flux:dropdown position="bottom" align="start" class="min-w-0">
+    <flux:button variant="subtle" icon:trailing="chevrons-up-down" class="max-w-44 min-w-0 sm:max-w-60">
         <span class="truncate">{{ $current?->name ?? __('Personal') }}</span>
     </flux:button>
 

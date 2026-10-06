@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
@@ -43,6 +44,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
+        'avatar' => null,
         'staff_role' => null,
         'timezone' => null,
         'timezone_automatic' => true,
@@ -85,6 +87,18 @@ class User extends Authenticatable implements FilamentUser
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * The photo that stands for this person in the account menu: their own
+     * profile photo, or the one on their recruiter profile when they have
+     * only that. Null means show initials.
+     */
+    public function avatarUrl(): ?string
+    {
+        $path = $this->avatar ?: $this->recruiterProfile?->avatar_path;
+
+        return $path ? Storage::url($path) : null;
     }
 
     public function memberships()

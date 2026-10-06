@@ -3,7 +3,7 @@
 <head>
     @include('partials.head')
 </head>
-<body class="min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+<body class="min-h-screen bg-canvas text-ink antialiased">
     @include('partials.navbar')
 
     @include('partials.flash-toasts')
@@ -13,25 +13,50 @@
     </main>
 
     @persist('toast')
-    <flux:toast.group position="top end">
+    <flux:toast.group position="bottom end">
         <flux:toast />
     </flux:toast.group>
     @endpersist
 
-    {{-- Shell A's footer, the supplemental navigation.
-         It is the only place the static pages are reachable
-         from, which is why they are links here and not just a line of
-         copyright. --}}
-    <footer class="mt-16 border-t border-zinc-200 px-6 py-8 text-sm text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
-        <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
-            <p>&copy; {{ now()->year }} JobBoard.</p>
+    {{-- Shell A's footer, the supplemental navigation. One column for
+         each audience the board serves, then the board itself; the static
+         pages are reachable from nowhere else, which is why they are here
+         as links and not just a line of copyright. --}}
+    <footer class="mt-20 border-t border-line bg-surface">
+        <div class="mx-auto grid max-w-6xl gap-10 px-6 py-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+            <div class="flex flex-col gap-3 sm:col-span-2 lg:col-span-1">
+                <a href="{{ route('home') }}" class="w-fit rounded-control" wire:navigate>
+                    <x-logo />
+                </a>
+                <p class="max-w-xs text-meta text-ink-muted">{{ __('A job board where every application has a timeline you can follow.') }}</p>
+            </div>
 
-            <nav class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                <a href="{{ route('jobs.index') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Browse jobs') }}</a>
-                <a href="{{ route('about') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('About') }}</a>
-                <a href="{{ route('privacy') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Privacy') }}</a>
-                <a href="{{ route('terms') }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ __('Terms') }}</a>
+            <nav aria-labelledby="footer-candidates" class="flex flex-col gap-3 text-sm">
+                <h2 id="footer-candidates" class="font-semibold text-ink">{{ __('Find a job') }}</h2>
+                <a href="{{ route('jobs.index') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Browse jobs') }}</a>
+                @guest
+                    <a href="{{ route('register') }}" class="w-fit text-ink-muted transition-colors hover:text-ink">{{ __('Create a profile') }}</a>
+                @endguest
             </nav>
+
+            <nav aria-labelledby="footer-employers" class="flex flex-col gap-3 text-sm">
+                <h2 id="footer-employers" class="font-semibold text-ink">{{ __('Hire') }}</h2>
+                <a href="{{ route('employers') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('For employers') }}</a>
+                @guest
+                    <a href="{{ route('register', ['as' => 'employer']) }}" class="w-fit text-ink-muted transition-colors hover:text-ink">{{ __('Post a job') }}</a>
+                @endguest
+            </nav>
+
+            <nav aria-labelledby="footer-board" class="flex flex-col gap-3 text-sm">
+                <h2 id="footer-board" class="font-semibold text-ink">{{ config('app.name') }}</h2>
+                <a href="{{ route('about') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('About') }}</a>
+                <a href="{{ route('privacy') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Privacy') }}</a>
+                <a href="{{ route('terms') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Terms') }}</a>
+            </nav>
+        </div>
+
+        <div class="border-t border-line">
+            <p class="mx-auto max-w-6xl px-6 py-5 text-meta text-ink-muted">&copy; {{ now()->year }} {{ config('app.name') }}</p>
         </div>
     </footer>
 

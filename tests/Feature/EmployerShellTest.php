@@ -24,7 +24,8 @@ test('the workspace carries no public job-browsing controls', function () {
     // Shell A's navbar offers these; Shell C deliberately does not, so that
     // someone mid-review is not invited back out into browsing.
     $response->assertDontSee(route('jobs.index'));
-    $response->assertDontSee('For Employers');
+    $response->assertDontSee('For employers');
+    $response->assertDontSee(route('employers'));
 });
 
 test('with only one context, the switcher offers no other space to go to', function () {
