@@ -81,6 +81,15 @@ class CompanyResource extends Resource
         return $waiting > 0 ? (string) $waiting : null;
     }
 
+    /**
+     * Companies waiting for verification are work for staff, like the other
+     * queues, not good news.
+     */
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
+
     public static function canViewAny(): bool
     {
         return auth()->user()?->isActiveStaff() ?? false;

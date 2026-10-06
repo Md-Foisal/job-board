@@ -1,15 +1,14 @@
-<div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist aria-label="{{ __('Settings') }}">
-            <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
-        </flux:navlist>
-    </div>
+{{-- Settings sit inside the main sidebar layout, so their own sections
+     are tabs across the top rather than a second sidebar beside the
+     first: one vertical navigation per screen. --}}
+<div class="flex flex-col">
+    <flux:navbar scrollable class="-mt-3 mb-6 border-b border-line" aria-label="{{ __('Settings') }}">
+        <flux:navbar.item :href="route('profile.edit')" wire:navigate>{{ __('Account') }}</flux:navbar.item>
+        <flux:navbar.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navbar.item>
+        <flux:navbar.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navbar.item>
+    </flux:navbar>
 
-    <flux:separator class="md:hidden" />
-
-    <div class="flex-1 self-stretch max-md:pt-6">
+    <div class="w-full">
         <flux:heading>{{ $heading ?? '' }}</flux:heading>
         <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
 
