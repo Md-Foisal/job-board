@@ -9,8 +9,8 @@
     <div class="flex min-w-0 shrink items-center gap-3">
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
 
-        <a href="{{ route('home') }}" class="shrink-0 font-display text-lg font-bold text-brand-700 dark:text-brand-400" wire:navigate>
-            JobBoard
+        <a href="{{ route('home') }}" class="shrink-0 rounded-control" wire:navigate>
+            <x-logo />
         </a>
 
         <flux:separator vertical class="mx-1 h-5" />

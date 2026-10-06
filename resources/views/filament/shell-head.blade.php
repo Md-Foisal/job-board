@@ -22,13 +22,18 @@
 </script>
 
 <style>
+    /* The logo (components/logo): the app styles it with Tailwind
+       classes the panel's stylesheet does not have. */
     .jb-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.625rem;
         font-size: 1.125rem;
         font-weight: 700;
         letter-spacing: -0.03em;
-        color: var(--primary-700);
+        color: var(--gray-950);
     }
-    .dark .jb-brand { color: var(--primary-400); }
+    .dark .jb-brand { color: #ededef; }
 
     /* Page, top bar and sidebar, as in the app: the bar sits on the page
        colour with a hairline under it; the sidebar is its own panel. */
@@ -57,24 +62,19 @@
     /* Same rounded-square avatar as the app's account menu. */
     .fi-user-menu .fi-avatar.fi-circular { border-radius: 0.5rem; }
 
-    /* The day/night switch -- the app's components/theme-toggle, in plain
-       CSS because the panel does not load the app's stylesheet. */
+    /* The light/dark switch -- the app's components/theme-toggle, in
+       plain CSS for the same reason. */
     .jb-tt {
-        position: relative; display: inline-flex; align-items: center;
-        width: 4rem; height: 2rem; padding: 0.25rem; margin-inline-end: 0.75rem;
-        border-radius: 9999px; box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.15);
-        cursor: pointer; flex-shrink: 0; border: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 2.25rem; height: 2.25rem; margin-inline-end: 0.75rem; flex-shrink: 0;
+        border-radius: 0.625rem; border: 1px solid var(--gray-200);
+        background-color: var(--gray-50); color: var(--gray-950);
+        cursor: pointer; transition: background-color 150ms;
     }
-    .jb-tt:focus-visible { outline: 2px solid var(--primary-400); outline-offset: 2px; }
-    .jb-tt-sky { position: absolute; inset: 0; border-radius: 9999px; overflow: hidden; transition: opacity 500ms ease-in-out; }
-    .jb-tt-day { background: linear-gradient(120deg, #8ec9ec 0%, #cdeaf9 55%, #eef8fd 100%); }
-    .jb-tt-night { background: linear-gradient(120deg, #0b1229 0%, #182552 60%, #22306b 100%); }
-    .jb-tt-dot { position: absolute; border-radius: 9999px; background: #fff; }
-    .jb-tt-thumb {
-        position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
-        width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: #fff;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        transition: transform 500ms ease-out;
-    }
-    .jb-tt-icon { position: absolute; width: 1rem; height: 1rem; transition: all 300ms; }
+    .jb-tt:hover { background-color: var(--gray-100); }
+    .jb-tt:focus-visible { outline: 2px solid var(--gray-950); outline-offset: 2px; }
+    .jb-tt svg { width: 18px; height: 18px; }
+    .dark .jb-tt { border-color: var(--gray-800); background-color: var(--gray-900); color: #ededef; }
+    .dark .jb-tt:hover { background-color: var(--gray-800); }
+    .dark .jb-tt:focus-visible { outline-color: #ededef; }
 </style>

@@ -13,15 +13,15 @@
                      (every extra link is an exit from a flow the visitor
                      started), but the brand always links home -- the
                      convention people actually rely on. It is the visible
-                     wordmark rather than a bare icon so that it reads as
-                     a link, and it matches the guest navbar's brand
-                     exactly. --}}
+                     logo with its wordmark rather than a bare icon so that
+                     it reads as a link, and it is the guest navbar's
+                     logo, larger. --}}
                 <a
                     href="{{ route('home') }}"
-                    class="mb-2 flex flex-col items-center font-display text-2xl font-bold text-brand-700 dark:text-brand-400"
+                    class="mb-2 self-center rounded-control"
                     wire:navigate
                 >
-                    {{ config('app.name') }}
+                    <x-logo size="lg" />
                 </a>
                 <div class="flex flex-col gap-6">
                     {{ $slot }}

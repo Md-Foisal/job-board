@@ -13,8 +13,8 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" />
         @endif
 
-        <a href="{{ route('home') }}" class="font-display text-lg font-bold text-brand-700 dark:text-brand-400" wire:navigate>
-            JobBoard
+        <a href="{{ route('home') }}" class="rounded-control" wire:navigate>
+            <x-logo />
         </a>
     </div>
 

@@ -7,8 +7,8 @@
 
 <body class="flex min-h-screen flex-col bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
     <header class="flex items-center justify-between px-6 py-4">
-        <a href="{{ route('home') }}" class="font-display text-lg font-bold text-brand-700 dark:text-brand-400">
-            JobBoard
+        <a href="{{ route('home') }}" class="rounded-control">
+            <x-logo />
         </a>
         <x-theme-toggle />
     </header>
