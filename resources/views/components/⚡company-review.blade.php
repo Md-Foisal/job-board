@@ -226,7 +226,7 @@ new class extends Component
                         <p class="text-sm text-zinc-500 dark:text-zinc-500">
                             {{ __('About your application for :job, :month.', [
                                 'job' => $review->application->jobPosting->title,
-                                'month' => \App\Support\LocalTime::of($review->application->created_at)->format('F Y'),
+                                'month' => \App\Support\LocalTime::of($review->application->created_at)->format(\App\Support\DateFormat::MONTH),
                             ]) }}
                         </p>
                     </div>

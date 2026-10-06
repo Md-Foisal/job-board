@@ -21,6 +21,6 @@
     <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $label }}</p>
 
     <time class="text-sm text-zinc-500 dark:text-zinc-500" datetime="{{ $local->toIso8601String() }}">
-        {{ $local->format('j M Y, g:i a') }}
+        {{ $local->format(\App\Support\DateFormat::MOMENT) }}
     </time>
 </li>

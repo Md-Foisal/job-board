@@ -9,6 +9,7 @@ use App\Models\CompanyReview;
 use App\Models\JobPosting;
 use App\Models\ModerationEvent;
 use App\Models\User;
+use App\Support\DateFormat;
 use BackedEnum;
 use Carbon\CarbonImmutable;
 use Filament\Actions\ViewAction;
@@ -191,8 +192,8 @@ class ModerationEventResource extends Resource
                     // A custom filter has no indicator of its own, so without
                     // these the filter button would count it as off.
                     ->indicateUsing(fn (array $data): array => array_values(array_filter([
-                        filled($data['from'] ?? null) ? Indicator::make('From '.CarbonImmutable::parse($data['from'])->format('j M Y'))->removeField('from') : null,
-                        filled($data['until'] ?? null) ? Indicator::make('Until '.CarbonImmutable::parse($data['until'])->format('j M Y'))->removeField('until') : null,
+                        filled($data['from'] ?? null) ? Indicator::make('From '.CarbonImmutable::parse($data['from'])->format(DateFormat::DAY))->removeField('from') : null,
+                        filled($data['until'] ?? null) ? Indicator::make('Until '.CarbonImmutable::parse($data['until'])->format(DateFormat::DAY))->removeField('until') : null,
                     ]))),
             ])
             ->emptyStateHeading(fn (Table $table): string => $table->isFiltered() ? 'No decisions match these filters' : 'No decisions yet')

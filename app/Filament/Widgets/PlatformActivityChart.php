@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Application;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
+use App\Support\DateFormat;
 use Carbon\CarbonImmutable;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
@@ -72,7 +73,7 @@ class PlatformActivityChart extends ChartWidget
 
         if ($total > 0) {
             $busiest = array_search(max($series), $series, true);
-            $summary .= ', most on '.CarbonImmutable::parse($busiest)->format('j M').' ('.number_format($series[$busiest]).')';
+            $summary .= ', most on '.CarbonImmutable::parse($busiest)->format(DateFormat::DAY_SHORT).' ('.number_format($series[$busiest]).')';
         }
 
         return $summary.'.'.($this->metric() === 'views'
@@ -89,7 +90,7 @@ class PlatformActivityChart extends ChartWidget
                 'label' => $this->getFilters()[$this->metric()],
                 'data' => array_values($series),
             ]],
-            'labels' => array_map(fn (string $date) => CarbonImmutable::parse($date)->format('j M'), array_keys($series)),
+            'labels' => array_map(fn (string $date) => CarbonImmutable::parse($date)->format(DateFormat::DAY_SHORT), array_keys($series)),
         ];
     }
 

@@ -109,9 +109,9 @@ final class JobSearchCriteria
             $currency = $criteria['currency'];
 
             $parts[] = match (true) {
-                isset($criteria['salaryMin'], $criteria['salaryMax']) => __('pay :currency :min–:max a month', ['currency' => $currency, 'min' => number_format($criteria['salaryMin']), 'max' => number_format($criteria['salaryMax'])]),
-                isset($criteria['salaryMin']) => __('pay from :currency :min a month', ['currency' => $currency, 'min' => number_format($criteria['salaryMin'])]),
-                isset($criteria['salaryMax']) => __('pay up to :currency :max a month', ['currency' => $currency, 'max' => number_format($criteria['salaryMax'])]),
+                isset($criteria['salaryMin'], $criteria['salaryMax']) => __('pay :min–:max a month', ['min' => Money::format($currency, $criteria['salaryMin']), 'max' => Money::format($currency, $criteria['salaryMax'])]),
+                isset($criteria['salaryMin']) => __('pay from :amount a month', ['amount' => Money::format($currency, $criteria['salaryMin'])]),
+                isset($criteria['salaryMax']) => __('pay up to :amount a month', ['amount' => Money::format($currency, $criteria['salaryMax'])]),
                 default => __('paid in :currency', ['currency' => $currency]),
             };
         }

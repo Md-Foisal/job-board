@@ -91,7 +91,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
 
         unset($this->jobPostings);
         Flux::toast(variant: 'success', text: __('Closing date moved to :date.', [
-            'date' => ClosingDate::day($jobPosting, $this->company)->toFormattedDateString(),
+            'date' => ClosingDate::day($jobPosting, $this->company)->format(\App\Support\DateFormat::DAY),
         ]));
     }
 
@@ -171,7 +171,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                             <td class="px-5 py-4">
                                 <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $jobPosting->title }}</div>
                                 <div class="text-zinc-500 dark:text-zinc-500">
-                                    {{ __('Closes :date', ['date' => ClosingDate::day($jobPosting, $company)->toFormattedDateString()]) }}
+                                    {{ __('Closes :date', ['date' => ClosingDate::day($jobPosting, $company)->format(\App\Support\DateFormat::DAY)]) }}
                                 </div>
                             </td>
                             <td class="px-5 py-4">

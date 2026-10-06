@@ -389,7 +389,7 @@
                                     </p>
                                 @endif
                                 <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
-                                    {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
+                                    {{ $record->start_date->format(\App\Support\DateFormat::MONTH) }} &mdash; {{ $record->end_date?->format(\App\Support\DateFormat::MONTH) ?? __('Present') }}
                                 </p>
                             </div>
                         </li>
@@ -425,7 +425,7 @@
                                 <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $record->job_title }}</p>
                                 <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $record->company_name }}</p>
                                 <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
-                                    {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
+                                    {{ $record->start_date->format(\App\Support\DateFormat::MONTH) }} &mdash; {{ $record->end_date?->format(\App\Support\DateFormat::MONTH) ?? __('Present') }}
                                 </p>
                                 @if ($record->description)
                                     <div class="prose-content mt-2">{!! $record->description !!}</div>

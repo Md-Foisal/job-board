@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Invitation;
 use App\Models\User;
+use App\Support\DateFormat;
 use App\Support\LocalTime;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -42,7 +43,7 @@ class TeamMemberInvited extends Notification
             ]))
             ->action(__('View invitation'), route('invitations.show', $this->invitation->token))
             ->line(__('This invitation expires on :date (:zone).', [
-                'date' => LocalTime::of($this->invitation->expires_at, $zone)->format('j F Y, g:i a'),
+                'date' => LocalTime::of($this->invitation->expires_at, $zone)->format(DateFormat::MOMENT),
                 'zone' => LocalTime::label($zone, at: $this->invitation->expires_at),
             ]));
     }

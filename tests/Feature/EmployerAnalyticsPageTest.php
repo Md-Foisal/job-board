@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
 use App\Models\Skill;
+use App\Support\DateFormat;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -153,7 +154,7 @@ test('a company without postings is told what will appear here', function () {
 test('the page says when views started being counted, so an empty start is not read as nobody coming', function () {
     JobPostingDailyStat::create(['job_posting_id' => $this->job->id, 'date' => today()->subDays(3)->toDateString(), 'views' => 2]);
 
-    analyticsPage($this)->assertSee('Views have been counted since '.today()->subDays(3)->toFormattedDateString());
+    analyticsPage($this)->assertSee('Views have been counted since '.today()->subDays(3)->format(DateFormat::DAY));
 });
 
 test('each chart has its table, with every day of the range', function () {
@@ -163,9 +164,9 @@ test('each chart has its table, with every day of the range', function () {
         ->assertSee('Views per day')
         ->assertSee('Applications per day')
         ->assertSee('Show as table')
-        ->assertSee('Views per day: 9 in total, highest 9 on '.today()->toFormattedDateString().'.')
-        ->assertSee(today()->subDays(6)->toFormattedDateString())
-        ->assertDontSee(today()->subDays(7)->toFormattedDateString());
+        ->assertSee('Views per day: 9 in total, highest 9 on '.today()->format(DateFormat::DAY).'.')
+        ->assertSee(today()->subDays(6)->format(DateFormat::DAY))
+        ->assertDontSee(today()->subDays(7)->format(DateFormat::DAY));
 });
 
 test('the page is linked from the dashboard, the sidebar and each posting', function () {

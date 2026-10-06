@@ -143,6 +143,6 @@ test('an alert with pay needs a currency, and says it in words', function () {
     $criteria = $user->jobAlerts()->sole()->criteria;
 
     expect($criteria)->toBe(['currency' => 'BDT', 'salaryMin' => 50000])
-        ->and(JobSearchCriteria::describe($criteria))->toBe(['pay from BDT 50,000 a month'])
+        ->and(JobSearchCriteria::describe($criteria))->toBe(["pay from BDT\u{a0}50,000 a month"])
         ->and(JobSearchCriteria::describe(['currency' => 'EUR']))->toBe(['paid in EUR']);
 });

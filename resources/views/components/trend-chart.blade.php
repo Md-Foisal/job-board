@@ -19,7 +19,7 @@
     $peakDate = $peak > 0 ? $dates[array_search($peak, $values, true)] : null;
 
     $summary = $peakDate
-        ? __(':title: :total in total, highest :peak on :date.', ['title' => $title, 'total' => $total, 'peak' => $peak, 'date' => $peakDate->toFormattedDateString()])
+        ? __(':title: :total in total, highest :peak on :date.', ['title' => $title, 'total' => $total, 'peak' => $peak, 'date' => $peakDate->format(\App\Support\DateFormat::DAY)])
         : __(':title: none in this period.', ['title' => $title]);
 @endphp
 
@@ -27,8 +27,8 @@
     {{ $attributes->class('rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900') }}
     x-data="performanceChart(@js([
         'type' => $type,
-        'labels' => $dates->map->format('M j')->all(),
-        'dates' => $dates->map->toFormattedDateString()->all(),
+        'labels' => $dates->map->format(\App\Support\DateFormat::DAY_SHORT)->all(),
+        'dates' => $dates->map->format(\App\Support\DateFormat::DAY)->all(),
         'values' => $values,
         'label' => $valueLabel,
     ]))"
@@ -60,7 +60,7 @@
             <tbody>
                 @foreach ($series as $date => $value)
                     <tr class="border-b border-zinc-100 last:border-0 dark:border-zinc-800/60">
-                        <td class="py-1.5 text-zinc-700 dark:text-zinc-300">{{ \Carbon\CarbonImmutable::parse($date)->toFormattedDateString() }}</td>
+                        <td class="py-1.5 text-zinc-700 dark:text-zinc-300">{{ \Carbon\CarbonImmutable::parse($date)->format(\App\Support\DateFormat::DAY) }}</td>
                         <td class="py-1.5 text-end tabular-nums text-zinc-900 dark:text-zinc-100">{{ $value }}</td>
                     </tr>
                 @endforeach

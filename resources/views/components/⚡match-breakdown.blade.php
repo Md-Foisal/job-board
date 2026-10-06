@@ -13,6 +13,7 @@ use App\Support\AiQuota;
 use App\Support\MatchBreakdown;
 use App\Support\MatchExplanation;
 use App\Support\MatchExplanationInput;
+use App\Support\Money;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -222,7 +223,7 @@ new class extends Component
                 'job' => $this->jobSalary(),
                 'you' => $preference?->desired_salary_min === null
                     ? __('Not set')
-                    : __('From :amount a month', ['amount' => $this->money($preference->desired_salary_currency, $preference->desired_salary_min)]),
+                    : __('From :amount a month', ['amount' => Money::format($preference->desired_salary_currency, $preference->desired_salary_min)]),
             ],
             [
                 'check' => MatchCheck::Workplace,
@@ -272,19 +273,14 @@ new class extends Component
         }
 
         $amount = match (true) {
-            $min !== null && $max !== null => $this->money($job->salary_currency, $min).'–'.number_format($max),
-            $min !== null => __('from :amount', ['amount' => $this->money($job->salary_currency, $min)]),
-            default => __('up to :amount', ['amount' => $this->money($job->salary_currency, $max)]),
+            $min !== null && $max !== null => Money::format($job->salary_currency, $min).'–'.Money::format($job->salary_currency, $max),
+            $min !== null => __('from :amount', ['amount' => Money::format($job->salary_currency, $min)]),
+            default => __('up to :amount', ['amount' => Money::format($job->salary_currency, $max)]),
         };
 
         return $job->salary_period === SalaryPeriod::Monthly
             ? __(':amount a month', ['amount' => $amount])
             : __('About :amount a month', ['amount' => $amount]);
-    }
-
-    private function money(?string $currency, int $amount): string
-    {
-        return trim(strtoupper(trim((string) $currency)).' '.number_format($amount));
     }
 
     private function duration(int $months): string
@@ -447,7 +443,7 @@ new class extends Component
                     </div>
                 @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
                     <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
+                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format(\App\Support\DateFormat::MOMENT)]) }}
                     </p>
                 @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
                     <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">

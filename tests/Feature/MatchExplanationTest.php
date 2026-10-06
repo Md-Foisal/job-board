@@ -465,7 +465,7 @@ test('when the month\'s allowance is used, the page says when it comes back, in 
 
     Livewire::actingAs($karim)
         ->test('match-breakdown', ['jobPosting' => explainedPosting(['expires_at' => now()->addWeek()])])
-        ->assertSee("You've used this month's AI explanations. They reset on 1 November at 6:00 am.")
+        ->assertSee("You've used this month's AI explanations. They reset on 1 Nov 2026, 6:00 am.")
         ->assertDontSee('Explain my match');
 });
 

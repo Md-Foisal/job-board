@@ -9,7 +9,7 @@
             {{ __('Response from :company', ['company' => $company->name]) }}
             <span class="mx-1 font-normal text-zinc-500">·</span>
             @php($respondedAt = \App\Support\LocalTime::of($review->responded_at))
-            <time class="font-normal text-zinc-500" datetime="{{ $respondedAt->format('Y-m') }}">{{ $respondedAt->format('F Y') }}</time>
+            <time class="font-normal text-zinc-500" datetime="{{ $respondedAt->format('Y-m') }}">{{ $respondedAt->format(\App\Support\DateFormat::MONTH) }}</time>
         </p>
         @if ($review->responseAnswersEarlierVersion())
             <p class="mt-1 text-xs italic text-zinc-500 dark:text-zinc-400">{{ __('Written to an earlier version of this review.') }}</p>

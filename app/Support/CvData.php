@@ -209,7 +209,7 @@ final class CvData
 
     private static function dates(?CarbonInterface $start, ?CarbonInterface $end): string
     {
-        return ($start?->format('M Y') ?? '').' – '.($end?->format('M Y') ?? __('Present'));
+        return ($start?->format(DateFormat::MONTH) ?? '').' – '.($end?->format(DateFormat::MONTH) ?? __('Present'));
     }
 
     private static function qualification(?string $degree, ?string $field): string

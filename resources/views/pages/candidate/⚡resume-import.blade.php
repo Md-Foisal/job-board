@@ -534,7 +534,7 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
         && collect([...$experience, ...$education])->every(fn ($entry) => $entry['has']);
 
     $offerAi = $this->aiCanRead && $this->aiAvailability === \App\Enums\AiAvailability::Available;
-    $monthLabel = fn (?string $month) => $month ? \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month)->format('M Y') : null;
+    $monthLabel = fn (?string $month) => $month ? \Carbon\CarbonImmutable::createFromFormat('!Y-m', $month)->format(\App\Support\DateFormat::MONTH) : null;
 @endphp
 
 <div class="mx-auto max-w-2xl px-6 py-10">

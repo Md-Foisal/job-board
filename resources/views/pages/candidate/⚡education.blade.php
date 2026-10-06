@@ -134,7 +134,7 @@ new #[Layout('layouts::app')] #[Title('Education')] class extends Component {
                         @endif
 
                         <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
-                            {{ $record->start_date->format('M Y') }} &mdash; {{ $record->end_date?->format('M Y') ?? __('Present') }}
+                            {{ $record->start_date->format(\App\Support\DateFormat::MONTH) }} &mdash; {{ $record->end_date?->format(\App\Support\DateFormat::MONTH) ?? __('Present') }}
                         </p>
                     </div>
                 </div>

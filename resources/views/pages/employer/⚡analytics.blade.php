@@ -198,7 +198,7 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
             @if (! $report->viewsCoverRange())
                 <flux:text size="sm">
                     {{ $report->viewsCountedSince
-                        ? __('Views have been counted since :date, so earlier days show none.', ['date' => $report->viewsCountedSince->toFormattedDateString()])
+                        ? __('Views have been counted since :date, so earlier days show none.', ['date' => $report->viewsCountedSince->format(\App\Support\DateFormat::DAY)])
                         : __('No views counted yet.') }}
                 </flux:text>
             @endif

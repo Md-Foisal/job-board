@@ -96,7 +96,7 @@ test('the breakdown shows the score, each skill and each check with both sides i
         ->assertSee('Only you can see this.')
         ->assertSeeInOrder(['Required skills', 'Laravel', '(you have this)', 'Go', '(missing from your profile)'])
         ->assertSeeInOrder(['Nice to have', 'Vue', '(missing from your profile)'])
-        ->assertSeeInOrder(['Salary', 'This job: BDT 50,000–80,000 a month', 'You: From BDT 70,000 a month', 'Fits'])
+        ->assertSeeInOrder(['Salary', "This job: BDT\u{a0}50,000–BDT\u{a0}80,000 a month", "You: From BDT\u{a0}70,000 a month", 'Fits'])
         ->assertSeeInOrder(['Workplace', 'This job: Hybrid', 'You: Remote', 'Doesn&#039;t fit'], false)
         ->assertSeeInOrder(['Employment type', 'This job: Full-time', 'You: No preference', 'Can&#039;t compare'], false)
         ->assertSeeInOrder(['Experience', 'This job: 2+ years', 'You: 1 year 2 months', 'Doesn&#039;t fit'], false)
@@ -112,7 +112,7 @@ test('pay not given by the month is shown as a rough monthly figure', function (
 
     Livewire::actingAs(filledCandidate())
         ->test('match-breakdown', ['jobPosting' => $posting])
-        ->assertSee('This job: About BDT 50,000–100,000 a month');
+        ->assertSee("This job: About BDT\u{a0}50,000–BDT\u{a0}100,000 a month");
 });
 
 test('an empty profile is asked to fill in, with a way to do it from a CV', function () {

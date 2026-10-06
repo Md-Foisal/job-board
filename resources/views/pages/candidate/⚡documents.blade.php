@@ -143,7 +143,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                     <div>
                         <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->original_filename }}</p>
                         <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $document->document_type->label() }}</p>
-                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">{{ \App\Support\LocalTime::of($document->created_at)->format('M j, Y') }}</p>
+                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">{{ \App\Support\LocalTime::of($document->created_at)->format(\App\Support\DateFormat::DAY) }}</p>
 
                         @if ($document->document_type === \App\Enums\DocumentType::Cv)
                             @if (\App\Support\CvText::supports($document))

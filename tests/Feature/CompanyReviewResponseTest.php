@@ -75,7 +75,7 @@ test('every member sees the published reviews as the public does, and nothing mo
     $this->actingAs($this->member)
         ->get(route('employer.reviews', $this->company))
         ->assertOk()
-        ->assertSee(['Quick and fair', 'Verified applicant', 'April 2026'])
+        ->assertSee(['Quick and fair', 'Verified applicant', 'Apr 2026'])
         ->assertSee('Owners and managers can answer reviews on behalf of the company.')
         ->assertDontSee(['Still being read', 'Kept off the page', 'Night Shift Analyst', 'Answer publicly'])
         ->assertDontSee($this->review->candidateProfile->user->name);

@@ -128,7 +128,7 @@
                 @else
                     {{ $pay }}
                     @if ($jobPosting->salary_period)
-                        <span class="font-normal text-zinc-500 dark:text-zinc-500">/ {{ \Illuminate\Support\Str::lower($jobPosting->salary_period->label()) }}</span>
+                        <span class="font-normal text-ink-muted">{{ $jobPosting->salary_period->per() }}</span>
                     @endif
                 @endif
             </p>

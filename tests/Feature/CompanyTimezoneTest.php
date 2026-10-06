@@ -121,7 +121,7 @@ test('the listing shows the closing day the company picked', function () {
 
     Livewire::actingAs(employerUser($this->dhaka, MembershipRole::Owner))
         ->test('pages::employer.job-listings', ['company' => $this->dhaka])
-        ->assertSee('Closes Oct 30, 2026');
+        ->assertSee('Closes 30 Oct 2026');
 });
 
 test('extending gives a month to the end of that day, without running past a short month', function () {

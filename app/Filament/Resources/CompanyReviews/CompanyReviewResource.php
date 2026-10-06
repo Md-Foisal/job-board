@@ -11,6 +11,7 @@ use App\Enums\ReviewPart;
 use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
 use App\Models\CompanyReview;
+use App\Support\DateFormat;
 use App\Support\ReviewEligibility;
 use App\Support\ReviewTextFlags;
 use BackedEnum;
@@ -145,7 +146,7 @@ class CompanyReviewResource extends Resource
                             ->state(fn (CompanyReview $record) => ReviewEligibility::describe(ReviewEligibility::basisOf($record->application))),
                         TextEntry::make('applied_for')
                             ->label('Applied for')
-                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->setTimezone(FilamentTimezone::get())->format('j M Y')}"),
+                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->setTimezone(FilamentTimezone::get())->format(DateFormat::DAY)}"),
                         TextEntry::make('flags')
                             ->label('Text contains')
                             ->state(fn (CompanyReview $record) => collect(ReviewTextFlags::in($record->title, $record->body))
@@ -184,7 +185,7 @@ class CompanyReviewResource extends Resource
                         TextEntry::make('job_as_described')->label('Job as described')
                             ->formatStateUsing(fn ($state) => $state->label()),
                         TextEntry::make('updated_at')->label('Last written')->since(),
-                        TextEntry::make('published_at')->label('Published')->dateTime('F Y')->placeholder('Not yet'),
+                        TextEntry::make('published_at')->label('Published')->date(DateFormat::MONTH)->placeholder('Not yet'),
                         TextEntry::make('title')->columnSpanFull(),
                         TextEntry::make('body')->columnSpanFull()->extraAttributes(['class' => 'whitespace-pre-line']),
                     ]),

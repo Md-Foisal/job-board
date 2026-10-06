@@ -10,9 +10,12 @@ use App\Models\Skill;
 use App\Observers\FlushLookupCache;
 use App\Observers\FlushPublicCache;
 use App\Services\MatchScoreCalculator;
+use App\Support\DateFormat;
 use App\Support\LocalTime;
 use Carbon\CarbonImmutable;
+use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentTimezone;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -63,6 +66,19 @@ class AppServiceProvider extends ServiceProvider
         // the rest of the product does. A closure, because which person is
         // signed in is not known yet while providers boot.
         FilamentTimezone::set(fn (): string => LocalTime::zone());
+
+        // And writes its dates the way the rest of the product does.
+        Table::configureUsing(function (Table $table): void {
+            $table
+                ->defaultDateDisplayFormat(DateFormat::DAY)
+                ->defaultDateTimeDisplayFormat(DateFormat::MOMENT);
+        });
+
+        Schema::configureUsing(function (Schema $schema): void {
+            $schema
+                ->defaultDateDisplayFormat(DateFormat::DAY)
+                ->defaultDateTimeDisplayFormat(DateFormat::MOMENT);
+        });
 
         // Outside production, turn Eloquent's two silent-wrong-data behaviors
         // into loud ones: assigning an attribute that is not fillable, and

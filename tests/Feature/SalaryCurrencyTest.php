@@ -201,10 +201,10 @@ test('the pay reads as a range, or as one open end', function (array $pay, strin
 
     expect($job->payRange())->toBe($expected);
 })->with([
-    'both ends' => [['salary_min' => 50000, 'salary_max' => 80000], 'BDT 50,000–80,000'],
-    'one figure' => [['salary_min' => 50000, 'salary_max' => 50000], 'BDT 50,000'],
-    'only a floor' => [['salary_min' => 50000, 'salary_max' => null], 'From BDT 50,000'],
-    'only a ceiling' => [['salary_min' => null, 'salary_max' => 80000], 'Up to BDT 80,000'],
+    'both ends' => [['salary_min' => 50000, 'salary_max' => 80000], "BDT\u{a0}50,000–BDT\u{a0}80,000"],
+    'one figure' => [['salary_min' => 50000, 'salary_max' => 50000], "BDT\u{a0}50,000"],
+    'only a floor' => [['salary_min' => 50000, 'salary_max' => null], "From BDT\u{a0}50,000"],
+    'only a ceiling' => [['salary_min' => null, 'salary_max' => 80000], "Up to BDT\u{a0}80,000"],
 ]);
 
 test('a job page with only a floor never shows a range to zero', function () {
@@ -217,7 +217,7 @@ test('a job page with only a floor never shows a range to zero', function () {
 
     $this->get(route('jobs.show', $job))
         ->assertOk()
-        ->assertSee('From BDT 50,000')
+        ->assertSee("From BDT\u{a0}50,000")
         ->assertDontSee('50,000–0');
 });
 
