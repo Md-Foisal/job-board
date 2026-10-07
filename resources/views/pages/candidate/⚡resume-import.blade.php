@@ -541,8 +541,8 @@ new #[Layout('layouts::app')] #[Title('Fill your profile from your CV')] class e
     <x-page-header
         :title="__('Fill your profile from your CV')"
         :description="$hasSomething ? __('We read :file and found the things below. Nothing is added until you choose it.', ['file' => $document->original_filename]) : null"
-        :back="route('candidate.documents.index')"
-        :back-label="__('Documents')"
+        :back="route('candidate.profile.edit')"
+        :back-label="__('My profile')"
     />
 
     <div>

@@ -78,6 +78,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
 
     Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/preview', [CandidateProfileController::class, 'preview'])->name('profile.preview');
 
     // Filling the profile from a CV in the library: the page reads the
     // file, suggests what it found, and adds only what the candidate ticks.

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationOutcomeStatus;
+use App\Enums\CandidateApplicationStatus;
 use App\Models\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,15 +14,22 @@ class CandidateApplicationController extends Controller
 {
     public function index(Request $request): View
     {
+        // The dashboard's counts link here with ?status=, so each number
+        // opens the applications behind it. An unknown value lists all.
+        $status = CandidateApplicationStatus::tryFrom((string) $request->query('status'));
+
         $applications = Application::query()
             ->where('candidate_profile_id', $request->user()->candidateProfile->id)
+            ->when($status, fn ($query) => $status->scope($query))
             ->with('jobPosting.company')
             ->latest('created_at')
             ->latest('id')
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return view('candidate.applications.index', [
             'applications' => $applications,
+            'status' => $status,
         ]);
     }
 

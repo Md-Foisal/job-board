@@ -2,7 +2,17 @@
     <x-page>
         <x-page-header :title="__('Applications')" />
 
-        @if ($applications->isEmpty())
+        @if ($status)
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <span class="text-ink-muted">{{ __('Showing') }}</span>
+                <x-chip>{{ __($status->label()) }}</x-chip>
+                <flux:link :href="route('candidate.applications.index')" wire:navigate>{{ __('Show all') }}</flux:link>
+            </div>
+        @endif
+
+        @if ($applications->isEmpty() && $status)
+            <x-empty-state icon="paper-airplane" :heading="__('No applications here right now.')" :action-href="route('candidate.applications.index')" :action-label="__('Show all applications')" />
+        @elseif ($applications->isEmpty())
             <x-empty-state icon="paper-airplane" :heading="__('You haven\'t applied to any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')">
                 {{ __('Every job you apply to shows up here, with where your application stands.') }}
             </x-empty-state>

@@ -17,10 +17,7 @@
         {{-- One reading column until the page gets its own layout: a
              timeline stretched across the full width is hard to follow. --}}
         <div class="max-w-3xl">
-            <flux:heading size="lg" level="2">{{ __('History') }}</flux:heading>
-            <flux:subheading class="mb-6">
-                {{ __('Everything that has happened to this application, newest at the bottom.') }}
-            </flux:subheading>
+            <flux:heading size="lg" level="2" class="mb-6">{{ __('History') }}</flux:heading>
 
             {{-- The timeline always has at least one entry: the application
                  itself. Employer-side entries name the company, never the
@@ -31,24 +28,7 @@
                 <x-timeline-item :label="__('You applied')" :at="$application->created_at" highlight />
 
                 @foreach ($application->eventsForCandidate() as $event)
-                    @php
-                        $company = $application->jobPosting->company->name;
-                        $byCandidate = $event->changed_by_id === auth()->id();
-
-                        if ($event->to_stage !== null) {
-                            $label = \App\Enums\ApplicationStage::tryFrom($event->to_stage)?->label() ?? $event->to_stage;
-                            $line = __(':company moved your application to :stage', ['company' => $company, 'stage' => $label]);
-                        } else {
-                            $outcome = \App\Enums\ApplicationOutcomeStatus::tryFrom($event->to_outcome_status);
-                            $label = $outcome?->label() ?? $event->to_outcome_status;
-
-                            $line = $byCandidate
-                                ? __('You withdrew this application')
-                                : __(':company marked this application as :outcome', ['company' => $company, 'outcome' => $label]);
-                        }
-                    @endphp
-
-                    <x-timeline-item :label="$line" :at="$event->created_at" />
+                    <x-timeline-item :label="\App\Support\CandidateTimeline::line($event, $application, auth()->id())" :at="$event->created_at" />
                 @endforeach
             </ol>
 

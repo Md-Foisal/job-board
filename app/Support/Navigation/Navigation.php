@@ -43,11 +43,15 @@ final class Navigation
                 new NavItem(__('Job alerts'), 'bell', route('candidate.job-alerts.index'), ['candidate.job-alerts.*']),
             ]);
 
+            // Experience, Education and Skills are parts of the profile and
+            // are edited on it, so they light up My profile rather than
+            // standing beside it. Documents and the CV builder are the CV
+            // library; preferences are private. Neither is the profile.
             $sections[] = new NavSection(__('Profile'), [
-                new NavItem(__('Overview'), 'user-circle', route('candidate.profile.edit'), ['candidate.profile.*', 'candidate.resume-import']),
-                new NavItem(__('Experience'), 'briefcase', route('candidate.experience.index'), ['candidate.experience.*']),
-                new NavItem(__('Education'), 'academic-cap', route('candidate.education.index'), ['candidate.education.*']),
-                new NavItem(__('Skills'), 'tag', route('candidate.skills.edit'), ['candidate.skills.*']),
+                new NavItem(__('My profile'), 'user-circle', route('candidate.profile.edit'), [
+                    'candidate.profile.*', 'candidate.resume-import',
+                    'candidate.experience.*', 'candidate.education.*', 'candidate.skills.*',
+                ]),
                 new NavItem(__('Documents'), 'document-text', route('candidate.documents.index'), ['candidate.documents.*']),
                 new NavItem(__('CV builder'), 'document-plus', route('candidate.cv-builder'), ['candidate.cv-builder']),
                 new NavItem(__('Job preferences'), 'adjustments-horizontal', route('candidate.preferences.edit'), ['candidate.preferences.*']),

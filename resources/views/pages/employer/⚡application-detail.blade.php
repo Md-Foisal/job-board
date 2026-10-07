@@ -339,9 +339,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
 
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($candidate->skills as $skill)
-                            <x-chip :variant="$this->wantedSkillIds->contains($skill->id) ? 'matched' : 'fact'">
-                                {{ $skill->name }}
-                            </x-chip>
+                            <x-profile.skill-chip :skill="$skill" :variant="$this->wantedSkillIds->contains($skill->id) ? 'matched' : 'fact'" />
                         @endforeach
                     </div>
                 </div>

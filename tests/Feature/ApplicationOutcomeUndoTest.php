@@ -172,11 +172,14 @@ test('to the candidate, an application stays open until the undo window has pass
     decide($this, ApplicationOutcomeStatus::Rejected);
     $candidate = $this->application->candidateProfile->user;
 
-    $this->actingAs($candidate)->get(route('candidate.dashboard'))->assertViewHas('activeApplicationCount', 1);
+    $closed = fn () => $this->actingAs($candidate)->get(route('candidate.dashboard'))->viewData('statusCounts')['closed'];
+    $closedList = fn () => $this->actingAs($candidate)->get(route('candidate.applications.index', ['status' => 'closed']))->viewData('applications');
+
+    expect($closed())->toBe(0)->and($closedList())->toHaveCount(0);
 
     $this->travel(Application::UNDO_MINUTES + 1)->minutes();
 
-    $this->actingAs($candidate)->get(route('candidate.dashboard'))->assertViewHas('activeApplicationCount', 0);
+    expect($closed())->toBe(1)->and($closedList())->toHaveCount(1);
 });
 
 test('an application whose decision was undone is waiting again', function () {

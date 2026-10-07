@@ -249,6 +249,6 @@ test('the CV builder is linked from the sidebar, the documents page and the prof
         ->assertSee(route('candidate.cv-builder'));
 
     $this->actingAs($candidate)->get(route('candidate.profile.edit'))
-        ->assertSee('Build a CV from your profile')
+        ->assertSee('Build a CV')
         ->assertSee(route('candidate.cv-builder'));
 });

@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\DocumentType;
 use App\Models\Pivots\CandidateProfileSkillPivot;
+use App\Support\CvText;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -53,5 +55,20 @@ class CandidateProfile extends Model
     public function applications()
     {
         return $this->hasMany(Application::class);
+    }
+
+    /**
+     * The CV the profile can be filled from: the newest one in the
+     * library whose text can be read (PDF or DOCX). Null when there is
+     * none, so the offer to import is not shown at all.
+     */
+    public function importableCv(): ?Document
+    {
+        return $this->documents()
+            ->where('document_type', DocumentType::Cv)
+            ->latest()
+            ->latest('id')
+            ->get()
+            ->first(fn (Document $document) => CvText::supports($document));
     }
 }

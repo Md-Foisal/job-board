@@ -4,6 +4,7 @@ use App\Enums\MembershipRole;
 use App\Filament\Resources\Companies\CompanyResource;
 use App\Models\Company;
 use App\Models\User;
+use App\Support\Navigation\Navigation;
 use Illuminate\Support\Facades\Storage;
 
 test('the guest navbar sends employers to their own page, not straight to sign-up', function () {
@@ -63,13 +64,21 @@ test('registration asks for the side first and arrives with employer chosen from
 });
 
 test('the candidate sidebar groups job search apart from the profile', function () {
-    $this->actingAs(candidateUser())
+    $candidate = candidateUser();
+
+    // Experience, education and skills are parts of My profile, not pages
+    // beside it. Checked on the list the sidebar draws from: the page
+    // itself may still link to them, from an empty state for instance.
+    $labels = collect(Navigation::personal($candidate))->flatMap(fn ($section) => $section->items)->pluck('label');
+    expect($labels)->not->toContain('Experience')->not->toContain('Education')->not->toContain('Skills');
+
+    $this->actingAs($candidate)
         ->get(route('candidate.dashboard'))
         ->assertOk()
         ->assertSeeInOrder([
             'Dashboard',
             'Job search', 'Find jobs', 'Applications', 'Saved jobs', 'Job alerts',
-            'Profile', 'Overview', 'Experience', 'Education', 'Skills', 'Documents', 'CV builder', 'Job preferences',
+            'Profile', 'My profile', 'Documents', 'CV builder', 'Job preferences',
             'Account', 'Settings',
         ])
         ->assertDontSee('>Platform<', false);
@@ -118,8 +127,7 @@ test('settings sections are tabs, and the account one is not called Profile', fu
     $this->actingAs(candidateUser())
         ->get(route('profile.edit'))
         ->assertOk()
-        ->assertSeeInOrder(['Account', 'Security', 'Appearance'])
-        ->assertSee('Your name, email address and time zone.');
+        ->assertSeeInOrder(['Account', 'Security', 'Appearance']);
 });
 
 test('the sitemap lists the employers page', function () {

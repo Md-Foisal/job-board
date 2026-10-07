@@ -137,7 +137,7 @@ test('the company workspace has the palette, scoped to the company', function ()
 test('the palette lists the same pages as the sidebar', function () {
     Livewire::actingAs(candidateUser())
         ->test(CommandPalette::class)
-        ->assertSeeInOrder(['Dashboard', 'Find jobs', 'Applications', 'Saved jobs', 'Job alerts', 'Overview', 'Experience', 'Education', 'Skills', 'Documents', 'CV builder', 'Job preferences', 'Settings'])
+        ->assertSeeInOrder(['Dashboard', 'Find jobs', 'Applications', 'Saved jobs', 'Job alerts', 'My profile', 'Documents', 'CV builder', 'Job preferences', 'Settings'])
         ->assertSee(route('candidate.saved-jobs.index'), false);
 });
 
