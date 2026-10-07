@@ -3,15 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Actions\RecordJobView;
+use App\Models\Application;
 use App\Models\JobPosting;
+use App\Models\User;
 use App\Services\EmployerResponsiveness;
 use App\Services\JobPostingStructuredData;
 use App\Support\ReviewSummary;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class JobPostingController extends Controller
 {
+    /**
+     * How many other openings the page suggests under the description.
+     */
+    private const SIMILAR_COUNT = 3;
+
     public function show(
         Request $request,
         JobPosting $jobPosting,
@@ -33,6 +41,7 @@ class JobPostingController extends Controller
             // cost both of those.
             'company',
             'skills:id,name',
+            'categories:id,name,slug',
             // The recruiter's own face, when they have set one up: the
             // candidate is deciding whether to apply, and a name with a
             // person behind it is part of that decision.
@@ -43,16 +52,91 @@ class JobPostingController extends Controller
 
         $recordView($jobPosting, $request);
 
+        $user = $request->user();
+        $isCandidate = $user?->isCandidate() ?? false;
+        $isMember = $user !== null && $user->worksAt($jobPosting->company);
+        $isPublic = $jobPosting->isPubliclyVisible();
+        $application = $isCandidate ? $this->applicationOf($user, $jobPosting) : null;
+        $similarJobs = $isPublic ? $this->similarJobs($jobPosting) : new Collection;
+
         return view('jobs.show', [
             'jobPosting' => $jobPosting,
+            'isPublic' => $isPublic,
+            'isCandidate' => $isCandidate,
+            'isMember' => $isMember,
+            'application' => $application,
+            // The checks ApplicationPolicy::create() makes,
+            // answered from what is already loaded.
+            'canApply' => $isCandidate && $isPublic && ! $isMember && $application === null,
             'reviewSummary' => ReviewSummary::of($jobPosting->company),
             'responsivePercent' => $responsiveness->percentFor($jobPosting->company),
+            'openJobsCount' => $jobPosting->company->jobPostings()->active()->count(),
+            'similarJobs' => $similarJobs,
+            'savedJobIds' => $isCandidate ? $this->savedJobIds($user, $similarJobs) : [],
+            // Guests too: the button signs them in and brings them back.
+            // Employers and staff have no list of saved jobs.
+            'canSave' => $user === null || $isCandidate,
             // Only a publicly visible posting carries JSON-LD. A company
             // member previewing their own draft sees the same page, but
             // must not emit markup telling Google the job is live.
-            'structuredData' => $jobPosting->isPubliclyVisible()
-                ? $structuredData->toJson($jobPosting)
-                : null,
+            'structuredData' => $isPublic ? $structuredData->toJson($jobPosting) : null,
         ]);
+    }
+
+    /**
+     * The candidate's own application to this job, if they have sent
+     * one: the page then says so and links to its timeline, instead of
+     * offering an Apply button that could only end in "forbidden".
+     */
+    private function applicationOf(User $user, JobPosting $jobPosting): ?Application
+    {
+        return Application::query()
+            ->where('job_posting_id', $jobPosting->id)
+            ->where('candidate_profile_id', $user->candidateProfile->id)
+            ->first();
+    }
+
+    /**
+     * Other open jobs in the same categories, newest first. A posting
+     * with no category has nothing to be similar to, so it gets none
+     * rather than a list of whatever was posted last.
+     *
+     * @return Collection<int, JobPosting>
+     */
+    private function similarJobs(JobPosting $jobPosting): Collection
+    {
+        $categoryIds = $jobPosting->categories->modelKeys();
+
+        if ($categoryIds === []) {
+            return new Collection;
+        }
+
+        return JobPosting::query()
+            ->with('company:id,name,slug,logo_path,verified_at')
+            ->active()
+            ->whereKeyNot($jobPosting->id)
+            ->whereHas('categories', fn ($query) => $query->whereKey($categoryIds))
+            ->latest('published_at')
+            ->latest('id')
+            ->take(self::SIMILAR_COUNT)
+            ->get();
+    }
+
+    /**
+     * Which of the suggested jobs the candidate has saved, in one query.
+     *
+     * @param  Collection<int, JobPosting>  $jobPostings
+     * @return list<int>
+     */
+    private function savedJobIds(User $user, Collection $jobPostings): array
+    {
+        if ($jobPostings->isEmpty()) {
+            return [];
+        }
+
+        return $user->savedJobs()
+            ->whereIn('job_postings.id', $jobPostings->modelKeys())
+            ->pluck('job_postings.id')
+            ->all();
     }
 }

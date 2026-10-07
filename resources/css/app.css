@@ -256,6 +256,25 @@
 
 @layer base {
 
+    /* The navbar stays at the top of every page, so an anchor jumped to
+       or a field reached with Tab would otherwise land underneath it
+       (WCAG 2.4.11, focus not obscured). On a phone, a job page's Apply
+       bar covers the bottom edge the same way, and the page gets room
+       below the footer so the bar never sits on its last line. */
+    html {
+        scroll-padding-top: 5rem;
+    }
+
+    @media (width < 64rem) {
+        html:has([data-sticky-apply]) {
+            scroll-padding-bottom: 5.5rem;
+        }
+
+        body:has([data-sticky-apply]) {
+            padding-bottom: 5rem;
+        }
+    }
+
     *,
     ::after,
     ::before,
