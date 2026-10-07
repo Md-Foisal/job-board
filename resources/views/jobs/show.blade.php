@@ -97,11 +97,8 @@
                              "expired": the box beside it says what it is. --}}
                         @if ($jobPosting->isExpired())
                             <flux:badge color="red" size="sm">{{ __('Expired') }}</flux:badge>
-                        {{-- Counted from now to the closing moment: Carbon's diff is
-                             signed, and the other way round it is negative for
-                             every open posting, so the badge would never leave. --}}
-                        @elseif ($jobPosting->isOpen() && now()->diffInDays($jobPosting->expires_at) <= 3)
-                            <flux:badge color="amber" size="sm">{{ __('Expires :when', ['when' => $jobPosting->expires_at->diffForHumans()]) }}</flux:badge>
+                        @else
+                            <x-closing-soon :job-posting="$jobPosting" />
                         @endif
                     </div>
                 </div>

@@ -264,6 +264,15 @@
     fill: url(#sunset-icon);
 }
 
+/*
+ * The current tab (components/tab-nav). Flux draws its underline in a
+ * flat colour; here the label stays ink, like the current sidebar row,
+ * and the underline carries the Sunset fill.
+ */
+[data-tab-nav] [data-flux-navbar-items][data-current]::after {
+    background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+}
+
 /* The highlighted option in the command palette takes the same colour. */
 [data-palette-option][aria-selected='true'] svg[fill='none'] {
     stroke: url(#sunset-icon);

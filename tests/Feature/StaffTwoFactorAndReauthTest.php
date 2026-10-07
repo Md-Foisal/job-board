@@ -61,7 +61,7 @@ it('will not let a staff member switch two-factor off', function () {
     $this->actingAs($staff);
 
     Livewire::test('pages::settings.security')
-        ->assertDontSee('Disable 2FA')
+        ->assertDontSee('Turn off two-factor')
         ->call('disable')
         ->assertForbidden();
 

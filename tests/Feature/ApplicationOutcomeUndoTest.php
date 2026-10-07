@@ -136,8 +136,8 @@ test('the team sees the undo in the history; the candidate never sees either', f
     $this->actingAs($this->application->candidateProfile->user)
         ->get(route('candidate.applications.show', $this->application))
         ->assertOk()
-        ->assertDontSee('Rejected')
-        ->assertDontSee('marked this application as');
+        ->assertDontSee('Not selected')
+        ->assertDontSee('decided not to move forward');
 });
 
 test('an undone decision counts for nothing in the analytics', function () {

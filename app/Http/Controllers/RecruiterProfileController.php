@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\ReplaceUploadedImage;
 use App\Http\Requests\UpdateRecruiterProfileRequest;
 use App\Support\ImageUploads;
+use App\Support\Navigation\Navigation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -49,10 +50,7 @@ class RecruiterProfileController extends Controller
 
     private function frame(Request $request)
     {
-        $companies = $request->user()->activeCompanies();
-
-        return $request->filled('company')
-            ? ((clone $companies)->where('companies.slug', $request->query('company'))->first() ?? $companies->first())
-            : $companies->first();
+        return Navigation::workspaceFrom($request->user(), $request->query('company'))
+            ?? $request->user()->activeCompanies()->first();
     }
 }

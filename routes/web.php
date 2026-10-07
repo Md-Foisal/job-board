@@ -128,6 +128,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // rather than its own resource: it flips one field on the
     // application and appends an ApplicationEvent.
     Route::get('/applications/{application}', [CandidateApplicationController::class, 'show'])->name('applications.show');
+    Route::get('/applications/{application}/resume', [CandidateApplicationController::class, 'resume'])->name('applications.resume');
     Route::patch('/applications/{application}/withdraw', [CandidateApplicationController::class, 'withdraw'])->name('applications.withdraw');
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
     Route::delete('/saved-jobs/unavailable', [CandidateSavedJobController::class, 'pruneUnavailable'])->name('saved-jobs.prune');

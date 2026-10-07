@@ -1,4 +1,4 @@
-@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false, 'saved' => null, 'showCompany' => true])
+@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false, 'saved' => null, 'showCompany' => true, 'applied' => false])
 
 {{-- A <div> instead of one big <a> -- the company name below needs its own
      real link to the company profile, and nested <a> tags are invalid HTML
@@ -66,6 +66,12 @@
             </x-chip>
         @endif
         <x-chip>{{ $jobPosting->employment_type->label() }}</x-chip>
+        <x-closing-soon :job-posting="$jobPosting" />
+        @if ($applied)
+            {{-- Neutral, like the Applied step on the applications list:
+                 a fact about this job, not news. --}}
+            <flux:badge color="zinc" size="sm" icon="check">{{ __('Applied') }}</flux:badge>
+        @endif
     </div>
 
     <div class="mt-auto flex items-baseline justify-between gap-3 border-t border-line pt-3">

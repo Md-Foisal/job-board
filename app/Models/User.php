@@ -164,9 +164,12 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(JobAlert::class);
     }
 
+    /**
+     * The pivot's created_at is when the job was saved.
+     */
     public function savedJobs()
     {
-        return $this->belongsToMany(JobPosting::class, 'saved_jobs');
+        return $this->belongsToMany(JobPosting::class, 'saved_jobs')->withTimestamps();
     }
 
     /**

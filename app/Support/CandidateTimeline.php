@@ -30,6 +30,12 @@ final class CandidateTimeline
             return __('You withdrew this application');
         }
 
+        // A turn-down in the words of the email that brought it, not the
+        // company's own label for it.
+        if ($event->to_outcome_status === ApplicationOutcomeStatus::Rejected->value) {
+            return __(':company decided not to move forward with your application', ['company' => $company]);
+        }
+
         return __(':company marked this application as :outcome', [
             'company' => $company,
             'outcome' => ApplicationOutcomeStatus::tryFrom($event->to_outcome_status)?->label() ?? $event->to_outcome_status,

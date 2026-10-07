@@ -30,6 +30,6 @@
 
         <x-theme-toggle />
 
-        @include('partials.account-menu', ['withSpaces' => false])
+        @include('partials.account-menu', ['withSpaces' => false, 'settingsUrl' => route('profile.edit', ['company' => $company->slug])])
     </div>
 </header>

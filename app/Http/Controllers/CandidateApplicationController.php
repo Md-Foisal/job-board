@@ -8,19 +8,30 @@ use App\Models\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class CandidateApplicationController extends Controller
 {
+    /**
+     * Two tabs, as job trackers split them (Indeed's My jobs): Active --
+     * everything still open, the default -- and Closed. The dashboard's
+     * counts link here with ?status=, which narrows the Active tab to one
+     * step, or opens Closed; an unknown value is ignored.
+     */
     public function index(Request $request): View
     {
-        // The dashboard's counts link here with ?status=, so each number
-        // opens the applications behind it. An unknown value lists all.
+        $profileId = $request->user()->candidateProfile->id;
         $status = CandidateApplicationStatus::tryFrom((string) $request->query('status'));
+        $closed = $status === CandidateApplicationStatus::Closed;
 
         $applications = Application::query()
-            ->where('candidate_profile_id', $request->user()->candidateProfile->id)
-            ->when($status, fn ($query) => $status->scope($query))
+            ->where('candidate_profile_id', $profileId)
+            ->when(
+                $status,
+                fn ($query) => $status->scope($query),
+                fn ($query) => CandidateApplicationStatus::whereOpen($query),
+            )
             ->with('jobPosting.company')
             ->latest('created_at')
             ->latest('id')
@@ -30,6 +41,12 @@ class CandidateApplicationController extends Controller
         return view('candidate.applications.index', [
             'applications' => $applications,
             'status' => $status,
+            'closed' => $closed,
+            // An empty tab says something different to someone who has
+            // never applied than to someone whose applications are all in
+            // the other tab.
+            'hasAny' => $applications->isNotEmpty()
+                || Application::query()->where('candidate_profile_id', $profileId)->exists(),
         ]);
     }
 
@@ -50,6 +67,8 @@ class CandidateApplicationController extends Controller
 
         $application->load([
             'jobPosting.company',
+            'resumeDocument',
+            'screeningAnswers.screeningQuestion',
             // Oldest first: this reads top-to-bottom as a history. The
             // model's events() relation defaults to newest-first for
             // list contexts, so reorder() overrides it here.
@@ -59,6 +78,32 @@ class CandidateApplicationController extends Controller
         return view('candidate.applications.show', [
             'application' => $application,
         ]);
+    }
+
+    /**
+     * The CV exactly as it went with this application, for the candidate
+     * who sent it -- even after they took it out of their library, since
+     * the application keeps its own copy. Opened in the browser when it is
+     * a kind the browser draws (a PDF), downloaded otherwise.
+     */
+    public function resume(Application $application)
+    {
+        $this->authorize('view', $application);
+
+        $document = $application->resumeDocument;
+
+        abort_if($document === null, 404);
+        abort_unless(Storage::disk('local')->exists($document->file_path), 404);
+
+        if (! DocumentPreviewController::canPreview($document)) {
+            return Storage::disk('local')->download($document->file_path, $document->original_filename);
+        }
+
+        return Storage::disk('local')->response($document->file_path, $document->original_filename, [
+            'Content-Type' => DocumentPreviewController::contentType($document),
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
+        ], 'inline');
     }
 
     /**

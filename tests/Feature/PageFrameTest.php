@@ -90,6 +90,7 @@ test('every workspace page has exactly one top-level heading', function () {
         route('employer.applications.show', ['company' => $company, 'application' => $application]),
         route('employer.analytics', $company), route('employer.reviews', $company), route('employer.team.index', $company),
         route('employer.company.edit', $company), route('employer.recruiter-profile.edit', ['company' => $company->slug]),
+        route('profile.edit', ['company' => $company->slug]),
     ];
 
     foreach ([[$candidate, $candidatePages], [$owner, $companyPages]] as [$user, $pages]) {

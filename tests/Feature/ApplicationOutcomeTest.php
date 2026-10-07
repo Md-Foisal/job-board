@@ -179,13 +179,13 @@ test('a batch move leaves closed applications where they are', function () {
 test('the candidate sees the decision only once the undo window has passed', function () {
     app(ChangeApplicationOutcome::class)($this->application, employerUser($this->company, MembershipRole::Owner), ApplicationOutcomeStatus::Rejected);
     $candidate = $this->application->candidateProfile->user;
-    $line = $this->company->name.' marked this application as Rejected';
+    $line = $this->company->name.' decided not to move forward with your application';
 
     $this->actingAs($candidate)
         ->get(route('candidate.applications.show', $this->application))
         ->assertOk()
         ->assertDontSee($line)
-        ->assertSee('Active');
+        ->assertDontSee('Not selected');
 
     $this->travel(Application::UNDO_MINUTES + 1)->minutes();
 
@@ -194,8 +194,8 @@ test('the candidate sees the decision only once the undo window has passed', fun
         ->assertSee($line);
 
     $this->actingAs($candidate)
-        ->get(route('candidate.applications.index'))
-        ->assertSee('Rejected');
+        ->get(route('candidate.applications.index', ['status' => 'closed']))
+        ->assertSee('Not selected');
 });
 
 test('a turned-down or withdrawn application at New is no longer waiting on the company', function () {

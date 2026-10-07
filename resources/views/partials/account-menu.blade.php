@@ -2,12 +2,14 @@
     The account menu at the right end of every top bar: the person's photo
     (or initials), then where they can go as themselves. The public navbar
     also lists their spaces here; the company workspace leaves them out,
-    since its own switcher already does.
+    since its own switcher already does, and opens Settings inside
+    itself.
 --}}
 @php
     $menuUser = auth()->user();
     $menuAvatar = $menuUser->avatarUrl();
     $withSpaces ??= true;
+    $settingsUrl ??= route('profile.edit');
 @endphp
 
 <flux:dropdown position="bottom" align="end">
@@ -46,7 +48,7 @@
             </flux:menu.item>
         @endif
 
-        <flux:menu.item :href="route('profile.edit')" icon="cog-6-tooth" wire:navigate>
+        <flux:menu.item :href="$settingsUrl" icon="cog-6-tooth" wire:navigate>
             {{ __('Settings') }}
         </flux:menu.item>
 

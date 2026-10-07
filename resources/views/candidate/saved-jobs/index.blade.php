@@ -28,7 +28,7 @@
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($jobPostings as $jobPosting)
-                    <x-job-card :job-posting="$jobPosting" :show-save-button="true" />
+                    <x-job-card :job-posting="$jobPosting" :show-save-button="true" :saved="true" :applied="in_array($jobPosting->id, $appliedIds, true)" />
                 @endforeach
             </div>
         @endif

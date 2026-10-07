@@ -11,7 +11,10 @@
         </p>
         <p>
             We also record which job postings you open while signed in, so your
-            dashboard can show you what you were last looking at.
+            dashboard can show you what you were last looking at, and the jobs
+            you save, with when you saved them, so your saved list can put the
+            latest first. A search you keep as a job alert is stored with how
+            often you want its email.
         </p>
         <p>
             Whenever anyone opens a job posting, signed in or not, we add one to

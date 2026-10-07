@@ -203,8 +203,6 @@ new class extends Component
 
 <div>
     @if ($this->review !== null || $this->canWrite)
-        <flux:separator variant="subtle" class="my-8" />
-
         <x-card>
             @if ($this->review === null)
                 <div class="flex flex-wrap items-center justify-between gap-4">

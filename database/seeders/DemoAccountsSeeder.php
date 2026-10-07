@@ -165,7 +165,11 @@ class DemoAccountsSeeder extends Seeder
             }
         }
 
-        $candidate->savedJobs()->attach($postings->slice(3, 2)->pluck('id'));
+        // Saved a day apart, so the saved list has an order to show.
+        $postings->slice(3, 2)->values()->each(fn (JobPosting $posting, int $index) => $candidate->savedJobs()->attach($posting->id, [
+            'created_at' => now()->subDays($index + 1),
+            'updated_at' => now()->subDays($index + 1),
+        ]));
 
         $postings->slice(5, 3)->values()->each(fn (JobPosting $posting, int $hoursAgo) => JobView::create([
             'user_id' => $candidate->id,

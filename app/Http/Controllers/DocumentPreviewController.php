@@ -29,6 +29,15 @@ class DocumentPreviewController extends Controller
         return array_key_exists(self::extension($document), self::TYPES);
     }
 
+    /**
+     * The type the file is served as, from our own list; null for a kind
+     * that is downloaded instead.
+     */
+    public static function contentType(Document $document): ?string
+    {
+        return self::TYPES[self::extension($document)] ?? null;
+    }
+
     public static function isImage(Document $document): bool
     {
         return str_starts_with(self::TYPES[self::extension($document)] ?? '', 'image/');

@@ -48,14 +48,8 @@ enum CandidateApplicationStatus: string
      */
     public function scope(Builder $query): Builder
     {
-        $openForCandidate = fn (Builder $query) => $query
-            ->where('outcome_status', ApplicationOutcomeStatus::Active)
-            ->orWhere(fn (Builder $query) => $query
-                ->whereIn('outcome_status', [ApplicationOutcomeStatus::Hired, ApplicationOutcomeStatus::Rejected])
-                ->where('decided_at', '>', now()->subMinutes(Application::UNDO_MINUTES)));
-
         if ($this === self::Closed) {
-            return $query->whereNot($openForCandidate);
+            return $query->whereNot(fn (Builder $query) => self::whereOpen($query));
         }
 
         $stages = match ($this) {
@@ -64,6 +58,20 @@ enum CandidateApplicationStatus: string
             self::Offer => [ApplicationStage::Offer],
         };
 
-        return $query->where($openForCandidate)->whereIn('stage', $stages);
+        return self::whereOpen($query)->whereIn('stage', $stages);
+    }
+
+    /**
+     * Applied, In review and Offer together: every application still
+     * open as far as the candidate knows, which is the first tab of
+     * their applications list.
+     */
+    public static function whereOpen(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $query) => $query
+            ->where('outcome_status', ApplicationOutcomeStatus::Active)
+            ->orWhere(fn (Builder $query) => $query
+                ->whereIn('outcome_status', [ApplicationOutcomeStatus::Hired, ApplicationOutcomeStatus::Rejected])
+                ->where('decided_at', '>', now()->subMinutes(Application::UNDO_MINUTES))));
     }
 }

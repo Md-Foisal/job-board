@@ -15,6 +15,11 @@ use App\Models\User;
 final class Navigation
 {
     /**
+     * The tabs of the settings page, under which its entry is current.
+     */
+    public const SETTINGS_ROUTES = ['profile.edit', 'security.edit', 'appearance.edit'];
+
+    /**
      * The person's own side: the candidate pages when they have a
      * candidate profile, and their account in every case.
      *
@@ -59,7 +64,7 @@ final class Navigation
         }
 
         $sections[] = new NavSection(__('Account'), [
-            new NavItem(__('Settings'), 'cog-6-tooth', route('profile.edit'), ['profile.edit', 'security.edit', 'appearance.edit']),
+            new NavItem(__('Settings'), 'cog-6-tooth', route('profile.edit'), self::SETTINGS_ROUTES),
         ]);
 
         return $sections;
@@ -107,10 +112,23 @@ final class Navigation
         // was opened from along, so it keeps this company in view.
         $sections[] = new NavSection(__('You'), [
             new NavItem(__('Recruiter profile'), 'identification', route('employer.recruiter-profile.edit', ['company' => $company->slug]), ['employer.recruiter-profile.*']),
-            new NavItem(__('Settings'), 'cog-6-tooth', route('profile.edit')),
+            new NavItem(__('Settings'), 'cog-6-tooth', route('profile.edit', ['company' => $company->slug]), self::SETTINGS_ROUTES),
         ]);
 
         return $sections;
+    }
+
+    /**
+     * The company whose workspace a page about the person themselves --
+     * their settings, their recruiter profile -- was opened from, named
+     * by ?company= in its address. Only one where they are an active
+     * member; anything else is null, never someone else's workspace.
+     */
+    public static function workspaceFrom(User $user, mixed $slug): ?Company
+    {
+        return is_string($slug) && $slug !== ''
+            ? $user->activeCompanies()->where('companies.slug', $slug)->first()
+            : null;
     }
 
     /**

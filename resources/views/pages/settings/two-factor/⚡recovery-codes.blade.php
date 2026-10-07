@@ -54,10 +54,10 @@ new class extends Component {
     <div class="px-6 space-y-2">
         <div class="flex items-center gap-2">
             <flux:icon.lock-closed variant="outline" class="size-4"/>
-            <flux:heading size="lg" level="3">{{ __('2FA recovery codes') }}</flux:heading>
+            <flux:heading size="lg" level="3">{{ __('Recovery codes') }}</flux:heading>
         </div>
         <flux:text variant="subtle">
-            {{ __('Recovery codes let you regain access if you lose your 2FA device. Store them in a secure password manager.') }}
+            {{ __('If you lose your phone, each code lets you sign in once without it. Keep them somewhere safe, such as a password manager.') }}
         </flux:text>
     </div>
 

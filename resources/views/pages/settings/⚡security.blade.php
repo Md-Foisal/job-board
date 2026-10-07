@@ -7,12 +7,20 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new #[Title('Security settings')] class extends Component {
+new #[Layout('layouts::settings')] #[Title('Security settings')] class extends Component {
     use PasswordValidationRules;
+
+    /**
+     * The company workspace these settings were opened from, if any.
+     */
+    #[Url(as: 'company')]
+    public ?string $workspace = null;
 
     public string $current_password = '';
     public string $password = '';
@@ -92,10 +100,10 @@ new #[Title('Security settings')] class extends Component {
 <x-page width="narrow">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
+    <x-pages::settings.layout current="security" :workspace="$workspace">
+        <x-card as="form" method="POST" wire:submit="updatePassword" class="space-y-6">
+            <flux:heading size="lg" level="2">{{ __('Password') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')">
-        <x-card as="form" method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
                 :label="__('Current password')"
@@ -122,60 +130,65 @@ new #[Title('Security settings')] class extends Component {
         </x-card>
 
         @if ($canManageTwoFactor)
-            <section class="mt-10">
-                <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
+            <x-card as="section" aria-labelledby="two-factor-heading" class="flex flex-col gap-4 text-sm" wire:cloak>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <flux:heading size="lg" level="2" id="two-factor-heading">{{ __('Two-factor authentication') }}</flux:heading>
+                    @if ($twoFactorEnabled)
+                        <flux:badge color="green" size="sm">{{ __('On') }}</flux:badge>
+                    @else
+                        <flux:badge color="zinc" size="sm">{{ __('Off') }}</flux:badge>
+                    @endif
+                </div>
 
                 @if (auth()->user()->isStaff() && ! $twoFactorEnabled)
-                    <flux:callout variant="warning" icon="shield-exclamation" class="mt-4">
+                    <flux:callout variant="warning" icon="shield-exclamation">
                         <flux:callout.heading>{{ __('Required for staff accounts') }}</flux:callout.heading>
                         <flux:callout.text>{{ __('Your account can take moderation actions, so the admin panel stays closed until two-factor authentication is set up.') }}</flux:callout.text>
                     </flux:callout>
                 @endif
 
-                <x-card class="mt-4 flex w-full flex-col space-y-6 text-sm" wire:cloak>
-                    @if ($twoFactorEnabled)
-                        <div class="space-y-4">
+                @if ($twoFactorEnabled)
+                    <div class="space-y-4">
+                        <flux:text>
+                            {{ __('When you sign in, we ask for a code from the authenticator app on your phone as well as your password.') }}
+                        </flux:text>
+
+                        @if (auth()->user()->isStaff())
                             <flux:text>
-                                {{ __('You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.') }}
+                                {{ __('Two-factor authentication cannot be switched off on a staff account.') }}
                             </flux:text>
-
-                            @if (auth()->user()->isStaff())
-                                <flux:text>
-                                    {{ __('Two-factor authentication cannot be switched off on a staff account.') }}
-                                </flux:text>
-                            @else
-                                <div class="flex justify-start">
-                                    <flux:button
-                                        variant="danger"
-                                        wire:click="disable"
-                                    >
-                                        {{ __('Disable 2FA') }}
-                                    </flux:button>
-                                </div>
-                            @endif
-
-                            <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
-                        </div>
-                    @else
-                        <div class="space-y-4">
-                            <flux:text variant="subtle">
-                                {{ __('When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.') }}
-                            </flux:text>
-
-                            <flux:modal.trigger name="two-factor-setup-modal">
+                        @else
+                            <div class="flex justify-start">
                                 <flux:button
-                                    variant="primary"
-                                    wire:click="$dispatch('start-two-factor-setup')"
+                                    variant="danger"
+                                    wire:click="disable"
                                 >
-                                    {{ __('Enable 2FA') }}
+                                    {{ __('Turn off two-factor') }}
                                 </flux:button>
-                            </flux:modal.trigger>
+                            </div>
+                        @endif
 
-                            <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$requiresConfirmation" />
-                        </div>
-                    @endif
-                </x-card>
-            </section>
+                        <livewire:pages::settings.two-factor.recovery-codes :$requiresConfirmation />
+                    </div>
+                @else
+                    <div class="space-y-4">
+                        <flux:text>
+                            {{ __('Add a second step to signing in: a code from an authenticator app on your phone, such as Google Authenticator or 1Password. Someone who learns your password still cannot get in.') }}
+                        </flux:text>
+
+                        <flux:modal.trigger name="two-factor-setup-modal">
+                            <flux:button
+                                variant="primary"
+                                wire:click="$dispatch('start-two-factor-setup')"
+                            >
+                                {{ __('Set up two-factor') }}
+                            </flux:button>
+                        </flux:modal.trigger>
+
+                        <livewire:pages::settings.two-factor-setup-modal :requires-confirmation="$requiresConfirmation" />
+                    </div>
+                @endif
+            </x-card>
         @endif
     </x-pages::settings.layout>
 </x-page>

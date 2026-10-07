@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\ApplicationOutcomeStatus;
 use App\Models\Application;
 use App\Models\JobPosting;
 
@@ -31,7 +30,7 @@ test('candidate sees their own applications', function () {
 
     $response->assertOk();
     $response->assertSee('Senior Laravel Developer');
-    $response->assertSee(ApplicationOutcomeStatus::Active->label());
+    $response->assertSee('Applied');
 });
 
 test('candidate does not see another candidate\'s applications', function () {

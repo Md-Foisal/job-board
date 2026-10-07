@@ -7,11 +7,20 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new #[Title('Account settings')] class extends Component {
+new #[Layout('layouts::settings')] #[Title('Account settings')] class extends Component {
     use ProfileValidationRules;
+
+    /**
+     * The company workspace these settings were opened from, if any;
+     * kept in the address so the tabs stay in its frame.
+     */
+    #[Url(as: 'company')]
+    public ?string $workspace = null;
 
     public string $name = '';
     public string $email = '';
@@ -115,10 +124,10 @@ new #[Title('Account settings')] class extends Component {
 <x-page width="narrow">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Account settings') }}</flux:heading>
+    <x-pages::settings.layout current="account" :workspace="$workspace">
+        <x-card as="form" wire:submit="updateProfileInformation" class="space-y-6">
+            <flux:heading size="lg" level="2">{{ __('Name and email') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Account')">
-        <x-card as="form" wire:submit="updateProfileInformation" class="mt-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
             <div>
@@ -145,7 +154,9 @@ new #[Title('Account settings')] class extends Component {
             </div>
         </x-card>
 
-        <x-card as="form" wire:submit="updateTimezone" class="mt-6 w-full space-y-6">
+        <x-card as="form" wire:submit="updateTimezone" class="space-y-6">
+            <flux:heading size="lg" level="2">{{ __('Dates and times') }}</flux:heading>
+
             <flux:select
                 wire:model="timezone"
                 :label="__('Time zone')"
