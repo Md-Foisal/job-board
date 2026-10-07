@@ -79,7 +79,6 @@ test('password can be updated', function () {
     $response = Livewire::test('pages::settings.security')
         ->set('current_password', 'password')
         ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
         ->call('updatePassword');
 
     $response->assertHasNoErrors();
@@ -97,7 +96,6 @@ test('correct password must be provided to update password', function () {
     $response = Livewire::test('pages::settings.security')
         ->set('current_password', 'wrong-password')
         ->set('password', 'new-password')
-        ->set('password_confirmation', 'new-password')
         ->call('updatePassword');
 
     $response->assertHasErrors(['current_password']);

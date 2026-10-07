@@ -7,6 +7,7 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Enums\AccountStatus;
 use App\Http\Controllers\AccountRestoreController;
 use App\Http\Middleware\EnsureAccountIsActive;
+use App\Http\Responses\PasswordResetLinkResponse;
 use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -18,7 +19,9 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -29,6 +32,11 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->bindRegisterResponse();
+
+        // Fortify passes the broker's status to these; the shared answer
+        // ignores it on purpose (see PasswordResetLinkResponse).
+        $this->app->bind(SuccessfulPasswordResetLinkRequestResponse::class, fn () => new PasswordResetLinkResponse);
+        $this->app->bind(FailedPasswordResetLinkRequestResponse::class, fn () => new PasswordResetLinkResponse);
 
         $this->app->bind(DisableTwoFactorAuthentication::class, \App\Actions\Fortify\DisableTwoFactorAuthentication::class);
         $this->app->bind(EnableTwoFactorAuthentication::class, \App\Actions\Fortify\EnableTwoFactorAuthentication::class);

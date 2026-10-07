@@ -1,17 +1,13 @@
 <x-layouts::auth :title="__('Invitation')">
     <div class="flex flex-col gap-6 text-center">
-        <div class="flex flex-col gap-2">
-            <flux:heading size="lg" class="font-display">
-                {{ __('Join :company', ['company' => $invitation->company->name]) }}
-            </flux:heading>
-            <flux:text>
-                {{ __(':inviter invited :email to join as a :role.', [
-                    'inviter' => $invitation->invitedBy?->name ?? $invitation->company->name,
-                    'email' => $invitation->email,
-                    'role' => \Illuminate\Support\Str::lower($invitation->role->label()),
-                ]) }}
-            </flux:text>
-        </div>
+        <x-auth-header
+            :title="__('Join :company', ['company' => $invitation->company->name])"
+            :description="__(':inviter invited :email to join as a :role.', [
+                'inviter' => $invitation->invitedBy?->name ?? $invitation->company->name,
+                'email' => $invitation->email,
+                'role' => \Illuminate\Support\Str::lower($invitation->role->label()),
+            ])"
+        />
 
         @guest
             {{-- Most people following an invitation have never used the
@@ -21,7 +17,7 @@
 
             <form method="POST" action="{{ route('invitations.accept', $invitation->token) }}">
                 @csrf
-                <flux:button variant="primary" type="submit" class="w-full">{{ __('Continue') }}</flux:button>
+                <flux:button variant="primary" type="submit" class="btn-sunset w-full">{{ __('Continue') }}</flux:button>
             </form>
         @endguest
 
@@ -29,7 +25,7 @@
             @if ($addressMatches)
                 <form method="POST" action="{{ route('invitations.accept', $invitation->token) }}">
                     @csrf
-                    <flux:button variant="primary" type="submit" class="w-full">
+                    <flux:button variant="primary" type="submit" class="btn-sunset w-full">
                         {{ __('Accept invitation') }}
                     </flux:button>
                 </form>

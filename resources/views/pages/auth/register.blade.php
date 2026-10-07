@@ -6,90 +6,83 @@
     $role = old('role', request()->query('as') === 'employer' ? 'employer' : 'candidate');
 @endphp
 
-<x-layouts::auth :title="__('Register')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Create your account')" :description="__('You can add the other side to the same account later.')" />
+<x-layouts::auth :title="__('Create an account')">
+    <x-auth-header :title="__('Create your account')" />
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+    <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
-            @csrf
-            <flux:radio.group name="role" :label="__('I want to')" variant="cards" class="grid grid-cols-2">
-                <flux:radio value="candidate" :checked="$role === 'candidate'">
-                    <flux:radio.indicator />
-                    <div class="flex flex-col items-center gap-1.5 text-center">
-                        <flux:icon.magnifying-glass class="size-6 text-ink" />
-                        <flux:heading>{{ __('Find a job') }}</flux:heading>
-                        <flux:text size="sm">{{ __('Build a profile and apply') }}</flux:text>
-                    </div>
-                </flux:radio>
-                <flux:radio value="employer" :checked="$role === 'employer'">
-                    <flux:radio.indicator />
-                    <div class="flex flex-col items-center gap-1.5 text-center">
-                        <flux:icon.building-office-2 class="size-6 text-ink" />
-                        <flux:heading>{{ __('Hire') }}</flux:heading>
-                        <flux:text size="sm">{{ __('Post jobs and review applicants') }}</flux:text>
-                    </div>
-                </flux:radio>
-            </flux:radio.group>
+    <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
+        @csrf
 
-            <!-- Name -->
-            <flux:input
-                name="name"
-                :label="__('Name')"
-                :value="old('name')"
-                type="text"
-                required
-                autofocus
-                autocomplete="name"
-                :placeholder="__('Full name')"
-            />
+        <flux:radio.group
+            name="role"
+            :label="__('I want to')"
+            :description="__('You can add the other one later, on the same account.')"
+            variant="cards"
+            class="grid grid-cols-2"
+        >
+            <flux:radio value="candidate" :checked="$role === 'candidate'">
+                <flux:radio.indicator />
+                <div class="flex flex-col items-center gap-1.5 text-center">
+                    <flux:icon.magnifying-glass class="size-6 icon-sunset" />
+                    <flux:heading>{{ __('Find a job') }}</flux:heading>
+                    <flux:text size="sm">{{ __('Build a profile and apply') }}</flux:text>
+                </div>
+            </flux:radio>
+            <flux:radio value="employer" :checked="$role === 'employer'">
+                <flux:radio.indicator />
+                <div class="flex flex-col items-center gap-1.5 text-center">
+                    <flux:icon.building-office-2 class="size-6 icon-sunset" />
+                    <flux:heading>{{ __('Hire') }}</flux:heading>
+                    <flux:text size="sm">{{ __('Post jobs and review applicants') }}</flux:text>
+                </div>
+            </flux:radio>
+        </flux:radio.group>
 
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+        <flux:input
+            name="name"
+            :label="__('Full name')"
+            :value="old('name')"
+            type="text"
+            required
+            autocomplete="name"
+        />
 
-            <!-- Password -->
-            <flux:input
-                name="password"
-                :label="__('Password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Password')"
-                viewable
-            />
+        <flux:input
+            name="email"
+            :label="__('Email address')"
+            :value="old('email')"
+            type="email"
+            required
+            autocomplete="email"
+        />
 
-            <!-- Confirm Password -->
-            <flux:input
-                name="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Confirm password')"
-                viewable
-            />
+        <flux:input
+            name="password"
+            :label="__('Create a password')"
+            :description="\App\Support\PasswordPolicy::hint()"
+            type="password"
+            required
+            autocomplete="new-password"
+            viewable
+        />
 
+        <div class="flex flex-col gap-3">
+            <flux:button type="submit" variant="primary" class="btn-sunset w-full" data-test="register-user-button">
+                {{ __('Create account') }}
+            </flux:button>
 
-            <div class="flex items-center justify-end">
-                <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                    {{ __('Create account') }}
-                </flux:button>
-            </div>
-        </form>
-
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-ink-muted">
-            <span>{{ __('Already have an account?') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+            <p class="text-center text-meta text-ink-muted">
+                {{ __('By creating an account, you agree to our') }}
+                <a href="{{ route('terms') }}" class="text-sunset-small hover:underline">{{ __('Terms') }}</a>
+                {{ __('and') }}
+                <a href="{{ route('privacy') }}" class="text-sunset-small hover:underline">{{ __('Privacy Policy') }}</a>.
+            </p>
         </div>
-    </div>
+    </form>
+
+    <x-slot:footer>
+        {{ __('Already have an account?') }}
+        <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+    </x-slot:footer>
 </x-layouts::auth>

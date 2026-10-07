@@ -12,6 +12,7 @@ use App\Observers\FlushPublicCache;
 use App\Services\MatchScoreCalculator;
 use App\Support\DateFormat;
 use App\Support\LocalTime;
+use App\Support\PasswordPolicy;
 use Carbon\CarbonImmutable;
 use Filament\Schemas\Schema;
 use Filament\Support\Facades\FilamentTimezone;
@@ -96,14 +97,6 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
-        Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
-            : null,
-        );
+        Password::defaults(fn (): Password => PasswordPolicy::rule());
     }
 }

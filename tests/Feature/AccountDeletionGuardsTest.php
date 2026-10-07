@@ -62,7 +62,6 @@ test('registering with a taken address says signing in may bring a deleted accou
         'name' => 'Sakib',
         'email' => 'sakib@example.com',
         'password' => 'password-123-Strong!',
-        'password_confirmation' => 'password-123-Strong!',
         'role' => 'candidate',
     ])->assertSessionHasErrors([
         'email' => 'An account already uses this email. If it is yours — even one you deleted in the last '.User::DELETION_GRACE_DAYS.' days — sign in instead.',

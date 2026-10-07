@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\PasswordPolicy;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -18,7 +19,6 @@ test('new users can register', function () {
         'name' => 'John Doe',
         'email' => 'test@example.com',
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'candidate',
     ]);
 
@@ -33,7 +33,6 @@ test('registering as a candidate creates an empty candidate profile', function (
         'name' => 'Jane Candidate',
         'email' => 'jane@example.com',
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'candidate',
     ]);
 
@@ -47,11 +46,19 @@ test('registering as an employer does not create a candidate profile', function 
         'name' => 'John Employer',
         'email' => 'john@example.com',
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'employer',
     ]);
 
     $user = User::where('email', 'john@example.com')->firstOrFail();
 
     expect($user->candidateProfile)->toBeNull();
+});
+
+test('the password is typed once, with what it needs said before the first attempt', function () {
+    $this->get(route('register'))
+        ->assertOk()
+        ->assertSee(PasswordPolicy::hint())
+        ->assertDontSeeHtml('name="password_confirmation"')
+        ->assertSee(route('terms'), false)
+        ->assertSee(route('privacy'), false);
 });
