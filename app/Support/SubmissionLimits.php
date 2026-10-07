@@ -31,6 +31,9 @@ use Illuminate\Support\Facades\RateLimiter;
  *   an address the company typed in. GitHub caps organisation invitations
  *   at fifty a day for the same reason: without it, a company set up a
  *   minute ago could use our mail server to write to anyone.
+ * - Contact messages are keyed by IP address, since most come from people
+ *   who cannot sign in. Each one mails every staff member, and five an
+ *   hour is more than anyone with one problem needs.
  * - Company review saves are counted per candidate, edits included: a
  *   review that enters the moderation queue mails every staff member, and
  *   deleting and rewriting one would otherwise do that without end. Ten
@@ -47,6 +50,8 @@ final class SubmissionLimits
     public const INVITATIONS_PER_DAY = 50;
 
     public const REVIEW_SAVES_PER_DAY = 10;
+
+    public const CONTACT_MESSAGES_PER_HOUR = 5;
 
     /**
      * Per company, since any of its owners and managers can answer. Each
@@ -73,6 +78,11 @@ final class SubmissionLimits
     public static function invitationKey(Company $company): string
     {
         return 'invitations:'.$company->id;
+    }
+
+    public static function contactMessageKey(string $ip): string
+    {
+        return 'contact-messages:'.$ip;
     }
 
     public static function reviewSaveKey(User $candidate): string

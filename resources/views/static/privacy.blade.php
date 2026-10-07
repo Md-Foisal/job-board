@@ -197,11 +197,29 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Writing to us">
+        <p>
+            When you write to us through the
+            <a href="{{ route('contact') }}" class="font-medium text-sunset-small hover:underline">contact page</a>,
+            we keep your name, email address, the topic and your message, our
+            reply, and which account you were signed in to, if any. Only our
+            staff can read them, and we use them to answer you and for nothing
+            else. We keep a message for {{ \App\Models\ContactMessage::KEPT_AFTER_CLOSING_MONTHS }} months after we close it, in case
+            you write back about it, and then delete it. Erasing your account
+            deletes your messages straight away.
+        </p>
+        <p>
+            To ask what we hold about you, or to have it corrected or erased,
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="What we do not do">
         <p>
             We do not sell your data, and we do not share it with advertisers.
             Email from us is limited to what the service needs: account and
-            verification mail, and updates about applications you filed or received.
+            verification mail, updates about applications you filed or received,
+            and answers to messages you send us.
         </p>
     </x-prose-section>
 </x-static-page>

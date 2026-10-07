@@ -11,7 +11,9 @@
     (413 is refused before a session starts; 500 and 503 are the app
     itself failing).
 
-    The slot holds the actions; the first one is the main way on.
+    The slot holds the actions; the first one is the main way on. Under
+    them, the contact page, for when none of them helps -- except while
+    the site is down for maintenance, when the form could not be sent.
 --}}
 @props([
     'code',
@@ -19,6 +21,7 @@
     'message',
     'icon' => 'exclamation-triangle',
     'shell' => 'site',
+    'contact' => true,
 ])
 
 @if ($shell === 'site')
@@ -28,6 +31,12 @@
             <h1 class="mt-6 text-balance text-heading text-ink sm:text-title">{{ $heading }}</h1>
             <p class="mt-3 max-w-md text-body text-ink-muted">{{ $message }}</p>
             <div class="mt-8 flex flex-wrap items-center justify-center gap-3">{{ $slot }}</div>
+            @if ($contact)
+                <p class="mt-6 text-sm text-ink-muted">
+                    {{ __('Still stuck?') }}
+                    <a href="{{ route('contact') }}" class="font-medium text-sunset-small hover:underline">{{ __('Contact us') }}</a>
+                </p>
+            @endif
             <p class="mt-10 font-mono text-meta text-ink-muted">{{ __('Error :code', ['code' => $code]) }}</p>
         </section>
     </x-layouts::guest>
@@ -52,6 +61,12 @@
             <h1 class="mt-6 max-w-xl text-balance text-heading text-ink sm:text-title">{{ $heading }}</h1>
             <p class="mt-3 max-w-md text-body text-ink-muted">{{ $message }}</p>
             <div class="mt-8 flex flex-wrap items-center justify-center gap-3">{{ $slot }}</div>
+            @if ($contact)
+                <p class="mt-6 text-sm text-ink-muted">
+                    {{ __('Still stuck?') }}
+                    <a href="{{ route('contact') }}" class="font-medium text-sunset-small hover:underline">{{ __('Contact us') }}</a>
+                </p>
+            @endif
             <p class="mt-10 font-mono text-meta text-ink-muted">{{ __('Error :code', ['code' => $code]) }}</p>
         </main>
 

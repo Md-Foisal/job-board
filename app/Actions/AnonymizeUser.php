@@ -7,6 +7,7 @@ use App\Enums\InvitationStatus;
 use App\Enums\MembershipStatus;
 use App\Models\ApplicationNote;
 use App\Models\CompanyReview;
+use App\Models\ContactMessage;
 use App\Models\Invitation;
 use App\Models\JobView;
 use App\Models\ScreeningAnswer;
@@ -25,7 +26,7 @@ use Illuminate\Support\Str;
  * experience, every uploaded file, cover letters, screening answers, the
  * notes employers wrote about them, their reviews of companies (with the
  * companies' answers to them), alerts, saved jobs, viewing history,
- * sessions and reset tokens.
+ * messages sent through the contact page, sessions and reset tokens.
  *
  * What stays: the rows other records point to, emptied -- the user row as
  * "Deleted user", the candidate profile, the applications with their
@@ -121,6 +122,10 @@ class AnonymizeUser
             $user->jobAlerts()->delete();
             $user->savedJobs()->detach();
             JobView::where('user_id', $user->id)->delete();
+
+            // Signed in or not when they wrote: a message carries the
+            // address it came from either way.
+            ContactMessage::where('user_id', $user->id)->orWhere('email', $originalEmail)->delete();
 
             $anonymousEmail = "deleted-{$user->id}@anonymized.invalid";
 

@@ -62,6 +62,7 @@
                 <a href="{{ route('about') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('About') }}</a>
                 <a href="{{ route('privacy') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Privacy') }}</a>
                 <a href="{{ route('terms') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Terms') }}</a>
+                <a href="{{ route('contact') }}" class="w-fit text-ink-muted transition-colors hover:text-ink" wire:navigate>{{ __('Contact') }}</a>
             </nav>
         </div>
 

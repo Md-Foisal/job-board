@@ -8,6 +8,7 @@ use App\Http\Controllers\CandidatePreferenceController;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
@@ -29,6 +30,11 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::view('/about', 'static.about')->name('about');
 Route::view('/privacy', 'static.privacy')->name('privacy');
 Route::view('/terms', 'static.terms')->name('terms');
+
+// Open to everyone, signed in or not: the people who most need it are
+// often the ones who cannot sign in.
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 // The hiring side's front door, linked from the navbar and footer as
 // "For employers". A view like the pages above: the one decision on it,
