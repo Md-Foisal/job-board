@@ -40,6 +40,16 @@ class CandidateProfile extends Model
         return $this->hasMany(ExperienceRecord::class);
     }
 
+    public function projects()
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    public function certifications()
+    {
+        return $this->hasMany(Certification::class);
+    }
+
     public function documents()
     {
         return $this->hasMany(Document::class);

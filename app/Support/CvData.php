@@ -4,8 +4,10 @@ namespace App\Support;
 
 use App\Enums\ProficiencyLevel;
 use App\Models\CandidateProfile;
+use App\Models\Certification;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
+use App\Models\Project;
 use App\Models\Skill;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +25,9 @@ use Illuminate\Support\Str;
  * - Skills: names only, strongest first, then by name. A self-assessed
  *   level cannot be checked by a reader, so the order carries it instead
  *   of a label.
+ * - Projects: ongoing and newest first, each with its live and code
+ *   links printed as text as well as linked.
+ * - Certifications: newest first; one past its expiry says so.
  * - Contact: name, email, phone, location and links are all in the body
  *   of the page, since applicant tracking systems often skip headers and
  *   footers.
@@ -45,6 +50,8 @@ final class CvData
      * @param  array<int, array{id: int, title: string, company: string, dates: string, description: ?string}>  $experience
      * @param  array<int, array{title: string, institution: string, dates: string}>  $education
      * @param  array<int, string>  $skills
+     * @param  array<int, array{name: string, dates: ?string, description: ?string, links: array<int, array{label: string, url: ?string, text: string}>}>  $projects
+     * @param  array<int, array{name: string, issuer: string, dates: ?string, credentialId: ?string, link: ?array{label: string, url: ?string, text: string}}>  $certifications
      */
     public function __construct(
         public readonly string $name,
@@ -58,6 +65,8 @@ final class CvData
         public readonly array $experience,
         public readonly array $education,
         public readonly array $skills,
+        public readonly array $projects = [],
+        public readonly array $certifications = [],
     ) {}
 
     public static function fromProfile(CandidateProfile $profile): self
@@ -109,16 +118,50 @@ final class CvData
                 ->pluck('name')
                 ->values()
                 ->all(),
+            projects: $profile->projects()->get()
+                ->sortBy([
+                    fn (Project $a, Project $b) => ($a->end_date !== null) <=> ($b->end_date !== null),
+                    fn (Project $a, Project $b) => $b->end_date <=> $a->end_date,
+                    fn (Project $a, Project $b) => $b->start_date <=> $a->start_date,
+                    fn (Project $a, Project $b) => $b->id <=> $a->id,
+                ])
+                ->map(fn (Project $project) => [
+                    'name' => $project->name,
+                    'dates' => $project->start_date ? self::dates($project->start_date, $project->end_date) : null,
+                    'description' => filled(strip_tags((string) $project->description)) ? $project->description : null,
+                    'links' => collect(['Live' => $project->url, 'Code' => $project->source_url])
+                        ->filter()
+                        ->map(fn (string $url, string $label) => self::link($label, $url))
+                        ->values()
+                        ->all(),
+                ])
+                ->values()
+                ->all(),
+            certifications: $profile->certifications()->get()
+                ->sortBy([
+                    fn (Certification $a, Certification $b) => $b->issued_on <=> $a->issued_on,
+                    fn (Certification $a, Certification $b) => $b->id <=> $a->id,
+                ])
+                ->map(fn (Certification $certification) => [
+                    'name' => $certification->name,
+                    'issuer' => $certification->issuer,
+                    'dates' => self::certificationDates($certification),
+                    'credentialId' => self::filledOrNull($certification->credential_id),
+                    'link' => $certification->credential_url ? self::link(__('Credential'), $certification->credential_url) : null,
+                ])
+                ->values()
+                ->all(),
         );
     }
 
     /**
      * A CV needs something beyond the contact lines to be worth building:
-     * at least one role, course or skill.
+     * at least one role, course, skill, project or certification.
      */
     public function hasContent(): bool
     {
-        return $this->experience !== [] || $this->education !== [] || $this->skills !== [];
+        return $this->experience !== [] || $this->education !== [] || $this->skills !== []
+            || $this->projects !== [] || $this->certifications !== [];
     }
 
     /**
@@ -173,6 +216,8 @@ final class CvData
             'Experience' => collect($this->experience)->flatMap(fn (array $role) => [$role['title'], $role['company'], strip_tags((string) $role['description'])])->all(),
             'Education' => collect($this->education)->flatMap(fn (array $course) => [$course['title'], $course['institution']])->all(),
             'Skills' => $this->skills,
+            'Projects' => collect($this->projects)->flatMap(fn (array $project) => [$project['name'], strip_tags((string) $project['description'])])->all(),
+            'Certifications' => collect($this->certifications)->flatMap(fn (array $certification) => [$certification['name'], $certification['issuer']])->all(),
         ];
 
         return collect($parts)
@@ -196,15 +241,41 @@ final class CvData
             'Portfolio' => $profile->portfolio_url,
         ])
             ->filter()
-            ->map(fn (string $url, string $label) => [
-                'label' => $label,
-                'url' => preg_match('#^https?://#i', $url) === 1 ? $url : null,
-                // Printed as well as linked: a parser reading the text,
-                // and a reader holding paper, both need the address itself.
-                'text' => rtrim(preg_replace('#^https?://(www\.)?#i', '', $url) ?? $url, '/'),
-            ])
+            ->map(fn (string $url, string $label) => self::link($label, $url))
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array{label: string, url: ?string, text: string}
+     */
+    private static function link(string $label, string $url): array
+    {
+        return [
+            'label' => $label,
+            'url' => preg_match('#^https?://#i', $url) === 1 ? $url : null,
+            // Printed as well as linked: a parser reading the text, and a
+            // reader holding paper, both need the address itself.
+            'text' => rtrim(preg_replace('#^https?://(www\.)?#i', '', $url) ?? $url, '/'),
+        ];
+    }
+
+    /**
+     * "Issued Mar 2024 · Expires Mar 2027", "Expired Jan 2025", or null
+     * when neither date was given.
+     */
+    private static function certificationDates(Certification $certification): ?string
+    {
+        $parts = array_filter([
+            $certification->issued_on ? __('Issued :date', ['date' => $certification->issued_on->format(DateFormat::MONTH)]) : null,
+            match (true) {
+                $certification->expires_on === null => null,
+                $certification->hasExpired() => __('Expired :date', ['date' => $certification->expires_on->format(DateFormat::MONTH)]),
+                default => __('Expires :date', ['date' => $certification->expires_on->format(DateFormat::MONTH)]),
+            },
+        ]);
+
+        return $parts === [] ? null : implode(' · ', $parts);
     }
 
     private static function dates(?CarbonInterface $start, ?CarbonInterface $end): string

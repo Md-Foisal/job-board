@@ -2,9 +2,27 @@
     The dialogs behind the pencils on the candidate's own profile. Each
     is its own small form that sends only its own fields, so saving the
     About text never touches the links, and a mistake in one is shown in
-    that dialog alone.
+    that dialog alone. Used by the profile page and the CV builder, which
+    edit the same profile; the form returns to whichever page sent it.
 --}}
-@php($update = route('candidate.profile.update'))
+@php
+    $update = route('candidate.profile.update');
+
+    // A form sent back with an error opens its dialog again, so the
+    // message is seen next to what was typed.
+    $reopen = match (true) {
+        $errors->has('avatar') => 'edit-photo',
+        $errors->has('cover_photo') => 'edit-cover',
+        $errors->hasAny(['headline', 'portfolio_url', 'github_url', 'linkedin_url']) => 'edit-intro',
+        $errors->has('bio') => 'edit-about',
+        $errors->hasAny(['phone', 'location']) => 'edit-contact',
+        default => null,
+    };
+@endphp
+
+@if ($reopen)
+    <div x-data x-init="$nextTick(() => $flux.modal(@js($reopen)).show())" hidden></div>
+@endif
 
 {{-- Photo --}}
 <flux:modal name="edit-photo" class="w-full max-w-md">

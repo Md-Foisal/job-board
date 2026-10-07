@@ -92,6 +92,7 @@ new class extends Component {
 
         $this->showModal = false;
         $this->resetForm();
+        $this->dispatch('profile-updated');
     }
 
     public function delete(): void
@@ -102,6 +103,7 @@ new class extends Component {
 
         $this->showModal = false;
         $this->resetForm();
+        $this->dispatch('profile-updated');
     }
 
     public function closeModal(): void

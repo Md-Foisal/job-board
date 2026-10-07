@@ -10,9 +10,9 @@
               what stays private (phone, location, preferences).
 
     The order is LinkedIn's: the card with photo, name, headline and
-    links, then About, Experience, Education and Skills. A viewer can
-    pass the skill ids a posting asks for, and those skills show as
-    matched.
+    links, then About, Experience, Education, Licences & certifications,
+    Projects and Skills. A viewer can pass the skill ids a posting asks
+    for, and those skills show as matched.
 
     On the candidate's own page and on the preview the name is the page's
     title, as on LinkedIn, so those pages pass headingLevel 1; where the
@@ -31,17 +31,6 @@
     $coverUrl = $profile->cover_photo_path ? \Illuminate\Support\Facades\Storage::url($profile->cover_photo_path) : null;
     $avatarUrl = $user?->avatar ? \Illuminate\Support\Facades\Storage::url($user->avatar) : null;
 
-    // A form sent back with an error opens its dialog again, so the
-    // message is seen next to what was typed.
-    $reopen = match (true) {
-        ! $owner => null,
-        $errors->has('avatar') => 'edit-photo',
-        $errors->has('cover_photo') => 'edit-cover',
-        $errors->hasAny(['headline', 'portfolio_url', 'github_url', 'linkedin_url']) => 'edit-intro',
-        $errors->has('bio') => 'edit-about',
-        $errors->hasAny(['phone', 'location']) => 'edit-contact',
-        default => null,
-    };
 @endphp
 
 <div {{ $attributes }}>
@@ -193,6 +182,8 @@
         @if ($owner)
             <livewire:profile.experience-section />
             <livewire:profile.education-section />
+            <livewire:profile.certifications-section />
+            <livewire:profile.projects-section />
             <livewire:profile.skills-section />
 
             {{-- Kept for the CVs the candidate builds here; never on the profile
@@ -223,10 +214,12 @@
             @php
                 $experience = $profile->experienceRecords()->orderByDesc('start_date')->orderByDesc('id')->get();
                 $education = $profile->educationRecords()->orderByDesc('start_date')->orderByDesc('id')->get();
+                $certifications = $profile->certifications()->newestFirst()->get();
+                $projects = $profile->projects()->newestFirst()->get();
                 $skills = $profile->skills()->orderBy('name')->get();
             @endphp
 
-            <x-candidate-history :experience="$experience" :education="$education" />
+            <x-candidate-history :experience="$experience" :education="$education" :certifications="$certifications" :projects="$projects" />
 
             <x-profile.section :heading="__('Skills')">
                 <div class="border-t border-line px-5 py-4 sm:px-6">
@@ -248,9 +241,5 @@
          the profile out in a grid gets one item, and no dialog adds a gap. --}}
     @if ($owner)
         @include('candidate.profile.partials.dialogs', ['profile' => $profile, 'user' => $user])
-
-        @if ($reopen)
-            <div x-data x-init="$nextTick(() => $flux.modal(@js($reopen)).show())" hidden></div>
-        @endif
     @endif
 </div>

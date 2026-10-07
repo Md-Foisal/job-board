@@ -87,6 +87,7 @@ new class extends Component {
 
         $this->q = '';
         unset($this->skills, $this->results);
+        $this->dispatch('profile-updated');
     }
 
     public function edit(int $skillId): void
@@ -123,6 +124,10 @@ new class extends Component {
 
     public function stopEditing(): void
     {
+        if ($this->editingId !== null) {
+            $this->dispatch('profile-updated');
+        }
+
         $this->editingOpen = false;
         $this->editingId = null;
         unset($this->skills, $this->editing);

@@ -10,6 +10,7 @@ use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
@@ -102,6 +103,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // owner-only check, never a guessable public URL.
     Route::livewire('/documents', 'pages::candidate.documents')->name('documents.index');
     Route::get('/documents/{document}/download', DocumentDownloadController::class)->name('documents.download');
+    Route::get('/documents/{document}/preview', DocumentPreviewController::class)->name('documents.preview');
 
     // A CV made from the profile: previewed here, then saved into the
     // document library or downloaded as a PDF.

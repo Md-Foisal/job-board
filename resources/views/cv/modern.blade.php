@@ -1,18 +1,12 @@
 {{--
-    One template for the preview and the PDF. DOMPDF reads CSS 2.1 only
-    (no flexbox or grid), so the layout is plain blocks and one float.
-
-    In the preview there is no printed page, so the page margins are
-    drawn as padding instead ($preview).
-
-    Written for applicant tracking systems: a single column, contact
-    details in the body rather than a page header, the section names
-    parsers look for, round bullets, and real text throughout. Each role
-    and course is kept on one page where it fits. The sections come from
-    cv/partials/section in the order and selection of the CV's design.
+    The Modern CV: the Classic one's single column of real text, with the
+    candidate's chosen colour on the name, a rule under the contact lines
+    and the section headings. Still one column, so tracking systems read
+    it in order. CSS 2.1 only, for DOMPDF.
 --}}
 @php
-    $design ??= new \App\Support\CvDesign;
+    $design ??= new \App\Support\CvDesign(\App\Enums\CvTemplate::Modern, 'navy');
+    $accent = $design->colour();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -36,25 +30,24 @@
             height: 26mm;
             margin-left: 6mm;
         }
-        h1 { font-size: 20pt; line-height: 1.15; color: #111827; }
+        h1 { font-size: 24pt; line-height: 1.1; color: {{ $accent }}; }
         .headline { font-size: 11pt; color: #374151; margin-top: 1mm; }
         .contact { font-size: 9pt; color: #374151; margin-top: 1.5mm; }
+        .rule { clear: both; border-bottom: 1.5pt solid {{ $accent }}; margin-top: 4mm; }
         .contact a { color: #374151; text-decoration: none; }
         .separator { color: #9ca3af; }
         h2 {
             clear: both;
-            font-size: 11pt;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            color: #111827;
-            border-bottom: 0.6pt solid #9ca3af;
+            font-size: 12pt;
+            color: {{ $accent }};
+            border-bottom: 0.6pt solid #d1d5db;
             padding-bottom: 1mm;
             margin-top: 6mm;
             margin-bottom: 2.5mm;
         }
         .entry { margin-bottom: 3.5mm; page-break-inside: avoid; }
         h3 { font-size: 10.5pt; color: #111827; }
-        .at { font-weight: normal; }
+        .at { font-weight: normal; color: #374151; }
         .dates { font-size: 9pt; color: #6b7280; }
         .description { margin-top: 1mm; }
         .description p { margin-bottom: 1mm; }
@@ -64,7 +57,7 @@
         .description h3, .description h4 { font-size: 10pt; margin: 1.5mm 0 0.5mm; }
         .description a { color: #1f2937; }
         .links { font-size: 9pt; color: #374151; margin-top: 1mm; }
-        .links a { color: #374151; }
+        .links a { color: {{ $accent }}; }
     </style>
 </head>
 <body @class(['preview' => $preview ?? false])>
@@ -78,6 +71,7 @@
     @endif
 
     @include('cv.partials.contact')
+    <div class="rule"></div>
 
     @foreach ($design->sections() as $section)
         @include('cv.partials.section')

@@ -259,7 +259,7 @@ new #[Layout('layouts::guest')] class extends Component {
                 <h2 class="font-medium text-ink">{{ __('What :company sees', ['company' => $company->name]) }}</h2>
                 <ul class="mt-2 list-disc space-y-1 pl-4 text-ink-muted">
                     <li>{{ __('The CV, cover letter and answers you send now.') }}</li>
-                    <li>{{ __('Your profile: photo, headline, About, links, experience, education and skills with their levels, as they are when they read it.') }}</li>
+                    <li>{{ __('Your profile: photo, headline, About, links, experience, education, certifications, projects and skills with their levels, as they are when they read it.') }}</li>
                     <li>{{ __('How well your skills match the job.') }}</li>
                 </ul>
                 <p class="mt-2 text-ink-muted">{{ __('Your job preferences and the pay you want stay private.') }}</p>

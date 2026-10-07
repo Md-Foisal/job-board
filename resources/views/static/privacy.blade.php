@@ -4,10 +4,10 @@
             When you create an account we store your name, email address and
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
-            and location, education and work history, skills, salary and
-            work-type preferences, and any documents you upload or build, such as
-            a CV. If you post jobs, we store your company details and the
-            postings themselves.
+            and location, education and work history, projects, certifications,
+            skills, salary and work-type preferences, and any documents you upload
+            or build, such as a CV. If you post jobs, we store your company details
+            and the postings themselves.
         </p>
         <p>
             We also record which job postings you open while signed in, so your

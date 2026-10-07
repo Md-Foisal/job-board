@@ -94,6 +94,18 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
     }
 
     #[Computed]
+    public function certifications()
+    {
+        return $this->application->candidateProfile->certifications()->newestFirst()->get();
+    }
+
+    #[Computed]
+    public function projects()
+    {
+        return $this->application->candidateProfile->projects()->newestFirst()->get();
+    }
+
+    #[Computed]
     public function notes()
     {
         return $this->application->notes()->with('author')->get();
@@ -367,7 +379,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         </div>
     </x-card>
 
-    <x-candidate-history :experience="$this->experience" :education="$this->education" />
+    <x-candidate-history :experience="$this->experience" :education="$this->education" :certifications="$this->certifications" :projects="$this->projects" />
 
     @if ($this->application->cover_letter)
         <x-card>

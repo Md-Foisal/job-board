@@ -81,12 +81,11 @@ test('what the CV is missing is listed with a link to add it', function () {
         ->assertDontSee('Nothing missing');
 });
 
-test('a profile with no role, course or skill gets the way to add one instead of a CV', function () {
+test('a profile with nothing to put on a CV gets the editor and an empty page, not a CV', function () {
     $candidate = candidateUser();
 
     builderPage($candidate)
-        ->assertSee('Nothing to build a CV from yet')
-        ->assertSee(route('candidate.experience.index'))
+        ->assertSee('Your CV appears here')
         ->assertDontSee('Save to my CVs')
         ->call('save')
         ->call('download')

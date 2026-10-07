@@ -9,10 +9,12 @@ use App\Enums\ProficiencyLevel;
 use App\Enums\WorkplaceType;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
+use App\Models\Certification;
 use App\Models\Document;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
+use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
 use App\Support\CvData;
@@ -115,6 +117,28 @@ final class People
                 'description' => $job['description'],
                 'start_date' => self::monthsAgo($job['start']),
                 'end_date' => $job['end'] === null ? null : self::monthsAgo($job['end']),
+            ]);
+        }
+
+        foreach ($details['projects'] ?? [] as $project) {
+            Project::factory()->for($profile)->create([
+                'name' => $project['name'],
+                'description' => $project['description'],
+                'url' => $project['url'],
+                'source_url' => $project['source_url'],
+                'start_date' => self::monthsAgo($project['start']),
+                'end_date' => $project['end'] === null ? null : self::monthsAgo($project['end']),
+            ]);
+        }
+
+        foreach ($details['certifications'] ?? [] as $certification) {
+            Certification::factory()->for($profile)->create([
+                'name' => $certification['name'],
+                'issuer' => $certification['issuer'],
+                'issued_on' => self::monthsAgo($certification['issued']),
+                'expires_on' => self::monthsAgo($certification['expires']),
+                'credential_id' => $certification['credential_id'],
+                'credential_url' => $certification['credential_url'],
             ]);
         }
 

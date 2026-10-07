@@ -116,6 +116,21 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 }; ?>
 
 <x-page>
+    {{-- One preview window for every file: opened with the file's address,
+         emptied again on close so a large PDF stops loading. --}}
+    <div
+        x-data="{
+            src: null,
+            image: false,
+            name: '',
+            download: null,
+            open(src, image, name, download) {
+                [this.src, this.image, this.name, this.download] = [src, image, name, download];
+                $flux.modal('document-preview').show();
+            },
+        }"
+        class="contents"
+    >
     <x-page-header :title="__('Documents')">
         <x-slot:actions>
             <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
@@ -151,6 +166,25 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                 {{-- Icons alone, with their names on hover and focus: three
                      words side by side would crowd the file name on a phone. --}}
                 <div class="flex shrink-0 items-center gap-1">
+                    @if (\App\Http\Controllers\DocumentPreviewController::canPreview($document))
+                        <flux:tooltip :content="__('Preview')">
+                            <flux:button
+                                variant="ghost"
+                                size="sm"
+                                icon="eye"
+                                :aria-label="__('Preview')"
+                                data-src="{{ route('candidate.documents.preview', $document) }}"
+                                data-image="{{ \App\Http\Controllers\DocumentPreviewController::isImage($document) ? '1' : '' }}"
+                                data-name="{{ $document->original_filename }}"
+                                data-download="{{ route('candidate.documents.download', $document) }}"
+                                x-on:click="open($el.dataset.src, $el.dataset.image === '1', $el.dataset.name, $el.dataset.download)"
+                            />
+                        </flux:tooltip>
+                    @else
+                        <flux:tooltip :content="__('Word files and archives open once downloaded')">
+                            <flux:button variant="ghost" size="sm" icon="eye-slash" :aria-label="__('No preview for this file type')" disabled />
+                        </flux:tooltip>
+                    @endif
                     <flux:tooltip :content="__('Download')">
                         <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
                     </flux:tooltip>
@@ -169,6 +203,25 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                 </x-slot:actions>
             </x-empty-state>
         @endforelse
+    </div>
+
+    <flux:modal name="document-preview" class="w-full max-w-4xl" x-on:close="src = null">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-3 pe-10">
+                <flux:heading size="lg" class="min-w-0 truncate" x-text="name"></flux:heading>
+                <div class="ms-auto flex gap-2">
+                    <flux:button size="sm" icon="arrow-top-right-on-square" href="#" x-bind:href="src" target="_blank" rel="noopener">{{ __('Open in new tab') }}</flux:button>
+                    <flux:button size="sm" icon="arrow-down-tray" href="#" x-bind:href="download">{{ __('Download') }}</flux:button>
+                </div>
+            </div>
+            <template x-if="src && ! image">
+                <iframe :src="src" :title="name" class="h-[75vh] w-full rounded-control bg-surface ring-1 ring-line"></iframe>
+            </template>
+            <template x-if="src && image">
+                <img :src="src" :alt="name" class="mx-auto max-h-[75vh] w-auto rounded-control ring-1 ring-line">
+            </template>
+        </div>
+    </flux:modal>
     </div>
 
     <flux:modal wire:model="showModal" class="max-w-lg" @close="closeModal">

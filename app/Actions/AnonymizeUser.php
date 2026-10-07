@@ -23,10 +23,11 @@ use Illuminate\Support\Str;
  *
  * What goes: everything that says who they were or what they wrote about
  * themselves -- name, email, phone, photos, profile, preferences, education,
- * experience, every uploaded file, cover letters, screening answers, the
- * notes employers wrote about them, their reviews of companies (with the
- * companies' answers to them), alerts, saved jobs, viewing history,
- * messages sent through the contact page, sessions and reset tokens.
+ * experience, projects, certifications, every uploaded file, cover
+ * letters, screening answers, the notes employers wrote about them, their
+ * reviews of companies (with the companies' answers to them), alerts,
+ * saved jobs, viewing history, messages sent through the contact page,
+ * sessions and reset tokens.
  *
  * What stays: the rows other records point to, emptied -- the user row as
  * "Deleted user", the candidate profile, the applications with their
@@ -95,6 +96,8 @@ class AnonymizeUser
                 $profile->preference()->delete();
                 $profile->educationRecords()->delete();
                 $profile->experienceRecords()->delete();
+                $profile->projects()->delete();
+                $profile->certifications()->delete();
                 $profile->skills()->detach();
                 $profile->forceFill([
                     'headline' => null,
