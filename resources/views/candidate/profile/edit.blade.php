@@ -1,7 +1,7 @@
 <x-layouts::app :title="__('Your profile')">
     <div class="mx-auto max-w-3xl">
         <flux:heading size="xl" level="1">{{ __('Your profile') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Everything about you in one place. When you apply, the company sees your name, headline, bio and skills, with the CV you attach.') }}</flux:subheading>
+        <flux:subheading size="lg" class="mb-6">{{ __('Everything about you in one place. When you apply, the company sees this profile, apart from your contact details and cover photo, with the CV you attach.') }}</flux:subheading>
 
         <div
             x-data="{

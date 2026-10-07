@@ -77,6 +77,22 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             ->values();
     }
 
+    /**
+     * The candidate's history, read live like the rest of their profile and
+     * in the order their own profile page shows it, newest first.
+     */
+    #[Computed]
+    public function experience()
+    {
+        return $this->application->candidateProfile->experienceRecords()->orderByDesc('start_date')->get();
+    }
+
+    #[Computed]
+    public function education()
+    {
+        return $this->application->candidateProfile->educationRecords()->orderByDesc('start_date')->get();
+    }
+
     #[Computed]
     public function notes()
     {
@@ -204,11 +220,20 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
         ]" />
 
         <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <flux:heading size="xl" class="font-display">{{ $candidate->user->name }}</flux:heading>
-                @if ($candidate->headline)
-                    <flux:text class="mt-1">{{ $candidate->headline }}</flux:text>
-                @endif
+            <div class="flex min-w-0 items-center gap-4">
+                <flux:avatar
+                    circle
+                    size="lg"
+                    :src="$candidate->user->avatar ? \Illuminate\Support\Facades\Storage::url($candidate->user->avatar) : null"
+                    :name="$candidate->user->name"
+                    :initials="$candidate->user->initials()"
+                />
+                <div class="min-w-0">
+                    <flux:heading size="xl" class="font-display">{{ $candidate->user->name }}</flux:heading>
+                    @if ($candidate->headline)
+                        <flux:text class="mt-1">{{ $candidate->headline }}</flux:text>
+                    @endif
+                </div>
             </div>
 
             <div class="flex items-center gap-2">
@@ -310,6 +335,8 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                 <p class="text-ink-soft">{{ $candidate->bio }}</p>
             @endif
 
+            <x-candidate-links :profile="$candidate" />
+
             @if ($candidate->skills->isNotEmpty())
                 <div>
                     <div class="text-xs font-medium text-ink-muted">
@@ -350,6 +377,8 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             @endif
         </div>
     </x-card>
+
+    <x-candidate-history :experience="$this->experience" :education="$this->education" />
 
     @if ($this->application->cover_letter)
         <x-card>
