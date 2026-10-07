@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
@@ -166,6 +167,25 @@ class User extends Authenticatable implements FilamentUser
     public function savedJobs()
     {
         return $this->belongsToMany(JobPosting::class, 'saved_jobs');
+    }
+
+    /**
+     * Which of these postings this user has saved, in one query for a
+     * page of job cards rather than one per card.
+     *
+     * @param  Collection<int, JobPosting>  $jobPostings
+     * @return list<int>
+     */
+    public function savedJobIdsAmong(Collection $jobPostings): array
+    {
+        if ($jobPostings->isEmpty()) {
+            return [];
+        }
+
+        return $this->savedJobs()
+            ->whereIn('job_postings.id', $jobPostings->map(fn (JobPosting $jobPosting) => $jobPosting->getKey()))
+            ->pluck('job_postings.id')
+            ->all();
     }
 
     /**

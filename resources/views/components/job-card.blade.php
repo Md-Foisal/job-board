@@ -1,4 +1,4 @@
-@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false, 'saved' => null])
+@props(['jobPosting', 'matchScore' => null, 'showSaveButton' => false, 'saved' => null, 'showCompany' => true])
 
 {{-- A <div> instead of one big <a> -- the company name below needs its own
      real link to the company profile, and nested <a> tags are invalid HTML
@@ -14,8 +14,12 @@
 <x-card interactive class="group relative flex flex-col gap-4">
     <a href="{{ route('jobs.show', $jobPosting) }}" class="absolute inset-0 rounded-card" aria-label="{{ $jobPosting->title }}" wire:navigate></a>
 
+    {{-- showCompany is off on the company's own page, where every card
+         would repeat the logo and name the page is already about. --}}
     <div class="flex items-start gap-3">
-        <x-company-logo :company="$jobPosting->company" />
+        @if ($showCompany)
+            <x-company-logo :company="$jobPosting->company" />
+        @endif
 
         <div class="min-w-0 flex-1">
             {{-- Two lines before it gives up: the title is the one thing on
@@ -24,18 +28,20 @@
             <h3 class="line-clamp-2 text-subheading text-ink group-hover:text-sunset-small">
                 {{ $jobPosting->title }}
             </h3>
-            <div class="mt-0.5 flex max-w-full items-center gap-1">
-                <a
-                    href="{{ route('companies.show', $jobPosting->company) }}"
-                    wire:navigate
-                    class="relative z-10 block w-fit max-w-full truncate text-sm text-ink-muted hover:text-ink hover:underline"
-                >
-                    {{ $jobPosting->company->name }}
-                </a>
-                @if ($jobPosting->company->verified_at)
-                    <x-verified-badge class="relative z-10" />
-                @endif
-            </div>
+            @if ($showCompany)
+                <div class="mt-0.5 flex max-w-full items-center gap-1">
+                    <a
+                        href="{{ route('companies.show', $jobPosting->company) }}"
+                        wire:navigate
+                        class="relative z-10 block w-fit max-w-full truncate text-sm text-ink-muted hover:text-ink hover:underline"
+                    >
+                        {{ $jobPosting->company->name }}
+                    </a>
+                    @if ($jobPosting->company->verified_at)
+                        <x-verified-badge class="relative z-10" />
+                    @endif
+                </div>
+            @endif
         </div>
 
         @if ($showSaveButton)

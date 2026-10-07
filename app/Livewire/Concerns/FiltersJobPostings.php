@@ -369,14 +369,11 @@ trait FiltersJobPostings
     {
         $user = auth()->user();
 
-        if (! $user || ! $user->isCandidate() || $jobPostings->isEmpty()) {
+        if (! $user || ! $user->isCandidate()) {
             return [];
         }
 
-        return $user->savedJobs()
-            ->whereIn('job_postings.id', $jobPostings->modelKeys())
-            ->pluck('job_postings.id')
-            ->all();
+        return $user->savedJobIdsAmong($jobPostings);
     }
 
     /**

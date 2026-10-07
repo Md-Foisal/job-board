@@ -72,7 +72,7 @@ class JobPostingController extends Controller
             'responsivePercent' => $responsiveness->percentFor($jobPosting->company),
             'openJobsCount' => $jobPosting->company->jobPostings()->active()->count(),
             'similarJobs' => $similarJobs,
-            'savedJobIds' => $isCandidate ? $this->savedJobIds($user, $similarJobs) : [],
+            'savedJobIds' => $isCandidate ? $user->savedJobIdsAmong($similarJobs) : [],
             // Guests too: the button signs them in and brings them back.
             // Employers and staff have no list of saved jobs.
             'canSave' => $user === null || $isCandidate,
@@ -120,23 +120,5 @@ class JobPostingController extends Controller
             ->latest('id')
             ->take(self::SIMILAR_COUNT)
             ->get();
-    }
-
-    /**
-     * Which of the suggested jobs the candidate has saved, in one query.
-     *
-     * @param  Collection<int, JobPosting>  $jobPostings
-     * @return list<int>
-     */
-    private function savedJobIds(User $user, Collection $jobPostings): array
-    {
-        if ($jobPostings->isEmpty()) {
-            return [];
-        }
-
-        return $user->savedJobs()
-            ->whereIn('job_postings.id', $jobPostings->modelKeys())
-            ->pluck('job_postings.id')
-            ->all();
     }
 }

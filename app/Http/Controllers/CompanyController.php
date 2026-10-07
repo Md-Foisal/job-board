@@ -73,9 +73,17 @@ class CompanyController extends Controller
             ->paginate(self::REVIEWS_PER_PAGE)
             ->fragment('reviews');
 
+        $user = $request->user();
+        $isCandidate = $user?->isCandidate() ?? false;
+
         return view('companies.show', [
             'company' => $company,
             'jobPostings' => $jobPostings,
+            // As on the job search: guests get the button too (it signs
+            // them in and brings them back); employers and staff have no
+            // list of saved jobs.
+            'canSave' => $user === null || $isCandidate,
+            'savedJobIds' => $isCandidate ? $user->savedJobIdsAmong($jobPostings) : [],
             'reviews' => $reviews,
             'reviewSummary' => ReviewSummary::of($company),
             'responsivePercent' => $responsiveness->percentFor($company),

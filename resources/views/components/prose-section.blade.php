@@ -1,13 +1,12 @@
 {{--
-    One titled section inside a static page. The heading style was
-    repeated nine times across About/Privacy/Terms before this existed,
-    so changing it meant nine edits and one of them getting missed.
+    One titled section inside a static page. The heading's id is what the
+    page's "On this page" list links to.
 
     @param string $heading
 --}}
 @props(['heading'])
 
 <section class="space-y-3">
-    <h2 class="font-display text-xl font-semibold text-ink">{{ $heading }}</h2>
+    <h2 id="{{ \Illuminate\Support\Str::slug($heading) }}" class="text-heading text-ink">{{ $heading }}</h2>
     {{ $slot }}
 </section>
