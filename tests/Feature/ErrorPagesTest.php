@@ -14,7 +14,9 @@ test('an unknown address gets the site’s own 404, with a way back to the jobs'
         ->assertNotFound()
         ->assertSee('We can’t find that page')
         ->assertSee(route('jobs.index'), false)
-        ->assertSee('Error 404');
+        ->assertSee('Error 404')
+        // Livewire's own styles, which hide its loading indicators.
+        ->assertSee('[wire\\:loading', false);
 });
 
 test('an unknown address is answered inside the web middleware, so the navbar knows who is signed in', function () {

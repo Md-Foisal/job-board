@@ -6,6 +6,11 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     @include('partials.head')
+    @if ($errorPage)
+        {{-- Injected only into 200 responses too; without it the navbar
+             search's loading spinner shows for good. --}}
+        @livewireStyles
+    @endif
 </head>
 <body class="min-h-screen bg-canvas text-ink antialiased">
     @include('partials.svg-defs')
