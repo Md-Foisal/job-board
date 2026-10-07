@@ -1,3 +1,7 @@
+{{-- "errorPage" is set by error pages that keep the site's own frame
+     (components/error-page), so they can load Livewire themselves. --}}
+@props(['title' => null, 'errorPage' => false])
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -72,6 +76,12 @@
         clickable/interactive -- @livewireScripts alone boots Alpine but
         never loads that Flux behavior layer.
     --}}
+    {{-- Livewire only injects its assets into 200 responses, so an error
+         page has to load them itself, or Alpine never starts and nothing
+         in the navbar opens. --}}
+    @if ($errorPage)
+        @livewireScripts
+    @endif
     @fluxScripts
 </body>
 </html>

@@ -16,7 +16,7 @@ class EnsureUserIsCandidate
     public function handle(Request $request, Closure $next): Response
     {
         if (! auth()->check() || ! auth()->user()->isCandidate()) {
-            abort(403, 'Unauthorized, only candidates can access');
+            abort(403, __('This page is for job seekers. You can start a candidate profile from your account menu.'));
         }
 
         return $next($request);

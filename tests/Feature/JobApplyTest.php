@@ -18,13 +18,17 @@ test('guest is redirected to login when visiting the apply page', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('an employer without a candidate profile cannot visit the apply page', function () {
+test('an employer without a candidate profile is sent to the job page, which explains how to apply', function () {
     $job = JobPosting::factory()->create();
     $employer = employerUser();
 
-    $response = $this->actingAs($employer)->get(route('jobs.apply', $job));
+    $this->actingAs($employer)
+        ->get(route('jobs.apply', $job))
+        ->assertRedirect(route('jobs.show', $job));
 
-    $response->assertForbidden();
+    $this->actingAs($employer)
+        ->get(route('jobs.show', $job))
+        ->assertSee('Start a candidate profile');
 });
 
 test('a candidate can view the apply page for an open job', function () {
@@ -36,7 +40,13 @@ test('a candidate can view the apply page for an open job', function () {
     $response->assertOk();
 });
 
-test('a candidate cannot apply to a job at a company they work at', function () {
+test('the apply page of a posting the public cannot see is a 404, as the posting itself is', function () {
+    $this->actingAs(candidateUser())
+        ->get(route('jobs.apply', JobPosting::factory()->draft()->create()))
+        ->assertNotFound();
+});
+
+test('a candidate who works at the company is sent to the job page instead of the form', function () {
     $candidate = candidateUser();
     $job = JobPosting::factory()->create();
     $job->company->memberships()->create([
@@ -47,10 +57,10 @@ test('a candidate cannot apply to a job at a company they work at', function () 
 
     $response = $this->actingAs($candidate)->get(route('jobs.apply', $job));
 
-    $response->assertForbidden();
+    $response->assertRedirect(route('jobs.show', $job));
 });
 
-test('a candidate cannot apply to the same job twice', function () {
+test('a candidate who already applied is sent to the job page, which shows the application', function () {
     $candidate = candidateUser();
     $job = JobPosting::factory()->create();
 
@@ -65,7 +75,9 @@ test('a candidate cannot apply to the same job twice', function () {
 
     $response = $this->actingAs($candidate)->get(route('jobs.apply', $job));
 
-    $response->assertForbidden();
+    $response->assertRedirect(route('jobs.show', $job));
+
+    $this->actingAs($candidate)->get(route('jobs.show', $job))->assertSee('You applied on');
 });
 
 test('a candidate can submit an application using an existing CV', function () {

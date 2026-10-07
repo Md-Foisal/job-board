@@ -128,7 +128,14 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::livewire('/job-alerts', 'pages::candidate.job-alerts')->name('job-alerts.index');
 });
 
-Route::middleware(['auth', 'candidate'])->group(function () {
+/*
+ * Signed in, but not limited to candidates: anyone who cannot apply is
+ * sent back to the job's own page, which says why and what to do next
+ * (start a candidate profile, see the application already made, see the
+ * job as candidates do). A guest pressing Apply who then signs in with
+ * an employer account lands there too, instead of on a refusal.
+ */
+Route::middleware(['auth'])->group(function () {
     Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
 });
 
@@ -221,3 +228,13 @@ Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept
 Route::post('/invitations/{token}/switch-account', [InvitationController::class, 'switchAccount'])->name('invitations.switch-account');
 
 require __DIR__.'/settings.php';
+
+/*
+ * An address that matches no route would otherwise be answered before the
+ * web middleware runs, with no session, so the 404 page's navbar would
+ * offer "Log in" to someone who is signed in. Matching it here, last,
+ * gives the page the visitor's real session. Every method, not only GET
+ * as Route::fallback() registers it: a GET-only fallback would turn a
+ * POST to an unknown address into a 405.
+ */
+Route::any('{unknown}', fn () => abort(404))->where('unknown', '.*')->fallback();

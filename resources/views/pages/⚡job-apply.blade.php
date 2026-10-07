@@ -9,6 +9,7 @@ use App\Support\DocumentUploads;
 use App\Support\SubmissionLimits;
 use Flux\Flux;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -32,7 +33,19 @@ new #[Layout('layouts::guest')] class extends Component {
 
     public function mount(JobPosting $jobPosting): void
     {
-        $this->authorize('create', [Application::class, $jobPosting]);
+        // A hidden posting stays a 404, as on its own page; every other
+        // refusal has an explanation waiting on the job page.
+        $access = Gate::inspect('create', [Application::class, $jobPosting]);
+
+        if ($access->status() === 404) {
+            abort(404);
+        }
+
+        if ($access->denied()) {
+            $this->redirectRoute('jobs.show', $jobPosting);
+
+            return;
+        }
 
         // The columns the summary beside the form reads: the logo tile, and
         // the zone the closing day is counted in.
