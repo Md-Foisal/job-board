@@ -84,6 +84,9 @@ class DemoAccountsSeeder extends Seeder
         $employer = User::factory()->create(['name' => $demo['employer']['name'], 'email' => 'employer@jobboard.test', 'timezone' => $demo['company']['timezone']]);
         $company = CompanySeeder::create(self::DEMO_COMPANY_SLUG, $demo['company'], ['website_url' => 'https://jobboard.test']);
         Membership::factory()->owner()->for($company)->for($employer, 'user')->create(['job_title' => $demo['employer']['job_title']]);
+        // A filled-in recruiter face, so the "Posted by" card on the job
+        // page shows what candidates are meant to see.
+        $employer->recruiterProfile()->create(['bio' => $demo['employer']['recruiter_bio']]);
 
         $candidate = User::factory()->create(['name' => $demo['candidate']['name'], 'email' => 'candidate@jobboard.test', 'timezone' => 'Europe/London']);
         $profile = People::writtenCandidate($candidate, [

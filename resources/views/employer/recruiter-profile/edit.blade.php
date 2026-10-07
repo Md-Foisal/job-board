@@ -3,7 +3,7 @@
         <div>
             <flux:heading size="xl" class="font-display">{{ __('Your recruiter profile') }}</flux:heading>
             <flux:text class="mt-1">
-                {{ __('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for, and leaving it empty simply shows the company name instead.') }}
+                {{ __('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for. Until you fill it in, they see your account name.') }}
             </flux:text>
         </div>
 

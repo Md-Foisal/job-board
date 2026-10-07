@@ -29,13 +29,15 @@ test('a fresh seed can be looked at from every side', function () {
     $superAdmin = User::query()->where('email', 'superadmin@jobboard.test')->sole();
     $moderator = User::query()->where('email', 'moderator@jobboard.test')->sole();
     $candidate = User::query()->where('email', 'candidate@jobboard.test')->sole();
+    $employer = User::query()->where('email', 'employer@jobboard.test')->sole();
 
     expect($superAdmin->isSuperAdmin())->toBeTrue()
         ->and($moderator->canAccessPanel(filament()->getPanel('admin')))->toBeTrue()
         ->and($candidate->candidateProfile->skills)->not->toBeEmpty()
         ->and($candidate->candidateProfile->applications()->count())->toBe(3)
         ->and($candidate->savedJobs()->count())->toBe(2)
-        ->and($candidate->account_status)->toBe(AccountStatus::Active);
+        ->and($candidate->account_status)->toBe(AccountStatus::Active)
+        ->and($employer->recruiterProfile?->bio)->not->toBeEmpty();
 
     expect(JobPosting::query()->where('moderation_status', ModerationStatus::Pending)->count())->toBeGreaterThanOrEqual(5)
         ->and(JobPosting::query()->where('moderation_status', ModerationStatus::Rejected)->whereHas('latestRejection')->exists())->toBeTrue()

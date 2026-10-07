@@ -37,6 +37,7 @@ return [
     'employer' => [
         'name' => 'Hannah Lewis',
         'job_title' => 'Head of Operations',
+        'recruiter_bio' => 'I run operations at Fernhill and hire for our support and office teams. I read every application myself and reply within a week, whatever the answer.',
     ],
 
     'candidate' => [
