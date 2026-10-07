@@ -4,7 +4,7 @@
      boxes, which gave them nothing to do. --}}
 <x-layouts::app :title="__('Get started')">
     <x-page width="narrow">
-        <x-page-header :title="__('What would you like to do?')" :description="__('You can set up either side now and add the other whenever you need it.')" />
+        <x-page-header :title="__('What would you like to do?')" />
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <x-card class="flex flex-col gap-4">

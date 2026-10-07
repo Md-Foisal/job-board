@@ -7,12 +7,13 @@ use App\Models\Company;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
+use App\Models\Skill;
 
 test('the preference form makes no promise about what employers see', function () {
     $this->actingAs(candidateUser())
         ->get(route('candidate.preferences.edit'))
         ->assertOk()
-        ->assertSee('Only you see them.')
+        ->assertSee('Only you see these.')
         ->assertDontSee('Actively searching')
         ->assertDontSee('Shows employers');
 });
@@ -38,14 +39,20 @@ test('a candidate saves their preferences', function () {
         ->and($preference->preferred_workplace_type)->toBe(WorkplaceType::Remote);
 });
 
-test('the profile page says exactly what a company sees', function () {
+test('the own profile starts with the person, and shows what a company sees one click away', function () {
     // fresh(): the page reads avatar, which a factory-made user does not
     // carry until it is loaded from the database.
-    $this->actingAs(candidateUser()->fresh())
+    $candidate = candidateUser()->fresh();
+
+    $html = $this->actingAs($candidate)
         ->get(route('candidate.profile.edit'))
         ->assertOk()
-        ->assertSee('When you apply, the company sees this profile, apart from your contact details and cover photo, with the CV you attach.')
-        ->assertDontSee('look you up');
+        ->assertSee(route('candidate.profile.preview'), false)
+        ->assertSee('Private to you')
+        ->assertDontSee('look you up')
+        ->getContent();
+
+    expect($html)->toMatch('/<h1[^>]*>\s*'.preg_quote(e($candidate->name), '/').'\s*<\/h1>/');
 });
 
 test('the company reads the profile an application points at, history and links included', function () {
@@ -126,4 +133,25 @@ test('the company never sees the contact details or the preferences on a profile
         ->assertDontSee('98,765')
         ->assertDontSee('98765')
         ->assertDontSee('123,456');
+});
+
+test('the company reads each skill with its level and each role with how long it lasted', function () {
+    $company = Company::factory()->create();
+    $profile = candidateUser()->candidateProfile;
+    $profile->skills()->attach(Skill::create(['name' => 'Zendesk'])->id, ['proficiency' => 'advanced']);
+    ExperienceRecord::factory()->for($profile)->create([
+        'job_title' => 'Support Agent',
+        'start_date' => '2019-01-01',
+        'end_date' => '2022-02-01',
+    ]);
+    $application = Application::factory()->create([
+        'job_posting_id' => JobPosting::factory()->for($company)->create()->id,
+        'candidate_profile_id' => $profile->id,
+    ]);
+
+    $this->actingAs(employerUser($company))
+        ->get(route('employer.applications.show', ['company' => $company, 'application' => $application]))
+        ->assertOk()
+        ->assertSeeInOrder(['Zendesk', 'Advanced'])
+        ->assertSeeInOrder(['Support Agent', 'Feb 2022', '3 yrs 2 mos']);
 });

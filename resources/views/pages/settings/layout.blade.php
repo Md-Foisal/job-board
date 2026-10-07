@@ -10,7 +10,9 @@
 
     <div class="w-full">
         <flux:heading>{{ $heading ?? '' }}</flux:heading>
-        <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
+        @if (filled($subheading ?? null))
+            <flux:subheading>{{ $subheading }}</flux:subheading>
+        @endif
 
         <div class="mt-5 w-full max-w-lg">
             {{ $slot }}

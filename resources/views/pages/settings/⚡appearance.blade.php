@@ -12,7 +12,7 @@ new #[Title('Appearance settings')] class extends Component {
 
     <flux:heading class="sr-only">{{ __('Appearance settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Appearance')" :subheading="__('Light, dark, or the same as your device.')">
+    <x-pages::settings.layout :heading="__('Appearance')">
         <x-card class="mt-6 w-full">
             <flux:radio.group x-data variant="segmented" x-model="$flux.appearance">
                 <flux:radio value="light" icon="sun">{{ __('Light') }}</flux:radio>

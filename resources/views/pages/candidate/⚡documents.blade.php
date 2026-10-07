@@ -116,7 +116,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 }; ?>
 
 <x-page>
-    <x-page-header :title="__('Documents')" :description="__('Your CV, work samples and certificates — used when you apply.')">
+    <x-page-header :title="__('Documents')">
         <x-slot:actions>
             <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
             <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add document') }}</flux:button>
@@ -136,7 +136,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 
                         @if ($document->document_type === \App\Enums\DocumentType::Cv)
                             @if (\App\Support\CvText::supports($document))
-                                <flux:button :href="route('candidate.resume-import', $document)" wire:navigate size="xs" icon="user-plus" class="mt-3">
+                                <flux:button :href="route('candidate.resume-import', $document)" wire:navigate size="sm" icon="document-arrow-down" class="mt-3">
                                     {{ __('Fill my profile from this CV') }}
                                 </flux:button>
                             @else
@@ -148,10 +148,18 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                     </div>
                 </div>
 
+                {{-- Icons alone, with their names on hover and focus: three
+                     words side by side would crowd the file name on a phone. --}}
                 <div class="flex shrink-0 items-center gap-1">
-                    <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
-                    <flux:button wire:click="replace({{ $document->id }})" variant="ghost" size="sm" icon="arrow-path" :aria-label="__('Replace')" />
-                    <flux:button wire:click="delete({{ $document->id }})" wire:confirm="{{ __('Remove this document?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
+                    <flux:tooltip :content="__('Download')">
+                        <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Replace')">
+                        <flux:button wire:click="replace({{ $document->id }})" variant="ghost" size="sm" icon="arrow-path" :aria-label="__('Replace')" />
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Remove')">
+                        <flux:button wire:click="delete({{ $document->id }})" wire:confirm="{{ __('Remove this document?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
+                    </flux:tooltip>
                 </div>
             </x-card>
         @empty

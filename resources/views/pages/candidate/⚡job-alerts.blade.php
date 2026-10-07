@@ -209,7 +209,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 }; ?>
 
 <x-page>
-    <x-page-header :title="__('Job alerts')" :description="__('Searches we check for you. When new jobs match, we email them to you.')">
+    <x-page-header :title="__('Job alerts')">
         <x-slot:actions>
             <flux:button wire:click="create" variant="primary" icon="plus">{{ __('New alert') }}</flux:button>
         </x-slot:actions>
@@ -249,7 +249,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             </x-card>
         @empty
             <x-empty-state icon="bell" :heading="__('No job alerts yet')">
-                {{ __('Search for jobs and choose "Create job alert", or add one here.') }}
+                {{ __('We email you when new jobs match a search you keep. Search for jobs and choose "Create job alert", or add one here.') }}
                 <x-slot:actions>
                     <flux:button wire:click="create" size="sm" icon="plus">{{ __('New alert') }}</flux:button>
                 </x-slot:actions>

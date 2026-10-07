@@ -193,7 +193,7 @@ test('the preference form lists the currencies and keeps the saved one', functio
         ->get(route('candidate.preferences.edit'))
         ->assertOk()
         ->assertSee('EUR — Euro')
-        ->assertSee('A job that pays in another currency is not compared with your salary.');
+        ->assertSee('A job that pays in another currency is not compared with your pay.');
 });
 
 test('the pay reads as a range, or as one open end', function (array $pay, string $expected) {

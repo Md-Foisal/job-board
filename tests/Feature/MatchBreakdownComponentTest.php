@@ -157,7 +157,7 @@ test('the component shows nothing to anyone but a candidate, or on a job the pub
 test('the preference form asks for salary by the month', function () {
     $this->actingAs(candidateUser())
         ->get(route('candidate.preferences.edit'))
-        ->assertSee('Desired monthly salary, min')
-        ->assertSee('Desired monthly salary, max')
+        ->assertSee('At least, per month')
+        ->assertSee('Up to, per month')
         ->assertDontSee('employers match you');
 });

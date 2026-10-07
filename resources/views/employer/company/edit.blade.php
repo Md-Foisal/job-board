@@ -1,10 +1,11 @@
 <x-layouts::employer :company="$company" :title="__('Company profile')">
     <x-page width="narrow">
-        <x-page-header :title="__('Company profile')" :description="__('This is what candidates see before they decide to apply.')">
+        <x-page-header :title="__('Company profile')">
             {{-- Verification is the platform's judgement, not the company's,
                  so it is shown here rather than edited: a company that has
                  been asked for documents otherwise has no way of knowing. --}}
             <x-slot:status>
+                <x-visibility-badge public :tip="__('This is what candidates see before they decide to apply.')" />
                 @if ($company->verified_at)
                     <flux:badge color="green">{{ __('Verified') }}</flux:badge>
                 @elseif ($company->outstandingDocumentsRequest())

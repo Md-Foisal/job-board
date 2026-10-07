@@ -143,7 +143,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
 }; ?>
 
 <x-page>
-    <x-page-header :title="__('Team')" :description="__('Who can post jobs and review applicants for :company.', ['company' => $this->company->name])">
+    <x-page-header :title="__('Team')">
         <x-slot:actions>
             <flux:button variant="primary" icon="plus" wire:click="$set('showInviteModal', true)">
                 {{ __('Invite someone') }}

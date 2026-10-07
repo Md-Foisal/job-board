@@ -94,7 +94,7 @@ new #[Title('Security settings')] class extends Component {
 
     <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Use a long password that you do not use anywhere else.')">
+    <x-pages::settings.layout :heading="__('Update password')">
         <x-card as="form" method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
@@ -124,7 +124,6 @@ new #[Title('Security settings')] class extends Component {
         @if ($canManageTwoFactor)
             <section class="mt-10">
                 <flux:heading>{{ __('Two-factor authentication') }}</flux:heading>
-                <flux:subheading>{{ __('Manage your two-factor authentication settings') }}</flux:subheading>
 
                 @if (auth()->user()->isStaff() && ! $twoFactorEnabled)
                     <flux:callout variant="warning" icon="shield-exclamation" class="mt-4">

@@ -401,7 +401,13 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
 @endphp
 
 <x-page>
-    <x-page-header :title="__('CV builder')" :description="__('A CV made from your profile. Change your profile and the CV follows.')" />
+    {{-- The CV is drawn from the profile, so the way to change what it
+         says is the profile itself. --}}
+    <x-page-header :title="__('CV builder')">
+        <x-slot:actions>
+            <flux:button :href="route('candidate.profile.edit')" wire:navigate icon="pencil-square">{{ __('Edit profile') }}</flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
     <div>
 
@@ -532,12 +538,32 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
                 {{-- Preview: the same view the PDF is drawn from, isolated in a
                      frame so the page's own styles cannot change it. --}}
                 <x-card as="section" subtle padding="none" aria-label="{{ __('Preview') }}" class="overflow-hidden p-3">
-                    <iframe
-                        srcdoc="{{ $this->preview }}"
-                        sandbox=""
-                        title="{{ __('Preview of your CV') }}"
-                        class="mx-auto block h-[80vh] w-full max-w-[210mm] rounded-lg bg-white shadow-sm"
-                    ></iframe>
+                    {{-- A page-shaped placeholder until the frame has drawn the
+                         CV, rather than an empty white sheet. The timer is a
+                         fallback in case the frame finished before Alpine was
+                         listening, so the CV can never stay hidden. --}}
+                    <div class="relative mx-auto h-[80vh] w-full max-w-[210mm]" x-data="{ drawn: false }" x-init="setTimeout(() => drawn = true, 1500)">
+                        <div x-show="! drawn" class="absolute inset-0 flex flex-col gap-3 rounded-lg bg-canvas p-8" aria-hidden="true">
+                            <flux:skeleton.group animate="shimmer" class="flex flex-col gap-3">
+                                <flux:skeleton class="h-7 w-1/2 rounded" />
+                                <flux:skeleton.line class="w-1/3" />
+                                <flux:skeleton.line class="mt-6" />
+                                <flux:skeleton.line />
+                                <flux:skeleton.line class="w-4/5" />
+                                <flux:skeleton.line class="mt-6 w-1/4" />
+                                <flux:skeleton.line />
+                                <flux:skeleton.line class="w-3/5" />
+                            </flux:skeleton.group>
+                        </div>
+                        <iframe
+                            srcdoc="{{ $this->preview }}"
+                            sandbox=""
+                            title="{{ __('Preview of your CV') }}"
+                            x-on:load="drawn = true"
+                            :class="{ 'opacity-0': ! drawn }"
+                            class="relative block size-full rounded-lg bg-white shadow-sm transition-opacity duration-200"
+                        ></iframe>
+                    </div>
                 </x-card>
             </div>
 

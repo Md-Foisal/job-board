@@ -1,6 +1,10 @@
 <x-layouts::employer :company="$company" :title="__('Your recruiter profile')">
     <x-page width="narrow">
-        <x-page-header :title="__('Your recruiter profile')" :description="__('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for. Until you fill it in, they see your account name.')" />
+        <x-page-header :title="__('Your recruiter profile')">
+            <x-slot:status>
+                <x-visibility-badge public :tip="__('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for. Until you fill it in, they see your account name.')" />
+            </x-slot:status>
+        </x-page-header>
 
         <form method="POST" action="{{ route('employer.recruiter-profile.update') }}" enctype="multipart/form-data" class="flex flex-col gap-6">
             @csrf

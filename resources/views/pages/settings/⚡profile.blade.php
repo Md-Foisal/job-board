@@ -117,7 +117,7 @@ new #[Title('Account settings')] class extends Component {
 
     <flux:heading class="sr-only">{{ __('Account settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Account')" :subheading="__('Your name, email address and time zone.')">
+    <x-pages::settings.layout :heading="__('Account')">
         <x-card as="form" wire:submit="updateProfileInformation" class="mt-6 w-full space-y-6">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 

@@ -224,7 +224,11 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
 }; ?>
 
 <x-page>
-    <x-page-header :title="__('Reviews')" :description="__('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.')" />
+    <x-page-header :title="__('Reviews')">
+        <x-slot:status>
+            <x-visibility-badge public :tip="__('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.')" />
+        </x-slot:status>
+    </x-page-header>
 
     @if ($this->summary->count === 0)
         <x-empty-state icon="chat-bubble-left-right" :heading="__('No published reviews yet')">
