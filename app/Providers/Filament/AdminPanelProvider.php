@@ -95,6 +95,10 @@ class AdminPanelProvider extends PanelProvider
                     950 => 'oklch(0.145 0.002 286.1)',
                 ],
             ])
+            // Named once, in this order, so a new group cannot jump the
+            // queue: a group whose resources set no sort would otherwise
+            // land at the top.
+            ->navigationGroups(['Users & companies', 'Moderation', 'Support', 'Master data'])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
