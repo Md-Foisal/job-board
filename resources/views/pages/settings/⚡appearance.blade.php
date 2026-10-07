@@ -7,7 +7,7 @@ new #[Title('Appearance settings')] class extends Component {
     //
 }; ?>
 
-<section class="w-full">
+<x-page width="narrow">
     @include('partials.settings-heading')
 
     <flux:heading class="sr-only">{{ __('Appearance settings') }}</flux:heading>
@@ -21,4 +21,4 @@ new #[Title('Appearance settings')] class extends Component {
             </flux:radio.group>
         </x-card>
     </x-pages::settings.layout>
-</section>
+</x-page>

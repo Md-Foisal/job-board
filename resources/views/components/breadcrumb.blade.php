@@ -1,11 +1,9 @@
 {{--
-    The breadcrumb trail for guest pages: the supplemental navigation
-    level ("Home > Category > Job").
-
-    It was hand-written inline on each page before this component existed,
-    which meant a change to the separator -- or adding the aria markup a
-    screen reader needs -- had to be remembered in every copy. Home is
-    always the first crumb, so callers pass only what comes after it.
+    The trail on public pages whose place in a hierarchy is real and
+    where people often arrive straight from a search engine: a job
+    (Jobs › Category › title) and a category (Jobs › Category). There is
+    no Home crumb: the logo already goes home (NN/g). Pages inside a
+    sidebar workspace use <x-back-link> instead.
 
     @param array $items  [['label' => 'Jobs', 'url' => route('jobs.index')], ['label' => 'Senior Laravel Developer']]
                          An item with no 'url' is the current page: it is
@@ -13,28 +11,21 @@
 --}}
 @props(['items' => []])
 
-<nav aria-label="{{ __('Breadcrumb') }}" {{ $attributes->class('text-sm text-ink-muted') }}>
-    <a
-        href="{{ route('home') }}"
-        class="inline-flex items-center hover:text-sunset-small"
-        wire:navigate
-        title="{{ __('Home') }}"
-        aria-label="{{ __('Home') }}"
-    >
-        <flux:icon.home variant="mini" class="size-4" />
-    </a>
+<nav aria-label="{{ __('Breadcrumb') }}" {{ $attributes->class('min-w-0 text-sm text-ink-muted') }}>
+    <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        @foreach ($items as $item)
+            <li class="flex min-w-0 items-center gap-x-1.5">
+                @unless ($loop->first)
+                    {{-- Decoration: a screen reader already announces a list of links. --}}
+                    <flux:icon.chevron-right class="size-3.5 shrink-0 text-ink-muted/70" aria-hidden="true" />
+                @endunless
 
-    @foreach ($items as $item)
-        {{-- aria-hidden: the separator is decoration, and a screen reader
-             reading "slash" between every crumb is noise. --}}
-        <span class="mx-1" aria-hidden="true">/</span>
-
-        @if (!empty($item['url']))
-            <a href="{{ $item['url'] }}" class="hover:text-sunset-small" wire:navigate>
-                {{ $item['label'] }}
-            </a>
-        @else
-            <span class="text-ink-soft" aria-current="page">{{ $item['label'] }}</span>
-        @endif
-    @endforeach
+                @if (! empty($item['url']))
+                    <a href="{{ $item['url'] }}" class="hover:text-sunset-small" wire:navigate>{{ $item['label'] }}</a>
+                @else
+                    <span class="truncate text-ink-soft" aria-current="page">{{ $item['label'] }}</span>
+                @endif
+            </li>
+        @endforeach
+    </ol>
 </nav>

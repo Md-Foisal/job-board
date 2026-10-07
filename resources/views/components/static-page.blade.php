@@ -22,8 +22,7 @@
         <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-line-strong)_1px,transparent_0)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_top_left,black_20%,transparent_70%)]"></div>
 
         <div class="relative mx-auto max-w-3xl px-6 py-12 sm:py-16">
-            <x-breadcrumb :items="[['label' => $heading]]" />
-            <h1 class="mt-4 text-title text-ink sm:text-display">{{ $heading }}</h1>
+            <h1 class="text-title text-ink sm:text-display">{{ $heading }}</h1>
             @if (filled($lead))
                 <p class="mt-4 max-w-2xl text-body text-ink-muted sm:text-lg">{{ $lead }}</p>
             @endif

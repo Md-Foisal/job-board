@@ -32,12 +32,23 @@
              the navbar search-first and treat category browsing as secondary.
              Category access still exists via the homepage "browse by category"
              grid and as an in-search filter (FiltersJobPostings::$category). --}}
-        @unless (request()->routeIs('home', 'jobs.index', 'categories.show'))
+        {{-- Inside the sidebar workspace the box opens the command
+             palette instead, which searches the same jobs and the
+             workspace's pages too. --}}
+        @if ($showSidebarToggle)
+            @include('partials.command-palette-trigger', ['variant' => 'field', 'label' => __('Search jobs or jump to a page')])
+        @elseif (! request()->routeIs('home', 'jobs.index', 'categories.show'))
             <livewire:job-search-autocomplete variant="compact" />
-        @endunless
+        @endif
     </div>
 
     <div class="flex shrink-0 items-center gap-2 sm:gap-3">
+        @if ($showSidebarToggle)
+            <div class="md:hidden">
+                @include('partials.command-palette-trigger', ['variant' => 'icon', 'label' => __('Search jobs or jump to a page')])
+            </div>
+        @endif
+
         <x-theme-toggle />
 
         @guest

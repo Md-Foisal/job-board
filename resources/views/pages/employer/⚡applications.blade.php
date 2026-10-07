@@ -106,20 +106,12 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
     }
 }; ?>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-6">
-    <div>
-        <x-breadcrumb :items="[
-            ['label' => __('Job postings'), 'url' => route('employer.jobs.index', $this->company)],
-            ['label' => $this->jobPosting->title],
-        ]" />
-
-        <flux:heading size="xl" class="mt-4 font-display">{{ __('Applications') }}</flux:heading>
-        <flux:text class="mt-1">
-            {{ $this->jobPosting->title }}
-            &middot;
-            {{ trans_choice('{0} No applicants yet|{1} :count applicant|[2,*] :count applicants', $this->applications->count(), ['count' => $this->applications->count()]) }}
-        </flux:text>
-    </div>
+<x-page>
+    <x-page-header :title="__('Applications')" :back="route('employer.jobs.index', $this->company)" :back-label="__('Job postings')">
+        {{ $this->jobPosting->title }}
+        &middot;
+        {{ trans_choice('{0} No applicants yet|{1} :count applicant|[2,*] :count applicants', $this->applications->count(), ['count' => $this->applications->count()]) }}
+    </x-page-header>
 
     <div class="flex flex-wrap items-end justify-between gap-4">
         <div class="flex flex-wrap gap-4">
@@ -207,4 +199,4 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
             </ul>
         </x-card>
     @endif
-</div>
+</x-page>

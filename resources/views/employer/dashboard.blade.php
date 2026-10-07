@@ -1,15 +1,12 @@
 <x-layouts::employer :company="$company" :title="$company->name">
-    <div class="mx-auto flex max-w-5xl flex-col gap-8">
-        <div class="flex flex-wrap items-end justify-between gap-4">
-            <div>
-                <flux:heading size="xl" class="font-display">{{ $company->name }}</flux:heading>
-                <flux:text class="mt-1">{{ __('Where your hiring stands today.') }}</flux:text>
-            </div>
-
-            <flux:button icon="chart-bar" :href="route('employer.analytics', $company)" wire:navigate>
-                {{ __('Analytics') }}
-            </flux:button>
-        </div>
+    <x-page>
+        <x-page-header :title="$company->name">
+            <x-slot:actions>
+                <flux:button icon="chart-bar" :href="route('employer.analytics', $company)" wire:navigate>
+                    {{ __('Analytics') }}
+                </flux:button>
+            </x-slot:actions>
+        </x-page-header>
 
         <div class="grid gap-4 sm:grid-cols-3">
             <x-card>
@@ -85,5 +82,5 @@
                 </x-card>
             @endif
         </div>
-    </div>
+    </x-page>
 </x-layouts::employer>

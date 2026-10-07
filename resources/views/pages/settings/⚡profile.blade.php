@@ -112,7 +112,7 @@ new #[Title('Account settings')] class extends Component {
     }
 }; ?>
 
-<section class="w-full">
+<x-page width="narrow">
     @include('partials.settings-heading')
 
     <flux:heading class="sr-only">{{ __('Account settings') }}</flux:heading>
@@ -174,4 +174,4 @@ new #[Title('Account settings')] class extends Component {
             <livewire:pages::settings.delete-user-form />
         @endif
     </x-pages::settings.layout>
-</section>
+</x-page>

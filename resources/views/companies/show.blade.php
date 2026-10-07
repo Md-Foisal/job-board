@@ -10,13 +10,11 @@
 
 <x-layouts::guest :title="$company->name">
     <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:pt-10">
-        <x-breadcrumb :items="[['label' => $company->name]]" />
-
         {{-- One card: cover photo, profile photo, name and the links to the
              page's sections all belong to the same unit, so they live
              inside one bordered card instead of the avatar floating
              between the page and a separate card below it. --}}
-        <x-card padding="none" class="mt-4 overflow-hidden">
+        <x-card padding="none" class="overflow-hidden">
             <div class="relative">
                 <div class="h-32 w-full overflow-hidden bg-surface sm:h-44 md:h-56">
                     @if ($company->cover_photo_path)

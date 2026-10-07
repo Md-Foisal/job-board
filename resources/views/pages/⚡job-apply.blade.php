@@ -161,11 +161,7 @@ new #[Layout('layouts::guest')] class extends Component {
         $where = collect([$jobPosting->location_city, $jobPosting->workplace_type->label()])->filter()->implode(' · ');
     @endphp
 
-    <x-breadcrumb :items="[
-        ['label' => __('Jobs'), 'url' => route('jobs.index')],
-        ['label' => $jobPosting->title, 'url' => route('jobs.show', $jobPosting)],
-        ['label' => __('Apply')],
-    ]" />
+    <x-back-link :href="route('jobs.show', $jobPosting)">{{ $jobPosting->title }}</x-back-link>
 
     <h1 class="mt-4 text-balance font-display text-heading text-ink sm:text-title">{{ __('Apply to :job', ['job' => $jobPosting->title]) }}</h1>
     <p class="mt-1 text-ink-muted">{{ $company->name }}</p>

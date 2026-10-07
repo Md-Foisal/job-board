@@ -106,17 +106,14 @@ new #[Layout('layouts::app')] #[Title('Education')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-10">
-    <div class="flex items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Education') }}</flux:heading>
-            <flux:subheading>{{ __('Schools, degrees and what you studied. The companies you apply to see these.') }}</flux:subheading>
-        </div>
+<x-page>
+    <x-page-header :title="__('Education')" :description="__('Schools, degrees and what you studied. The companies you apply to see these.')">
+        <x-slot:actions>
+            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add education') }}</flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
-        <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>
-    </div>
-
-    <div class="mt-6 space-y-4">
+    <div class="space-y-4">
         @forelse ($educationRecords as $record)
             <x-card wire:key="education-{{ $record->id }}" class="flex items-start justify-between gap-4">
                 <div class="flex gap-4">
@@ -173,4 +170,4 @@ new #[Layout('layouts::app')] #[Title('Education')] class extends Component {
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>

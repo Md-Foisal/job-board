@@ -128,19 +128,16 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
     }
 }; ?>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-8">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-            <flux:heading size="xl" class="font-display">{{ __('Job postings') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Everything :company has posted.', ['company' => $this->company->name]) }}</flux:text>
-        </div>
-
+<x-page>
+    <x-page-header :title="__('Job postings')">
         @can('create', [\App\Models\JobPosting::class, $this->company])
-            <flux:button variant="primary" icon="plus" :href="route('employer.jobs.create', $this->company)" wire:navigate>
-                {{ __('Post a job') }}
-            </flux:button>
+            <x-slot:actions>
+                <flux:button variant="primary" icon="plus" :href="route('employer.jobs.create', $this->company)" wire:navigate>
+                    {{ __('Post a job') }}
+                </flux:button>
+            </x-slot:actions>
         @endcan
-    </div>
+    </x-page-header>
 
     <flux:radio.group wire:model.live="filter" variant="segmented" :label="__('Filter by status')">
         <flux:radio value="all" :label="__('All')" />
@@ -253,4 +250,4 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
             </table>
         </x-card>
     @endif
-</div>
+</x-page>

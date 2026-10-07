@@ -104,17 +104,10 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
     ];
 @endphp
 
-<div class="mx-auto flex max-w-5xl flex-col gap-6">
-    <div class="flex flex-wrap items-end justify-between gap-4">
-        <div>
-            <flux:heading size="xl" class="font-display">{{ __('Analytics') }}</flux:heading>
-            <flux:text class="mt-1">
-                {{ $selected ? $selected->title : __('All job postings together') }}
-            </flux:text>
-        </div>
-
+<x-page>
+    <x-page-header :title="__('Analytics')" :description="$selected ? $selected->title : __('All job postings together')">
         @if ($this->jobPostings->isNotEmpty())
-            <div class="flex flex-wrap items-end gap-3">
+            <x-slot:actions>
                 <flux:select wire:model.live="job" :label="__('Job posting')" class="w-64">
                     <flux:select.option value="">{{ __('All job postings') }}</flux:select.option>
                     @foreach ($this->jobPostings as $posting)
@@ -127,9 +120,9 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
                         <flux:select.option value="{{ $days }}">{{ __('Last :days days', ['days' => $days]) }}</flux:select.option>
                     @endforeach
                 </flux:select>
-            </div>
+            </x-slot:actions>
         @endif
-    </div>
+    </x-page-header>
 
     @if ($this->jobPostings->isEmpty())
         <x-empty-state icon="chart-bar" :heading="__('Nothing to measure yet')">
@@ -347,4 +340,4 @@ new #[Layout('layouts::employer')] #[Title('Analytics')] class extends Component
             @endif
         </div>
     @endif
-</div>
+</x-page>

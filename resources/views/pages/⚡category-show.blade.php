@@ -49,7 +49,10 @@ new #[Layout('layouts::guest')] class extends Component {
 }; ?>
 
 <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
-    <x-breadcrumb :items="[['label' => $categoryModel->name]]" />
+    <x-breadcrumb :items="[
+        ['label' => __('Jobs'), 'url' => route('jobs.index')],
+        ['label' => $categoryModel->name],
+    ]" />
 
     <div class="mt-3 mb-5 flex items-center gap-3">
         <x-icon-tile :icon="\App\Support\CategoryIcon::for($categoryModel)" />

@@ -342,15 +342,12 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
     }
 }; ?>
 
-<div class="mx-auto flex max-w-3xl flex-col gap-8">
-    <div>
-        <flux:heading size="xl" class="font-display">
-            {{ $jobPosting ? __('Edit job posting') : __('Post a job') }}
-        </flux:heading>
-        <flux:text class="mt-1">
-            {{ __('The clearer this is, the fewer wrong applications you have to read.') }}
-        </flux:text>
-    </div>
+<x-page width="narrow">
+    <x-page-header
+        :title="$jobPosting ? __('Edit job posting') : __('Post a job')"
+        :back="route('employer.jobs.index', $this->company)"
+        :back-label="__('Job postings')"
+    />
 
     {{-- novalidate: the browser's own bubble fires before Livewire ever
          runs, so it wins the race with an unstyled, untranslated message
@@ -530,4 +527,4 @@ new #[Layout('layouts::employer')] #[Title('Job posting')] class extends Compone
             </flux:button>
         </div>
     </form>
-</div>
+</x-page>

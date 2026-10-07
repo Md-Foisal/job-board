@@ -1,11 +1,6 @@
 <x-layouts::employer :company="$company" :title="__('Your recruiter profile')">
-    <div class="mx-auto flex max-w-2xl flex-col gap-8">
-        <div>
-            <flux:heading size="xl" class="font-display">{{ __('Your recruiter profile') }}</flux:heading>
-            <flux:text class="mt-1">
-                {{ __('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for. Until you fill it in, they see your account name.') }}
-            </flux:text>
-        </div>
+    <x-page width="narrow">
+        <x-page-header :title="__('Your recruiter profile')" :description="__('Candidates see this next to the jobs you post. It stays the same whichever company you are posting for. Until you fill it in, they see your account name.')" />
 
         <form method="POST" action="{{ route('employer.recruiter-profile.update') }}" enctype="multipart/form-data" class="flex flex-col gap-6">
             @csrf
@@ -45,5 +40,5 @@
                 <flux:button variant="primary" type="submit">{{ __('Save changes') }}</flux:button>
             </div>
         </form>
-    </div>
+    </x-page>
 </x-layouts::employer>

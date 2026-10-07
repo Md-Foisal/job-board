@@ -3,11 +3,10 @@
      every membership has ended. Replaces the starter kit's placeholder
      boxes, which gave them nothing to do. --}}
 <x-layouts::app :title="__('Get started')">
-    <div class="mx-auto max-w-3xl px-6 py-10">
-        <flux:heading size="xl">{{ __('What would you like to do?') }}</flux:heading>
-        <flux:subheading>{{ __('You can set up either side now and add the other whenever you need it.') }}</flux:subheading>
+    <x-page width="narrow">
+        <x-page-header :title="__('What would you like to do?')" :description="__('You can set up either side now and add the other whenever you need it.')" />
 
-        <div class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <x-card class="flex flex-col gap-4">
                 <x-icon-tile icon="user" />
                 <div class="flex-1">
@@ -29,5 +28,5 @@
                 <flux:button :href="route('companies.create')" class="w-full">{{ __('Create a company') }}</flux:button>
             </x-card>
         </div>
-    </div>
+    </x-page>
 </x-layouts::app>

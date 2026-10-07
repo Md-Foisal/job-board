@@ -89,7 +89,7 @@ new #[Title('Security settings')] class extends Component {
     }
 }; ?>
 
-<section class="w-full">
+<x-page width="narrow">
     @include('partials.settings-heading')
 
     <flux:heading class="sr-only">{{ __('Security settings') }}</flux:heading>
@@ -179,4 +179,4 @@ new #[Title('Security settings')] class extends Component {
             </section>
         @endif
     </x-pages::settings.layout>
-</section>
+</x-page>

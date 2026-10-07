@@ -115,20 +115,15 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-10">
-    <div class="flex items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Documents') }}</flux:heading>
-            <flux:subheading>{{ __('Your CV, work samples and certificates — used when you apply.') }}</flux:subheading>
-        </div>
-
-        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+<x-page>
+    <x-page-header :title="__('Documents')" :description="__('Your CV, work samples and certificates — used when you apply.')">
+        <x-slot:actions>
             <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
-            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>
-        </div>
-    </div>
+            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add document') }}</flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
-    <div class="mt-6 space-y-4">
+    <div class="space-y-4">
         @forelse ($documents as $document)
             <x-card wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4">
                 <div class="flex gap-4">
@@ -196,4 +191,4 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>

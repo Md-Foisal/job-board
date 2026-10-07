@@ -1,8 +1,6 @@
 <x-layouts::app :title="__('Job preferences')">
-    <div class="mx-auto max-w-2xl">
-        <flux:heading size="xl" level="1">{{ __('Job preferences') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Each job page compares the job with these. Only you see them.') }}</flux:subheading>
-        <flux:separator variant="subtle" class="mb-6" />
+    <x-page width="narrow">
+        <x-page-header :title="__('Job preferences')" :description="__('Each job page compares the job with these. Only you see them.')" />
 
         <x-card as="form" method="POST" action="{{ route('candidate.preferences.update') }}" class="space-y-6">
             @csrf
@@ -80,5 +78,5 @@
                 <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
             </div>
         </x-card>
-    </div>
+    </x-page>
 </x-layouts::app>

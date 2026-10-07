@@ -1,22 +1,19 @@
 <x-layouts::employer :company="$company" :title="__('Company profile')">
-    <div class="mx-auto flex max-w-3xl flex-col gap-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <flux:heading size="xl" class="font-display">{{ __('Company profile') }}</flux:heading>
-                <flux:text class="mt-1">{{ __('This is what candidates see before they decide to apply.') }}</flux:text>
-            </div>
-
+    <x-page width="narrow">
+        <x-page-header :title="__('Company profile')" :description="__('This is what candidates see before they decide to apply.')">
             {{-- Verification is the platform's judgement, not the company's,
                  so it is shown here rather than edited: a company that has
                  been asked for documents otherwise has no way of knowing. --}}
-            @if ($company->verified_at)
-                <flux:badge color="green">{{ __('Verified') }}</flux:badge>
-            @elseif ($company->outstandingDocumentsRequest())
-                <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
-            @else
-                <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
-            @endif
-        </div>
+            <x-slot:status>
+                @if ($company->verified_at)
+                    <flux:badge color="green">{{ __('Verified') }}</flux:badge>
+                @elseif ($company->outstandingDocumentsRequest())
+                    <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
+                @else
+                    <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
+                @endif
+            </x-slot:status>
+        </x-page-header>
 
         @if ($documentsRequest = $company->outstandingDocumentsRequest())
             <flux:callout icon="document-text" color="amber">
@@ -107,5 +104,5 @@
                 <flux:button variant="primary" type="submit">{{ __('Save changes') }}</flux:button>
             </div>
         </form>
-    </div>
+    </x-page>
 </x-layouts::employer>

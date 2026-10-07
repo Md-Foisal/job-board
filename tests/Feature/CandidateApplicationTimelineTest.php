@@ -155,7 +155,7 @@ test("a candidate cannot withdraw another candidate's application", function () 
     expect($application->fresh()->outcome_status)->toBe(ApplicationOutcomeStatus::Active);
 });
 
-test('My Applications links through to the timeline, not straight to the job', function () {
+test('the applications list links through to the timeline, not straight to the job', function () {
     $candidate = candidateUser();
     $application = timelineApplication($candidate);
 

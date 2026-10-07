@@ -142,17 +142,14 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-8">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-        <div>
-            <flux:heading size="xl" class="font-display">{{ __('Team') }}</flux:heading>
-            <flux:text class="mt-1">{{ __('Who can post jobs and review applicants for :company.', ['company' => $this->company->name]) }}</flux:text>
-        </div>
-
-        <flux:button variant="primary" icon="plus" wire:click="$set('showInviteModal', true)">
-            {{ __('Invite someone') }}
-        </flux:button>
-    </div>
+<x-page>
+    <x-page-header :title="__('Team')" :description="__('Who can post jobs and review applicants for :company.', ['company' => $this->company->name])">
+        <x-slot:actions>
+            <flux:button variant="primary" icon="plus" wire:click="$set('showInviteModal', true)">
+                {{ __('Invite someone') }}
+            </flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
     <x-card padding="none" class="overflow-hidden">
         <table class="w-full text-sm">
@@ -276,4 +273,4 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>

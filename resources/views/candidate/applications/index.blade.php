@@ -1,8 +1,6 @@
-<x-layouts::app :title="__('My Applications')">
-    <div class="mx-auto max-w-4xl">
-        <flux:heading size="xl" level="1">{{ __('My Applications') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Every job you have applied to, in one place.') }}</flux:subheading>
-        <flux:separator variant="subtle" class="mb-6" />
+<x-layouts::app :title="__('Applications')">
+    <x-page>
+        <x-page-header :title="__('Applications')" />
 
         @if ($applications->isEmpty())
             <x-empty-state icon="paper-airplane" :heading="__('You haven\'t applied to any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')">
@@ -38,5 +36,5 @@
                 {{ $applications->links() }}
             </div>
         @endif
-    </div>
+    </x-page>
 </x-layouts::app>

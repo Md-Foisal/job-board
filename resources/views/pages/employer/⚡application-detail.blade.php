@@ -207,41 +207,32 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
     }
 }; ?>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6">
+<x-page>
     @php
         $candidate = $this->application->candidateProfile;
     @endphp
 
-    <div>
-        <x-breadcrumb :items="[
-            ['label' => __('Job postings'), 'url' => route('employer.jobs.index', $this->company)],
-            ['label' => $this->application->jobPosting->title, 'url' => route('employer.jobs.applications', ['company' => $this->company, 'jobPosting' => $this->application->jobPosting])],
-            ['label' => $candidate->user->name],
-        ]" />
+    <x-page-header
+        :title="$candidate->user->name"
+        :description="$candidate->headline"
+        :back="route('employer.jobs.applications', ['company' => $this->company, 'jobPosting' => $this->application->jobPosting])"
+        :back-label="$this->application->jobPosting->title"
+    >
+        <x-slot:media>
+            <flux:avatar
+                circle
+                size="lg"
+                :src="$candidate->user->avatar ? \Illuminate\Support\Facades\Storage::url($candidate->user->avatar) : null"
+                :name="$candidate->user->name"
+                :initials="$candidate->user->initials()"
+            />
+        </x-slot:media>
 
-        <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
-            <div class="flex min-w-0 items-center gap-4">
-                <flux:avatar
-                    circle
-                    size="lg"
-                    :src="$candidate->user->avatar ? \Illuminate\Support\Facades\Storage::url($candidate->user->avatar) : null"
-                    :name="$candidate->user->name"
-                    :initials="$candidate->user->initials()"
-                />
-                <div class="min-w-0">
-                    <flux:heading size="xl" class="font-display">{{ $candidate->user->name }}</flux:heading>
-                    @if ($candidate->headline)
-                        <flux:text class="mt-1">{{ $candidate->headline }}</flux:text>
-                    @endif
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <x-match-score :score="$this->matchScore" size="md" />
-                <x-application-status :application="$this->application" />
-            </div>
-        </div>
-    </div>
+        <x-slot:status>
+            <x-match-score :score="$this->matchScore" size="md" />
+            <x-application-status :application="$this->application" />
+        </x-slot:status>
+    </x-page-header>
 
     <x-card>
         <div class="flex flex-wrap items-end gap-4">
@@ -478,4 +469,4 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
             @endforeach
         </ul>
     </x-card>
-</div>
+</x-page>

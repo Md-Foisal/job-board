@@ -223,13 +223,8 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6">
-    <div>
-        <flux:heading size="xl" class="font-display">{{ __('Reviews') }}</flux:heading>
-        <flux:text class="mt-1">
-            {{ __('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.') }}
-        </flux:text>
-    </div>
+<x-page>
+    <x-page-header :title="__('Reviews')" :description="__('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.')" />
 
     @if ($this->summary->count === 0)
         <x-empty-state icon="chat-bubble-left-right" :heading="__('No published reviews yet')">
@@ -394,4 +389,4 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
             </div>
         </div>
     </flux:modal>
-</div>
+</x-page>

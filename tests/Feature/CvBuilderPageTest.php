@@ -52,7 +52,7 @@ test('only a signed-in candidate can open the CV builder', function () {
 
     $this->actingAs(employerUser())->get(route('candidate.cv-builder'))->assertForbidden();
 
-    $this->actingAs(rahim())->get(route('candidate.cv-builder'))->assertOk()->assertSee('CV Builder');
+    $this->actingAs(rahim())->get(route('candidate.cv-builder'))->assertOk()->assertSee('CV builder');
 });
 
 test('the preview shows the CV from the profile, and never the salary preference', function () {

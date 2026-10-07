@@ -208,17 +208,14 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-10">
-    <div class="flex items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Job alerts') }}</flux:heading>
-            <flux:subheading>{{ __('Searches we check for you. When new jobs match, we email them to you.') }}</flux:subheading>
-        </div>
+<x-page>
+    <x-page-header :title="__('Job alerts')" :description="__('Searches we check for you. When new jobs match, we email them to you.')">
+        <x-slot:actions>
+            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('New alert') }}</flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
-        <flux:button wire:click="create" variant="primary" icon="plus">{{ __('New alert') }}</flux:button>
-    </div>
-
-    <div class="mt-6 space-y-4">
+    <div class="space-y-4">
         @forelse ($jobAlerts as $jobAlert)
             <x-card wire:key="job-alert-{{ $jobAlert->id }}" class="flex items-start justify-between gap-4 {{ $jobAlert->is_active ? '' : 'opacity-60' }}">
                 <div class="flex min-w-0 gap-4">
@@ -327,4 +324,4 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>
