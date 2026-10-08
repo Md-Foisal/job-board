@@ -108,11 +108,11 @@ test('the job page falls back to the account name when there is none', function 
         ->assertSee($recruiter->name);
 });
 
-test('the dashboard counts open jobs, applications, and the ones waiting', function () {
+test('the dashboard counts each open job\'s applications by stage', function () {
     $company = Company::factory()->create();
 
-    $open = JobPosting::factory()->for($company)->create(['availability_status' => AvailabilityStatus::Active]);
-    JobPosting::factory()->for($company)->create(['availability_status' => AvailabilityStatus::Closed]);
+    $open = JobPosting::factory()->for($company)->create(['title' => 'Backend Developer', 'availability_status' => AvailabilityStatus::Active]);
+    JobPosting::factory()->for($company)->create(['title' => 'Office Manager', 'availability_status' => AvailabilityStatus::Closed]);
 
     Application::factory()->count(2)->create([
         'job_posting_id' => $open->id,
@@ -123,14 +123,14 @@ test('the dashboard counts open jobs, applications, and the ones waiting', funct
         'stage' => ApplicationStage::Interview,
     ]);
 
-    $response = $this->actingAs(employerUser($company))
-        ->get(route('employer.dashboard', $company));
-
-    $response->assertOk();
-    $response->assertSee($open->title);
-    $response->assertSeeInOrder(['Live jobs', '1']);
-    $response->assertSeeInOrder(['Applications', '3']);
-    $response->assertSeeInOrder(['Waiting on you', '2']);
+    $this->actingAs(employerUser($company))
+        ->get(route('employer.dashboard', $company))
+        ->assertOk()
+        ->assertSee('2 applications at New for Backend Developer')
+        ->assertSee('1 application at Interview for Backend Developer')
+        ->assertSee('No applications at Offer for Backend Developer')
+        ->assertSee(route('employer.jobs.applications', ['company' => $company, 'jobPosting' => $open, 'stage' => 'interview']), false)
+        ->assertDontSee('Office Manager');
 });
 
 test('the dashboard says so plainly when there are no postings', function () {
@@ -139,7 +139,8 @@ test('the dashboard says so plainly when there are no postings', function () {
     $this->actingAs(employerUser($company))
         ->get(route('employer.dashboard', $company))
         ->assertOk()
-        ->assertSee('No job postings yet.');
+        ->assertSee('No job postings yet')
+        ->assertSee('Nothing needs you right now');
 });
 
 test('another company\'s numbers never appear', function () {

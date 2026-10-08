@@ -6,13 +6,7 @@
                  been asked for documents otherwise has no way of knowing. --}}
             <x-slot:status>
                 <x-visibility-badge public :tip="__('This is what candidates see before they decide to apply.')" />
-                @if ($company->verified_at)
-                    <flux:badge color="green">{{ __('Verified') }}</flux:badge>
-                @elseif ($company->outstandingDocumentsRequest())
-                    <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
-                @else
-                    <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
-                @endif
+                <x-verification-status :company="$company" />
             </x-slot:status>
         </x-page-header>
 

@@ -206,7 +206,7 @@ test('a turned-down or withdrawn application at New is no longer waiting on the 
     $this->actingAs(employerUser($this->company))
         ->get(route('employer.dashboard', $this->company))
         ->assertOk()
-        ->assertViewHas('newApplicationCount', 2);
+        ->assertViewHas('newApplications', fn ($jobs) => $jobs->sole()->stage_new_count === 2);
 
     Livewire::actingAs(employerUser($this->company))
         ->test('pages::employer.job-listings', ['company' => $this->company])

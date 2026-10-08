@@ -9,6 +9,10 @@
     otherwise (what the company sees, who reads this); a page that has
     nothing to add leaves it out rather than restating its title.
 
+    The title side never gets narrower than 16rem: below that the
+    actions move to a row of their own instead of running over a long
+    title on a phone.
+
     Slots: title (when it needs markup, such as a link), status, media
     (a photo or logo before the title), actions, and the default slot for
     anything longer than one line under the title.
@@ -26,7 +30,7 @@
     @endif
 
     <div class="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-        <div class="flex min-w-0 flex-1 items-center gap-4">
+        <div class="flex min-w-0 flex-1 basis-64 items-center gap-4">
             {{ $media ?? '' }}
 
             <div class="min-w-0">

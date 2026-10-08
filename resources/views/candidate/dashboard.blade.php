@@ -50,55 +50,31 @@
                 @if ($needsYou)
                     <ul class="divide-y divide-line border-t border-line">
                         @foreach ($closingSaved as $jobPosting)
-                            <li>
-                                <a href="{{ route('jobs.show', $jobPosting) }}" wire:navigate class="group flex items-center gap-4 px-5 py-4 transition hover:bg-surface sm:px-6">
-                                    <x-icon-tile icon="clock" size="sm" />
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block font-medium text-ink group-hover:text-sunset-small">{{ __('Saved job closes in :time', ['time' => $jobPosting->expires_at->diffForHumans(null, true)]) }}</span>
-                                        <span class="block truncate text-sm text-ink-muted">{{ $jobPosting->title }} &middot; {{ $jobPosting->company->name }}</span>
-                                    </span>
-                                    <flux:icon.chevron-right variant="mini" class="shrink-0 text-ink-muted" aria-hidden="true" />
-                                </a>
-                            </li>
+                            <x-task-row :href="route('jobs.show', $jobPosting)" icon="clock">
+                                {{ __('Saved job closes in :time', ['time' => $jobPosting->expires_at->diffForHumans(null, true)]) }}
+                                <x-slot:detail class="truncate">{{ $jobPosting->title }} &middot; {{ $jobPosting->company->name }}</x-slot:detail>
+                            </x-task-row>
                         @endforeach
 
                         @if ($importableCv)
-                            <li>
-                                <a href="{{ route('candidate.resume-import', $importableCv) }}" wire:navigate class="group flex items-center gap-4 px-5 py-4 transition hover:bg-surface sm:px-6">
-                                    <x-icon-tile icon="document-arrow-down" size="sm" />
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block font-medium text-ink group-hover:text-sunset-small">{{ __('Fill your profile from your CV') }}</span>
-                                        <span class="block text-sm text-ink-muted">{{ __('Without skills no job can show how well it fits you. We read :file and you pick what to add.', ['file' => $importableCv->original_filename]) }}</span>
-                                    </span>
-                                    <flux:icon.chevron-right variant="mini" class="shrink-0 text-ink-muted" aria-hidden="true" />
-                                </a>
-                            </li>
+                            <x-task-row :href="route('candidate.resume-import', $importableCv)" icon="document-arrow-down">
+                                {{ __('Fill your profile from your CV') }}
+                                <x-slot:detail>{{ __('Without skills no job can show how well it fits you. We read :file and you pick what to add.', ['file' => $importableCv->original_filename]) }}</x-slot:detail>
+                            </x-task-row>
                         @endif
 
                         @if ($profileGaps !== [])
-                            <li>
-                                <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="group flex items-center gap-4 px-5 py-4 transition hover:bg-surface sm:px-6">
-                                    <x-icon-tile icon="user-circle" size="sm" />
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block font-medium text-ink group-hover:text-sunset-small">{{ __('Add :parts to your profile', ['parts' => collect($profileGaps)->map(fn ($gap) => \App\Http\Controllers\CandidateDashboardController::gapLabel($gap))->join(', ', ' and ')]) }}</span>
-                                        <span class="block text-sm text-ink-muted">{{ __('These are what a company reads first when you apply.') }}</span>
-                                    </span>
-                                    <flux:icon.chevron-right variant="mini" class="shrink-0 text-ink-muted" aria-hidden="true" />
-                                </a>
-                            </li>
+                            <x-task-row :href="route('candidate.profile.edit')" icon="user-circle">
+                                {{ __('Add :parts to your profile', ['parts' => collect($profileGaps)->map(fn ($gap) => \App\Http\Controllers\CandidateDashboardController::gapLabel($gap))->join(', ', ' and ')]) }}
+                                <x-slot:detail>{{ __('These are what a company reads first when you apply.') }}</x-slot:detail>
+                            </x-task-row>
                         @endif
 
                         @foreach ($reviewable as $application)
-                            <li>
-                                <a href="{{ route('candidate.applications.show', $application) }}" wire:navigate class="group flex items-center gap-4 px-5 py-4 transition hover:bg-surface sm:px-6">
-                                    <x-icon-tile icon="chat-bubble-left-right" size="sm" />
-                                    <span class="min-w-0 flex-1">
-                                        <span class="block font-medium text-ink group-hover:text-sunset-small">{{ __('Review how :company hired', ['company' => $application->jobPosting->company->name]) }}</span>
-                                        <span class="block text-sm text-ink-muted">{{ __('Your account helps the next person who applies there.') }}</span>
-                                    </span>
-                                    <flux:icon.chevron-right variant="mini" class="shrink-0 text-ink-muted" aria-hidden="true" />
-                                </a>
-                            </li>
+                            <x-task-row :href="route('candidate.applications.show', $application)" icon="chat-bubble-left-right">
+                                {{ __('Review how :company hired', ['company' => $application->jobPosting->company->name]) }}
+                                <x-slot:detail>{{ __('Your account helps the next person who applies there.') }}</x-slot:detail>
+                            </x-task-row>
                         @endforeach
                     </ul>
                 @else

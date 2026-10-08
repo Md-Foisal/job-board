@@ -10,6 +10,7 @@ use App\Services\MatchScoreCalculator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 new #[Layout('layouts::employer')] #[Title('Applications')] class extends Component {
@@ -17,6 +18,11 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
 
     public JobPosting $jobPosting;
 
+    /**
+     * In the address, so the dashboard's count for one stage opens the
+     * list at that stage.
+     */
+    #[Url(as: 'stage', except: 'all')]
     public string $stageFilter = 'all';
 
     public string $sort = 'match';
@@ -44,7 +50,13 @@ new #[Layout('layouts::employer')] #[Title('Applications')] class extends Compon
                 'candidateProfile.skills:id',
                 'resumeDocument',
             ])
-            ->when($this->stageFilter !== 'all', fn ($query) => $query->where('stage', $this->stageFilter))
+            // A stage holds the applications still in play there, as the
+            // dashboard counts them: one turned down or withdrawn at
+            // Interview is no longer in interview. All stages shows every
+            // application, decided ones included.
+            ->when($this->stageFilter !== 'all', fn ($query) => $query
+                ->where('stage', $this->stageFilter)
+                ->where('outcome_status', ApplicationOutcomeStatus::Active))
             ->get();
 
         $calculator = app(MatchScoreCalculator::class);

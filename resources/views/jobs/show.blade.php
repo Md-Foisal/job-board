@@ -10,16 +10,6 @@
         $company = $jobPosting->company;
         $pay = $jobPosting->payRange();
         $category = $jobPosting->categories->first();
-        $requiredSkills = $jobPosting->skills->filter(fn ($skill) => $skill->pivot->importance === \App\Enums\SkillImportance::Required);
-        $niceSkills = $jobPosting->skills->diff($requiredSkills);
-        $where = collect([$jobPosting->location_city, $jobPosting->workplace_type->label()])->filter()->implode(' · ');
-        $location = collect([$jobPosting->location_city, $jobPosting->location_country])->filter()->implode(', ');
-        $closesOn = \App\Support\ClosingDate::day($jobPosting);
-        // A closing day means the end of that day where the company is.
-        // Said out loud only to someone whose own day ends at another time.
-        $closingZone = $company->timezone !== \App\Support\LocalTime::zone()
-            ? \App\Support\LocalTime::label($company->timezone, at: $jobPosting->expires_at)
-            : null;
         // Guests get the button too: it signs them in and brings them back
         // to the form. The bar on phones follows whichever button shows.
         $offersApply = $canApply || ($isPublic && ! auth()->check());
@@ -75,17 +65,7 @@
                         </div>
                     @endif
 
-                    <div class="mt-3 flex flex-wrap items-center gap-1.5">
-                        @if ($where !== '')
-                            <x-chip>
-                                <flux:icon.map-pin variant="micro" class="size-3.5" aria-hidden="true" />
-                                {{ $where }}
-                            </x-chip>
-                        @endif
-                        <x-chip>
-                            <flux:icon.briefcase variant="micro" class="size-3.5" aria-hidden="true" />
-                            {{ $jobPosting->employment_type->label() }}
-                        </x-chip>
+                    <x-job-posting.chips :job-posting="$jobPosting" class="mt-3">
                         @if ($jobPosting->published_at)
                             <span class="ms-1 inline-flex items-center gap-1 text-meta text-ink-muted">
                                 <flux:icon.clock variant="micro" class="size-3.5" aria-hidden="true" />
@@ -100,7 +80,7 @@
                         @else
                             <x-closing-soon :job-posting="$jobPosting" />
                         @endif
-                    </div>
+                    </x-job-posting.chips>
                 </div>
             </header>
 
@@ -109,16 +89,7 @@
                  wide screen it sits in its own column and stays in view. --}}
             <aside class="lg:col-start-2 lg:row-span-2 lg:row-start-1" aria-label="{{ __('Apply and job details') }}">
                 <x-card padding="sm" class="lg:sticky lg:top-20">
-                    @if ($jobPosting->salary_negotiable)
-                        <p class="text-subheading text-ink-muted">{{ __('Pay negotiable') }}</p>
-                    @elseif ($pay)
-                        <p class="font-display text-heading tabular-nums text-ink">
-                            {{ $pay }}
-                            @if ($jobPosting->salary_period)
-                                <span class="text-body font-normal text-ink-muted">{{ $jobPosting->salary_period->per() }}</span>
-                            @endif
-                        </p>
-                    @endif
+                    <x-job-posting.pay :job-posting="$jobPosting" />
 
                     <div @class(['mt-4' => $jobPosting->salary_negotiable || $pay])>
                         @if ($isMember)
@@ -206,60 +177,7 @@
                     </div>
 
                     <h2 class="mt-5 border-t border-line pt-4 text-meta font-semibold uppercase tracking-wide text-ink-muted">{{ __('Job details') }}</h2>
-                    <dl class="mt-3 grid grid-cols-[7rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
-                        <dt class="text-ink-muted">{{ __('Pay') }}</dt>
-                        <dd class="text-ink">
-                            @if ($jobPosting->salary_negotiable)
-                                {{ __('Negotiable') }}
-                            @elseif ($pay)
-                                {{ $pay }} {{ $jobPosting->salary_period?->per() }}
-                            @else
-                                {{ __('Not stated') }}
-                            @endif
-                        </dd>
-
-                        <dt class="text-ink-muted">{{ __('Job type') }}</dt>
-                        <dd class="text-ink">{{ $jobPosting->employment_type->label() }}</dd>
-
-                        <dt class="text-ink-muted">{{ __('Workplace') }}</dt>
-                        <dd class="text-ink">{{ $jobPosting->workplace_type->label() }}</dd>
-
-                        @if ($location !== '')
-                            <dt class="text-ink-muted">{{ __('Location') }}</dt>
-                            <dd class="text-ink">{{ $location }}</dd>
-                        @endif
-
-                        @if ($jobPosting->min_experience_years !== null)
-                            <dt class="text-ink-muted">{{ __('Experience') }}</dt>
-                            <dd class="text-ink">
-                                {{ $jobPosting->min_experience_years === 0
-                                    ? __('No minimum')
-                                    : trans_choice('{1} :count+ year|[2,*] :count+ years', $jobPosting->min_experience_years) }}
-                            </dd>
-                        @endif
-
-                        @if ($jobPosting->categories->isNotEmpty())
-                            <dt class="text-ink-muted">{{ trans_choice('Category|Categories', $jobPosting->categories->count()) }}</dt>
-                            <dd class="text-ink">
-                                @foreach ($jobPosting->categories as $jobCategory)
-                                    <a href="{{ route('categories.show', $jobCategory) }}" class="hover:text-sunset-small hover:underline" wire:navigate>{{ $jobCategory->name }}</a>@if (! $loop->last), @endif
-                                @endforeach
-                            </dd>
-                        @endif
-
-                        @if ($jobPosting->published_at)
-                            <dt class="text-ink-muted">{{ __('Posted') }}</dt>
-                            <dd class="text-ink">{{ \App\Support\LocalTime::of($jobPosting->published_at)->format(\App\Support\DateFormat::DAY) }}</dd>
-                        @endif
-
-                        <dt class="text-ink-muted">{{ __('Closes') }}</dt>
-                        <dd class="text-ink">
-                            {{ $closesOn->format(\App\Support\DateFormat::DAY) }}
-                            @if ($closingZone)
-                                <span class="block text-meta text-ink-muted">{{ __('End of the day in :zone', ['zone' => $closingZone]) }}</span>
-                            @endif
-                        </dd>
-                    </dl>
+                    <x-job-posting.facts :job-posting="$jobPosting" class="mt-3" />
                 </x-card>
             </aside>
 
@@ -268,28 +186,7 @@
                     <livewire:match-breakdown :job-posting="$jobPosting" :key="'match-'.$jobPosting->id" defer />
                 @endif
 
-                <section class="mt-8 first:mt-0" aria-labelledby="job-description-heading">
-                    <h2 id="job-description-heading" class="font-display text-heading text-ink">{{ __('About the job') }}</h2>
-                    <div class="prose prose-zinc mt-4 max-w-none dark:prose-invert">
-                        <div class="prose-content">{!! $jobPosting->description !!}</div>
-                    </div>
-                </section>
-
-                @if ($jobPosting->skills->isNotEmpty())
-                    <section class="mt-10" aria-labelledby="job-skills-heading">
-                        <h2 id="job-skills-heading" class="font-display text-heading text-ink">{{ __('Skills') }}</h2>
-                        @foreach ([__('Required') => $requiredSkills, __('Nice to have') => $niceSkills] as $label => $group)
-                            @if ($group->isNotEmpty())
-                                <h3 class="mt-4 text-meta font-medium uppercase tracking-wide text-ink-muted">{{ $label }}</h3>
-                                <ul class="mt-2 flex flex-wrap gap-2">
-                                    @foreach ($group as $skill)
-                                        <li><x-chip variant="skill">{{ $skill->name }}</x-chip></li>
-                                    @endforeach
-                                </ul>
-                            @endif
-                        @endforeach
-                    </section>
-                @endif
+                <x-job-posting.about :job-posting="$jobPosting" />
 
                 <section class="mt-10" aria-labelledby="job-company-heading">
                     <h2 id="job-company-heading" class="font-display text-heading text-ink">{{ __('About the company') }}</h2>
