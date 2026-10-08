@@ -11,4 +11,7 @@
     @if ($skill->pivot?->proficiency)
         <span class="font-normal text-ink-muted">&middot; {{ $skill->pivot->proficiency->label() }}</span>
     @endif
+    @if ($variant === 'matched')
+        <span class="sr-only">{{ __('(this job asks for it)') }}</span>
+    @endif
 </x-chip>

@@ -17,11 +17,19 @@
     On the candidate's own page and on the preview the name is the page's
     title, as on LinkedIn, so those pages pass headingLevel 1; where the
     profile sits inside another page it stays a level-2 heading.
+
+    A page that already shows the person at its top -- the applicant
+    page, whose header carries the photo, name, headline and links --
+    passes intro false and starts at About. It can also pass the skills
+    a posting asks for that the candidate does not list (missingSkills),
+    which the Skills section then names under their own.
 --}}
 @props([
     'profile',
     'mode' => 'viewer',
     'wantedSkillIds' => null,
+    'missingSkills' => null,
+    'intro' => true,
     'headingLevel' => 2,
 ])
 
@@ -38,6 +46,7 @@
         {{-- The intro card: photo, name, headline, links. The cover photo is
              the candidate's own decoration and stays on their side, so a
              company's view starts with the photo. --}}
+        @if ($intro || $owner)
         <x-card padding="none" class="overflow-hidden">
             @if ($owner)
                 <div class="relative">
@@ -149,6 +158,7 @@
                 @endif
             </div>
         </x-card>
+        @endif
 
         {{-- About --}}
         @if ($owner || filled($profile->bio))
@@ -222,7 +232,7 @@
             <x-candidate-history :experience="$experience" :education="$education" :certifications="$certifications" :projects="$projects" />
 
             <x-profile.section :heading="__('Skills')">
-                <div class="border-t border-line px-5 py-4 sm:px-6">
+                <div class="flex flex-col gap-4 border-t border-line px-5 py-4 sm:px-6">
                     @if ($skills->isEmpty())
                         <p class="text-sm text-ink-muted">{{ __('No skills on their profile.') }}</p>
                     @else
@@ -231,6 +241,36 @@
                                 <li><x-profile.skill-chip :skill="$skill" :variant="$wantedSkillIds?->contains($skill->id) ? 'matched' : 'skill'" /></li>
                             @endforeach
                         </ul>
+
+                        {{-- A legend rather than a note in brackets: when every
+                             skill matches, the chips alone look the same as
+                             when none does. --}}
+                        @if ($wantedSkillIds?->isNotEmpty() && $skills->contains(fn ($skill) => $wantedSkillIds->contains($skill->id)))
+                            <p class="flex items-center gap-2 text-xs text-ink-muted">
+                                <flux:icon.check variant="micro" class="size-3.5 shrink-0 text-success-700 dark:text-success-300" aria-hidden="true" />
+                                {{ __('Ticked: a skill this job asks for') }}
+                            </p>
+                        @endif
+                    @endif
+
+                    @if ($missingSkills?->isNotEmpty())
+                        <div>
+                            <h3 class="text-xs font-medium text-ink-muted">{{ __('Asked for, not on their profile') }}</h3>
+
+                            <ul class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($missingSkills as $skill)
+                                    @php $required = $skill->pivot->importance === \App\Enums\SkillImportance::Required; @endphp
+                                    <li>
+                                        <x-chip variant="missing" :required="$required">
+                                            {{ $skill->name }}
+                                            @if ($required)
+                                                <span class="font-normal">{{ __('(required)') }}</span>
+                                            @endif
+                                        </x-chip>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
                     @endif
                 </div>
             </x-profile.section>

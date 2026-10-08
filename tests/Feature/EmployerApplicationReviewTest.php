@@ -93,8 +93,7 @@ test('moving an applicant forward records who moved them and when', function () 
 
     Livewire::actingAs($reviewer)
         ->test('pages::employer.application-detail', ['company' => $company, 'application' => $application])
-        ->set('stage', ApplicationStage::Shortlisted->value)
-        ->call('updateStage');
+        ->call('moveTo', ApplicationStage::Shortlisted->value);
 
     $application->refresh();
 
@@ -112,8 +111,7 @@ test('setting the same stage again writes no history', function () {
 
     Livewire::actingAs(employerUser($company))
         ->test('pages::employer.application-detail', ['company' => $company, 'application' => $application])
-        ->set('stage', ApplicationStage::New->value)
-        ->call('updateStage');
+        ->call('moveTo', ApplicationStage::New->value);
 
     expect($application->events()->count())->toBe(0);
 });

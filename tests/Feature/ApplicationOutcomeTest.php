@@ -154,8 +154,7 @@ test('once decided, the stage stops moving, so nobody is told they moved forward
     $this->application->update(['outcome_status' => ApplicationOutcomeStatus::Rejected]);
 
     detailPage($this, employerUser($this->company))
-        ->set('stage', ApplicationStage::Interview->value)
-        ->call('updateStage')
+        ->call('moveTo', ApplicationStage::Interview->value)
         ->assertForbidden();
 
     expect($this->application->fresh()->stage)->toBe(ApplicationStage::New);

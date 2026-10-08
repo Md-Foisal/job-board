@@ -7,10 +7,11 @@
       skill    a skill someone has or a job asks for. Round, on the
                brand tint, its name in the Sunset text gradient.
       matched  a skill the job asks for that the person has. Round, in
-               the success colour, since here the colour is the answer.
+               the success colour, since here the colour is the answer,
+               with a tick so the answer is not colour alone.
       missing  a skill the job asks for that the person does not list.
-               Round, dashed outline; amber when the job marks it
-               required.
+               Round, dashed outline, a cross; amber when the job marks
+               it required.
 
     Status (Applied, Rejected, Approved ...) is not a chip: it uses
     flux:badge in its status colour, through application-status and
@@ -29,6 +30,11 @@
 ]) }}>
     @if ($variant === 'skill')
         <span class="text-sunset-small">{{ $slot }}</span>
+    @elseif ($variant === 'matched' || $variant === 'missing')
+        {{-- A tick or a cross as well as the colour, so the answer does
+             not rest on colour alone (WCAG 1.4.1). --}}
+        <flux:icon :name="$variant === 'matched' ? 'check' : 'x-mark'" variant="micro" class="-ms-0.5 size-3.5 shrink-0" aria-hidden="true" />
+        {{ $slot }}
     @else
         {{ $slot }}
     @endif

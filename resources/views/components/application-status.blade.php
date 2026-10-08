@@ -11,8 +11,12 @@
     still inside its undo window has not been made yet, as far as the
     candidate is concerned.
 
-    The company sees the outcome and, while it is still open, the stage
-    beside it. The outcome's colour is decided on the enum
+    The company sees one pill too: the stage while the application is
+    open (New, Shortlisted, Interview, Offer), and how it ended once it
+    is closed -- one status per row, as Greenhouse and Workable list
+    candidates, instead of "Active" beside the stage. A decision still
+    inside its undo window already shows as made: the company made it.
+    The outcome's colour is decided on the enum
     (ApplicationOutcomeStatus::color()), so any other view that shows it
     without this component gets the same colour.
 
@@ -38,14 +42,10 @@
     @endphp
 
     <flux:badge :color="$color">{{ $label }}</flux:badge>
+@elseif ($application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active)
+    <flux:badge color="zinc">{{ __($application->stage->label()) }}</flux:badge>
 @else
     <flux:badge :color="$application->outcome_status->color()">
-        {{ $application->outcome_status->label() }}
+        {{ __($application->outcome_status->label()) }}
     </flux:badge>
-
-    @if ($application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active)
-        <flux:badge color="zinc" variant="pill">
-            {{ $application->stage->label() }}
-        </flux:badge>
-    @endif
 @endif

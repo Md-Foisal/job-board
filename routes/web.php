@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountRestoreController;
 use App\Http\Controllers\ApplicationResumeDownloadController;
+use App\Http\Controllers\ApplicationResumePreviewController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
 use App\Http\Controllers\CandidatePreferenceController;
@@ -225,6 +226,7 @@ Route::middleware(['auth', 'company.member'])
 
         Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
         Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');
+        Route::get('/applications/{application}/resume/preview', ApplicationResumePreviewController::class)->name('applications.resume.preview');
     });
 
 /*

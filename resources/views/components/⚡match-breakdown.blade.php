@@ -343,7 +343,6 @@ new class extends Component
                                 @foreach ($group['matched'] as $skill)
                                     <li>
                                         <x-chip variant="matched">
-                                            <flux:icon.check variant="micro" class="size-3.5" aria-hidden="true" />
                                             {{ $skill->name }}
                                             <span class="sr-only">{{ __('(you have this)') }}</span>
                                         </x-chip>
@@ -352,7 +351,6 @@ new class extends Component
                                 @foreach ($group['missing'] as $skill)
                                     <li>
                                         <x-chip variant="missing">
-                                            <flux:icon.x-mark variant="micro" class="size-3.5" aria-hidden="true" />
                                             {{ $skill->name }}
                                             <span class="sr-only">{{ __('(missing from your profile)') }}</span>
                                         </x-chip>
