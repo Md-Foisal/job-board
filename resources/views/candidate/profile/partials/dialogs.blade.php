@@ -26,8 +26,9 @@
 
 {{-- Photo --}}
 <flux:modal name="edit-photo" class="w-full max-w-md">
+    {{-- Nothing to save until a picture is picked. --}}
     <form method="POST" action="{{ $update }}" enctype="multipart/form-data" class="space-y-6"
-        x-data="{ preview: null }">
+        x-data="{ picked: false }" x-on:image-picked="picked = !! $event.detail.url">
         @csrf
         @method('PATCH')
 
@@ -36,32 +37,18 @@
             <flux:text class="mt-1">{{ __('A clear photo of your face helps a company put a person to the name.') }}</flux:text>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-50 text-xl font-semibold dark:bg-brand-950">
-                <template x-if="preview"><img :src="preview" alt="" class="size-full object-cover"></template>
-                <template x-if="! preview">
-                    @if ($user->avatar)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($user->avatar) }}" alt="" class="size-full object-cover">
-                    @else
-                        <span class="text-sunset-small">{{ $user->initials() }}</span>
-                    @endif
-                </template>
-            </div>
-
-            <flux:input
-                type="file"
-                name="avatar"
-                accept="{{ \App\Support\ImageUploads::ACCEPT }}"
-                :label="__('Photo')"
-                :description="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::PHOTO)"
-                x-on:change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
-                required
-            />
-        </div>
+        <x-image-picker
+            name="avatar"
+            :label="__('Photo')"
+            :current="$user->avatar ? \Illuminate\Support\Facades\Storage::url($user->avatar) : null"
+            :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::PHOTO)"
+        >
+            <span class="text-xl font-semibold text-sunset-small">{{ $user->initials() }}</span>
+        </x-image-picker>
 
         <div class="flex justify-end gap-2">
             <flux:modal.close><flux:button variant="ghost">{{ __('Cancel') }}</flux:button></flux:modal.close>
-            <flux:button type="submit" variant="primary">{{ __('Save photo') }}</flux:button>
+            <flux:button type="submit" variant="primary" x-bind:disabled="! picked">{{ __('Save photo') }}</flux:button>
         </div>
     </form>
 </flux:modal>
@@ -69,7 +56,7 @@
 {{-- Cover --}}
 <flux:modal name="edit-cover" class="w-full max-w-lg">
     <form method="POST" action="{{ $update }}" enctype="multipart/form-data" class="space-y-6"
-        x-data="{ preview: null }">
+        x-data="{ picked: false }" x-on:image-picked="picked = !! $event.detail.url">
         @csrf
         @method('PATCH')
 
@@ -78,30 +65,19 @@
             <flux:text class="mt-1">{{ __('The wide picture behind your photo. Companies do not see it; it is for your own page.') }}</flux:text>
         </div>
 
-        <div class="relative h-24 overflow-hidden rounded-control bg-surface">
-            <template x-if="preview"><img :src="preview" alt="" class="size-full object-cover"></template>
-            <template x-if="! preview">
-                @if ($profile->cover_photo_path)
-                    <img src="{{ \Illuminate\Support\Facades\Storage::url($profile->cover_photo_path) }}" alt="" class="size-full object-cover">
-                @else
-                    <div class="bg-sunset absolute inset-0"></div>
-                @endif
-            </template>
-        </div>
-
-        <flux:input
-            type="file"
+        <x-image-picker
             name="cover_photo"
-            accept="{{ \App\Support\ImageUploads::ACCEPT }}"
+            shape="wide"
             :label="__('Cover photo')"
-            :description="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)"
-            x-on:change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
-            required
-        />
+            :current="$profile->cover_photo_path ? \Illuminate\Support\Facades\Storage::url($profile->cover_photo_path) : null"
+            :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)"
+        >
+            <div class="bg-sunset size-full"></div>
+        </x-image-picker>
 
         <div class="flex justify-end gap-2">
             <flux:modal.close><flux:button variant="ghost">{{ __('Cancel') }}</flux:button></flux:modal.close>
-            <flux:button type="submit" variant="primary">{{ __('Save cover') }}</flux:button>
+            <flux:button type="submit" variant="primary" x-bind:disabled="! picked">{{ __('Save cover') }}</flux:button>
         </div>
     </form>
 </flux:modal>

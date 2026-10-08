@@ -8,6 +8,10 @@
                 <x-visibility-badge public :tip="__('This is what candidates see before they decide to apply.')" />
                 <x-verification-status :company="$company" />
             </x-slot:status>
+
+            <x-slot:actions>
+                <flux:button size="sm" variant="ghost" icon="eye" :href="route('companies.show', $company)" wire:navigate>{{ __('View public page') }}</flux:button>
+            </x-slot:actions>
         </x-page-header>
 
         @if ($documentsRequest = $company->outstandingDocumentsRequest())
@@ -85,13 +89,26 @@
             <x-card>
                 <flux:heading size="lg">{{ __('Branding') }}</flux:heading>
 
-                <div class="mt-6 flex flex-col gap-6">
-                    <div class="flex items-center gap-4">
+                <div class="mt-6 flex flex-col gap-8">
+                    <x-image-picker
+                        name="logo"
+                        shape="square"
+                        :label="__('Logo')"
+                        :current="$company->logo_path ? \Illuminate\Support\Facades\Storage::url($company->logo_path) : null"
+                        :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::LOGO)"
+                    >
                         <x-company-logo :company="$company" size="lg" />
-                        <flux:input type="file" name="logo" :label="__('Logo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::LOGO)" class="flex-1" />
-                    </div>
+                    </x-image-picker>
 
-                    <flux:input type="file" name="cover_photo" :label="__('Cover photo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)" />
+                    <x-image-picker
+                        name="cover_photo"
+                        shape="wide"
+                        :label="__('Cover photo')"
+                        :current="$company->cover_photo_path ? \Illuminate\Support\Facades\Storage::url($company->cover_photo_path) : null"
+                        :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)"
+                    >
+                        <div class="bg-sunset size-full"></div>
+                    </x-image-picker>
                 </div>
             </x-card>
 

@@ -40,6 +40,20 @@ return [
         'recruiter_bio' => 'I run operations at Fernhill and hire for our support and office teams. I read every application myself and reply within a week, whatever the answer.',
     ],
 
+    // Hannah's team: a colleague who reviews applicants with her, and a
+    // manager she has invited who has not accepted yet, so the Team page
+    // and a member's own view of the workspace both have something real
+    // to show.
+    'colleague' => [
+        'name' => 'Tom Hughes',
+        'job_title' => 'Support Team Lead',
+    ],
+
+    'invitation' => [
+        'email' => 'priya.shah@example.org',
+        'role' => 'manager',
+    ],
+
     'candidate' => [
         'name' => 'Rafi Ahmed',
         'headline' => 'Full Stack Developer (Laravel, Vue)',

@@ -31,4 +31,19 @@ enum MembershipRole: string
             self::Member => 'Member',
         };
     }
+
+    /**
+     * What the role may do, in one line, wherever a role is named or
+     * chosen -- the team list, the invitation form, the invitation
+     * itself -- so nobody hands out a role without knowing what it
+     * opens. Kept to what the policies actually allow.
+     */
+    public function description(): string
+    {
+        return match ($this) {
+            self::Owner => __('Everything a manager can do, and outranks managers on the team.'),
+            self::Manager => __('Posts and edits jobs, hires or turns down applicants, invites people and answers reviews.'),
+            self::Member => __('Reads every application, moves applicants between stages and writes notes.'),
+        };
+    }
 }

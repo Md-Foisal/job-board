@@ -9,6 +9,7 @@ use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
 use App\Enums\JobAsDescribed;
+use App\Enums\MembershipRole;
 use App\Enums\ModerationStatus;
 use App\Enums\ReviewPart;
 use App\Enums\StaffRole;
@@ -17,6 +18,7 @@ use App\Models\ApplicationEvent;
 use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\CompanyReview;
+use App\Models\Invitation;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
@@ -87,6 +89,7 @@ class DemoAccountsSeeder extends Seeder
         // A filled-in recruiter face, so the "Posted by" card on the job
         // page shows what candidates are meant to see.
         $employer->recruiterProfile()->create(['bio' => $demo['employer']['recruiter_bio']]);
+        $this->seedTeam($company, $employer, $demo);
 
         $candidate = User::factory()->create(['name' => $demo['candidate']['name'], 'email' => 'candidate@jobboard.test', 'timezone' => 'Europe/London']);
         $profile = People::writtenCandidate($candidate, [
@@ -104,6 +107,7 @@ class DemoAccountsSeeder extends Seeder
             ['Super admin', 'superadmin@jobboard.test', self::PASSWORD],
             ['Moderator', 'moderator@jobboard.test', self::PASSWORD],
             ['Employer (owner of '.$company->name.')', 'employer@jobboard.test', self::PASSWORD],
+            ['Employer (member of '.$company->name.')', 'member@jobboard.test', self::PASSWORD],
             ['Candidate', 'candidate@jobboard.test', self::PASSWORD],
             ['Deleted candidate (sign in to restore)', $deleted->email, self::PASSWORD],
         ]);
@@ -393,6 +397,35 @@ class DemoAccountsSeeder extends Seeder
                 ])->save();
             }
         }
+    }
+
+    /**
+     * Hannah's colleague, a plain member who signs in as
+     * member@jobboard.test to see the workspace as a member does, and an
+     * invitation still waiting to be accepted.
+     *
+     * @param  array<string, mixed>  $demo
+     */
+    private function seedTeam(Company $company, User $owner, array $demo): void
+    {
+        $colleague = User::factory()->create([
+            'name' => $demo['colleague']['name'],
+            'email' => 'member@jobboard.test',
+            'timezone' => $demo['company']['timezone'],
+        ]);
+
+        Membership::factory()->for($company)->for($colleague, 'user')->create([
+            'role' => MembershipRole::Member,
+            'job_title' => $demo['colleague']['job_title'],
+        ]);
+
+        Invitation::factory()->for($company)->create([
+            'invited_by_id' => $owner->id,
+            'email' => $demo['invitation']['email'],
+            'role' => MembershipRole::from($demo['invitation']['role']),
+            'created_at' => now()->subDays(2),
+            'expires_at' => now()->addDays(5),
+        ]);
     }
 
     /**

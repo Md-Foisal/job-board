@@ -2,6 +2,7 @@
 
 use App\Enums\AccountStatus;
 use App\Enums\DocumentType;
+use App\Enums\InvitationStatus;
 use App\Enums\ModerationStatus;
 use App\Models\Application;
 use App\Models\CandidatePreference;
@@ -154,4 +155,21 @@ test('known passwords are never seeded outside a developer machine', function ()
     (new DemoAccountsSeeder)->run();
 
     expect(User::query()->where('email', 'superadmin@jobboard.test')->exists())->toBeFalse();
+});
+
+test('the demo company has a member who signs in, and an invitation still open', function () {
+    Storage::fake('local');
+
+    $this->seed(DemoAccountsSeeder::class);
+
+    $company = Company::query()->where('slug', DemoAccountsSeeder::DEMO_COMPANY_SLUG)->sole();
+    $member = User::query()->where('email', 'member@jobboard.test')->sole();
+
+    expect($member->worksAt($company))->toBeTrue()
+        ->and($member->canManage($company))->toBeFalse()
+        ->and($company->invitations()->where('status', InvitationStatus::Pending)->where('expires_at', '>', now())->count())->toBe(1);
+
+    $this->actingAs($member)
+        ->get(route('employer.dashboard', $company))
+        ->assertOk();
 });

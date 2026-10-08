@@ -35,7 +35,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
     public function members()
     {
         return $this->company->memberships()
-            ->with('user')
+            ->with('user.recruiterProfile')
             ->orderByRaw("CASE role WHEN 'owner' THEN 1 WHEN 'manager' THEN 2 ELSE 3 END")
             ->get();
     }
@@ -44,6 +44,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
     public function pendingInvitations()
     {
         return $this->company->invitations()
+            ->with('invitedBy')
             ->where('status', InvitationStatus::Pending)
             ->where('expires_at', '>', now())
             ->latest()
@@ -165,16 +166,28 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                 @foreach ($this->members as $membership)
                     <tr wire:key="membership-{{ $membership->id }}" @class(['opacity-60' => $membership->status === \App\Enums\MembershipStatus::Inactive])>
                         <td class="px-5 py-4">
-                            <div class="font-medium text-ink">{{ $membership->user->name }}</div>
-                            <div class="text-ink-muted">{{ $membership->user->email }}</div>
+                            <div class="flex items-center gap-3">
+                                <flux:avatar circle size="sm" :src="$membership->user->avatarUrl()" :name="$membership->user->name" :initials="$membership->user->initials()" />
+                                <div class="min-w-0">
+                                    <div class="font-medium text-ink">
+                                        {{ $membership->user->name }}
+                                        @if ($membership->user->is(auth()->user()))
+                                            <span class="font-normal text-ink-muted">{{ __('(you)') }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="truncate text-ink-muted">
+                                        {{ collect([$membership->job_title, $membership->user->email])->filter()->implode(' · ') }}
+                                    </div>
+                                </div>
+                            </div>
                         </td>
                         <td class="px-5 py-4">
                             @if ($membership->status === \App\Enums\MembershipStatus::Inactive)
                                 <flux:badge color="zinc">{{ __('No longer on the team') }}</flux:badge>
                             @else
-                                <flux:badge :color="$membership->role === \App\Enums\MembershipRole::Owner ? 'green' : 'zinc'">
-                                    {{ $membership->role->label() }}
-                                </flux:badge>
+                                {{-- A role is only a word until it says what it opens. --}}
+                                <div class="font-medium text-ink">{{ __($membership->role->label()) }}</div>
+                                <div class="mt-0.5 max-w-xs text-xs text-ink-muted">{{ $membership->role->description() }}</div>
                             @endif
                         </td>
                         <td class="px-5 py-4 text-end">
@@ -213,6 +226,16 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
         </table>
     </x-card>
 
+    @if ($this->members->count() === 1 && $this->pendingInvitations->isEmpty())
+        <x-empty-state icon="user-plus" :heading="__('Just you so far')">
+            {{ __('Invite the people who read applications with you. Members review applicants; managers also post jobs and decide.') }}
+
+            <x-slot:actions>
+                <flux:button variant="primary" size="sm" icon="plus" wire:click="$set('showInviteModal', true)">{{ __('Invite someone') }}</flux:button>
+            </x-slot:actions>
+        </x-empty-state>
+    @endif
+
     @if ($this->pendingInvitations->isNotEmpty())
         <div>
             <flux:heading size="lg">{{ __('Waiting to accept') }}</flux:heading>
@@ -224,8 +247,12 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
                             <div>
                                 <div class="text-sm font-medium text-ink">{{ $invitation->email }}</div>
                                 <div class="text-sm text-ink-muted">
-                                    {{ __('Invited as a :role, expires :date', [
-                                        'role' => \Illuminate\Support\Str::lower($invitation->role->label()),
+                                    {{-- "as Manager", not "as a manager": the article
+                                         would read "a owner" for the one role that
+                                         starts with a vowel. --}}
+                                    {{ __('Invited as :role by :inviter · expires :date', [
+                                        'role' => __($invitation->role->label()),
+                                        'inviter' => $invitation->invitedBy?->name ?? __('a former team member'),
                                         'date' => \App\Support\LocalTime::of($invitation->expires_at)->format(\App\Support\DateFormat::DAY),
                                     ]) }}
                                 </div>
@@ -247,7 +274,7 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
         </div>
     @endif
 
-    <flux:modal wire:model="showInviteModal" class="md:w-96">
+    <flux:modal wire:model="showInviteModal" class="w-full max-w-md">
         <form wire:submit="invite" class="flex flex-col gap-6">
             <div>
                 <flux:heading size="lg">{{ __('Invite someone') }}</flux:heading>
@@ -256,11 +283,11 @@ new #[Layout('layouts::employer')] #[Title('Team')] class extends Component {
 
             <flux:input wire:model="inviteEmail" type="email" :label="__('Email address')" required />
 
-            <flux:select wire:model="inviteRole" :label="__('Role')">
-                <flux:select.option value="member">{{ __('Member — review applicants') }}</flux:select.option>
-                <flux:select.option value="manager">{{ __('Manager — also post jobs and manage the team') }}</flux:select.option>
-                <flux:select.option value="owner">{{ __('Owner — full control of the company') }}</flux:select.option>
-            </flux:select>
+            <flux:radio.group wire:model="inviteRole" variant="cards" :label="__('Role')" class="flex-col">
+                @foreach (array_reverse(\App\Enums\MembershipRole::cases()) as $role)
+                    <flux:radio :value="$role->value" :label="__($role->label())" :description="$role->description()" />
+                @endforeach
+            </flux:radio.group>
 
             <div class="flex justify-end gap-2">
                 <flux:modal.close>

@@ -258,12 +258,6 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
             </flux:radio.group>
         </div>
 
-        @unless ($this->canRespond)
-            <flux:callout icon="information-circle">
-                <flux:callout.text>{{ __('Owners and managers can answer reviews on behalf of the company.') }}</flux:callout.text>
-            </flux:callout>
-        @endunless
-
         @if ($this->reviews->isEmpty())
             <x-empty-state icon="check-circle" :heading="__('Every review has an answer.')" />
         @endif
@@ -317,8 +311,12 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                         @elseif ($review->response_status === null)
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <flux:text>{{ __('No answer yet.') }}</flux:text>
+                                {{-- Said where the button would be, rather than in a
+                                     standing notice at the top of the page. --}}
                                 @if ($this->canRespond)
                                     <flux:button size="sm" wire:click="startAnswer({{ $review->id }})">{{ __('Answer publicly') }}</flux:button>
+                                @else
+                                    <flux:text size="sm">{{ __('Owners and managers can answer reviews on behalf of the company.') }}</flux:text>
                                 @endif
                             </div>
                         @else
@@ -333,7 +331,7 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                                             <flux:badge color="red" size="sm">{{ __('Not published') }}</flux:badge>
                                             @break
                                         @default
-                                            <flux:badge color="blue" size="sm">{{ __('Waiting for a check') }}</flux:badge>
+                                            <flux:badge color="amber" size="sm">{{ __('Waiting for a check') }}</flux:badge>
                                     @endswitch
                                 </div>
 
