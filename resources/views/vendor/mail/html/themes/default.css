@@ -244,7 +244,9 @@ img {
 
 /* Buttons. The colour sits on the cell, which every client paints
    (Outlook on Windows reads only bgcolor, so it shows the solid first
-   stop); the link inside carries the padding. */
+   stop). The link carries the padding, so the whole button is the link;
+   Outlook ignores padding on a link, so the cell gives it the same
+   padding through mso-padding-alt, a property only Outlook reads. */
 
 .action {
     -premailer-cellpadding: 0;
@@ -259,6 +261,7 @@ img {
 
 .button-cell {
     border-radius: 8px;
+    mso-padding-alt: 12px 22px;
 }
 
 .button {

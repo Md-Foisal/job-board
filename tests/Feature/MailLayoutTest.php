@@ -22,6 +22,8 @@ test('the button carries the Sunset fill, with a solid colour for clients that c
     $html = (string) $this->mail->render();
 
     expect($html)->toContain('bgcolor="#c2410c"')
+        // Outlook drops a link's padding; the cell gives it back there.
+        ->and($html)->toContain('mso-padding-alt: 12px 22px')
         ->and($html)->toContain('linear-gradient(120deg, #c2410c 0%, #db2777 55%, #7c3aed 100%)');
 });
 
