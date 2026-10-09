@@ -6,8 +6,7 @@
 A job board where silence shows. Built with Laravel, Livewire, Filament and Pest.
 
 This project is in active development. Everything described here is merged on `main`.
-The UI/UX layer is merged; screenshots are still to come.
-See [Status and roadmap](#status-and-roadmap).
+See [A look at it](#a-look-at-it) for screenshots and [Status and roadmap](#status-and-roadmap) for what comes next.
 
 ## What it is
 
@@ -23,6 +22,50 @@ This board is built so that a company's silence is visible:
 
 It is for three groups of people: job seekers, employers (a company, an agency, or one person hiring),
 and the staff who keep the board clean.
+
+## A look at it
+
+The screens use the seeded demo data (`php artisan migrate:fresh --seed`). Every company and person in
+it is made up, and the people's pictures are drawn avatars.
+
+**Home.** Search by what and where, with the newest open jobs scrolling beside it.
+
+![Home page](docs/screenshots/home.jpg)
+
+**A job page, as a candidate sees it.** The match box compares the job with the candidate's skills, pay,
+workplace, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
+
+![Job page with the match breakdown](docs/screenshots/job-page.jpg)
+
+**Candidate dashboard.** Applications by status, what needs the candidate's attention, the latest changes
+from companies, and open jobs that match at least half of what they ask for.
+
+![Candidate dashboard](docs/screenshots/candidate-dashboard.jpg)
+
+**CV builder.** The CV is built from the profile, with three templates, six colours and a live preview,
+and downloads as a PDF.
+
+![CV builder with the Creative template](docs/screenshots/cv-builder.jpg)
+
+**Applicants as a board.** A job's applicants by stage. Cards move with a "Move to" menu instead of
+dragging, so the board works the same with a keyboard and on a phone.
+
+![Applicant board](docs/screenshots/applicant-board.jpg)
+
+**One applicant, in dark mode.** Profile, CV and application in tabs, private notes and the history
+beside them, and previous and next through the list the employer came from.
+
+![Applicant page in dark mode](docs/screenshots/applicant-page-dark.jpg)
+
+**Employer analytics.** Views, applications and the apply rate per day, how far applicants got and how
+well they match, for one posting or all of them.
+
+![Employer analytics](docs/screenshots/analytics.jpg)
+
+**Staff dashboard.** What is waiting for a decision and how long the oldest item has waited, the
+platform's numbers, and activity over the last 30 days.
+
+![Staff dashboard](docs/screenshots/staff-dashboard.jpg)
 
 ## What each role can do
 
