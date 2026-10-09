@@ -6,7 +6,7 @@
 A job board where silence shows. Built with Laravel, Livewire, Filament and Pest.
 
 This project is in active development. Everything described here is merged on `main`.
-The UI/UX layer is being built now, and screenshots will be added with it.
+The UI/UX layer is merged; screenshots are still to come.
 See [Status and roadmap](#status-and-roadmap).
 
 ## What it is
@@ -109,6 +109,9 @@ employers. See [ADR 0005](docs/adr/0005-ai-is-optional-and-never-scores-candidat
   that data moves a generation key, so old entries are never read again.
 - **Uploads:** images are re-encoded before they are stored. CVs and documents are on a private disk and
   are only served after a policy check.
+- **Design system:** colours, type and spacing are named tokens in
+  [`resources/css/app.css`](resources/css/app.css), and repeated blocks are Blade components. A test
+  fails when a view copies a colour or a block by hand instead of using them.
 - **Layers:** the product was built in layers. Each layer is one branch and one pull request, so the
   history reads in the order the product was built.
 
@@ -123,6 +126,7 @@ The main design decisions are written down as Architecture Decision Records in [
 5. [AI is optional and never scores candidates](docs/adr/0005-ai-is-optional-and-never-scores-candidates.md)
 6. [Moments in UTC, calendar dates as they are](docs/adr/0006-utc-moments-and-plain-calendar-dates.md)
 7. [Pay is compared only within one currency](docs/adr/0007-pay-compared-within-one-currency.md)
+8. [One design system, guarded by tests](docs/adr/0008-one-design-system-guarded-by-tests.md)
 
 ## Run it locally
 
@@ -155,6 +159,7 @@ The seeder creates these accounts in the local and testing environments only. Ev
 | Super admin | `superadmin@jobboard.test` | Lands in the admin panel. |
 | Moderator | `moderator@jobboard.test` | Lands in the admin panel. |
 | Employer | `employer@jobboard.test` | Owner of Fernhill Software, with posts and applicants. |
+| Team member | `member@jobboard.test` | A plain member of Fernhill Software, to see the workspace as a member does. |
 | Candidate | `candidate@jobboard.test` | Full profile, a real PDF CV, applications, saved jobs and alerts. |
 | Deleted account | `deleted@jobboard.test` | Inside the 30-day grace period. Signing in offers to restore it. |
 
@@ -187,10 +192,10 @@ and Laravel Pint checks the code style, on every push and pull request to `main`
 | 5 Infrastructure polish | Caching, scheduled expiry, job alerts, account deletion and erasure, upload and rate limits ([#5](https://github.com/Md-Foisal/job-board/pull/5)) | Sep 2026 |
 | 6 AI features | CV import, match explanation, CV builder, employer analytics, company reviews ([#6](https://github.com/Md-Foisal/job-board/pull/6)) | Oct 2026 |
 | 7 Polish | Time zones, currencies, best-match sort and realistic demo data ([#7](https://github.com/Md-Foisal/job-board/pull/7)) | Oct 2026 |
+| 8 UI/UX | A design system with light and dark themes, every page rebuilt per role, a command palette, an applicant board, CV templates and branded emails ([#8](https://github.com/Md-Foisal/job-board/pull/8)) | Oct 2026 |
 
 Next:
 
-- **Layer 8, UI/UX (in progress):** a design system first, then every page, starting with the busiest.
 - **Launch,** with AI off.
 - **After launch:** paid plans, which is when the AI features can be turned on.
 
