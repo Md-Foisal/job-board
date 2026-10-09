@@ -27,7 +27,7 @@ class ReviewResponseAwaitingReview extends Notification
     {
         return (new MailMessage)
             ->subject(__('Company response to check: :company', ['company' => $this->review->company->name]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__(':company answered one of its reviews. The answer stays hidden until someone on the team approves it.', [
                 'company' => $this->review->company->name,
             ]))

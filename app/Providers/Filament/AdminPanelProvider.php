@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Support\InitialsAvatar;
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
 use App\Http\Middleware\LoadStaffMemberships;
 use App\Http\Middleware\SyncTimezone;
@@ -56,7 +57,9 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => view('filament.brand'))
             ->homeUrl(fn () => route('home'))
             ->themeSwitcher(false)
+            ->defaultAvatarProvider(InitialsAvatar::class)
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
+            ->renderHook(PanelsRenderHook::BODY_START, fn () => view('partials.svg-defs'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
             ->userMenuItems([
                 'site' => Action::make('site')

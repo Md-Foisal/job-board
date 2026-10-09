@@ -27,7 +27,7 @@ class ReviewResponseRejected extends Notification
     {
         return (new MailMessage)
             ->subject(__('Your answer to a review was not published'))
-            ->greeting(__('Hello :name,', ['name' => $notifiable->name]))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('We read :company\'s answer to one of its reviews and could not publish it as written:', [
                 'company' => $this->review->company->name,
             ]))

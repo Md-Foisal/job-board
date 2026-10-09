@@ -29,7 +29,7 @@ class JobPostingAwaitingReview extends Notification
     {
         return (new MailMessage)
             ->subject(__('New posting to review: :title', ['title' => $this->jobPosting->title]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__(':company submitted ":title" for review.', [
                 'company' => $this->jobPosting->company->name,
                 'title' => $this->jobPosting->title,

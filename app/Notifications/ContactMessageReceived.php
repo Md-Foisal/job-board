@@ -28,7 +28,7 @@ class ContactMessageReceived extends Notification
     {
         return (new MailMessage)
             ->subject(__('New message: :topic', ['topic' => $this->message->topic->label()]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('Someone wrote to us through the contact form. They have been told to expect an answer within :days working days.', [
                 'days' => ContactMessage::REPLY_WITHIN_WORKING_DAYS,
             ]))

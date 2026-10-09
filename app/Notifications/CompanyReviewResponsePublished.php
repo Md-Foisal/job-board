@@ -25,7 +25,7 @@ class CompanyReviewResponsePublished extends Notification
     {
         return (new MailMessage)
             ->subject(__(':company answered your review', ['company' => $this->review->company->name]))
-            ->greeting(__('Hello :name,', ['name' => $notifiable->name]))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__(':company published an answer to your review of its hiring process. It appears under your review on the company\'s page.', [
                 'company' => $this->review->company->name,
             ]))

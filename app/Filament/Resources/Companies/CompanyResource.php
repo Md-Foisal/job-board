@@ -16,6 +16,7 @@ use App\Models\Company;
 use App\Support\EmailDomain;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Textarea;
@@ -204,28 +205,34 @@ class CompanyResource extends Resource
                 TextColumn::make('website_host')
                     ->label('Website')
                     ->state(fn (Company $record) => EmailDomain::host($record->website_url))
-                    ->placeholder('None'),
+                    ->placeholder('None')
+                    ->visibleFrom('lg'),
                 TextColumn::make('domain_check')
                     ->label('Email check')
                     ->badge()
                     ->state(fn (Company $record) => $record->domainCheck())
                     ->formatStateUsing(fn (DomainCheck $state) => $state->label())
                     ->color(fn (DomainCheck $state) => $state->color()),
-                TextColumn::make('job_postings_count')->label('Postings'),
+                TextColumn::make('job_postings_count')->label('Postings')->visibleFrom('md'),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')
                     ->badge()
                     ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray'),
-                TextColumn::make('created_at')->label('Joined')->since()->sortable(),
+                TextColumn::make('created_at')->label('Joined')->since()->sortable()->visibleFrom('md'),
             ])
             ->emptyStateHeading('Nothing here')
+            // The decision the queue exists for stays on the row (Verify, or
+            // Lift ban on a banned company); the rest sit behind the menu,
+            // which keeps the row inside the table at a laptop's width.
             ->recordActions([
                 ViewAction::make()->label('Review'),
                 static::verifyAction(),
-                static::requestDocumentsAction(),
-                static::revokeVerificationAction(),
-                static::banAction(),
                 static::unbanAction(),
+                ActionGroup::make([
+                    static::requestDocumentsAction(),
+                    static::revokeVerificationAction(),
+                    static::banAction(),
+                ])->label('More actions')->tooltip('More actions')->color('gray'),
             ]);
     }
 
@@ -254,7 +261,11 @@ class CompanyResource extends Resource
         return Action::make('requestDocuments')
             ->label('Ask for documents')
             ->icon(Heroicon::OutlinedDocumentText)
-            ->color('warning')
+            // A request, not a warning: neutral in the menu, and the
+            // dialog's button is the page's main action.
+            ->color('gray')
+            ->modalSubmitAction(fn (Action $action) => $action->color('primary'))
+            ->modalSubmitActionLabel('Send request')
             ->authorize('moderate')
             ->visible(fn (Company $record) => $record->verified_at === null
                 && $record->account_status === AccountStatus::Active)

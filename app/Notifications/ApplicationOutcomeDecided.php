@@ -57,7 +57,7 @@ class ApplicationOutcomeDecided extends Notification implements ShouldQueue
         $job = $this->application->jobPosting;
         $replace = ['company' => $job->company->name, 'title' => $job->title];
 
-        $mail = (new MailMessage)->greeting(__('Hello!'));
+        $mail = (new MailMessage)->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]));
 
         if ($this->outcome === ApplicationOutcomeStatus::Hired) {
             return $mail

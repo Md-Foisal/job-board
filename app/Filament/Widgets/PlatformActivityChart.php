@@ -7,6 +7,7 @@ use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
 use App\Support\DateFormat;
 use Carbon\CarbonImmutable;
+use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Cache;
@@ -40,6 +41,8 @@ class PlatformActivityChart extends ChartWidget
     protected ?string $pollingInterval = null;
 
     protected ?string $maxHeight = '280px';
+
+    protected int|string|array $columnSpan = 'full';
 
     public ?string $filter = 'views';
 
@@ -94,12 +97,35 @@ class PlatformActivityChart extends ChartWidget
         ];
     }
 
-    protected function getOptions(): array
+    /**
+     * The line in the Sunset gradient, drawn the way the employers' chart
+     * draws it (resources/js/performance-chart.js): one gradient across the
+     * plot, from the heading set that keeps 3:1 against the page, with a
+     * faint wash under it. The stops are read from the panel's variables
+     * (filament/shell-head) each time it is drawn, so either theme gets
+     * its own.
+     */
+    protected function getOptions(): RawJs
     {
-        return [
-            'plugins' => ['legend' => ['display' => false]],
-            'scales' => ['y' => ['beginAtZero' => true, 'ticks' => ['precision' => 0]]],
-        ];
+        return RawJs::make(<<<'JS'
+            {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+                datasets: {
+                    line: {
+                        borderColor: ({ chart }) => window.jbSunset(chart, 1),
+                        backgroundColor: ({ chart }) => window.jbSunset(chart, 0.1),
+                        fill: 'origin',
+                        borderWidth: 2,
+                        tension: 0,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHitRadius: 12,
+                        pointHoverBackgroundColor: ({ chart }) => window.jbSunset(chart, 1),
+                    },
+                },
+            }
+        JS);
     }
 
     /**

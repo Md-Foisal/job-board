@@ -76,15 +76,21 @@ class CompanyReviewResource extends Resource
     }
 
     /**
-     * Reviews and answers waiting, together: both are decided here.
+     * Reviews and answers waiting, together: both are decided here. Shared
+     * by the menu badge and the dashboard, so the two never disagree.
      */
-    public static function getNavigationBadge(): ?string
+    public static function waitingCount(): int
     {
-        $waiting = static::getEloquentQuery()
+        return static::getEloquentQuery()
             ->where(fn (Builder $query) => $query
                 ->where('moderation_status', ModerationStatus::Pending->value)
                 ->orWhere('response_status', ModerationStatus::Pending->value))
             ->count();
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $waiting = static::waitingCount();
 
         return $waiting > 0 ? (string) $waiting : null;
     }
@@ -297,7 +303,8 @@ class CompanyReviewResource extends Resource
                     ->description(fn (CompanyReview $record) => $record->company->name),
                 TextColumn::make('overall_rating')
                     ->label('Overall')
-                    ->suffix(' / 5'),
+                    ->suffix(' / 5')
+                    ->visibleFrom('md'),
                 TextColumn::make('flags')
                     ->label('Flags')
                     ->state(fn (CompanyReview $record, $livewire) => collect(static::partShownOn($livewire) === ReviewPart::Response
@@ -307,13 +314,15 @@ class CompanyReviewResource extends Resource
                         ->all())
                     ->badge()
                     ->color('warning')
-                    ->placeholder('None'),
+                    ->placeholder('None')
+                    ->visibleFrom('lg'),
                 TextColumn::make('ai_hint')
                     ->label('AI hint')
                     ->state(fn (CompanyReview $record, $livewire) => $record->screeningOf(static::partShownOn($livewire))?->labels() ?? [])
                     ->badge()
                     ->color('warning')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->visibleFrom('lg'),
                 TextColumn::make('response_status')
                     ->label('Response')
                     ->badge()
@@ -323,11 +332,13 @@ class CompanyReviewResource extends Resource
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
                     })
-                    ->placeholder('None'),
+                    ->placeholder('None')
+                    ->visibleFrom('lg'),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')
                     ->badge()
-                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray'),
+                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray')
+                    ->visibleFrom('md'),
                 TextColumn::make('moderation_status')
                     ->label('Status')
                     ->badge()
@@ -336,7 +347,9 @@ class CompanyReviewResource extends Resource
                         ModerationStatus::Pending => 'warning',
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
-                    }),
+                    })
+                    // The tab already says it; on a phone the room goes to the title.
+                    ->visibleFrom('md'),
                 TextColumn::make('updated_at')
                     ->label('Written')
                     ->state(fn (CompanyReview $record, $livewire) => static::partShownOn($livewire) === ReviewPart::Response

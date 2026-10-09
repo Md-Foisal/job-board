@@ -24,13 +24,23 @@ class ManageCompanyReviews extends ManageRecords
      */
     public function getTabs(): array
     {
+        // The two queues carry their counts; together they make the menu's.
+        $waiting = fn (string $column) => ($count = CompanyReviewResource::getEloquentQuery()
+            ->where($column, ModerationStatus::Pending->value)
+            ->count()) > 0 ? (string) $count : null;
+
         return collect([
             ModerationStatus::Pending->value => 'Waiting',
             ModerationStatus::Approved->value => ModerationStatus::Approved->label(),
             ModerationStatus::Rejected->value => ModerationStatus::Rejected->label(),
         ])->map(fn (string $label, string $status) => Tab::make($label)
             ->modifyQueryUsing(fn (Builder $query) => $query->where('moderation_status', $status)))
+            ->tap(fn ($tabs) => $tabs->get(ModerationStatus::Pending->value)
+                ->badge($waiting('moderation_status'))
+                ->badgeColor('warning'))
             ->put('responses', Tab::make('Responses')
+                ->badge($waiting('response_status'))
+                ->badgeColor('warning')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('response_status', ModerationStatus::Pending->value)))
             ->all();
     }

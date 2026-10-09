@@ -128,7 +128,9 @@ test('the email lists ten and links to the rest, with one-click unsubscribe head
 
     $rendered = (string) $mail->render();
     expect($rendered)->toContain('See all 12')
-        ->and($rendered)->toContain('Unsubscribe from this alert');
+        ->and($rendered)->toContain('Unsubscribe from this alert')
+        // The alert has its own body but the same frame as every email.
+        ->and($rendered)->toContain('images/mail-logo.png');
 
     $message = new Email;
     foreach ($mail->callbacks as $callback) {

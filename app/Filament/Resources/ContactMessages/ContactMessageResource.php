@@ -146,7 +146,8 @@ class ContactMessageResource extends Resource
                 TextColumn::make('body')
                     ->label('Message')
                     ->limit(70)
-                    ->wrap(),
+                    ->wrap()
+                    ->visibleFrom('md'),
                 TextColumn::make('created_at')
                     ->label('Received')
                     ->since()

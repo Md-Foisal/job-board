@@ -26,7 +26,7 @@ class JobPostingRejected extends Notification
     {
         return (new MailMessage)
             ->subject(__('":title" needs changes before it can go live', ['title' => $this->jobPosting->title]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('Your posting ":title" was reviewed and cannot be published as it stands. The reviewer wrote:', ['title' => $this->jobPosting->title]))
             ->line('"'.$this->reason.'"')
             ->action(__('Edit the posting'), route('employer.jobs.edit', [$this->jobPosting->company, $this->jobPosting]))

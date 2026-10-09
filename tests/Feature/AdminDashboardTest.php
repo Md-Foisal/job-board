@@ -47,6 +47,24 @@ it('reports how many closed reports this week led to action', function () {
     }
     $this->actingAs(staffWithTwoFactor());
 
-    Livewire::test(PlatformOverview::class)
+    // How the queues are being worked sits with the queues.
+    Livewire::test(ModerationQueuesOverview::class)
+        ->assertSee('No decisions this week')
         ->assertSee('50% of closed reports led to action');
+});
+
+it('shows four queue cards and four platform figures, so neither row has a gap', function () {
+    $this->actingAs(staffWithTwoFactor());
+
+    Livewire::test(ModerationQueuesOverview::class)
+        ->assertSee('Job postings to review')
+        ->assertSee('Reviews and answers to check')
+        ->assertSee('Reported things')
+        ->assertSee('Companies not verified')
+        ->assertDontSee('Company responses to check');
+
+    Livewire::test(PlatformOverview::class)
+        ->assertSee('Live job postings')
+        ->assertSee('Applications this week')
+        ->assertDontSee('Moderation decisions this week');
 });

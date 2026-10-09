@@ -150,7 +150,8 @@ class ModerationEventResource extends Resource
                     ->sortable(),
                 TextColumn::make('admin.name')
                     ->label('By')
-                    ->placeholder('A former staff member'),
+                    ->placeholder('A former staff member')
+                    ->visibleFrom('md'),
                 TextColumn::make('action')
                     ->badge()
                     ->formatStateUsing(fn (ModerationAction $state) => $state->label())
@@ -161,7 +162,8 @@ class ModerationEventResource extends Resource
                 TextColumn::make('reason')
                     ->limit(60)
                     ->placeholder('—')
-                    ->wrap(),
+                    ->wrap()
+                    ->visibleFrom('md'),
             ])
             ->filters([
                 SelectFilter::make('action')

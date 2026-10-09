@@ -10,6 +10,7 @@ use App\Enums\StaffRole;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -25,7 +26,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password', 'avatar', 'timezone', 'timezone_automatic'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
@@ -81,6 +82,19 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Get the user's initials
      */
+    /**
+     * What to call the person in a greeting: the first name, as job sites
+     * greet people -- unless the name starts with a short form such as
+     * "Md." or "Dr.", which is not what anyone is called; then the whole
+     * name. Used by the dashboard and the emails alike.
+     */
+    public function greetingName(): string
+    {
+        $firstWord = Str::of($this->name)->trim()->explode(' ')->first();
+
+        return str_ends_with($firstWord, '.') ? trim($this->name) : $firstWord;
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)
@@ -100,6 +114,14 @@ class User extends Authenticatable implements FilamentUser
         $path = $this->avatar ?: $this->recruiterProfile?->avatar_path;
 
         return $path ? Storage::url($path) : null;
+    }
+
+    /**
+     * The staff panel shows the same photo as the app's account menu.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
     }
 
     public function memberships()

@@ -30,7 +30,7 @@ class NewApplicationReceived extends Notification
 
         return (new MailMessage)
             ->subject(__('New application for :title', ['title' => $job->title]))
-            ->greeting(__('Hello!'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__(':name has applied for :title.', [
                 'name' => $this->application->candidateProfile->user->name,
                 'title' => $job->title,

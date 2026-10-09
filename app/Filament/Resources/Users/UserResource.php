@@ -12,6 +12,7 @@ use App\Filament\Support\ConfirmsPassword;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
@@ -97,11 +98,12 @@ class UserResource extends Resource
 
     /**
      * What a person is on the platform, derived the same way the app
-     * derives it -- nothing here is a stored role except staff.
+     * derives it -- nothing here is a stored role except staff. Shown in
+     * grey: a role is a fact about the person, not a state to act on.
      *
      * @return array<int, string>
      */
-    public static function standing(User $user): array
+    public static function roles(User $user): array
     {
         return array_values(array_filter([
             $user->staff_role?->label(),
@@ -128,9 +130,11 @@ class UserResource extends Resource
                             ->badge()
                             ->formatStateUsing(fn (AccountStatus $state, User $record) => static::accountLabel($record))
                             ->color(fn (AccountStatus $state, User $record) => static::accountColor($record)),
-                        TextEntry::make('standing')
-                            ->state(fn (User $record) => static::standing($record))
+                        TextEntry::make('roles')
+                            ->label('Role')
+                            ->state(fn (User $record) => static::roles($record))
                             ->badge()
+                            ->color('gray')
                             ->placeholder('Nothing set up yet'),
                         TextEntry::make('created_at')->label('Joined')->since(),
                         TextEntry::make('companies')
@@ -170,16 +174,18 @@ class UserResource extends Resource
                     ->searchable()
                     ->description(fn (User $record) => $record->email),
                 TextColumn::make('email')->searchable()->hidden(),
-                TextColumn::make('standing')
-                    ->state(fn (User $record) => static::standing($record))
+                TextColumn::make('roles')
+                    ->label('Role')
+                    ->state(fn (User $record) => static::roles($record))
                     ->badge()
+                    ->color('gray')
                     ->placeholder('—'),
                 TextColumn::make('account_status')
                     ->label('Account')
                     ->badge()
                     ->formatStateUsing(fn (AccountStatus $state, User $record) => static::accountLabel($record))
                     ->color(fn (AccountStatus $state, User $record) => static::accountColor($record)),
-                TextColumn::make('created_at')->label('Joined')->since()->sortable(),
+                TextColumn::make('created_at')->label('Joined')->since()->sortable()->visibleFrom('md'),
             ])
             ->filters([
                 // Off by default, like the app: a deleted account is gone for
@@ -191,11 +197,16 @@ class UserResource extends Resource
                     ->trueLabel('Show deleted too')
                     ->falseLabel('Only deleted'),
             ])
+            // The way back in stays on the row; the two that take something
+            // away sit behind the menu, so a slip of the mouse on a long
+            // list cannot start one.
             ->recordActions([
                 ViewAction::make(),
-                static::suspendAction(),
                 static::reinstateAction(),
-                static::eraseAction(),
+                ActionGroup::make([
+                    static::suspendAction(),
+                    static::eraseAction(),
+                ])->label('More actions')->tooltip('More actions')->color('gray'),
             ]);
     }
 

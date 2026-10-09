@@ -1,9 +1,5 @@
 @php
-    // The first name, as job sites greet people -- unless the name starts
-    // with a short form such as "Md." or "Dr.", which is not what anyone
-    // is called; then the whole name.
-    $firstWord = \Illuminate\Support\Str::of($user->name)->trim()->explode(' ')->first();
-    $greetingName = str_ends_with($firstWord, '.') ? trim($user->name) : $firstWord;
+    $greetingName = $user->greetingName();
     $needsYou = $closingSaved->isNotEmpty() || $profileGaps !== [] || $importableCv || $reviewable->isNotEmpty();
     $statusIcons = [
         \App\Enums\CandidateApplicationStatus::Applied->value => 'paper-airplane',

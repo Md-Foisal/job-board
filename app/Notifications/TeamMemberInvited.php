@@ -35,7 +35,9 @@ class TeamMemberInvited extends Notification
 
         return (new MailMessage)
             ->subject(__('You have been invited to join :company', ['company' => $company]))
-            ->greeting(__('Hello!'))
+            // Not by name, unlike the other emails: the invitee may not
+            // have an account yet, and the address is all that is known.
+            ->greeting(__('Hello,'))
             ->line(__(':inviter invited you to join :company on :app.', [
                 'inviter' => $this->invitation->invitedBy?->name ?? $company,
                 'company' => $company,
