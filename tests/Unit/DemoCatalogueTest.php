@@ -1,6 +1,7 @@
 <?php
 
 use Database\Seeders\Demo\Catalogue;
+use Database\Seeders\DemoAccountsSeeder;
 
 test('every role names a seeded category, seeded skills and a family of people', function () {
     $families = array_keys(Catalogue::people()['families']);
@@ -42,4 +43,18 @@ test('the skills people are given and the demo candidate lists are all seeded', 
 test('skill and category names are unique regardless of case', function () {
     expect(array_unique(array_map('strtolower', Catalogue::SKILLS)))->toHaveCount(count(Catalogue::SKILLS))
         ->and(array_unique(array_map('strtolower', Catalogue::CATEGORIES)))->toHaveCount(count(Catalogue::CATEGORIES));
+});
+
+test('every catalogue company has a drawn logo, and every feminine name is one a place gives', function () {
+    $folder = dirname(__DIR__, 2).'/database/seeders/Demo/pictures/companies';
+
+    foreach ([...array_keys(Catalogue::companies()), DemoAccountsSeeder::DEMO_COMPANY_SLUG] as $slug) {
+        expect(is_file("{$folder}/{$slug}-logo.png"))->toBeTrue("{$slug}: logo");
+    }
+
+    $firstNames = collect(Catalogue::people()['places'])->pluck('first')->flatten()->all();
+
+    foreach (Catalogue::people()['feminine'] as $name) {
+        expect($name)->toBeIn($firstNames, "feminine: {$name}");
+    }
 });

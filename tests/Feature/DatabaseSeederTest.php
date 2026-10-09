@@ -10,6 +10,7 @@ use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\JobPosting;
 use App\Models\ModerationEvent;
+use App\Models\RecruiterProfile;
 use App\Models\Report;
 use App\Models\User;
 use App\Services\EmployerResponsiveness;
@@ -24,6 +25,7 @@ use PragmaRX\Google2FA\Google2FA;
 
 test('a fresh seed can be looked at from every side', function () {
     Storage::fake('local');
+    Storage::fake('public');
 
     $this->seed();
 
@@ -134,10 +136,33 @@ test('a fresh seed can be looked at from every side', function () {
         ->and($demoCompany->reviews()->where('moderation_status', ModerationStatus::Pending)->count())->toBe(1)
         ->and($demoCompany->reviews()->where('response_status', ModerationStatus::Approved)->count())->toBe(1)
         ->and(app(EmployerResponsiveness::class)->percentFor($demoCompany))->not->toBeNull();
+
+    // Pictures: every catalogue company has its logo and most a banner,
+    // the demo people have faces, and no two records share a file, since
+    // erasing one deletes it.
+    $catalogued = Company::query()->whereIn('slug', [...array_keys(Catalogue::companies()), DemoAccountsSeeder::DEMO_COMPANY_SLUG])->get();
+    $member = User::query()->where('email', 'member@jobboard.test')->sole();
+    $pictures = collect([
+        ...$catalogued->pluck('logo_path'),
+        ...$catalogued->pluck('cover_photo_path'),
+        ...User::query()->pluck('avatar'),
+        ...CandidateProfile::query()->pluck('cover_photo_path'),
+        ...RecruiterProfile::query()->pluck('avatar_path'),
+    ])->filter();
+
+    expect($catalogued->every(fn (Company $company) => $company->logo_path !== null))->toBeTrue()
+        ->and($catalogued->whereNotNull('cover_photo_path')->count())->toBeGreaterThan(intdiv($catalogued->count(), 2))
+        ->and($candidate->fresh()->avatar)->not->toBeNull()
+        ->and($candidate->candidateProfile->cover_photo_path)->not->toBeNull()
+        ->and($employer->recruiterProfile->avatar_path)->not->toBeNull()
+        ->and($member->recruiterProfile?->avatar_path)->not->toBeNull()
+        ->and($pictures->duplicates())->toBeEmpty()
+        ->and($pictures->every(fn (string $path) => Storage::disk('public')->exists($path)))->toBeTrue();
 });
 
 test('the demo two-factor secret gives codes that sign staff in', function () {
     Storage::fake('local');
+    Storage::fake('public');
 
     $this->seed(DemoAccountsSeeder::class);
 
@@ -159,6 +184,7 @@ test('known passwords are never seeded outside a developer machine', function ()
 
 test('the demo company has a member who signs in, and an invitation still open', function () {
     Storage::fake('local');
+    Storage::fake('public');
 
     $this->seed(DemoAccountsSeeder::class);
 

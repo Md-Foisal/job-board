@@ -31,6 +31,7 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\Catalogue;
 use Database\Seeders\Demo\People;
+use Database\Seeders\Demo\Pictures;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -88,7 +89,10 @@ class DemoAccountsSeeder extends Seeder
         Membership::factory()->owner()->for($company)->for($employer, 'user')->create(['job_title' => $demo['employer']['job_title']]);
         // A filled-in recruiter face, so the "Posted by" card on the job
         // page shows what candidates are meant to see.
-        $employer->recruiterProfile()->create(['bio' => $demo['employer']['recruiter_bio']]);
+        $employer->recruiterProfile()->create([
+            'bio' => $demo['employer']['recruiter_bio'],
+            'avatar_path' => Pictures::face($employer->name, 'recruiter-avatars'),
+        ]);
         $this->seedTeam($company, $employer, $demo);
 
         $candidate = User::factory()->create(['name' => $demo['candidate']['name'], 'email' => 'candidate@jobboard.test', 'timezone' => 'Europe/London']);
@@ -418,6 +422,7 @@ class DemoAccountsSeeder extends Seeder
             'role' => MembershipRole::Member,
             'job_title' => $demo['colleague']['job_title'],
         ]);
+        $colleague->recruiterProfile()->create(['avatar_path' => Pictures::face($colleague->name, 'recruiter-avatars')]);
 
         Invitation::factory()->for($company)->create([
             'invited_by_id' => $owner->id,

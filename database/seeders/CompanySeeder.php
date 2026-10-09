@@ -8,6 +8,7 @@ use App\Models\Membership;
 use App\Models\User;
 use Database\Seeders\Demo\Catalogue;
 use Database\Seeders\Demo\People;
+use Database\Seeders\Demo\Pictures;
 use Illuminate\Database\Seeder;
 
 class CompanySeeder extends Seeder
@@ -21,12 +22,19 @@ class CompanySeeder extends Seeder
     {
         foreach (Catalogue::companies() as $slug => $details) {
             $company = self::create($slug, $details);
+            $owner = self::owner($details);
 
             Membership::factory()
                 ->owner()
                 ->for($company)
-                ->for(self::owner($details), 'user')
+                ->for($owner, 'user')
                 ->create(['job_title' => self::OWNER_TITLES[array_rand(self::OWNER_TITLES)]]);
+
+            // The owner posts the company's jobs, so their face is the one
+            // on the "Posted by" card; some never added one.
+            if (random_int(1, 3) <= 2) {
+                $owner->recruiterProfile()->create(['avatar_path' => Pictures::face($owner->name, 'recruiter-avatars')]);
+            }
         }
     }
 
@@ -68,6 +76,8 @@ class CompanySeeder extends Seeder
             'size' => $details['size'],
             'industry' => $details['industry'],
             'timezone' => $details['timezone'],
+            'logo_path' => Pictures::companyLogo($slug),
+            'cover_photo_path' => Pictures::companyCover($slug),
             ...$overrides,
         ]);
 

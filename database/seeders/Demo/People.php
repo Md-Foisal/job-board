@@ -59,6 +59,9 @@ final class People
             'name' => $name,
             'email' => self::email($name),
             'timezone' => $where['timezone'],
+            // Not everyone adds a photo, so a profile without one is
+            // seen in a fresh database as well.
+            'avatar' => random_int(1, 4) <= 3 ? Pictures::face($name) : null,
             'created_at' => $joined,
             'updated_at' => $joined,
             ...$user,
@@ -71,6 +74,7 @@ final class People
             'portfolio_url' => random_int(1, 4) === 1 ? 'https://'.Str::slug($name, '').'.example' : null,
             'github_url' => null,
             'linkedin_url' => null,
+            'cover_photo_path' => random_int(1, 4) === 1 ? Pictures::personalCover() : null,
         ]);
 
         // The headline is the title of the latest job, so the level it
@@ -95,6 +99,8 @@ final class People
      */
     public static function writtenCandidate(User $account, array $details): CandidateProfile
     {
+        $account->update(['avatar' => Pictures::face($account->name)]);
+
         $profile = CandidateProfile::factory()->for($account)->create([
             'headline' => $details['headline'],
             'bio' => $details['bio'],
@@ -102,6 +108,7 @@ final class People
             'portfolio_url' => $details['portfolio_url'],
             'github_url' => null,
             'linkedin_url' => null,
+            'cover_photo_path' => Pictures::personalCover(),
             ...($details['contact'] ?? []),
         ]);
 
