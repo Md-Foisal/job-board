@@ -39,6 +39,10 @@ test('a fresh seed can be looked at from every side', function () {
         ->and($candidate->candidateProfile->skills)->not->toBeEmpty()
         ->and($candidate->candidateProfile->applications()->count())->toBe(3)
         ->and($candidate->savedJobs()->count())->toBe(2)
+        // Moderation seeded afterwards leaves them open, so the saved
+        // list and the applications have something to show.
+        ->and($candidate->savedJobs()->with('company')->get()->every->isPubliclyVisible())->toBeTrue()
+        ->and($candidate->candidateProfile->applications()->with('jobPosting.company')->get()->every(fn (Application $application) => $application->jobPosting->isPubliclyVisible()))->toBeTrue()
         ->and($candidate->account_status)->toBe(AccountStatus::Active)
         ->and($employer->recruiterProfile?->bio)->not->toBeEmpty();
 
