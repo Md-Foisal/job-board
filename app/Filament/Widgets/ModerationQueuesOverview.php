@@ -36,6 +36,13 @@ class ModerationQueuesOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 1;
 
+    /**
+     * Rendered with the page rather than after it: it sits at the top,
+     * where a lazy widget shows an empty box first and then pushes the
+     * rest of the dashboard down when it arrives.
+     */
+    protected static bool $isLazy = false;
+
     protected ?string $heading = 'Waiting on you';
 
     /**
