@@ -39,7 +39,7 @@ test('the dashboard shows the open jobs that fit, best fit first, with the score
 
     $this->actingAs($candidate)
         ->get(route('candidate.dashboard'))
-        ->assertSeeInOrder(['Jobs that match your skills', 'Full Fit Role', '100%', 'Half Fit Role', '50%'])
+        ->assertSeeInOrder(['Recommended for you', 'Full Fit Role', '100%', 'Half Fit Role', '50%'])
         ->assertDontSee('No Overlap Role');
 });
 
@@ -59,11 +59,12 @@ test('jobs already applied to and jobs the public cannot see are left out', func
         ])->id,
     ]);
 
-    $this->actingAs($candidate)
-        ->get(route('candidate.dashboard'))
-        ->assertDontSee('Applied Role')
-        ->assertDontSee('Waiting Role')
-        ->assertSee('No open job asks for your skills right now.');
+    // The applied-to job still shows under Recent changes ("You applied
+    // to ..."), so the check is on the recommendations themselves.
+    $response = $this->actingAs($candidate)->get(route('candidate.dashboard'));
+
+    expect($response->viewData('recommended'))->toBeEmpty();
+    $response->assertDontSee('Waiting Role')->assertSee('No strong match open right now');
 });
 
 test('a candidate with no skills is asked to add them, not shown guesses', function () {
@@ -71,6 +72,18 @@ test('a candidate with no skills is asked to add them, not shown guesses', funct
 
     $this->actingAs(candidateUser())
         ->get(route('candidate.dashboard'))
-        ->assertSee('Add your skills and we will show the open jobs that fit you')
+        ->assertSee('Add your skills to see the jobs that fit you')
         ->assertDontSee('Some Role');
+});
+
+test('a job matching less than half of what it asks for is not recommended', function () {
+    $laravel = Skill::create(['name' => 'Laravel']);
+    $candidate = skilledCandidate([$laravel]);
+
+    postingAsking([$laravel, Skill::create(['name' => 'Go']), Skill::create(['name' => 'Rust'])], ['title' => 'Weak Fit Role']);
+
+    $this->actingAs($candidate)
+        ->get(route('candidate.dashboard'))
+        ->assertDontSee('Weak Fit Role')
+        ->assertSee('No strong match open right now');
 });

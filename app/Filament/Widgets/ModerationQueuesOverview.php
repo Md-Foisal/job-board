@@ -10,7 +10,9 @@ use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Filament\Resources\Reports\ReportResource;
 use App\Models\Company;
+use App\Models\ModerationEvent;
 use App\Models\Report;
+use App\Support\PublicCache;
 use Carbon\CarbonInterface;
 use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\StatsOverviewWidget;
@@ -34,15 +36,70 @@ class ModerationQueuesOverview extends StatsOverviewWidget
 
     protected static ?int $sort = 1;
 
+    /**
+     * Rendered with the page rather than after it: it sits at the top,
+     * where a lazy widget shows an empty box first and then pushes the
+     * rest of the dashboard down when it arrives.
+     */
+    protected static bool $isLazy = false;
+
     protected ?string $heading = 'Waiting on you';
+
+    /**
+     * Four queues, so the cards fill their rows: four across on a desktop,
+     * two on a tablet, one on a phone. Reviews and the companies' answers
+     * to them are one queue here, as they are in the menu, since both are
+     * decided on the same page.
+     *
+     * @return array<string, int>
+     */
+    protected function getColumns(): array
+    {
+        return ['@md' => 2, '@4xl' => 4];
+    }
+
+    /**
+     * How the queues are being worked, under the heading: the decisions of
+     * the last week, and the action rate -- of the reports closed this
+     * week, how many led to something being done. Close to zero means
+     * reporting is mostly noise; close to all means bad actors are getting
+     * through review and being caught only by users.
+     */
+    protected function getDescription(): ?string
+    {
+        $numbers = PublicCache::remember('admin-moderation-week', function () {
+            $weekAgo = now()->subWeek();
+
+            $closed = Report::query()
+                ->where('review_status', '!=', ReportStatus::Pending->value)
+                ->where('updated_at', '>=', $weekAgo);
+
+            return [
+                'decisions' => ModerationEvent::where('created_at', '>=', $weekAgo)->count(),
+                'closed' => (clone $closed)->count(),
+                'actioned' => (clone $closed)->where('review_status', ReportStatus::Actioned->value)->count(),
+            ];
+        });
+
+        $decisions = trans_choice('{0} No decisions this week|{1} 1 decision this week|[2,*] :count decisions this week', $numbers['decisions']);
+
+        return $decisions.' · '.($numbers['closed'] > 0
+            ? round($numbers['actioned'] / $numbers['closed'] * 100).'% of closed reports led to action'
+            : 'no reports closed');
+    }
 
     protected function getStats(): array
     {
         $postings = JobPostingResource::getEloquentQuery()->awaitingReview();
 
-        $reviews = CompanyReviewResource::getEloquentQuery()->where('moderation_status', ModerationStatus::Pending->value);
+        $reviews = CompanyReviewResource::getEloquentQuery();
+        $reviewsWaiting = (clone $reviews)->where('moderation_status', ModerationStatus::Pending->value);
+        $answersWaiting = (clone $reviews)->where('response_status', ModerationStatus::Pending->value);
 
-        $responses = CompanyReviewResource::getEloquentQuery()->where('response_status', ModerationStatus::Pending->value);
+        $oldestReview = collect([
+            $reviewsWaiting->min('updated_at'),
+            $answersWaiting->min('responded_at'),
+        ])->filter()->min();
 
         $companies = Company::query()
             ->whereNull('verified_at')
@@ -57,18 +114,16 @@ class ModerationQueuesOverview extends StatsOverviewWidget
                 Heroicon::OutlinedRectangleStack,
             ),
             $this->queueStat(
-                'Company reviews to check',
-                $reviews->count(),
-                $reviews->min('updated_at'),
-                CompanyReviewResource::getUrl('index'),
+                'Reviews and answers to check',
+                // The same count as the menu badge: a review whose answer is
+                // also waiting is one row to open, not two.
+                CompanyReviewResource::waitingCount(),
+                $oldestReview,
+                // Straight to the tab that has something in it.
+                $reviewsWaiting->exists()
+                    ? CompanyReviewResource::getUrl('index')
+                    : CompanyReviewResource::getUrl('index', ['tab' => 'responses']),
                 Heroicon::OutlinedChatBubbleLeftRight,
-            ),
-            $this->queueStat(
-                'Company responses to check',
-                $responses->count(),
-                $responses->min('responded_at'),
-                CompanyReviewResource::getUrl('index', ['tab' => 'responses']),
-                Heroicon::OutlinedChatBubbleBottomCenterText,
             ),
             $this->queueStat(
                 'Reported things',

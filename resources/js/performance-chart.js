@@ -9,9 +9,12 @@
  * would wrap it in a reactive Proxy, and Chart.js mutates its own state
  * far too much to be proxied safely.
  *
- * Colours come from the design tokens on :root, so the line is the brand
- * teal in either theme; the one series needs no legend, its heading names
- * it. The table beside the canvas is the accessible view of the same
+ * Colours come from the design tokens on :root, read when the chart is
+ * drawn, so either theme gets its own: the series runs in the Sunset
+ * gradient across the plot, as every coloured mark in the product does
+ * (the heading set, which keeps 3:1 against the page -- WCAG 1.4.11 for
+ * graphics), and the grid and labels take the line and muted-ink
+ * tokens. The one series needs no legend, its heading names it. The table beside the canvas is the accessible view of the same
  * numbers, since a canvas says nothing to a screen reader.
  */
 export default function performanceChart({ type = 'line', labels = [], dates = [], values = [], label = '' }) {
@@ -28,12 +31,30 @@ export default function performanceChart({ type = 'line', labels = [], dates = [
 
             Chart.register(LineController, LineElement, PointElement, BarController, BarElement, LinearScale, CategoryScale, Tooltip, Filler)
 
-            const dark = document.documentElement.classList.contains('dark')
             const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
-            const line = token(dark ? '--color-brand-500' : '--color-brand-600')
-            const grid = token(dark ? '--color-zinc-800' : '--color-zinc-200')
-            const ink = token(dark ? '--color-zinc-400' : '--color-zinc-500')
-            const surface = token(dark ? '--color-zinc-900' : '--color-white') || (dark ? '#171717' : '#ffffff')
+            const stops = [token('--color-sunset-ink-1'), token('--color-sunset-ink-2'), token('--color-sunset-ink-3')]
+            const grid = token('--color-line')
+            const ink = token('--color-ink-muted')
+            const surface = token('--color-canvas')
+
+            // One gradient across the plot area, left to right, so a line
+            // and a row of columns change colour the same way. Made per
+            // draw, since the plot area is only known once laid out.
+            const sunset = (alpha = 1) => ({ chart: { ctx, chartArea } }) => {
+                if (! chartArea) {
+                    return stops[1]
+                }
+
+                const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)
+                const hex = (colour) => alpha === 1 ? colour : colour + Math.round(alpha * 255).toString(16).padStart(2, '0')
+
+                gradient.addColorStop(0, hex(stops[0]))
+                gradient.addColorStop(0.55, hex(stops[1]))
+                gradient.addColorStop(1, hex(stops[2]))
+
+                return gradient
+            }
+            const line = sunset()
 
             const lineDataset = {
                 borderColor: line,
@@ -41,12 +62,12 @@ export default function performanceChart({ type = 'line', labels = [], dates = [
                 borderJoinStyle: 'round',
                 borderCapStyle: 'round',
                 // A wash, not a block: the line carries the data.
-                backgroundColor: line.endsWith(')') ? line.replace(/\)$/, ' / 0.1)') : `${line}1a`,
+                backgroundColor: sunset(0.1),
                 fill: 'origin',
                 tension: 0,
                 pointRadius: 0,
                 pointHoverRadius: 5,
-                pointHoverBackgroundColor: line,
+                pointHoverBackgroundColor: stops[1],
                 pointHoverBorderColor: surface,
                 pointHoverBorderWidth: 2,
                 pointHitRadius: 12,

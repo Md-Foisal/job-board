@@ -52,7 +52,7 @@ test('only a signed-in candidate can open the CV builder', function () {
 
     $this->actingAs(employerUser())->get(route('candidate.cv-builder'))->assertForbidden();
 
-    $this->actingAs(rahim())->get(route('candidate.cv-builder'))->assertOk()->assertSee('CV Builder');
+    $this->actingAs(rahim())->get(route('candidate.cv-builder'))->assertOk()->assertSee('CV builder');
 });
 
 test('the preview shows the CV from the profile, and never the salary preference', function () {
@@ -81,12 +81,11 @@ test('what the CV is missing is listed with a link to add it', function () {
         ->assertDontSee('Nothing missing');
 });
 
-test('a profile with no role, course or skill gets the way to add one instead of a CV', function () {
+test('a profile with nothing to put on a CV gets the editor and an empty page, not a CV', function () {
     $candidate = candidateUser();
 
     builderPage($candidate)
-        ->assertSee('Nothing to build a CV from yet')
-        ->assertSee(route('candidate.experience.index'))
+        ->assertSee('Your CV appears here')
         ->assertDontSee('Save to my CVs')
         ->call('save')
         ->call('download')
@@ -249,6 +248,6 @@ test('the CV builder is linked from the sidebar, the documents page and the prof
         ->assertSee(route('candidate.cv-builder'));
 
     $this->actingAs($candidate)->get(route('candidate.profile.edit'))
-        ->assertSee('Build a CV from your profile')
+        ->assertSee('Build a CV')
         ->assertSee(route('candidate.cv-builder'));
 });

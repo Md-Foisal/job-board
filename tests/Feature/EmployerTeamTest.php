@@ -236,7 +236,6 @@ test('registering from an invitation lands on the invitation, not on company set
         'name' => 'Nadia',
         'email' => 'nadia@example.com',
         'password' => 'password123',
-        'password_confirmation' => 'password123',
         // The radio says "I am here to hire", which on its own would send
         // them off to name a company they were invited to join.
         'role' => 'employer',

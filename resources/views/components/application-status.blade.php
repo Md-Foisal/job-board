@@ -1,32 +1,51 @@
 {{--
-    An application's outcome badge, plus its review stage while the
-    application is still active. Lived twice -- once in the My
-    Applications list, once on the timeline page -- until a second copy
-    made the duplication obvious: adding an outcome would have meant
-    picking its colour in two files.
+    Where an application stands, as a badge. Used wherever an application
+    is listed or opened, so one status never reads two ways.
 
-    The colour itself is not decided here but on the enum
-    (ApplicationOutcomeStatus::color()), so any other view that shows a
-    status without using this component still gets the same colour.
+    The candidate sees one pill: the step their application has reached,
+    or how it ended, in the words Indeed's tracker uses -- "Not selected"
+    rather than "Rejected", the same news the decision email gives.
+    Being turned down is neutral grey, not red: it is not an error the
+    candidate has to fix, and red would shout from a list they open
+    often. An offer and a hire are the good news, in green. A decision
+    still inside its undo window has not been made yet, as far as the
+    candidate is concerned.
+
+    The company sees one pill too: the stage while the application is
+    open (New, Shortlisted, Interview, Offer), and how it ended once it
+    is closed -- one status per row, as Greenhouse and Workable list
+    candidates, instead of "Active" beside the stage. A decision still
+    inside its undo window already shows as made: the company made it.
+    The outcome's colour is decided on the enum
+    (ApplicationOutcomeStatus::color()), so any other view that shows it
+    without this component gets the same colour.
 
     @param \App\Models\Application $application
-    @param bool $showStage  false to show only the outcome badge.
-    @param bool $forCandidate  true on the candidate's own pages, where a
-                               decision still inside its undo window has not
-                               been made yet.
+    @param bool $forCandidate  true on the candidate's own pages.
 --}}
-@props(['application', 'showStage' => true, 'forCandidate' => false])
+@props(['application', 'forCandidate' => false])
 
-@php
-    $outcome = $forCandidate ? $application->outcomeForCandidate() : $application->outcome_status;
-@endphp
+@if ($forCandidate)
+    @php
+        // No default arm: a new outcome or stage fails here rather than
+        // showing the candidate a wrong word.
+        [$label, $color] = match ($application->outcomeForCandidate()) {
+            \App\Enums\ApplicationOutcomeStatus::Active => match ($application->stage) {
+                \App\Enums\ApplicationStage::New => [__('Applied'), 'zinc'],
+                \App\Enums\ApplicationStage::Shortlisted, \App\Enums\ApplicationStage::Interview => [__($application->stage->label()), 'zinc'],
+                \App\Enums\ApplicationStage::Offer => [__('Offer'), 'green'],
+            },
+            \App\Enums\ApplicationOutcomeStatus::Hired => [__('Hired'), 'green'],
+            \App\Enums\ApplicationOutcomeStatus::Rejected => [__('Not selected'), 'zinc'],
+            \App\Enums\ApplicationOutcomeStatus::Withdrawn => [__('Withdrawn'), 'zinc'],
+        };
+    @endphp
 
-<flux:badge :color="$outcome->color()">
-    {{ $outcome->label() }}
-</flux:badge>
-
-@if ($showStage && $outcome === \App\Enums\ApplicationOutcomeStatus::Active)
-    <flux:badge color="zinc" variant="pill">
-        {{ $application->stage->label() }}
+    <flux:badge :color="$color">{{ $label }}</flux:badge>
+@elseif ($application->outcome_status === \App\Enums\ApplicationOutcomeStatus::Active)
+    <flux:badge color="zinc">{{ __($application->stage->label()) }}</flux:badge>
+@else
+    <flux:badge :color="$application->outcome_status->color()">
+        {{ __($application->outcome_status->label()) }}
     </flux:badge>
 @endif

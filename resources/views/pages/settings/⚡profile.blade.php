@@ -7,11 +7,20 @@ use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
-new #[Title('Profile settings')] class extends Component {
+new #[Layout('layouts::settings')] #[Title('Account settings')] class extends Component {
     use ProfileValidationRules;
+
+    /**
+     * The company workspace these settings were opened from, if any;
+     * kept in the address so the tabs stay in its frame.
+     */
+    #[Url(as: 'company')]
+    public ?string $workspace = null;
 
     public string $name = '';
     public string $email = '';
@@ -112,13 +121,13 @@ new #[Title('Profile settings')] class extends Component {
     }
 }; ?>
 
-<section class="w-full">
+<x-page width="narrow">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Profile settings') }}</flux:heading>
+    <x-pages::settings.layout current="account" :workspace="$workspace">
+        <x-card as="form" wire:submit="updateProfileInformation" class="space-y-6">
+            <flux:heading size="lg" level="2">{{ __('Name and email') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Profile')" :subheading="__('Update your name and email address')">
-        <form wire:submit="updateProfileInformation" class="mt-6 w-full space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
             <flux:input wire:model="name" :label="__('Name')" type="text" required autofocus autocomplete="name" />
 
             <div>
@@ -143,9 +152,11 @@ new #[Title('Profile settings')] class extends Component {
                     {{ __('Save') }}
                 </flux:button>
             </div>
-        </form>
+        </x-card>
 
-        <form wire:submit="updateTimezone" class="mt-6 w-full space-y-6 rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <x-card as="form" wire:submit="updateTimezone" class="space-y-6">
+            <flux:heading size="lg" level="2">{{ __('Dates and times') }}</flux:heading>
+
             <flux:select
                 wire:model="timezone"
                 :label="__('Time zone')"
@@ -168,10 +179,10 @@ new #[Title('Profile settings')] class extends Component {
                     {{ __('Save') }}
                 </flux:button>
             </div>
-        </form>
+        </x-card>
 
         @if ($this->showDeleteUser)
             <livewire:pages::settings.delete-user-form />
         @endif
     </x-pages::settings.layout>
-</section>
+</x-page>

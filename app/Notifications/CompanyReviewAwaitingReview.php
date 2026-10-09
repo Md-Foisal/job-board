@@ -28,7 +28,7 @@ class CompanyReviewAwaitingReview extends Notification
     {
         return (new MailMessage)
             ->subject(__('New company review to check: :company', ['company' => $this->review->company->name]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('An applicant wrote a review of :company\'s hiring process. It stays hidden until someone on the team approves it.', [
                 'company' => $this->review->company->name,
             ]))

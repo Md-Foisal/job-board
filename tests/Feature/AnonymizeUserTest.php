@@ -220,7 +220,7 @@ test('the employer still sees the application of someone who erased their accoun
         ->assertSee('Deleted user');
 
     $this->actingAs($manager)
-        ->get(route('employer.applications.show', ['company' => $company, 'application' => $application]))
+        ->get(route('employer.applications.show', ['company' => $company, 'application' => $application, 'tab' => 'cv']))
         ->assertOk()
         ->assertSee('Deleted user')
         ->assertSee("CV removed at the candidate's request")

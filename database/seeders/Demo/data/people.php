@@ -315,6 +315,23 @@ return [
         '<p>Hi,</p><p>:line I think that makes me a good fit for the :title role at :company.</p><p>My CV has the details. Thank you for your time.</p><p>:name</p>',
     ],
 
+    // First names drawn with the feminine set of seeded faces. Every
+    // other name, and any name added to a place without being listed
+    // here, gets the masculine set.
+    'feminine' => [
+        'Amelia', 'Isla', 'Ava', 'Grace', 'Freya', 'Chloe',
+        'Nusrat', 'Farhana', 'Tasnim', 'Sharmin', 'Mehjabin', 'Sadia',
+        'Emma', 'Sophia', 'Mia', 'Harper', 'Camila', 'Aaliyah',
+        'Olivia', 'Charlotte', 'Zoe', 'Maya', 'Hannah', 'Priya',
+        'Julia', 'Sophie', 'Tess', 'Lotte', 'Noor',
+        'Lena', 'Lea', 'Anna', 'Clara',
+        'Aoife', 'Niamh', 'Saoirse', 'Ciara', 'Róisín', 'Sinéad',
+        'Inês', 'Beatriz', 'Mariana', 'Leonor', 'Carolina', 'Matilde',
+        'Wei Ling', 'Mei Xin', 'Siti', 'Hui Min', 'Nurul', 'Shu Fen',
+        'Ananya', 'Diya', 'Sneha', 'Pooja', 'Meera', 'Kavya',
+        'Ngozi', 'Aisha', 'Funmilayo', 'Chiamaka', 'Zainab', 'Temitope',
+    ],
+
     'places' => [
         'uk' => [
             'country' => 'United Kingdom', 'cities' => ['London', 'Manchester', 'Leeds', 'Bristol', 'Glasgow'],

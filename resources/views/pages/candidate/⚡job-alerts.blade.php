@@ -67,6 +67,7 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
         return [
             'jobAlerts' => $jobAlerts,
+            'atLimit' => $jobAlerts->count() >= JobAlert::MAX_PER_CANDIDATE,
             'descriptions' => $jobAlerts->mapWithKeys(fn (JobAlert $jobAlert) => [
                 $jobAlert->id => implode(' · ', JobSearchCriteria::describe($jobAlert->criteria, $skillNames, $categoryNames)),
             ]),
@@ -158,11 +159,16 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
     {
         $jobAlert = auth()->user()->jobAlerts()->findOrFail($id);
         $jobAlert->update(['is_active' => ! $jobAlert->is_active]);
+
+        Flux::toast(text: $jobAlert->is_active ? __('Emails for :name are on again.', ['name' => $jobAlert->name]) : __('Emails for :name are paused.', ['name' => $jobAlert->name]));
     }
 
     public function delete(int $id): void
     {
         auth()->user()->jobAlerts()->findOrFail($id)->delete();
+
+        $this->closeModal();
+        Flux::toast(text: __('Job alert deleted.'));
     }
 
     public function closeModal(): void
@@ -208,61 +214,66 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-10">
-    <div class="flex items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Job alerts') }}</flux:heading>
-            <flux:subheading>{{ __('Searches we check for you. When new jobs match, we email them to you.') }}</flux:subheading>
-        </div>
-
-        <flux:button wire:click="create" variant="primary" icon="plus">{{ __('New alert') }}</flux:button>
-    </div>
-
-    <div class="mt-6 space-y-4">
-        @forelse ($jobAlerts as $jobAlert)
-            <div wire:key="job-alert-{{ $jobAlert->id }}" @class([
-                'flex items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900',
-                'opacity-60' => ! $jobAlert->is_active,
-            ])>
-                <div class="flex min-w-0 gap-4">
-                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon name="bell" variant="mini" />
+<x-page>
+    <x-page-header :title="__('Job alerts')">
+        <x-slot:actions>
+            {{-- Shut, with the reason on hover, once the limit is reached:
+                 better than a button that opens only to say no. --}}
+            @if ($atLimit)
+                <flux:tooltip :content="__('You can keep up to :limit job alerts. Delete one to add another.', ['limit' => JobAlert::MAX_PER_CANDIDATE])">
+                    <div>
+                        <flux:button variant="primary" icon="plus" disabled>{{ __('New alert') }}</flux:button>
                     </div>
+                </flux:tooltip>
+            @else
+                <flux:button wire:click="create" variant="primary" class="btn-sunset" icon="plus">{{ __('New alert') }}</flux:button>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
-                    <div class="min-w-0">
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $jobAlert->name }}</p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">
-                            {{ $descriptions[$jobAlert->id] }}
+    @if ($jobAlerts->isEmpty())
+        <x-empty-state icon="bell" :heading="__('No job alerts yet')">
+            {{ __('We email you when new jobs match a search you keep. Search for jobs and choose "Create job alert", or add one here.') }}
+            <x-slot:actions>
+                <flux:button wire:click="create" size="sm" icon="plus">{{ __('New alert') }}</flux:button>
+            </x-slot:actions>
+        </x-empty-state>
+    @else
+        {{-- One row per alert, after LinkedIn's: an on/off switch for the
+             emails, the search it runs, and Edit -- with Delete inside the
+             edit dialog, as on the profile, rather than a row of bare
+             icons. A paused alert keeps its full colour: the switch and
+             the word under it say it is off. --}}
+        <x-card padding="none" class="divide-y divide-line overflow-hidden">
+            @foreach ($jobAlerts as $jobAlert)
+                <div wire:key="job-alert-{{ $jobAlert->id }}" class="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4 sm:flex-nowrap sm:px-6">
+                    <x-icon-tile icon="bell" size="sm" />
+
+                    <div class="min-w-0 flex-1">
+                        <p class="font-medium text-ink">{{ $jobAlert->name }}</p>
+                        @if (filled($descriptions[$jobAlert->id]))
+                            <p class="text-sm text-ink-muted">{{ $descriptions[$jobAlert->id] }}</p>
+                        @endif
+                        <p class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-ink-muted">
+                            <span>{{ $jobAlert->is_active ? __(':frequency email', ['frequency' => $jobAlert->frequency->label()]) : __('Paused — no emails') }}</span>
+                            <flux:link :href="route('jobs.index', $jobAlert->criteria)" wire:navigate>{{ __('See matching jobs') }}</flux:link>
                         </p>
+                    </div>
 
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                            <flux:badge size="sm">{{ $jobAlert->frequency->label() }}</flux:badge>
-                            @unless ($jobAlert->is_active)
-                                <flux:badge size="sm" color="zinc">{{ __('Paused') }}</flux:badge>
-                            @endunless
-                            <flux:link :href="route('jobs.index', $jobAlert->criteria)" wire:navigate class="text-sm">
-                                {{ __('See matching jobs') }}
-                            </flux:link>
-                        </div>
+                    {{-- A row of its own on a phone, so the alert's name and
+                         search keep the width. --}}
+                    <div class="flex w-full shrink-0 items-center justify-end gap-3 sm:w-auto">
+                        <flux:switch
+                            :checked="$jobAlert->is_active"
+                            wire:change="toggle({{ $jobAlert->id }})"
+                            :aria-label="__('Emails for :name', ['name' => $jobAlert->name])"
+                        />
+                        <flux:button wire:click="edit({{ $jobAlert->id }})" variant="ghost" size="sm" icon="pencil-square">{{ __('Edit') }}</flux:button>
                     </div>
                 </div>
-
-                <div class="flex shrink-0 items-center gap-1">
-                    <flux:button wire:click="toggle({{ $jobAlert->id }})" variant="ghost" size="sm"
-                        :icon="$jobAlert->is_active ? 'pause' : 'play'"
-                        :aria-label="$jobAlert->is_active ? __('Pause') : __('Resume')" />
-                    <flux:button wire:click="edit({{ $jobAlert->id }})" variant="ghost" size="sm" icon="pencil" :aria-label="__('Edit')" />
-                    <flux:button wire:click="delete({{ $jobAlert->id }})" wire:confirm="{{ __('Delete this job alert?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Delete')" />
-                </div>
-            </div>
-        @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ __('No job alerts yet. Search for jobs and choose "Create job alert", or add one here.') }}
-                </p>
-            </div>
-        @endforelse
-    </div>
+            @endforeach
+        </x-card>
+    @endif
 
     <flux:modal wire:model="showModal" class="max-w-lg" @close="closeModal">
         <form wire:submit="save" class="space-y-6">
@@ -325,10 +336,16 @@ new #[Layout('layouts::app')] #[Title('Job alerts')] class extends Component {
 
             <flux:input wire:model="experience" type="number" :label="__('Your years of experience')" class="sm:max-w-xs" />
 
-            <div class="flex justify-end gap-2">
-                <flux:button wire:click="closeModal" variant="ghost">{{ __('Cancel') }}</flux:button>
-                <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                @if ($editingId)
+                    <flux:button wire:click="delete({{ $editingId }})" wire:confirm="{{ __('Delete this job alert?') }}" variant="ghost" icon="trash">{{ __('Delete') }}</flux:button>
+                @endif
+
+                <div class="ms-auto flex gap-2">
+                    <flux:button wire:click="closeModal" variant="ghost">{{ __('Cancel') }}</flux:button>
+                    <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+                </div>
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>

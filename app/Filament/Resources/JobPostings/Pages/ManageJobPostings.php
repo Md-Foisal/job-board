@@ -26,7 +26,11 @@ class ManageJobPostings extends ManageRecords
     public function getTabs(): array
     {
         return [
+            // The queue tab carries the menu's count, so the number that
+            // brought someone here is the one they find.
             ModerationStatus::Pending->value => Tab::make('Waiting')
+                ->badge(JobPostingResource::getNavigationBadge())
+                ->badgeColor(JobPostingResource::getNavigationBadgeColor())
                 ->modifyQueryUsing(fn (Builder $query) => $query->awaitingReview()),
             ModerationStatus::Approved->value => Tab::make(ModerationStatus::Approved->label())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('moderation_status', ModerationStatus::Approved->value)),

@@ -26,7 +26,6 @@ function registrationPayload(string $email): array
         'name' => 'Someone',
         'email' => $email,
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'candidate',
     ];
 }

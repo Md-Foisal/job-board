@@ -1,20 +1,28 @@
-<div class="flex items-start max-md:flex-col">
-    <div class="me-10 w-full pb-4 md:w-[220px]">
-        <flux:navlist aria-label="{{ __('Settings') }}">
-            <flux:navlist.item :href="route('profile.edit')" wire:navigate>{{ __('Profile') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('security.edit')" wire:navigate>{{ __('Security') }}</flux:navlist.item>
-            <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Appearance') }}</flux:navlist.item>
-        </flux:navlist>
-    </div>
+{{--
+    The settings sections as tabs under the page header, rather than a
+    second sidebar beside the first: one vertical navigation per screen.
+    Each section heads its own cards, so the tab's name is not repeated
+    as a heading under it.
 
-    <flux:separator class="md:hidden" />
+    @param string $current  account, security or appearance -- named by the
+                            page rather than read from the route, which a
+                            Livewire update request does not carry.
+    @param string|null $workspace  The company slug the page was opened
+                                   from, carried along so the tabs keep
+                                   the same frame (layouts/settings).
+--}}
+@props(['current', 'workspace' => null])
 
-    <div class="flex-1 self-stretch max-md:pt-6">
-        <flux:heading>{{ $heading ?? '' }}</flux:heading>
-        <flux:subheading>{{ $subheading ?? '' }}</flux:subheading>
+@php
+    $keep = filled($workspace) ? ['company' => $workspace] : [];
+@endphp
 
-        <div class="mt-5 w-full max-w-lg">
-            {{ $slot }}
-        </div>
-    </div>
+<div class="flex flex-col gap-6">
+    <x-tab-nav :label="__('Settings')">
+        <x-tab-nav.item :href="route('profile.edit', $keep)" :current="$current === 'account'">{{ __('Account') }}</x-tab-nav.item>
+        <x-tab-nav.item :href="route('security.edit', $keep)" :current="$current === 'security'">{{ __('Security') }}</x-tab-nav.item>
+        <x-tab-nav.item :href="route('appearance.edit', $keep)" :current="$current === 'appearance'">{{ __('Appearance') }}</x-tab-nav.item>
+    </x-tab-nav>
+
+    {{ $slot }}
 </div>

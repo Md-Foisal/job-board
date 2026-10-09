@@ -21,6 +21,8 @@ class ManageCompanies extends ManageRecords
     {
         return [
             'unverified' => Tab::make('Not verified')
+                ->badge(CompanyResource::getNavigationBadge())
+                ->badgeColor(CompanyResource::getNavigationBadgeColor())
                 ->modifyQueryUsing(fn (Builder $query) => $query
                     ->whereNull('verified_at')
                     ->where('account_status', AccountStatus::Active->value)),

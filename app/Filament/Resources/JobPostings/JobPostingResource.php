@@ -222,14 +222,17 @@ class JobPostingResource extends Resource
                     // hides the rows that really need a closer look.
                     ->falseIcon(Heroicon::OutlinedMinus)
                     ->falseColor('gray')
-                    ->getStateUsing(fn (JobPosting $record) => $record->company?->verified_at !== null),
+                    ->getStateUsing(fn (JobPosting $record) => $record->company?->verified_at !== null)
+                    ->visibleFrom('md'),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')
                     ->badge()
-                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray'),
+                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray')
+                    ->visibleFrom('md'),
                 TextColumn::make('postedBy.name')
                     ->label('Posted by')
-                    ->placeholder('Account removed'),
+                    ->placeholder('Account removed')
+                    ->visibleFrom('lg'),
                 TextColumn::make('moderation_status')
                     ->label('Status')
                     ->badge()
@@ -238,7 +241,9 @@ class JobPostingResource extends Resource
                         ModerationStatus::Pending => 'warning',
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
-                    }),
+                    })
+                    // The tab already says it; on a phone the room goes to the title.
+                    ->visibleFrom('md'),
                 TextColumn::make('submitted_at')
                     ->label('Submitted')
                     ->since()

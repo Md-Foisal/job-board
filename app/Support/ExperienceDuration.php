@@ -59,6 +59,35 @@ final class ExperienceDuration
     }
 
     /**
+     * How long one role lasted, counted the same way: whole calendar
+     * months, both ends included, a role still going running to this
+     * month. A role that starts and ends in one month is one month; one
+     * that has not started yet is none.
+     */
+    public static function ofRole(ExperienceRecord $record, ?CarbonInterface $today = null): int
+    {
+        $now = self::index($today ?? now());
+        $end = min($record->end_date ? self::index($record->end_date) : $now, $now);
+
+        return max(0, $end - self::index($record->start_date) + 1);
+    }
+
+    /**
+     * A number of months in the short form a profile shows beside a
+     * role's dates: "2 yrs 6 mos", "1 yr", "8 mos".
+     */
+    public static function label(int $months): string
+    {
+        $years = intdiv($months, 12);
+        $rest = $months % 12;
+
+        return collect([
+            $years > 0 ? trans_choice(':count yr|:count yrs', $years) : null,
+            $rest > 0 ? trans_choice(':count mo|:count mos', $rest) : null,
+        ])->filter()->join(' ');
+    }
+
+    /**
      * Months since year zero, so two dates compare and subtract as months.
      */
     private static function index(CarbonInterface $date): int

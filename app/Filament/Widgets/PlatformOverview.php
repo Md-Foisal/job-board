@@ -2,54 +2,51 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\ReportStatus;
 use App\Models\Application;
 use App\Models\Company;
 use App\Models\JobPosting;
-use App\Models\ModerationEvent;
-use App\Models\Report;
 use App\Models\User;
 use App\Support\PublicCache;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 /**
- * The platform as a whole, and the last week of moderation.
- *
- * The action rate -- of the reports closed this week, how many led to
- * something being done -- is the check on the queue itself: close to zero
- * means reporting is mostly noise; close to all means bad actors are
- * getting through review and being caught only by users.
+ * The platform as a whole: how much is on it, and how much it is used.
+ * How the moderation itself is going sits with the queues, above.
  */
 class PlatformOverview extends StatsOverviewWidget
 {
     protected static ?int $sort = 2;
 
+    /**
+     * Rendered with the page rather than after it: it sits at the top,
+     * where a lazy widget shows an empty box first and then pushes the
+     * rest of the dashboard down when it arrives.
+     */
+    protected static bool $isLazy = false;
+
     protected ?string $heading = 'Platform';
+
+    /**
+     * @return array<string, int>
+     */
+    protected function getColumns(): array
+    {
+        return ['@md' => 2, '@4xl' => 4];
+    }
 
     protected function getStats(): array
     {
-        // Seven counts across the largest tables, identical for every
-        // member of staff. The queue widget above stays live: that is the
-        // one a moderator acts on.
-        $numbers = PublicCache::remember('admin-platform-numbers', function () {
-            $weekAgo = now()->subWeek();
-
-            $closed = Report::query()
-                ->where('review_status', '!=', ReportStatus::Pending->value)
-                ->where('updated_at', '>=', $weekAgo);
-
-            return [
-                'live' => JobPosting::query()->active()->count(),
-                'companies' => Company::count(),
-                'verified' => Company::whereNotNull('verified_at')->count(),
-                'people' => User::count(),
-                'applications' => Application::where('created_at', '>=', $weekAgo)->count(),
-                'decisions' => ModerationEvent::where('created_at', '>=', $weekAgo)->count(),
-                'closed' => (clone $closed)->count(),
-                'actioned' => (clone $closed)->where('review_status', ReportStatus::Actioned->value)->count(),
-            ];
-        });
+        // Counts across the largest tables, identical for every member of
+        // staff. The queue widget above stays live: that is the one a
+        // moderator acts on.
+        $numbers = PublicCache::remember('admin-platform-numbers', fn () => [
+            'live' => JobPosting::query()->active()->count(),
+            'companies' => Company::count(),
+            'verified' => Company::whereNotNull('verified_at')->count(),
+            'people' => User::count(),
+            'applications' => Application::where('created_at', '>=', now()->subWeek())->count(),
+        ]);
 
         return [
             Stat::make('Live job postings', $numbers['live']),
@@ -57,10 +54,6 @@ class PlatformOverview extends StatsOverviewWidget
                 ->description($numbers['verified'].' verified'),
             Stat::make('People', $numbers['people']),
             Stat::make('Applications this week', $numbers['applications']),
-            Stat::make('Moderation decisions this week', $numbers['decisions'])
-                ->description($numbers['closed'] > 0
-                    ? round($numbers['actioned'] / $numbers['closed'] * 100).'% of closed reports led to action'
-                    : 'No reports closed this week'),
         ];
     }
 }

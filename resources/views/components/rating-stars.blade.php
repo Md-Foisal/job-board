@@ -8,7 +8,7 @@
             'size-4' => $size === 'sm',
             'size-5' => $size === 'lg',
             'text-warning-500' => $star <= round($value),
-            'text-zinc-300 dark:text-zinc-700' => $star > round($value),
+            'text-line-strong' => $star > round($value),
         ]) />
     @endforeach
 </span>

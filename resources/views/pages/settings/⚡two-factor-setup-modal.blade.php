@@ -159,23 +159,7 @@ new class extends Component {
 >
         <div class="space-y-6">
             <div class="flex flex-col items-center space-y-4">
-                <div class="p-0.5 w-auto rounded-full border border-stone-100 dark:border-stone-600 bg-white dark:bg-stone-800 shadow-sm">
-                    <div class="p-2.5 rounded-full border border-stone-200 dark:border-stone-600 overflow-hidden bg-stone-100 dark:bg-stone-200 relative">
-                        <div class="flex items-stretch absolute inset-0 w-full h-full divide-x [&>div]:flex-1 divide-stone-200 dark:divide-stone-300 justify-around opacity-50">
-                            @for ($i = 1; $i <= 5; $i++)
-                                <div></div>
-                            @endfor
-                        </div>
-
-                        <div class="flex flex-col items-stretch absolute w-full h-full divide-y [&>div]:flex-1 inset-0 divide-stone-200 dark:divide-stone-300 justify-around opacity-50">
-                            @for ($i = 1; $i <= 5; $i++)
-                                <div></div>
-                            @endfor
-                        </div>
-
-                        <flux:icon.qr-code class="relative z-20 dark:text-accent-foreground"/>
-                    </div>
-                </div>
+                <x-icon-tile icon="qr-code" />
 
                 <div class="space-y-2 text-center">
                     <flux:heading size="lg">{{ $this->modalConfig['title'] }}</flux:heading>
@@ -221,9 +205,9 @@ new class extends Component {
                 @enderror
 
                 <div class="flex justify-center">
-                    <div class="relative w-64 overflow-hidden border rounded-lg border-stone-200 dark:border-stone-700 aspect-square">
+                    <div class="relative aspect-square w-64 overflow-hidden rounded-control border border-line">
                         @empty($qrCodeSvg)
-                            <div class="absolute inset-0 flex items-center justify-center bg-white dark:bg-stone-700 animate-pulse">
+                            <div class="absolute inset-0 flex animate-pulse items-center justify-center bg-surface">
                                 <flux:icon.loading/>
                             </div>
                         @else
@@ -252,16 +236,16 @@ new class extends Component {
 
                 <div class="space-y-4">
                     <div class="relative flex items-center justify-center w-full">
-                        <div class="absolute inset-0 w-full h-px top-1/2 bg-stone-200 dark:bg-stone-600"></div>
-                        <span class="relative px-2 text-sm bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-400">
+                        <div class="absolute inset-0 top-1/2 h-px w-full bg-line"></div>
+                        <span class="relative bg-canvas px-2 text-sm text-ink-muted">
                             {{ __('or, enter the code manually') }}
                         </span>
                     </div>
 
                     <div class="flex flex-col gap-2" x-data="copyText">
-                        <div class="flex items-stretch w-full border rounded-xl dark:border-stone-700">
+                        <div class="flex w-full items-stretch rounded-control border border-line">
                             @empty($manualSetupKey)
-                                <div class="flex items-center justify-center w-full p-3 bg-stone-100 dark:bg-stone-700">
+                                <div class="flex w-full items-center justify-center bg-surface p-3">
                                     <flux:icon.loading variant="mini"/>
                                 </div>
                             @else
@@ -269,26 +253,26 @@ new class extends Component {
                                     type="text"
                                     readonly
                                     value="{{ $manualSetupKey }}"
-                                    class="w-full p-3 bg-transparent outline-none text-stone-900 dark:text-stone-100"
+                                    class="w-full bg-transparent p-3 text-ink outline-none"
                                 />
 
                                 <button
                                     type="button"
                                     @click="copy(@js($manualSetupKey))"
                                     aria-label="{{ __('Copy setup key') }}"
-                                    class="px-3 transition-colors border-l cursor-pointer border-stone-200 dark:border-stone-600"
+                                    class="cursor-pointer border-l border-line px-3 transition-colors"
                                 >
                                     <flux:icon.document-duplicate x-show="copyState !== 'copied'" variant="outline"></flux:icon>
                                     <flux:icon.check
                                         x-show="copyState === 'copied'"
                                         variant="solid"
-                                        class="text-green-500"
+                                        class="text-success-500"
                                     ></flux:icon>
                                 </button>
                             @endempty
                         </div>
 
-                        <p role="status" class="text-sm text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the key and copy it yourself.")) })[copyState] ?? ''"></p>
+                        <p role="status" class="text-sm text-danger-700 dark:text-danger-300" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the key and copy it yourself.")) })[copyState] ?? ''"></p>
                     </div>
                 </div>
             @endif

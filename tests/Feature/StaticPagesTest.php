@@ -113,9 +113,17 @@ test('the terms of service set out the review rules, and what moderation never d
         ->assertSee('or hide a review, and reporting one does not take it down. An answer');
 });
 
-test('an error page loads Livewire itself, since it is never injected into one', function () {
-    $this->get('/no-such-page')
-        ->assertNotFound()
-        ->assertSee("This page doesn't exist")
-        ->assertSee('livewire.js', false);
+test('the about page does not promise pay on every posting, since pay can be left negotiable', function () {
+    $this->get(route('about'))
+        ->assertOk()
+        ->assertDontSee('rather than "negotiable"', false)
+        ->assertSee('When an employer gives a pay range');
+});
+
+test('a long static page lists its sections and links to each one', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('On this page')
+        ->assertSeeHtml('href="#what-we-collect"')
+        ->assertSeeHtml('<h2 id="what-we-collect"');
 });

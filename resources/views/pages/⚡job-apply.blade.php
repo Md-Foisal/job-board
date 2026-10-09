@@ -9,14 +9,14 @@ use App\Support\DocumentUploads;
 use App\Support\SubmissionLimits;
 use Flux\Flux;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
+new #[Layout('layouts::guest')] class extends Component {
     use WithFileUploads;
 
     public JobPosting $jobPosting;
@@ -33,9 +33,23 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
 
     public function mount(JobPosting $jobPosting): void
     {
-        $this->authorize('create', [Application::class, $jobPosting]);
+        // A hidden posting stays a 404, as on its own page; every other
+        // refusal has an explanation waiting on the job page.
+        $access = Gate::inspect('create', [Application::class, $jobPosting]);
 
-        $jobPosting->load(['company:id,name,slug', 'screeningQuestions']);
+        if ($access->status() === 404) {
+            abort(404);
+        }
+
+        if ($access->denied()) {
+            $this->redirectRoute('jobs.show', $jobPosting);
+
+            return;
+        }
+
+        // The columns the summary beside the form reads: the logo tile, and
+        // the zone the closing day is counted in.
+        $jobPosting->load(['company:id,name,slug,logo_path,verified_at,timezone', 'screeningQuestions']);
         $this->jobPosting = $jobPosting;
 
         $this->existingCvs = auth()->user()->candidateProfile->documents()
@@ -88,7 +102,15 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
             $rules["screeningAnswers.{$question->id}"] = ['required', 'string', 'max:2000'];
         }
 
-        $this->validate($rules);
+        $this->validate($rules, [
+            'newResume.required' => __('Choose a CV to upload, or pick one you have already uploaded.'),
+            'screeningAnswers.*.required' => __('Answer this question to apply.'),
+        ], [
+            'resumeChoice' => __('CV'),
+            'newResume' => __('CV'),
+            'coverLetter' => __('cover letter'),
+            'screeningAnswers.*' => __('answer'),
+        ]);
 
         $candidateProfile = auth()->user()->candidateProfile;
 
@@ -125,48 +147,124 @@ new #[Layout('layouts::guest')] #[Title('Apply')] class extends Component {
 
         $this->redirectRoute('jobs.show', $this->jobPosting, navigate: true);
     }
+
+    public function render()
+    {
+        return $this->view()->title(__('Apply: :job', ['job' => $this->jobPosting->title]));
+    }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-12">
-    <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-        <a href="{{ route('jobs.show', $jobPosting) }}" class="hover:text-brand-700 dark:hover:text-brand-400" wire:navigate>{{ $jobPosting->title }}</a>
-        <span class="mx-1">/</span>
-        <span class="text-zinc-700 dark:text-zinc-300">Apply</span>
-    </nav>
+<div class="mx-auto max-w-5xl px-4 pt-6 sm:px-6 lg:pt-10">
+    @php
+        $company = $jobPosting->company;
+        $pay = $jobPosting->payRange();
+        $where = collect([$jobPosting->location_city, $jobPosting->workplace_type->label()])->filter()->implode(' · ');
+    @endphp
 
-    <h1 class="mt-2 font-display text-2xl font-bold text-zinc-900 dark:text-zinc-50">Apply to {{ $jobPosting->title }}</h1>
-    <p class="mt-1 text-zinc-500 dark:text-zinc-500">{{ $jobPosting->company->name }}</p>
+    <x-back-link :href="route('jobs.show', $jobPosting)">{{ $jobPosting->title }}</x-back-link>
 
-    <form wire:submit="submit" class="mt-8 space-y-8">
-        <div>
-            <flux:radio.group wire:model="resumeChoice" label="Resume">
-                @foreach ($existingCvs as $cv)
-                    <flux:radio value="{{ $cv->id }}" label="{{ $cv->original_filename }}" />
-                @endforeach
-                <flux:radio value="new" label="Upload a new resume" />
-            </flux:radio.group>
+    <h1 class="mt-4 text-balance font-display text-heading text-ink sm:text-title">{{ __('Apply to :job', ['job' => $jobPosting->title]) }}</h1>
+    <p class="mt-1 text-ink-muted">{{ $company->name }}</p>
 
-            @if ($resumeChoice === 'new')
-                <div class="mt-3">
-                    <flux:input type="file" wire:model="newResume" :accept="\App\Support\DocumentUploads::accept(\App\Enums\DocumentType::Cv)" />
-                    <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::Cv) }}</p>
-                </div>
-            @endif
-        </div>
+    <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-10">
+        <form wire:submit="submit" class="flex flex-col gap-8">
+            <div>
+                <flux:radio.group wire:model.live="resumeChoice" :label="__('CV')">
+                    @foreach ($existingCvs as $cv)
+                        <flux:radio
+                            value="{{ $cv->id }}"
+                            :label="$cv->original_filename"
+                            :description="__('Uploaded :date', ['date' => \App\Support\LocalTime::of($cv->created_at)->format(\App\Support\DateFormat::DAY)])"
+                        />
+                    @endforeach
+                    <flux:radio value="new" :label="__('Upload a new CV')" />
+                </flux:radio.group>
 
-        <x-rich-text-editor wire="coverLetter" :value="$coverLetter" :label="__('Cover letter')" :description="__('Why you are a good fit (optional)')" :headings="false" />
-
-        @if ($jobPosting->screeningQuestions->isNotEmpty())
-            <div class="space-y-6">
-                @foreach ($jobPosting->screeningQuestions as $question)
-                    <flux:textarea wire:model="screeningAnswers.{{ $question->id }}" label="{{ $question->question_text }}" rows="3" />
-                @endforeach
+                @if ($resumeChoice === 'new')
+                    <div class="mt-4">
+                        <flux:input
+                            type="file"
+                            wire:model="newResume"
+                            :accept="\App\Support\DocumentUploads::accept(\App\Enums\DocumentType::Cv)"
+                            :label="__('Your new CV')"
+                            :description:trailing="\App\Support\DocumentUploads::hint(\App\Enums\DocumentType::Cv)"
+                        />
+                        <p wire:loading wire:target="newResume" class="mt-2 text-sm text-ink-muted" role="status">{{ __('Uploading your CV…') }}</p>
+                    </div>
+                @endif
             </div>
-        @endif
 
-        <div class="flex items-center gap-3">
-            <flux:button type="submit" variant="primary">Submit application</flux:button>
-            <flux:button href="{{ route('jobs.show', $jobPosting) }}" variant="ghost" wire:navigate>Cancel</flux:button>
-        </div>
-    </form>
+            {{-- "(optional)" in the label, not an asterisk on everything
+                 else: GOV.UK's rule, since people read labels, not marks. --}}
+            <x-rich-text-editor
+                wire="coverLetter"
+                :value="$coverLetter"
+                :label="__('Cover letter (optional)')"
+                :description="__('A few lines on why you fit this job.')"
+                :headings="false"
+            />
+
+            @if ($jobPosting->screeningQuestions->isNotEmpty())
+                <fieldset class="flex flex-col gap-6">
+                    <legend class="font-display text-subheading text-ink">{{ __('Questions from :company', ['company' => $company->name]) }}</legend>
+                    @foreach ($jobPosting->screeningQuestions as $question)
+                        <flux:textarea wire:model="screeningAnswers.{{ $question->id }}" :label="$question->question_text" rows="3" />
+                    @endforeach
+                </fieldset>
+            @endif
+
+            <div class="flex flex-wrap items-center gap-3 border-t border-line pt-6">
+                {{-- Held back while a CV is still uploading: sent then, the
+                     form would go without the file it is waiting for. --}}
+                <flux:button type="submit" variant="primary" class="btn-sunset" wire:loading.attr="disabled" wire:target="newResume">
+                    {{ __('Submit application') }}
+                </flux:button>
+                <flux:button :href="route('jobs.show', $jobPosting)" variant="ghost" wire:navigate>{{ __('Cancel') }}</flux:button>
+            </div>
+        </form>
+
+        <aside class="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start" aria-label="{{ __('The job you are applying to') }}">
+            <x-card subtle padding="sm">
+                <div class="flex items-start gap-3">
+                    <x-company-logo :company="$company" size="sm" />
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-ink">{{ $jobPosting->title }}</p>
+                        <p class="flex items-center gap-1 text-meta text-ink-muted">
+                            {{ $company->name }}
+                            @if ($company->verified_at)
+                                <x-verified-badge />
+                            @endif
+                        </p>
+                    </div>
+                </div>
+                <dl class="mt-4 grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 text-meta">
+                    <dt class="text-ink-muted">{{ __('Where') }}</dt>
+                    <dd class="text-ink">{{ $where }}</dd>
+                    <dt class="text-ink-muted">{{ __('Pay') }}</dt>
+                    <dd class="text-ink">
+                        @if ($jobPosting->salary_negotiable)
+                            {{ __('Negotiable') }}
+                        @elseif ($pay)
+                            {{ $pay }} {{ $jobPosting->salary_period?->per() }}
+                        @else
+                            {{ __('Not stated') }}
+                        @endif
+                    </dd>
+                    <dt class="text-ink-muted">{{ __('Closes') }}</dt>
+                    <dd class="text-ink">{{ \App\Support\ClosingDate::day($jobPosting, $company)->format(\App\Support\DateFormat::DAY) }}</dd>
+                </dl>
+            </x-card>
+
+            <x-card subtle padding="sm" class="text-meta">
+                <h2 class="font-medium text-ink">{{ __('What :company sees', ['company' => $company->name]) }}</h2>
+                <ul class="mt-2 list-disc space-y-1 pl-4 text-ink-muted">
+                    <li>{{ __('The CV, cover letter and answers you send now.') }}</li>
+                    <li>{{ __('Your profile: photo, headline, About, links, experience, education, certifications, projects and skills with their levels, as they are when they read it.') }}</li>
+                    <li>{{ __('How well your skills match the job.') }}</li>
+                </ul>
+                <p class="mt-2 text-ink-muted">{{ __('Your job preferences and the pay you want stay private.') }}</p>
+                <a href="{{ route('candidate.profile.preview') }}" class="mt-3 inline-block font-medium text-sunset-small hover:underline" wire:navigate>{{ __('See your profile as they will') }}</a>
+            </x-card>
+        </aside>
+    </div>
 </div>

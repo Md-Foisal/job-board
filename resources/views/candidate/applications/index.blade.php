@@ -1,45 +1,73 @@
-<x-layouts::app :title="__('My Applications')">
-    <div class="mx-auto max-w-4xl">
-        <flux:heading size="xl" level="1">{{ __('My Applications') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Every job you have applied to, in one place.') }}</flux:subheading>
-        <flux:separator variant="subtle" class="mb-6" />
+<x-layouts::app :title="__('Applications')">
+    <x-page>
+        <x-page-header :title="__('Applications')" />
 
-        @if ($applications->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __("You haven't applied to any jobs yet.") }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
+        <x-tab-nav :label="__('Applications')">
+            <x-tab-nav.item :href="route('candidate.applications.index')" :current="! $closed">{{ __('Active') }}</x-tab-nav.item>
+            <x-tab-nav.item :href="route('candidate.applications.index', ['status' => \App\Enums\CandidateApplicationStatus::Closed->value])" :current="$closed">{{ __('Closed') }}</x-tab-nav.item>
+        </x-tab-nav>
+
+        {{-- One step of the Active tab, opened from a dashboard count. --}}
+        @if ($status && ! $closed)
+            <div class="flex flex-wrap items-center gap-3 text-sm">
+                <span class="text-ink-muted">{{ __('Showing') }}</span>
+                <x-chip>{{ __($status->label()) }}</x-chip>
+                <flux:link :href="route('candidate.applications.index')" wire:navigate>{{ __('Show all active') }}</flux:link>
             </div>
+        @endif
+
+        @if ($applications->isEmpty() && ! $hasAny)
+            <x-empty-state icon="paper-airplane" :heading="__('You haven\'t applied to any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Find jobs')">
+                {{ __('Every job you apply to shows up here, with where your application stands.') }}
+            </x-empty-state>
+        @elseif ($applications->isEmpty() && $closed)
+            <x-empty-state icon="archive-box" :heading="__('No closed applications.')" :action-href="route('candidate.applications.index')" :action-label="__('Show active applications')">
+                {{ __('An application moves here once it ends: you were hired or not selected, or you withdrew.') }}
+            </x-empty-state>
+        @elseif ($applications->isEmpty() && $status)
+            <x-empty-state icon="paper-airplane" :heading="__('No applications here right now.')" :action-href="route('candidate.applications.index')" :action-label="__('Show all active')" />
+        @elseif ($applications->isEmpty())
+            <x-empty-state icon="paper-airplane" :heading="__('Nothing in progress right now.')" :action-href="route('jobs.index')" :action-label="__('Find jobs')">
+                {{ __('Your earlier applications are under Closed.') }}
+            </x-empty-state>
         @else
-            <div class="divide-y divide-zinc-200 rounded-xl border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+            <x-card padding="none" class="divide-y divide-line overflow-hidden">
                 @foreach ($applications as $application)
+                    @php
+                        $jobPosting = $application->jobPosting;
+                        $appliedOn = \App\Support\LocalTime::of($application->created_at)->format(\App\Support\DateFormat::DAY);
+                    @endphp
+
                     <a
                         href="{{ route('candidate.applications.show', $application) }}"
                         wire:navigate
-                        class="flex items-center justify-between gap-4 p-5 transition hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                        class="group flex items-center gap-4 px-5 py-4 transition hover:bg-surface sm:px-6"
                     >
-                        <div class="min-w-0">
-                            <p class="truncate font-display font-semibold text-zinc-900 dark:text-zinc-100">
-                                {{ $application->jobPosting->title }}
-                            </p>
-                            <p class="truncate text-sm text-zinc-500 dark:text-zinc-500">
-                                {{ $application->jobPosting->company->name }}
+                        <x-company-logo :company="$jobPosting->company" size="sm" />
+
+                        <div class="min-w-0 flex-1">
+                            {{-- On a phone the lines wrap rather than cut off the
+                                 date: the pill leaves the text little room. --}}
+                            <p class="line-clamp-2 font-medium text-ink group-hover:text-sunset-small sm:truncate">{{ $jobPosting->title }}</p>
+                            <p class="text-sm text-ink-muted sm:truncate">
+                                {{ $jobPosting->company->name }}
                                 &middot;
-                                {{ __('Applied') }} {{ $application->created_at->diffForHumans() }}
+                                <time datetime="{{ $application->created_at->toAtomString() }}" title="{{ $appliedOn }}">{{ __('Applied :when', ['when' => $application->created_at->diffForHumans()]) }}</time>
+                                {{-- Still waiting on a job that stopped taking
+                                     applications: worth knowing, as Indeed's
+                                     "Job closed" says. --}}
+                                @if ($application->outcomeForCandidate() === \App\Enums\ApplicationOutcomeStatus::Active && ! $jobPosting->isOpen())
+                                    &middot; {{ __('Job closed') }}
+                                @endif
                             </p>
                         </div>
 
-                        <div class="flex shrink-0 items-center gap-2">
-                            <x-application-status :application="$application" for-candidate />
-                        </div>
+                        <x-application-status :application="$application" for-candidate />
                     </a>
                 @endforeach
-            </div>
+            </x-card>
 
-            <div class="mt-8">
-                {{ $applications->links() }}
-            </div>
+            {{ $applications->links() }}
         @endif
-    </div>
+    </x-page>
 </x-layouts::app>

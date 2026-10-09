@@ -33,8 +33,10 @@ enum ApplicationOutcomeStatus: string
      */
     public function color(): string
     {
+        // Still open is the ordinary state, so it is neutral; the status
+        // colours are kept for news (green good, red bad).
         return match ($this) {
-            self::Active => 'blue',
+            self::Active => 'zinc',
             self::Hired => 'green',
             self::Rejected => 'red',
             self::Withdrawn => 'zinc',

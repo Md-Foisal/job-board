@@ -5,6 +5,7 @@ use App\Console\Commands\ExpireInvitations;
 use App\Console\Commands\ExpireJobPostings;
 use App\Console\Commands\PruneExpiredCache;
 use App\Console\Commands\SendJobAlerts;
+use App\Models\ContactMessage;
 use Illuminate\Support\Facades\Schedule;
 
 // Every minute: each run is a single indexed UPDATE that usually matches
@@ -25,3 +26,7 @@ Schedule::command(AnonymizeDeletedUsers::class)->dailyAt('03:00')->timezone('Asi
 // same key is read again, and AI drafts and explanations about a person
 // must not outlive their hour or day.
 Schedule::command(PruneExpiredCache::class)->hourly()->withoutOverlapping()->onOneServer();
+
+// Nightly: contact messages closed long enough ago that nobody will
+// write back about them (ContactMessage::KEPT_AFTER_CLOSING_MONTHS).
+Schedule::command('model:prune', ['--model' => [ContactMessage::class]])->dailyAt('03:30')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();

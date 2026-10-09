@@ -66,7 +66,7 @@ test('the company page shows published reviews only, as a verified applicant and
         ->assertSee('Hiring process reviews')
         ->assertSee('Fair and quick')
         ->assertSee('Verified applicant')
-        ->assertSee('March 2026')
+        ->assertSee('Mar 2026')
         ->assertDontSee('2026-03-14')
         ->assertDontSee('Still being read')
         ->assertDontSee('Kept off the page')

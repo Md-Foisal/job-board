@@ -1,211 +1,261 @@
-<x-layouts::guest>
-    <div class="bg-zinc-50 pb-16 pt-6 dark:bg-zinc-950">
-        <div class="mx-auto max-w-6xl px-6">
-            <nav class="text-sm text-zinc-500 dark:text-zinc-500">
-                <a href="{{ route('home') }}" class="inline-flex items-center hover:text-brand-700 dark:hover:text-brand-400" wire:navigate title="Home">
-            <flux:icon.home variant="mini" class="size-4" />
-        </a>
-                <span class="mx-1">/</span>
-                <span class="text-zinc-700 dark:text-zinc-300">{{ $company->name }}</span>
-            </nav>
+@php
+    $jobCount = $jobPostings->count();
+    $sections = array_filter([
+        'about' => $company->description ? __('About') : null,
+        'jobs' => __('Jobs'),
+        'reviews' => __('Reviews'),
+    ]);
+    $counts = ['jobs' => $jobCount, 'reviews' => $reviewSummary->count];
+@endphp
 
-            {{-- One card: cover photo, profile photo, name and bio all belong
-                 to the same unit, so they live inside one bordered card
-                 instead of the avatar floating between the page tray and a
-                 separate card below it. --}}
-            <div class="mt-4 overflow-hidden rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-                <div class="relative">
-                    <div class="h-36 w-full overflow-hidden bg-zinc-200 sm:h-52 md:h-64 dark:bg-zinc-800">
-                        @if ($company->cover_photo_path)
-                            <img
-                                src="{{ \Illuminate\Support\Facades\Storage::url($company->cover_photo_path) }}"
-                                alt=""
-                                class="size-full object-cover"
-                            >
-                        @else
-                            <div class="absolute inset-0 bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 dark:from-brand-800 dark:via-brand-900 dark:to-zinc-950">
-                                <div
-                                    class="absolute inset-0 opacity-[0.15]"
-                                    style="background-image: radial-gradient(circle, white 1.5px, transparent 1.5px); background-size: 22px 22px;"
-                                ></div>
-                                <span class="pointer-events-none absolute -bottom-8 -right-2 select-none font-display text-[9rem] font-bold leading-none text-white/10 sm:-bottom-10 sm:text-[13rem]">
-                                    {{ \Illuminate\Support\Str::of($company->name)->substr(0, 1) }}
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-
-                    <div class="absolute -bottom-12 left-6 flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-white bg-brand-50 text-3xl font-semibold text-brand-700 shadow-md dark:border-zinc-900 dark:bg-brand-950 dark:text-brand-300 sm:-bottom-14 sm:left-8 sm:size-28">
-                        @if ($company->logo_path)
-                            <img src="{{ \Illuminate\Support\Facades\Storage::url($company->logo_path) }}" alt="{{ $company->name }}" class="size-full object-cover">
-                        @else
-                            {{ \Illuminate\Support\Str::of($company->name)->substr(0, 1) }}
-                        @endif
-                    </div>
+<x-layouts::guest :title="$company->name">
+    <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:pt-10">
+        {{-- One card: cover photo, profile photo, name and the links to the
+             page's sections all belong to the same unit, so they live
+             inside one bordered card instead of the avatar floating
+             between the page and a separate card below it. --}}
+        <x-card padding="none" class="overflow-hidden">
+            <div class="relative">
+                <div class="h-32 w-full overflow-hidden bg-surface sm:h-44 md:h-56">
+                    @if ($company->cover_photo_path)
+                        <img
+                            src="{{ \Illuminate\Support\Facades\Storage::url($company->cover_photo_path) }}"
+                            alt=""
+                            class="size-full object-cover"
+                        >
+                    @else
+                        <div class="bg-sunset absolute inset-0">
+                            <div
+                                class="absolute inset-0 opacity-[0.15]"
+                                style="background-image: radial-gradient(circle, white 1.5px, transparent 1.5px); background-size: 22px 22px;"
+                            ></div>
+                            <span class="pointer-events-none absolute -bottom-8 -right-2 select-none font-display text-[9rem] font-bold leading-none text-white/10 sm:-bottom-10 sm:text-[13rem]">
+                                {{ \Illuminate\Support\Str::of($company->name)->substr(0, 1) }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
 
-                <div class="px-6 pb-6 pt-16 sm:px-8 sm:pb-8 sm:pt-20">
+                <x-company-logo :company="$company" size="xl" class="absolute -bottom-12 left-6 border-4 border-canvas shadow-md sm:-bottom-14 sm:left-8 sm:size-28" />
+            </div>
+
+            <div class="flex flex-col gap-5 px-6 pb-6 pt-16 sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:pt-20">
+                <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                        <h1 class="text-balance font-display text-3xl font-bold text-zinc-900 dark:text-zinc-50">{{ $company->name }}</h1>
+                        <h1 class="text-balance text-heading text-ink sm:text-title">{{ $company->name }}</h1>
 
                         @if ($company->verified_at)
                             <x-verified-badge size="lg" />
                         @endif
                     </div>
 
-                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                        <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                            {{ $company->identity_type->label() }}
-                        </span>
-                        @if ($company->industry)
-                            <span class="rounded-full bg-zinc-100 px-2.5 py-1 font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                {{ $company->industry }}
-                            </span>
-                        @endif
-                        @if ($company->size)
-                            <span class="text-zinc-500 dark:text-zinc-500">{{ $company->size }} employees</span>
-                        @endif
-                    </div>
-
-                    <p class="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
-                        <span class="font-semibold tabular-nums text-zinc-700 dark:text-zinc-300">{{ $jobPostings->count() }}</span>
-                        open {{ \Illuminate\Support\Str::plural('position', $jobPostings->count()) }}
-                        <span class="mx-1.5">·</span>
-                        On JobBoard since {{ \App\Support\LocalTime::of($company->created_at)->format('Y') }}
+                    <p class="mt-1 text-ink-muted">
+                        {{ collect([$company->identity_type->label(), $company->industry])->filter()->implode(' · ') }}
                     </p>
 
-                    @if ($responsivePercent !== null)
-                        <x-responsive-badge :percent="$responsivePercent" show-detail class="mt-3" />
+                    @if ($reviewSummary->count > 0)
+                        <p class="mt-3 text-sm">
+                            <a href="#reviews" class="inline-flex items-center gap-1.5 text-ink-muted hover:text-sunset-small">
+                                @if ($reviewSummary->hasAverages())
+                                    <x-rating-stars :value="$reviewSummary->overall" />
+                                    <span class="font-medium tabular-nums text-ink" aria-hidden="true">{{ number_format($reviewSummary->overall, 1) }}</span>
+                                @endif
+                                <span class="underline underline-offset-2">{{ trans_choice(':count hiring process review|:count hiring process reviews', $reviewSummary->count, ['count' => $reviewSummary->count]) }}</span>
+                            </a>
+                        </p>
+                    @endif
+                </div>
+
+                <div class="flex shrink-0 flex-wrap items-center gap-2">
+                    @if ($company->website_url)
+                        <flux:button :href="$company->website_url" icon:trailing="arrow-top-right-on-square" target="_blank" rel="noopener noreferrer">
+                            {{ __('Visit website') }}
+                        </flux:button>
                     @endif
 
-                    <div class="mt-5 flex flex-wrap items-center gap-3">
-                        @if ($company->website_url)
-                            <flux:button href="{{ $company->website_url }}" variant="primary" icon:trailing="arrow-top-right-on-square" target="_blank" rel="noopener noreferrer">
-                                Visit website
-                            </flux:button>
-                        @endif
-
-                        <livewire:report-button :reportable="$company" :key="'report-'.$company->id" />
-                    </div>
-
-                    @if ($company->description)
-                        <div class="prose prose-zinc mt-6 max-w-3xl dark:prose-invert">
-                            <div class="prose-content">{!! $company->description !!}</div>
-                        </div>
-                    @endif
+                    <livewire:report-button :reportable="$company" :key="'report-'.$company->id" />
                 </div>
             </div>
 
-            <section class="mt-10">
-                <h2 class="mb-6 font-display text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-                    Open positions
-                </h2>
+            {{-- Jump links to the page's own sections, with how much is in
+                 each. One page rather than tabs: the sections are short
+                 enough to read in one scroll, and search engines see the
+                 jobs and reviews on the company's own address. --}}
+            <nav aria-label="{{ __('On this page') }}" class="flex gap-1 overflow-x-auto border-t border-line px-4 sm:px-6">
+                @foreach ($sections as $id => $label)
+                    <a href="#{{ $id }}" class="inline-flex shrink-0 items-center gap-2 border-b-2 border-transparent px-2 py-3 text-sm font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink">
+                        {{ $label }}
+                        @isset($counts[$id])
+                            <flux:badge size="sm" class="tabular-nums">{{ $counts[$id] }}</flux:badge>
+                        @endisset
+                    </a>
+                @endforeach
+            </nav>
+        </x-card>
 
-                @if ($jobPostings->isEmpty())
-                    <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                        No open positions right now — check back soon.
-                    </div>
-                @else
-                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach ($jobPostings as $jobPosting)
-                            <x-job-card :job-posting="$jobPosting" />
-                        @endforeach
-                    </div>
-                @endif
-            </section>
+        <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-x-10">
+            {{-- The facts first in the page's order, so on a phone they come
+                 straight after the header; on a wide screen they sit in the
+                 right-hand column, as on the job page. --}}
+            <aside class="lg:col-start-2 lg:row-start-1">
+                <x-card subtle padding="sm" class="lg:sticky lg:top-24">
+                    <h2 class="text-meta font-semibold uppercase tracking-wide text-ink-muted">{{ __('Company details') }}</h2>
+                    <dl class="mt-3 grid grid-cols-[8rem_minmax(0,1fr)] gap-x-3 gap-y-2.5 text-sm">
+                        <dt class="text-ink-muted">{{ __('Type') }}</dt>
+                        <dd class="text-ink">{{ $company->identity_type->label() }}</dd>
 
-            <section id="reviews" class="mt-12 scroll-mt-6" aria-labelledby="reviews-heading">
-                <h2 id="reviews-heading" class="font-display text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-                    {{ __('Hiring process reviews') }}
-                </h2>
-                <p class="mt-1 max-w-3xl text-sm text-zinc-500 dark:text-zinc-500">
-                    {{ __('Written by people who applied here through JobBoard and read by our team before they appear. Names, jobs and outcomes are never shown.') }}
-                </p>
+                        @if ($company->industry)
+                            <dt class="text-ink-muted">{{ __('Industry') }}</dt>
+                            <dd class="text-ink">{{ $company->industry }}</dd>
+                        @endif
 
-                @if ($reviewSummary->count === 0)
-                    <div class="mt-6 rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                        {{ __('No reviews yet. Anyone who applies here through JobBoard can review the hiring process once they get a decision, reach an interview, or go a month without an answer.') }}
-                    </div>
-                @else
-                    @if ($reviewSummary->hasAverages())
-                        <dl class="mt-6 grid gap-6 rounded-xl border border-zinc-200 bg-white p-6 sm:grid-cols-3 dark:border-zinc-800 dark:bg-zinc-900">
-                            <div>
-                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Overall') }}</dt>
-                                <dd class="mt-1 flex items-center gap-2">
-                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50" aria-hidden="true">{{ number_format($reviewSummary->overall, 1) }}</span>
-                                    <x-rating-stars :value="$reviewSummary->overall" size="lg" />
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}</dt>
-                                <dd class="mt-1 flex items-center gap-2">
-                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50" aria-hidden="true">{{ number_format($reviewSummary->communication, 1) }}</span>
-                                    <x-rating-stars :value="$reviewSummary->communication" size="lg" />
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}</dt>
-                                <dd class="mt-1 text-zinc-700 dark:text-zinc-300">
-                                    <span class="font-display text-2xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">{{ $reviewSummary->asDescribed }}</span>
-                                    {{ __('of :count said yes', ['count' => $reviewSummary->count]) }}
-                                </dd>
-                            </div>
-                        </dl>
-                        <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
-                            {{ trans_choice('Based on :count published review.|Based on :count published reviews.', $reviewSummary->count, ['count' => $reviewSummary->count]) }}
-                        </p>
-                    @else
-                        <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-                            {{ trans_choice(':count review so far. Averages appear once there are :min.|:count reviews so far. Averages appear once there are :min.', $reviewSummary->count, [
-                                'count' => $reviewSummary->count,
-                                'min' => \App\Support\ReviewSummary::MIN_FOR_AVERAGES,
-                            ]) }}
-                        </p>
+                        @if ($company->size)
+                            <dt class="text-ink-muted">{{ __('Size') }}</dt>
+                            <dd class="text-ink">{{ __(':size employees', ['size' => $company->size]) }}</dd>
+                        @endif
+
+                        <dt class="text-ink-muted">{{ __('Open jobs') }}</dt>
+                        <dd class="tabular-nums text-ink">{{ $jobCount }}</dd>
+
+                        <dt class="text-ink-muted">{{ __('On :app since', ['app' => config('app.name')]) }}</dt>
+                        <dd class="tabular-nums text-ink">{{ \App\Support\LocalTime::of($company->created_at)->format('Y') }}</dd>
+                    </dl>
+
+                    @if ($responsivePercent !== null)
+                        <x-responsive-badge :percent="$responsivePercent" show-detail class="mt-4 border-t border-line pt-4" />
                     @endif
+                </x-card>
+            </aside>
 
-                    <div class="mt-6 space-y-4">
-                        @foreach ($reviews as $review)
-                            <article class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900" aria-labelledby="review-{{ $review->id }}-title">
-                                <div class="flex flex-wrap items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <x-rating-stars :value="$review->overall_rating" />
-                                        <h3 id="review-{{ $review->id }}-title" class="mt-2 font-medium text-zinc-900 dark:text-zinc-100">{{ $review->title }}</h3>
-                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
-                                            {{ __('Verified applicant') }}
-                                            <span class="mx-1">·</span>
-                                            @php($publishedAt = \App\Support\LocalTime::of($review->published_at))
-                                            <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format('F Y') }}</time>
-                                        </p>
-                                    </div>
+            <div class="min-w-0 space-y-12 lg:col-start-1 lg:row-start-1">
+                @if ($company->description)
+                    <section id="about" aria-labelledby="about-heading">
+                        <h2 id="about-heading" class="text-heading text-ink">{{ __('About') }}</h2>
+                        <div class="prose prose-zinc mt-4 max-w-none dark:prose-invert">
+                            <div class="prose-content">{!! $company->description !!}</div>
+                        </div>
+                    </section>
+                @endif
 
-                                    <livewire:report-button :reportable="$review" :key="'report-review-'.$review->id" />
-                                </div>
+                <section id="jobs" aria-labelledby="jobs-heading">
+                    <h2 id="jobs-heading" class="text-heading text-ink">{{ __('Open jobs') }}</h2>
 
-                                <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $review->body }}</p>
-
-                                <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                                    <div class="flex gap-1">
-                                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}:</dt>
-                                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
-                                    </div>
-                                    <div class="flex gap-1">
-                                        <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}:</dt>
-                                        <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $review->job_as_described->label() }}</dd>
-                                    </div>
-                                </dl>
-
-                                <x-review-response :review="$review" :company="$company" />
-                            </article>
-                        @endforeach
-                    </div>
-
-                    @if ($reviews->hasPages())
-                        <div class="mt-6">
-                            {{ $reviews->links() }}
+                    @if ($jobPostings->isEmpty())
+                        <x-empty-state icon="briefcase" :level="3" class="mt-4" :heading="__('No open jobs right now')">
+                            {{ __('When :company posts a job, it will appear here.', ['company' => $company->name]) }}
+                        </x-empty-state>
+                    @else
+                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            @foreach ($jobPostings as $jobPosting)
+                                <x-job-card
+                                    :job-posting="$jobPosting"
+                                    :show-company="false"
+                                    :show-save-button="$canSave"
+                                    :saved="in_array($jobPosting->id, $savedJobIds, true)"
+                                />
+                            @endforeach
                         </div>
                     @endif
-                @endif
-            </section>
+                </section>
+
+                <section id="reviews" aria-labelledby="reviews-heading">
+                    <h2 id="reviews-heading" class="text-heading text-ink">
+                        {{ __('Hiring process reviews') }}
+                    </h2>
+                    <p class="mt-1 max-w-3xl text-sm text-ink-muted">
+                        {{ __('Written by people who applied here through :app and read by our team before they appear. Names, jobs and outcomes are never shown.', ['app' => config('app.name')]) }}
+                    </p>
+
+                    @if ($reviewSummary->count === 0)
+                        <x-empty-state icon="chat-bubble-left-right" :level="3" class="mt-6" :heading="__('No reviews yet.')">
+                            {{ __('Anyone who applies here through :app can review the hiring process once they get a decision, reach an interview, or go :days days without an answer.', [
+                                'app' => config('app.name'),
+                                'days' => \App\Support\ReviewEligibility::UNANSWERED_DAYS,
+                            ]) }}
+                        </x-empty-state>
+                    @else
+                        @if ($reviewSummary->hasAverages())
+                            <x-card as="dl" class="mt-6 grid gap-6 sm:grid-cols-3">
+                                <div>
+                                    <dt class="text-sm text-ink-muted">{{ __('Overall') }}</dt>
+                                    <dd class="mt-1 flex items-center gap-2">
+                                        <span class="font-display text-2xl font-semibold tabular-nums text-ink" aria-hidden="true">{{ number_format($reviewSummary->overall, 1) }}</span>
+                                        <x-rating-stars :value="$reviewSummary->overall" size="lg" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm text-ink-muted">{{ __('Communication') }}</dt>
+                                    <dd class="mt-1 flex items-center gap-2">
+                                        <span class="font-display text-2xl font-semibold tabular-nums text-ink" aria-hidden="true">{{ number_format($reviewSummary->communication, 1) }}</span>
+                                        <x-rating-stars :value="$reviewSummary->communication" size="lg" />
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt class="text-sm text-ink-muted">{{ __('Job as described') }}</dt>
+                                    <dd class="mt-1 text-ink-soft">
+                                        <span class="font-display text-2xl font-semibold tabular-nums text-ink">{{ $reviewSummary->asDescribed }}</span>
+                                        {{ __('of :count said yes', ['count' => $reviewSummary->count]) }}
+                                    </dd>
+                                </div>
+                            </x-card>
+                            <p class="mt-2 text-xs text-ink-muted">
+                                {{ trans_choice('Based on :count published review.|Based on :count published reviews.', $reviewSummary->count, ['count' => $reviewSummary->count]) }}
+                            </p>
+                        @else
+                            <p class="mt-6 text-sm text-ink-muted">
+                                {{ trans_choice(':count review so far. Averages appear once there are :min.|:count reviews so far. Averages appear once there are :min.', $reviewSummary->count, [
+                                    'count' => $reviewSummary->count,
+                                    'min' => \App\Support\ReviewSummary::MIN_FOR_AVERAGES,
+                                ]) }}
+                            </p>
+                        @endif
+
+                        <div class="mt-6 space-y-4">
+                            @foreach ($reviews as $review)
+                                <x-card as="article" aria-labelledby="review-{{ $review->id }}-title">
+                                    <div class="flex flex-wrap items-start justify-between gap-3">
+                                        <div class="min-w-0">
+                                            <x-rating-stars :value="$review->overall_rating" />
+                                            <h3 id="review-{{ $review->id }}-title" class="mt-2 font-medium text-ink">{{ $review->title }}</h3>
+                                            <p class="mt-1 text-xs text-ink-muted">
+                                                {{ __('Verified applicant') }}
+                                                <span class="mx-1">·</span>
+                                                @php
+                                                    $publishedAt = \App\Support\LocalTime::of($review->published_at);
+                                                @endphp
+                                                <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format(\App\Support\DateFormat::MONTH) }}</time>
+                                            </p>
+                                        </div>
+
+                                        <livewire:report-button :reportable="$review" :key="'report-review-'.$review->id" />
+                                    </div>
+
+                                    <p class="mt-3 whitespace-pre-line text-sm text-ink-soft">{{ $review->body }}</p>
+
+                                    <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                                        <div class="flex gap-1">
+                                            <dt class="text-ink-muted">{{ __('Communication') }}:</dt>
+                                            <dd class="font-medium text-ink">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
+                                        </div>
+                                        <div class="flex gap-1">
+                                            <dt class="text-ink-muted">{{ __('Job as described') }}:</dt>
+                                            <dd class="font-medium text-ink">{{ $review->job_as_described->label() }}</dd>
+                                        </div>
+                                    </dl>
+
+                                    <x-review-response :review="$review" :company="$company" />
+                                </x-card>
+                            @endforeach
+                        </div>
+
+                        @if ($reviews->hasPages())
+                            <div class="mt-6">
+                                {{ $reviews->links() }}
+                            </div>
+                        @endif
+                    @endif
+                </section>
+            </div>
         </div>
     </div>
 </x-layouts::guest>

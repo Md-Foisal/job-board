@@ -9,6 +9,7 @@ use App\Enums\ApplicationOutcomeStatus;
 use App\Enums\ApplicationStage;
 use App\Enums\AvailabilityStatus;
 use App\Enums\JobAsDescribed;
+use App\Enums\MembershipRole;
 use App\Enums\ModerationStatus;
 use App\Enums\ReviewPart;
 use App\Enums\StaffRole;
@@ -17,6 +18,7 @@ use App\Models\ApplicationEvent;
 use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\CompanyReview;
+use App\Models\Invitation;
 use App\Models\JobAlert;
 use App\Models\JobPosting;
 use App\Models\JobPostingDailyStat;
@@ -29,6 +31,7 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Database\Seeders\Demo\Catalogue;
 use Database\Seeders\Demo\People;
+use Database\Seeders\Demo\Pictures;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Storage;
 
@@ -84,6 +87,13 @@ class DemoAccountsSeeder extends Seeder
         $employer = User::factory()->create(['name' => $demo['employer']['name'], 'email' => 'employer@jobboard.test', 'timezone' => $demo['company']['timezone']]);
         $company = CompanySeeder::create(self::DEMO_COMPANY_SLUG, $demo['company'], ['website_url' => 'https://jobboard.test']);
         Membership::factory()->owner()->for($company)->for($employer, 'user')->create(['job_title' => $demo['employer']['job_title']]);
+        // A filled-in recruiter face, so the "Posted by" card on the job
+        // page shows what candidates are meant to see.
+        $employer->recruiterProfile()->create([
+            'bio' => $demo['employer']['recruiter_bio'],
+            'avatar_path' => Pictures::face($employer->name, 'recruiter-avatars'),
+        ]);
+        $this->seedTeam($company, $employer, $demo);
 
         $candidate = User::factory()->create(['name' => $demo['candidate']['name'], 'email' => 'candidate@jobboard.test', 'timezone' => 'Europe/London']);
         $profile = People::writtenCandidate($candidate, [
@@ -101,6 +111,7 @@ class DemoAccountsSeeder extends Seeder
             ['Super admin', 'superadmin@jobboard.test', self::PASSWORD],
             ['Moderator', 'moderator@jobboard.test', self::PASSWORD],
             ['Employer (owner of '.$company->name.')', 'employer@jobboard.test', self::PASSWORD],
+            ['Employer (member of '.$company->name.')', 'member@jobboard.test', self::PASSWORD],
             ['Candidate', 'candidate@jobboard.test', self::PASSWORD],
             ['Deleted candidate (sign in to restore)', $deleted->email, self::PASSWORD],
         ]);
@@ -162,7 +173,11 @@ class DemoAccountsSeeder extends Seeder
             }
         }
 
-        $candidate->savedJobs()->attach($postings->slice(3, 2)->pluck('id'));
+        // Saved a day apart, so the saved list has an order to show.
+        $postings->slice(3, 2)->values()->each(fn (JobPosting $posting, int $index) => $candidate->savedJobs()->attach($posting->id, [
+            'created_at' => now()->subDays($index + 1),
+            'updated_at' => now()->subDays($index + 1),
+        ]));
 
         $postings->slice(5, 3)->values()->each(fn (JobPosting $posting, int $hoursAgo) => JobView::create([
             'user_id' => $candidate->id,
@@ -386,6 +401,36 @@ class DemoAccountsSeeder extends Seeder
                 ])->save();
             }
         }
+    }
+
+    /**
+     * Hannah's colleague, a plain member who signs in as
+     * member@jobboard.test to see the workspace as a member does, and an
+     * invitation still waiting to be accepted.
+     *
+     * @param  array<string, mixed>  $demo
+     */
+    private function seedTeam(Company $company, User $owner, array $demo): void
+    {
+        $colleague = User::factory()->create([
+            'name' => $demo['colleague']['name'],
+            'email' => 'member@jobboard.test',
+            'timezone' => $demo['company']['timezone'],
+        ]);
+
+        Membership::factory()->for($company)->for($colleague, 'user')->create([
+            'role' => MembershipRole::Member,
+            'job_title' => $demo['colleague']['job_title'],
+        ]);
+        $colleague->recruiterProfile()->create(['avatar_path' => Pictures::face($colleague->name, 'recruiter-avatars')]);
+
+        Invitation::factory()->for($company)->create([
+            'invited_by_id' => $owner->id,
+            'email' => $demo['invitation']['email'],
+            'role' => MembershipRole::from($demo['invitation']['role']),
+            'created_at' => now()->subDays(2),
+            'expires_at' => now()->addDays(5),
+        ]);
     }
 
     /**

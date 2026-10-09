@@ -276,7 +276,8 @@ class ReportResource extends Resource
                 TextColumn::make('reason')
                     ->label('Latest reason')
                     ->limit(60)
-                    ->wrap(),
+                    ->wrap()
+                    ->visibleFrom('md'),
                 TextColumn::make('created_at')
                     ->label('Last reported')
                     ->since()

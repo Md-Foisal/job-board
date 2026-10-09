@@ -5,6 +5,7 @@ use App\Actions\SuspendUser;
 use App\Enums\StaffRole;
 use App\Http\Middleware\EnsureAccountIsActive;
 use App\Models\User;
+use App\Support\DateFormat;
 
 function deletedAccount(): User
 {
@@ -25,7 +26,7 @@ test('signing in to a deleted account offers to restore it, without signing in',
     $this->get(route('account.restore'))
         ->assertOk()
         ->assertSee('sakib@example.com')
-        ->assertSee(now()->addDays(User::DELETION_GRACE_DAYS)->toFormattedDateString());
+        ->assertSee(now()->addDays(User::DELETION_GRACE_DAYS)->format(DateFormat::DAY));
 });
 
 test('restoring brings the account back and sends them to sign in as usual', function () {

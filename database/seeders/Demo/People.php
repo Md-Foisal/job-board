@@ -9,10 +9,12 @@ use App\Enums\ProficiencyLevel;
 use App\Enums\WorkplaceType;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
+use App\Models\Certification;
 use App\Models\Document;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
+use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
 use App\Support\CvData;
@@ -57,6 +59,9 @@ final class People
             'name' => $name,
             'email' => self::email($name),
             'timezone' => $where['timezone'],
+            // Not everyone adds a photo, so a profile without one is
+            // seen in a fresh database as well.
+            'avatar' => random_int(1, 4) <= 3 ? Pictures::face($name) : null,
             'created_at' => $joined,
             'updated_at' => $joined,
             ...$user,
@@ -69,6 +74,7 @@ final class People
             'portfolio_url' => random_int(1, 4) === 1 ? 'https://'.Str::slug($name, '').'.example' : null,
             'github_url' => null,
             'linkedin_url' => null,
+            'cover_photo_path' => random_int(1, 4) === 1 ? Pictures::personalCover() : null,
         ]);
 
         // The headline is the title of the latest job, so the level it
@@ -93,6 +99,8 @@ final class People
      */
     public static function writtenCandidate(User $account, array $details): CandidateProfile
     {
+        $account->update(['avatar' => Pictures::face($account->name)]);
+
         $profile = CandidateProfile::factory()->for($account)->create([
             'headline' => $details['headline'],
             'bio' => $details['bio'],
@@ -100,6 +108,7 @@ final class People
             'portfolio_url' => $details['portfolio_url'],
             'github_url' => null,
             'linkedin_url' => null,
+            'cover_photo_path' => Pictures::personalCover(),
             ...($details['contact'] ?? []),
         ]);
 
@@ -115,6 +124,28 @@ final class People
                 'description' => $job['description'],
                 'start_date' => self::monthsAgo($job['start']),
                 'end_date' => $job['end'] === null ? null : self::monthsAgo($job['end']),
+            ]);
+        }
+
+        foreach ($details['projects'] ?? [] as $project) {
+            Project::factory()->for($profile)->create([
+                'name' => $project['name'],
+                'description' => $project['description'],
+                'url' => $project['url'],
+                'source_url' => $project['source_url'],
+                'start_date' => self::monthsAgo($project['start']),
+                'end_date' => $project['end'] === null ? null : self::monthsAgo($project['end']),
+            ]);
+        }
+
+        foreach ($details['certifications'] ?? [] as $certification) {
+            Certification::factory()->for($profile)->create([
+                'name' => $certification['name'],
+                'issuer' => $certification['issuer'],
+                'issued_on' => self::monthsAgo($certification['issued']),
+                'expires_on' => self::monthsAgo($certification['expires']),
+                'credential_id' => $certification['credential_id'],
+                'credential_url' => $certification['credential_url'],
             ]);
         }
 

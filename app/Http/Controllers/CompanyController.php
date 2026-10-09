@@ -14,9 +14,16 @@ use Illuminate\View\View;
 
 class CompanyController extends Controller
 {
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('companies.create');
+        // Back to the workspace they came from when they already have one;
+        // otherwise to the start page that offered to set a company up.
+        $company = $request->user()->activeCompanies()->first();
+
+        return view('companies.create', [
+            'back' => $company ? route('employer.dashboard', $company) : route('dashboard'),
+            'backLabel' => $company?->name ?? __('Dashboard'),
+        ]);
     }
 
     public function store(StoreCompanyRequest $request, CreateCompany $createCompany): RedirectResponse
@@ -73,9 +80,17 @@ class CompanyController extends Controller
             ->paginate(self::REVIEWS_PER_PAGE)
             ->fragment('reviews');
 
+        $user = $request->user();
+        $isCandidate = $user?->isCandidate() ?? false;
+
         return view('companies.show', [
             'company' => $company,
             'jobPostings' => $jobPostings,
+            // As on the job search: guests get the button too (it signs
+            // them in and brings them back); employers and staff have no
+            // list of saved jobs.
+            'canSave' => $user === null || $isCandidate,
+            'savedJobIds' => $isCandidate ? $user->savedJobIdsAmong($jobPostings) : [],
             'reviews' => $reviews,
             'reviewSummary' => ReviewSummary::of($company),
             'responsivePercent' => $responsiveness->percentFor($company),

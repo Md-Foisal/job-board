@@ -11,70 +11,26 @@
     @include('partials.head')
 </head>
 
-<body class="flex min-h-screen flex-col bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+<body class="flex min-h-screen flex-col bg-canvas text-ink antialiased">
+    @include('partials.svg-defs')
     @include('partials.navbar', ['showSidebarToggle' => true])
 
     <div class="flex flex-1">
-        <flux:sidebar collapsible="mobile" sticky
-            class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
-                    {{-- Candidates land on their real dashboard directly rather than
-                         bouncing through the generic /dashboard redirect dispatcher
-                         (routes/web.php) -- same destination, one less hop. --}}
-                    <flux:sidebar.item icon="home"
-                        :href="auth()->check() && auth()->user()->isCandidate() ? route('candidate.dashboard') : route('dashboard')"
-                        :current="request()->routeIs('dashboard') || request()->routeIs('candidate.dashboard')"
-                        wire:navigate>
-                        {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
+        {{-- Grouped by the two jobs a candidate comes here for: looking for
+             work, and keeping the profile that applications are made from.
+             The entries come from App\Support\Navigation, which the
+             command palette searches too. It can be narrowed to icons on a
+             desktop, and the browser remembers the choice, but it opens
+             wide: the labels are what make it quick to scan. --}}
+        <flux:sidebar collapsible sticky
+            class="border-e border-line bg-surface">
+            <flux:sidebar.header class="justify-end">
+                <flux:sidebar.collapse :tooltip="__('Collapse sidebar')" />
+            </flux:sidebar.header>
 
+            <flux:sidebar.nav>
                 @auth
-                    @if (auth()->user()->isCandidate())
-                        <flux:sidebar.group :heading="__('Candidate')" class="grid">
-                            <flux:sidebar.item icon="user" :href="route('candidate.profile.edit')"
-                                :current="request()->routeIs('candidate.profile.*')" wire:navigate>
-                                {{ __('Profile') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="adjustments-horizontal" :href="route('candidate.preferences.edit')"
-                                :current="request()->routeIs('candidate.preferences.*')" wire:navigate>
-                                {{ __('Preferences') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="academic-cap" :href="route('candidate.education.index')"
-                                :current="request()->routeIs('candidate.education.*')" wire:navigate>
-                                {{ __('Education') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="briefcase" :href="route('candidate.experience.index')"
-                                :current="request()->routeIs('candidate.experience.*')" wire:navigate>
-                                {{ __('Experience') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="document-text" :href="route('candidate.documents.index')"
-                                :current="request()->routeIs('candidate.documents.*')" wire:navigate>
-                                {{ __('Documents') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="document-plus" :href="route('candidate.cv-builder')"
-                                :current="request()->routeIs('candidate.cv-builder')" wire:navigate>
-                                {{ __('CV Builder') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="tag" :href="route('candidate.skills.edit')"
-                                :current="request()->routeIs('candidate.skills.*')" wire:navigate>
-                                {{ __('Skills') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="paper-airplane" :href="route('candidate.applications.index')"
-                                :current="request()->routeIs('candidate.applications.*')" wire:navigate>
-                                {{ __('My Applications') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="bookmark" :href="route('candidate.saved-jobs.index')"
-                                :current="request()->routeIs('candidate.saved-jobs.*')" wire:navigate>
-                                {{ __('Saved Jobs') }}
-                            </flux:sidebar.item>
-                            <flux:sidebar.item icon="bell" :href="route('candidate.job-alerts.index')"
-                                :current="request()->routeIs('candidate.job-alerts.*')" wire:navigate>
-                                {{ __('Job Alerts') }}
-                            </flux:sidebar.item>
-                        </flux:sidebar.group>
-                    @endif
+                    @include('partials.sidebar-sections', ['sections' => \App\Support\Navigation\Navigation::personal(auth()->user())])
                 @endauth
             </flux:sidebar.nav>
         </flux:sidebar>
@@ -84,10 +40,14 @@
         </main>
     </div>
 
+    @auth
+        <livewire:command-palette />
+    @endauth
+
     @include('partials.flash-toasts')
 
     @persist('toast')
-    <flux:toast.group position="top end">
+    <flux:toast.group position="bottom end">
         <flux:toast />
     </flux:toast.group>
     @endpersist

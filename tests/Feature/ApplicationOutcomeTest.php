@@ -154,8 +154,7 @@ test('once decided, the stage stops moving, so nobody is told they moved forward
     $this->application->update(['outcome_status' => ApplicationOutcomeStatus::Rejected]);
 
     detailPage($this, employerUser($this->company))
-        ->set('stage', ApplicationStage::Interview->value)
-        ->call('updateStage')
+        ->call('moveTo', ApplicationStage::Interview->value)
         ->assertForbidden();
 
     expect($this->application->fresh()->stage)->toBe(ApplicationStage::New);
@@ -179,13 +178,13 @@ test('a batch move leaves closed applications where they are', function () {
 test('the candidate sees the decision only once the undo window has passed', function () {
     app(ChangeApplicationOutcome::class)($this->application, employerUser($this->company, MembershipRole::Owner), ApplicationOutcomeStatus::Rejected);
     $candidate = $this->application->candidateProfile->user;
-    $line = $this->company->name.' marked this application as Rejected';
+    $line = $this->company->name.' decided not to move forward with your application';
 
     $this->actingAs($candidate)
         ->get(route('candidate.applications.show', $this->application))
         ->assertOk()
         ->assertDontSee($line)
-        ->assertSee('Active');
+        ->assertDontSee('Not selected');
 
     $this->travel(Application::UNDO_MINUTES + 1)->minutes();
 
@@ -194,8 +193,8 @@ test('the candidate sees the decision only once the undo window has passed', fun
         ->assertSee($line);
 
     $this->actingAs($candidate)
-        ->get(route('candidate.applications.index'))
-        ->assertSee('Rejected');
+        ->get(route('candidate.applications.index', ['status' => 'closed']))
+        ->assertSee('Not selected');
 });
 
 test('a turned-down or withdrawn application at New is no longer waiting on the company', function () {
@@ -206,7 +205,7 @@ test('a turned-down or withdrawn application at New is no longer waiting on the 
     $this->actingAs(employerUser($this->company))
         ->get(route('employer.dashboard', $this->company))
         ->assertOk()
-        ->assertViewHas('newApplicationCount', 2);
+        ->assertViewHas('newApplications', fn ($jobs) => $jobs->sole()->stage_new_count === 2);
 
     Livewire::actingAs(employerUser($this->company))
         ->test('pages::employer.job-listings', ['company' => $this->company])

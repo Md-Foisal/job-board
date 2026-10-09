@@ -15,20 +15,21 @@ class CandidateProfileController extends Controller
     {
         $candidateProfile = $request->user()->candidateProfile;
 
-        // The profile page shows the candidate everything about them in one
-        // place, so it needs read-only summaries of every section a real
-        // candidate profile has -- not just the identity card fields that
-        // live directly on CandidateProfile. Education/Experience/
-        // Documents/Skills each already have their own dedicated CRUD page
-        // and stay that way here; this view only reads
-        // them, it never edits them.
         return view('candidate.profile.edit', [
-            'user' => $request->user(),
             'candidateProfile' => $candidateProfile,
-            'educationRecords' => $candidateProfile->educationRecords()->orderByDesc('start_date')->get(),
-            'experienceRecords' => $candidateProfile->experienceRecords()->orderByDesc('start_date')->get(),
-            'skills' => $candidateProfile->skills()->orderBy('name')->get(),
-            'documents' => $candidateProfile->documents()->latest()->latest('id')->get(),
+            'documentCount' => $candidateProfile->documents()->count(),
+        ]);
+    }
+
+    /**
+     * The candidate's own profile drawn the way a company reads it, so
+     * "what the company sees" is something they can look at rather than
+     * take on trust.
+     */
+    public function preview(Request $request): View
+    {
+        return view('candidate.profile.preview', [
+            'candidateProfile' => $request->user()->candidateProfile,
         ]);
     }
 

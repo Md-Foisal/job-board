@@ -33,7 +33,7 @@ class ApplicationStageChanged extends Notification
 
         return (new MailMessage)
             ->subject(__('Your application to :company has moved forward', ['company' => $company]))
-            ->greeting(__('Hello!'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__(':company has moved your application for :title to :stage.', [
                 'company' => $company,
                 'title' => $job->title,

@@ -1,11 +1,9 @@
-<x-layouts::app :title="__('Saved Jobs')">
-    <div class="mx-auto max-w-6xl">
-        <flux:heading size="xl" level="1">{{ __('Saved Jobs') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Jobs you bookmarked to come back to later.') }}</flux:subheading>
-        <flux:separator variant="subtle" class="mb-6" />
+<x-layouts::app :title="__('Saved jobs')">
+    <x-page>
+        <x-page-header :title="__('Saved jobs')" />
 
         @if ($unavailableCount > 0)
-            <div class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <flux:text>
                     {{ trans_choice('{1} One job you saved is no longer available, so it is not shown.|[2,*] :count jobs you saved are no longer available, so they are not shown.', $unavailableCount) }}
                 </flux:text>
@@ -22,25 +20,17 @@
         @if ($jobPostings->isEmpty() && $unavailableCount > 0)
             {{-- Saying "you haven't saved any" here would contradict the
                  line just above it. --}}
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __('None of the jobs you saved is open right now.') }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="bookmark" :heading="__('None of the jobs you saved is open right now.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')" />
         @elseif ($jobPostings->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __("You haven't saved any jobs yet.") }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
+            <x-empty-state icon="bookmark" :heading="__('You haven\'t saved any jobs yet.')" :action-href="route('jobs.index')" :action-label="__('Browse open roles')">
+                {{ __('Save a job from its card or its page and it waits for you here.') }}
+            </x-empty-state>
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($jobPostings as $jobPosting)
-                    <x-job-card :job-posting="$jobPosting" :show-save-button="true" />
+                    <x-job-card :job-posting="$jobPosting" :show-save-button="true" :saved="true" :applied="in_array($jobPosting->id, $appliedIds, true)" />
                 @endforeach
             </div>
         @endif
-    </div>
+    </x-page>
 </x-layouts::app>

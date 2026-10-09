@@ -4,14 +4,17 @@
             When you create an account we store your name, email address and
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
-            and location, education and work history, skills, salary and
-            work-type preferences, and any documents you upload or build, such as
-            a CV. If you post jobs, we store your company details and the
-            postings themselves.
+            and location, education and work history, projects, certifications,
+            skills, salary and work-type preferences, and any documents you upload
+            or build, such as a CV. If you post jobs, we store your company details
+            and the postings themselves.
         </p>
         <p>
             We also record which job postings you open while signed in, so your
-            dashboard can show you what you were last looking at.
+            dashboard can show you what you were last looking at, and the jobs
+            you save, with when you saved them, so your saved list can put the
+            latest first. A search you keep as a job alert is stored with how
+            often you want its email.
         </p>
         <p>
             Whenever anyone opens a job posting, signed in or not, we add one to
@@ -69,11 +72,11 @@
         </p>
         <p>
             Anthropic does not use what we send it to train its models
-            (<a href="https://privacy.claude.com/en/articles/7996868" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: model training</a>).
+            (<a href="https://privacy.claude.com/en/articles/7996868" class="font-medium text-sunset-small hover:underline">Anthropic: model training</a>).
             By default it deletes it within 30 days. If its automated safety systems
             flag it as breaking Anthropic's Usage Policy, it may keep it for up to
             two years
-            (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-brand-700 hover:underline dark:text-brand-400">Anthropic: data retention</a>).
+            (<a href="https://privacy.claude.com/en/articles/7996866" class="font-medium text-sunset-small hover:underline">Anthropic: data retention</a>).
         </p>
     </x-prose-section>
 
@@ -197,11 +200,29 @@
         </p>
     </x-prose-section>
 
+    <x-prose-section heading="Writing to us">
+        <p>
+            When you write to us through the
+            <a href="{{ route('contact') }}" class="font-medium text-sunset-small hover:underline">contact page</a>,
+            we keep your name, email address, the topic and your message, our
+            reply, and which account you were signed in to, if any. Only our
+            staff can read them, and we use them to answer you and for nothing
+            else. We keep a message for {{ \App\Models\ContactMessage::KEPT_AFTER_CLOSING_MONTHS }} months after we close it, in case
+            you write back about it, and then delete it. Erasing your account
+            deletes your messages straight away.
+        </p>
+        <p>
+            To ask what we hold about you, or to have it corrected or erased,
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="What we do not do">
         <p>
             We do not sell your data, and we do not share it with advertisers.
             Email from us is limited to what the service needs: account and
-            verification mail, and updates about applications you filed or received.
+            verification mail, updates about applications you filed or received,
+            and answers to messages you send us.
         </p>
     </x-prose-section>
 </x-static-page>

@@ -1,40 +1,26 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    // A policy or middleware that gives a reason ("Two-factor
+    // authentication is required for staff accounts.") is shown it;
+    // Laravel's own "This action is unauthorized." says nothing a person
+    // can act on, so it gets the general sentence instead.
+    $reason = $exception->getMessage();
+    $message = filled($reason) && $reason !== 'This action is unauthorized.'
+        ? $reason
+        : __('This page is for a different kind of account, or for people with a different role in a company.');
+@endphp
 
-<head>
-    @include('partials.head', ['title' => __('Access denied')])
-</head>
-
-<body class="flex min-h-screen flex-col bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100">
-    <header class="flex items-center justify-between px-6 py-4">
-        <a href="{{ route('home') }}" class="font-display text-lg font-bold text-brand-700 dark:text-brand-400">
-            JobBoard
-        </a>
-        <x-theme-toggle />
-    </header>
-
-    <main class="flex flex-1 flex-col items-center justify-center px-6 py-16 text-center">
-        <p class="font-display text-7xl font-bold text-brand-700 dark:text-brand-400">403</p>
-        <flux:heading size="xl" level="1" class="mt-4">{{ __("You don't have access to this page") }}</flux:heading>
-        <flux:subheading size="lg" class="mt-2 max-w-md">
-            {{ filled($exception->getMessage() ?? null)
-                ? $exception->getMessage()
-                : __('This area is restricted, or something you tried needs a different account.') }}
-        </flux:subheading>
-
-        <a
-            href="{{ route('home') }}"
-            class="mt-8 rounded-md bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
-        >
-            {{ __('Back to homepage') }}
-        </a>
-    </main>
-
-    {{-- Livewire only injects its assets into 200 responses, so an error
-         page has to load them itself, or Alpine never starts and the
-         theme switch does nothing. --}}
-    @livewireScripts
-    @fluxScripts
-</body>
-
-</html>
+<x-error-page
+    code="403"
+    icon="lock-closed"
+    :heading="__('You don’t have access to this page')"
+    :message="$message"
+>
+    <flux:button :href="route('home')" variant="primary" class="btn-sunset">
+        {{ __('Go to the homepage') }}
+    </flux:button>
+    @guest
+        <flux:button :href="route('login')" variant="ghost">
+            {{ __('Log in') }}
+        </flux:button>
+    @endguest
+</x-error-page>

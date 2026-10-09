@@ -97,7 +97,7 @@ test('the timeline names the company, never the staff member who made the change
     $response = $this->actingAs($candidate)->get(route('candidate.applications.show', $application));
 
     $response->assertOk();
-    $response->assertSee('Acme Ltd marked this application as Rejected');
+    $response->assertSee('Acme Ltd decided not to move forward with your application');
     // The candidate has no business knowing which
     // individual read their application.
     $response->assertDontSee('Nadia Karim');
@@ -155,7 +155,7 @@ test("a candidate cannot withdraw another candidate's application", function () 
     expect($application->fresh()->outcome_status)->toBe(ApplicationOutcomeStatus::Active);
 });
 
-test('My Applications links through to the timeline, not straight to the job', function () {
+test('the applications list links through to the timeline, not straight to the job', function () {
     $candidate = candidateUser();
     $application = timelineApplication($candidate);
 

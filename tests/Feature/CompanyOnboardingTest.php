@@ -76,7 +76,6 @@ test('registering to hire lands on company setup', function () {
         'name' => 'Nadia Rahman',
         'email' => 'nadia@example.com',
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'employer',
     ])->assertRedirect(route('companies.create'));
 });
@@ -86,7 +85,6 @@ test('registering to look for work does not', function () {
         'name' => 'Sakib Hasan',
         'email' => 'sakib@example.com',
         'password' => 'password',
-        'password_confirmation' => 'password',
         'role' => 'candidate',
     ])->assertRedirect(route('dashboard'));
 });

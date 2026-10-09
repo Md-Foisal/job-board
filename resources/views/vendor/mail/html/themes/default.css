@@ -1,0 +1,324 @@
+/*
+ * The product's email theme: the app's neutrals, Geist where the reader
+ * has it (no font is downloaded -- most mail clients block it), and the
+ * Sunset fill on the one button. Inlined into every tag by Laravel before
+ * sending, since most clients drop a <style> block. Plain hex values only:
+ * mail clients do not read oklch() or custom properties. The dark rules
+ * live in the layout's <style>, where a media query can reach them.
+ */
+
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #fafafa;
+    color: #2e2e33;
+    height: 100%;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.6;
+    text-align: start;
+}
+
+/* Links in the text set's first stop, which holds 5.2:1 on white.
+   Gradient text is drawn as a background clipped to the letters with the
+   text itself transparent; Outlook on Windows draws no background images,
+   so there the link would vanish. The gradient's first colour stands in. */
+a {
+    color: #c2410c;
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #0a0a0a;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    margin-top: 0;
+    margin-bottom: 16px;
+    text-align: start;
+}
+
+h2 {
+    color: #0a0a0a;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: start;
+}
+
+h3 {
+    color: #0a0a0a;
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 0;
+    text-align: start;
+}
+
+p {
+    font-size: 15px;
+    line-height: 1.6;
+    margin-top: 0;
+    margin-bottom: 16px;
+    text-align: start;
+}
+
+p.sub {
+    font-size: 13px;
+}
+
+strong {
+    color: #0a0a0a;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Layout */
+
+.wrapper {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #fafafa;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.content {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header: the mark and the name, as in the app's top bar. */
+
+.header {
+    padding: 32px 0 24px;
+    text-align: center;
+}
+
+.header a {
+    color: #0a0a0a;
+    display: inline-block;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+}
+
+.logo {
+    border-radius: 7px;
+    height: 32px;
+    margin-right: 10px;
+    vertical-align: middle;
+    width: 32px;
+}
+
+.wordmark {
+    vertical-align: middle;
+}
+
+/* Body */
+
+.body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    background-color: #fafafa;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.inner-body {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    background-color: #ffffff;
+    border: 1px solid #eaeaea;
+    border-radius: 12px;
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+.inner-body a {
+    word-break: break-word;
+}
+
+/* Subcopy */
+
+.subcopy {
+    border-top: 1px solid #eaeaea;
+    margin-top: 24px;
+    padding-top: 20px;
+}
+
+.subcopy p {
+    color: #5f5f66;
+    font-size: 13px;
+}
+
+/* Footer: muted ink, which keeps 6:1 on the page colour. Laravel's own
+   grey here was 2.5:1. */
+
+.footer {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 570px;
+    margin: 0 auto;
+    padding: 0;
+    text-align: center;
+    width: 570px;
+}
+
+.footer p {
+    color: #5f5f66;
+    font-size: 12px;
+    margin-bottom: 6px;
+    text-align: center;
+}
+
+.footer a {
+    color: #5f5f66;
+    text-decoration: underline;
+}
+
+/* Tables */
+
+.table table {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 24px auto;
+    width: 100%;
+}
+
+.table th {
+    border-bottom: 1px solid #eaeaea;
+    color: #0a0a0a;
+    margin: 0;
+    padding-bottom: 8px;
+}
+
+.table td {
+    color: #2e2e33;
+    font-size: 15px;
+    line-height: 20px;
+    margin: 0;
+    padding: 10px 0;
+}
+
+.content-cell {
+    max-width: 100vw;
+    padding: 32px;
+}
+
+/* Buttons. The colour sits on the cell, which every client paints
+   (Outlook on Windows reads only bgcolor, so it shows the solid first
+   stop). The link carries the padding, so the whole button is the link;
+   Outlook ignores padding on a link, so the cell gives it the same
+   padding through mso-padding-alt, a property only Outlook reads. */
+
+.action {
+    -premailer-cellpadding: 0;
+    -premailer-cellspacing: 0;
+    -premailer-width: 100%;
+    margin: 28px auto;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+    float: unset;
+}
+
+.button-cell {
+    border-radius: 8px;
+    mso-padding-alt: 12px 22px;
+}
+
+.button {
+    -webkit-text-size-adjust: none;
+    border-radius: 8px;
+    color: #ffffff;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 22px;
+    text-decoration: none;
+}
+
+.button-cell-primary,
+.button-cell-blue {
+    background-color: #c2410c;
+    background-image: linear-gradient(120deg, #c2410c 0%, #db2777 55%, #7c3aed 100%);
+}
+
+.button-cell-success,
+.button-cell-green {
+    background-color: #1e6626;
+}
+
+.button-cell-error,
+.button-cell-red {
+    background-color: #971a20;
+}
+
+/* Panels: a quoted note, such as a reviewer's reason. */
+
+.panel {
+    border-left: #db2777 solid 3px;
+    margin: 20px 0;
+}
+
+.panel-content {
+    background-color: #fafafa;
+    color: #2e2e33;
+    padding: 16px;
+}
+
+.panel-content p {
+    color: #2e2e33;
+}
+
+.panel-item {
+    padding: 0;
+}
+
+.panel-item p:last-of-type {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+/* Utilities */
+
+.break-all {
+    word-break: break-all;
+}

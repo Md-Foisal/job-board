@@ -25,7 +25,7 @@ class CompanyReviewApproved extends Notification
     {
         return (new MailMessage)
             ->subject(__('Your review of :company is published', ['company' => $this->review->company->name]))
-            ->greeting(__('Hello :name,', ['name' => $notifiable->name]))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('Your review of :company\'s hiring process is now on its page, shown as "Verified applicant" with the month.', [
                 'company' => $this->review->company->name,
             ]))

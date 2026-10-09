@@ -8,8 +8,12 @@
     Written for applicant tracking systems: a single column, contact
     details in the body rather than a page header, the section names
     parsers look for, round bullets, and real text throughout. Each role
-    and course is kept on one page where it fits.
+    and course is kept on one page where it fits. The sections come from
+    cv/partials/section in the order and selection of the CV's design.
 --}}
+@php
+    $design ??= new \App\Support\CvDesign;
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -59,6 +63,8 @@
         .description li { margin-bottom: 0.5mm; }
         .description h3, .description h4 { font-size: 10pt; margin: 1.5mm 0 0.5mm; }
         .description a { color: #1f2937; }
+        .links { font-size: 9pt; color: #374151; margin-top: 1mm; }
+        .links a { color: #374151; }
     </style>
 </head>
 <body @class(['preview' => $preview ?? false])>
@@ -71,60 +77,10 @@
         <p class="headline">{{ $cv->headline }}</p>
     @endif
 
-    <p class="contact">
-        {{ collect([$cv->email, $cv->phone, $cv->location])->filter()->implode(' · ') }}
-    </p>
-    @if ($cv->links !== [])
-        <p class="contact">
-            @foreach ($cv->links as $link)
-                @unless ($loop->first)<span class="separator"> · </span>@endunless
-                @if ($link['url'])
-                    <a href="{{ $link['url'] }}">{{ $link['text'] }}</a>
-                @else
-                    {{ $link['text'] }}
-                @endif
-            @endforeach
-        </p>
-    @endif
+    @include('cv.partials.contact')
 
-    @if ($cv->summary)
-        <h2>{{ __('Summary') }}</h2>
-        <p>{!! nl2br(e($cv->summary)) !!}</p>
-    @endif
-
-    @if ($cv->experience !== [])
-        <h2>{{ __('Work Experience') }}</h2>
-        @foreach ($cv->experience as $role)
-            <div class="entry">
-                <h3>{{ $role['title'] }} <span class="at">· {{ $role['company'] }}</span></h3>
-                <p class="dates">{{ $role['dates'] }}</p>
-                @if ($role['description'])
-                    {{-- Cleaned to a short list of tags when it was saved. --}}
-                    <div class="description">{!! $role['description'] !!}</div>
-                @endif
-            </div>
-        @endforeach
-    @endif
-
-    @if ($cv->education !== [])
-        <h2>{{ __('Education') }}</h2>
-        @foreach ($cv->education as $course)
-            <div class="entry">
-                <h3>
-                    @if ($course['title'] !== '')
-                        {{ $course['title'] }} <span class="at">· {{ $course['institution'] }}</span>
-                    @else
-                        {{ $course['institution'] }}
-                    @endif
-                </h3>
-                <p class="dates">{{ $course['dates'] }}</p>
-            </div>
-        @endforeach
-    @endif
-
-    @if ($cv->skills !== [])
-        <h2>{{ __('Skills') }}</h2>
-        <p>{{ implode(', ', $cv->skills) }}</p>
-    @endif
+    @foreach ($design->sections() as $section)
+        @include('cv.partials.section')
+    @endforeach
 </body>
 </html>

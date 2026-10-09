@@ -21,6 +21,8 @@ class ManageReports extends ManageRecords
     {
         return [
             'open' => Tab::make('Open')
+                ->badge(ReportResource::getNavigationBadge())
+                ->badgeColor(ReportResource::getNavigationBadgeColor())
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('review_status', ReportStatus::Pending->value)),
             'closed' => Tab::make('Closed')
                 ->modifyQueryUsing(fn (Builder $query) => $query->where('review_status', '!=', ReportStatus::Pending->value)),

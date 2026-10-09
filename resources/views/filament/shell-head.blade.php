@@ -1,9 +1,8 @@
 {{--
     Makes the staff panel look and behave like the rest of the product
     (partials/navbar, layouts/app/sidebar), without a separate Filament
-    theme build: the display font for the wordmark, the same surfaces for
-    the top bar, sidebar and page, and one light/dark setting shared with
-    the app.
+    theme build: the wordmark, the same surfaces for the top bar, sidebar
+    and page, and one light/dark setting shared with the app.
 
     Filament keeps its own theme choice under localStorage "theme"; the app
     (Flux) keeps it under "flux.appearance". Left alone the two drift -- an
@@ -14,9 +13,6 @@
 --}}
 @include('partials.timezone-cookie')
 
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family=bricolage-grotesque:700" rel="stylesheet" />
-
 <script>
     (() => {
         try {
@@ -25,14 +21,43 @@
     })()
 </script>
 
+<script>
+    // The Sunset gradient for a chart (widgets/PlatformActivityChart), left
+    // to right across the plot area, made per draw since the area is only
+    // known once laid out and the stops change with the theme.
+    window.jbSunset = (chart, alpha) => {
+        const style = getComputedStyle(document.documentElement)
+        const stops = ['--color-sunset-ink-1', '--color-sunset-ink-2', '--color-sunset-ink-3']
+            .map((name) => style.getPropertyValue(name).trim())
+        const { ctx, chartArea } = chart
+        const tint = (colour) => alpha === 1 ? colour : colour + Math.round(alpha * 255).toString(16).padStart(2, '0')
+
+        if (! chartArea) {
+            return tint(stops[1])
+        }
+
+        const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0)
+        gradient.addColorStop(0, tint(stops[0]))
+        gradient.addColorStop(0.55, tint(stops[1]))
+        gradient.addColorStop(1, tint(stops[2]))
+
+        return gradient
+    }
+</script>
+
 <style>
+    /* The logo (components/logo): the app styles it with Tailwind
+       classes the panel's stylesheet does not have. */
     .jb-brand {
-        font-family: 'Bricolage Grotesque', var(--font-family), sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.625rem;
         font-size: 1.125rem;
         font-weight: 700;
-        color: var(--primary-700);
+        letter-spacing: -0.03em;
+        color: var(--gray-950);
     }
-    .dark .jb-brand { color: var(--primary-400); }
+    .dark .jb-brand { color: #ededef; }
 
     /* Page, top bar and sidebar, as in the app: the bar sits on the page
        colour with a hairline under it; the sidebar is its own panel. */
@@ -58,27 +83,109 @@
         border-inline-end-color: var(--gray-800);
     }
 
-    /* Same rounded-square avatar as the app's account menu. */
-    .fi-user-menu .fi-avatar.fi-circular { border-radius: 0.5rem; }
+    /*
+     * The colour rule of the app (resources/css/app.css): anything coloured
+     * that is not a status carries the Sunset gradient, and the rest is
+     * ink. Filament paints its "primary" in one flat orange, so each place
+     * it shows is mapped here. The variables are the app's; partials/
+     * svg-defs (rendered at the top of the body) reads them for icons.
+     */
+    :root {
+        --color-sunset-1: #c2410c;
+        --color-sunset-2: #db2777;
+        --color-sunset-3: #7c3aed;
+        --color-sunset-text-1: #c2410c;
+        --color-sunset-text-2: #be185d;
+        --color-sunset-text-3: #7c3aed;
+        --color-sunset-ink-1: #ea580c;
+        --color-sunset-ink-2: #db2777;
+        --color-sunset-ink-3: #7c3aed;
+        --jb-ink: #0a0a0a;
+    }
+    .dark {
+        --color-sunset-text-1: #fbbf24;
+        --color-sunset-text-2: #f472b6;
+        --color-sunset-text-3: #a78bfa;
+        --color-sunset-ink-1: #fbbf24;
+        --color-sunset-ink-2: #f472b6;
+        --color-sunset-ink-3: #a78bfa;
+        --jb-ink: #ededef;
+    }
 
-    /* The day/night switch -- the app's components/theme-toggle, in plain
-       CSS because the panel does not load the app's stylesheet. */
+    /* The current page in the menu, and the current tab: ink label, the
+       icon in the gradient -- as in the app's sidebar. */
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-sidebar-item-label,
+    .fi-tabs-item.fi-active .fi-tabs-item-label {
+        color: var(--jb-ink);
+    }
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > .fi-icon,
+    .fi-tabs-item.fi-active > .fi-icon {
+        color: var(--jb-ink);
+    }
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > svg.fi-icon[fill='none'] { stroke: url(#sunset-icon); }
+    .fi-sidebar-item.fi-active > .fi-sidebar-item-btn > svg.fi-icon:not([fill='none']) { fill: url(#sunset-icon); }
+
+    /* A filled primary button is a page's main action (Add skill, the
+       confirm button of a dialog): the Sunset fill with white text, the
+       app's .btn-sunset. Every stop holds 4.5:1 against white. */
+    .fi-btn.fi-color-primary:not(.fi-outlined) {
+        color: #fff;
+        background-color: var(--color-sunset-1);
+        background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+        transition: transform 150ms, box-shadow 150ms;
+    }
+    .fi-btn.fi-color-primary:not(.fi-outlined):hover {
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px -6px rgb(219 39 119 / 0.45);
+    }
+    .fi-btn.fi-color-primary:not(.fi-outlined) .fi-icon { color: #fff; }
+
+    /* A primary link (Rename, Merge into…) reads as the app's links do:
+       gradient text from the darker text set, the icon to match. */
+    .fi-link.fi-color-primary {
+        background-image: linear-gradient(120deg, var(--color-sunset-text-1) 0%, var(--color-sunset-text-2) 55%, var(--color-sunset-text-3) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        text-decoration-color: var(--color-sunset-text-2);
+    }
+    .fi-link.fi-color-primary > svg.fi-icon[fill='none'] { stroke: url(#sunset-icon); }
+    .fi-link.fi-color-primary > svg.fi-icon:not([fill='none']) { fill: url(#sunset-icon); }
+
+    /* A badge left at Filament's default colour is a plain fact (a role,
+       a topic, a flag's name), not a state: grey, as in the app. Badges
+       that mean something set their own colour and are untouched. */
+    .fi-badge.fi-color-primary {
+        --color-50: var(--gray-50);
+        --color-100: var(--gray-100);
+        --color-200: var(--gray-200);
+        --color-300: var(--gray-300);
+        --color-400: var(--gray-400);
+        --color-500: var(--gray-500);
+        --color-600: var(--gray-600);
+        --color-700: var(--gray-700);
+        --color-800: var(--gray-800);
+        --color-900: var(--gray-900);
+        --color-950: var(--gray-950);
+    }
+
+    /* The current page number, in ink rather than orange. */
+    .fi-pagination-item.fi-active .fi-pagination-item-label { color: var(--jb-ink); }
+
+    /* The light/dark switch -- the app's components/theme-toggle, in
+       plain CSS for the same reason. */
     .jb-tt {
-        position: relative; display: inline-flex; align-items: center;
-        width: 4rem; height: 2rem; padding: 0.25rem; margin-inline-end: 0.75rem;
-        border-radius: 9999px; box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.15);
-        cursor: pointer; flex-shrink: 0; border: 0;
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 2.25rem; height: 2.25rem; margin-inline-end: 0.75rem; flex-shrink: 0;
+        border-radius: 0.625rem; border: 1px solid var(--gray-200);
+        background-color: var(--gray-50); color: var(--gray-950);
+        cursor: pointer; transition: background-color 150ms;
     }
-    .jb-tt:focus-visible { outline: 2px solid var(--primary-400); outline-offset: 2px; }
-    .jb-tt-sky { position: absolute; inset: 0; border-radius: 9999px; overflow: hidden; transition: opacity 500ms ease-in-out; }
-    .jb-tt-day { background: linear-gradient(120deg, #8ec9ec 0%, #cdeaf9 55%, #eef8fd 100%); }
-    .jb-tt-night { background: linear-gradient(120deg, #0b1229 0%, #182552 60%, #22306b 100%); }
-    .jb-tt-dot { position: absolute; border-radius: 9999px; background: #fff; }
-    .jb-tt-thumb {
-        position: relative; z-index: 1; display: flex; align-items: center; justify-content: center;
-        width: 1.5rem; height: 1.5rem; border-radius: 9999px; background: #fff;
-        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        transition: transform 500ms ease-out;
-    }
-    .jb-tt-icon { position: absolute; width: 1rem; height: 1rem; transition: all 300ms; }
+    .jb-tt:hover { background-color: var(--gray-100); }
+    .jb-tt:focus-visible { outline: 2px solid var(--gray-950); outline-offset: 2px; }
+    .jb-tt svg { width: 18px; height: 18px; }
+    .dark .jb-tt { border-color: var(--gray-800); background-color: var(--gray-900); color: #ededef; }
+    .dark .jb-tt:hover { background-color: var(--gray-800); }
+    .dark .jb-tt:focus-visible { outline-color: #ededef; }
 </style>

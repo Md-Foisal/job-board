@@ -19,8 +19,8 @@ test('the closing badge shows only in a posting\'s last three days', function ()
     $soon = JobPosting::factory()->create(['expires_at' => now()->addDays(2)]);
     $later = JobPosting::factory()->create(['expires_at' => now()->addDays(20)]);
 
-    $this->get(route('jobs.show', $soon))->assertSee('Expires');
-    $this->get(route('jobs.show', $later))->assertDontSee('Expires');
+    $this->get(route('jobs.show', $soon))->assertSee('Closes in');
+    $this->get(route('jobs.show', $later))->assertDontSee('Closes in');
 });
 
 test('newest means the day a posting went out, not the day its draft was begun', function () {

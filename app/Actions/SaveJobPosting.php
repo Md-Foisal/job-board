@@ -54,11 +54,18 @@ class SaveJobPosting
             // mass-assignable. A posting that goes live still has to clear
             // moderation; "published" here means the company is done with
             // it, not that the public can see it.
+            //
+            // A closed posting stays closed when it is edited: reopening is
+            // its own decision, made from the postings list. A lapsed one
+            // comes back, because publishing asks for a closing date that is
+            // still ahead -- the same as extending it.
             $publish = (bool) ($data['publish'] ?? false);
 
-            $jobPosting->availability_status = $publish
-                ? AvailabilityStatus::Active
-                : AvailabilityStatus::Draft;
+            $jobPosting->availability_status = match (true) {
+                ! $publish => AvailabilityStatus::Draft,
+                $jobPosting->availability_status === AvailabilityStatus::Closed => AvailabilityStatus::Closed,
+                default => AvailabilityStatus::Active,
+            };
 
             if ($publish && $jobPosting->published_at === null) {
                 $jobPosting->published_at = now();

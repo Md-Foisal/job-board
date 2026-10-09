@@ -199,8 +199,27 @@ test('the staff dashboard counts the reviews waiting, oldest first', function ()
     $this->actingAs($this->staff);
 
     Livewire::test(ModerationQueuesOverview::class)
-        ->assertSee('Company reviews to check')
+        ->assertSee('Reviews and answers to check')
         ->assertSee('Oldest waiting 1 day');
+});
+
+test('a review whose answer is also waiting counts once, and the card opens the tab that has work in it', function () {
+    $this->review->forceFill([
+        'moderation_status' => ModerationStatus::Approved,
+        'response_body' => 'Thank you for the feedback.',
+        'response_status' => ModerationStatus::Pending,
+        'responded_at' => now(),
+    ])->save();
+
+    $this->actingAs($this->staff);
+
+    expect(CompanyReviewResource::waitingCount())->toBe(1);
+    Livewire::test(ModerationQueuesOverview::class)
+        ->assertSee(CompanyReviewResource::getUrl('index', ['tab' => 'responses']), false);
+
+    $this->review->forceFill(['moderation_status' => ModerationStatus::Pending])->save();
+
+    expect(CompanyReviewResource::waitingCount())->toBe(1);
 });
 
 test('staff on the company team never see its reviews or the proof behind them', function () {

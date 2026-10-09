@@ -1,31 +1,31 @@
-<x-layouts::auth :title="__('Forgot password')">
-    <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Forgot password')" :description="__('Enter your email to receive a password reset link')" />
+<x-layouts::auth :title="__('Reset your password')">
+    <x-auth-header
+        :title="__('Reset your password')"
+        :description="__('Enter the email address you signed up with, and we will send you a link to choose a new password.')"
+    />
 
-        <!-- Session Status -->
-        <x-auth-session-status class="text-center" :status="session('status')" />
+    <x-auth-session-status class="text-center" :status="session('status')" />
 
-        <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
-            @csrf
+    <form method="POST" action="{{ route('password.email') }}" class="flex flex-col gap-6">
+        @csrf
 
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                type="email"
-                required
-                autofocus
-                placeholder="email@example.com"
-            />
+        <flux:input
+            name="email"
+            :label="__('Email address')"
+            :value="old('email')"
+            type="email"
+            required
+            autofocus
+            autocomplete="email"
+        />
 
-            <flux:button variant="primary" type="submit" class="w-full" data-test="email-password-reset-link-button">
-                {{ __('Email password reset link') }}
-            </flux:button>
-        </form>
+        <flux:button variant="primary" type="submit" class="btn-sunset w-full" data-test="email-password-reset-link-button">
+            {{ __('Send reset link') }}
+        </flux:button>
+    </form>
 
-        <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">
-            <span>{{ __('Or, return to') }}</span>
-            <flux:link :href="route('login')" wire:navigate>{{ __('log in') }}</flux:link>
-        </div>
-    </div>
+    <x-slot:footer>
+        {{ __('Remembered it?') }}
+        <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+    </x-slot:footer>
 </x-layouts::auth>

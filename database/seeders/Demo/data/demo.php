@@ -37,6 +37,21 @@ return [
     'employer' => [
         'name' => 'Hannah Lewis',
         'job_title' => 'Head of Operations',
+        'recruiter_bio' => 'I run operations at Fernhill and hire for our support and office teams. I read every application myself and reply within a week, whatever the answer.',
+    ],
+
+    // Hannah's team: a colleague who reviews applicants with her, and a
+    // manager she has invited who has not accepted yet, so the Team page
+    // and a member's own view of the workspace both have something real
+    // to show.
+    'colleague' => [
+        'name' => 'Tom Hughes',
+        'job_title' => 'Support Team Lead',
+    ],
+
+    'invitation' => [
+        'email' => 'priya.shah@example.org',
+        'role' => 'manager',
     ],
 
     'candidate' => [
@@ -70,6 +85,36 @@ return [
                 'start' => 62,
                 'end' => 31,
                 'description' => '<ul><li>Built Laravel websites and customer portals for agency clients in retail and travel</li><li>Worked directly with clients to turn requests into small, clear tasks</li><li>Set up automated deployments, which ended the Friday-evening manual releases</li></ul>',
+            ],
+        ],
+        // Example addresses only: a real GitHub or certificate link would
+        // point at somebody who exists.
+        'projects' => [
+            [
+                'name' => 'Shiftboard',
+                'description' => '<p>An open-source rota planner for small cafés: drag shifts onto a week, swap them by text message. Laravel, Livewire and SQLite.</p>',
+                'url' => 'https://shiftboard.rafiahmed.example',
+                'source_url' => 'https://git.rafiahmed.example/shiftboard',
+                'start' => 14,
+                'end' => null,
+            ],
+            [
+                'name' => 'Laravel bulk mailer',
+                'description' => '<p>A small package that queues newsletters in batches and retries the ones that bounce softly.</p>',
+                'url' => null,
+                'source_url' => 'https://git.rafiahmed.example/bulk-mailer',
+                'start' => 40,
+                'end' => 34,
+            ],
+        ],
+        'certifications' => [
+            [
+                'name' => 'AWS Certified Cloud Practitioner',
+                'issuer' => 'Amazon Web Services',
+                'issued' => 20,
+                'expires' => -16,
+                'credential_id' => 'AWS-CCP-0000',
+                'credential_url' => 'https://certificates.rafiahmed.example/aws-ccp',
             ],
         ],
         'education' => [

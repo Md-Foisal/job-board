@@ -26,7 +26,7 @@ class CompanyDocumentsRequested extends Notification
     {
         return (new MailMessage)
             ->subject(__('One more step to verify :company', ['company' => $this->company->name]))
-            ->greeting(__('Hello,'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('Before :company can show the verified badge, our team needs:', ['company' => $this->company->name]))
             ->line('"'.$this->request.'"')
             ->line(__('Reply to this email with it attached.'))

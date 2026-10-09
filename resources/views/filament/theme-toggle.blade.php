@@ -1,10 +1,12 @@
-{{-- The app's day/night switch (components/theme-toggle), for the staff
-     panel. Writes the app's setting ("flux.appearance") and tells Filament
-     through its own "theme-changed" event, so both sides stay on the same
-     theme whichever one it was changed in. --}}
+{{-- The app's light/dark switch (components/theme-toggle), for the staff
+     panel, styled by the "jb-tt" rules in filament/shell-head. Writes the
+     app's setting ("flux.appearance") and tells Filament through its own
+     "theme-changed" event, so both sides stay on the same theme whichever
+     one it was changed in. --}}
 <button
     type="button"
     class="jb-tt"
+    x-cloak
     x-data="{ dark: document.documentElement.classList.contains('dark') }"
     x-on:click="
         dark = ! dark
@@ -13,26 +15,12 @@
         window.dispatchEvent(new CustomEvent('theme-changed', { detail: mode }))
     "
     x-bind:aria-pressed="dark.toString()"
-    aria-label="{{ __('Switch to light or dark theme') }}"
+    aria-label="{{ __('Dark theme') }}"
 >
-    <span class="jb-tt-sky jb-tt-day" x-bind:style="{ opacity: dark ? 0 : 1 }">
-        <span class="jb-tt-dot" style="left: 34px; top: 7px; width: 17px; height: 9px; opacity: .85"></span>
-        <span class="jb-tt-dot" style="left: 41px; top: 4px; width: 11px; height: 7px; opacity: .7"></span>
-    </span>
-    <span class="jb-tt-sky jb-tt-night" x-bind:style="{ opacity: dark ? 1 : 0 }">
-        <span class="jb-tt-dot" style="left: 11px; top: 6px; width: 3px; height: 3px; opacity: .9"></span>
-        <span class="jb-tt-dot" style="left: 18px; top: 12px; width: 2px; height: 2px; opacity: .7"></span>
-        <span class="jb-tt-dot" style="left: 13px; top: 18px; width: 2px; height: 2px; opacity: .8"></span>
-        <span class="jb-tt-dot" style="left: 22px; top: 6px; width: 2px; height: 2px; opacity: .6"></span>
-    </span>
-    <span class="jb-tt-thumb" x-bind:style="{ transform: dark ? 'translateX(2rem)' : 'translateX(0)' }">
-        <svg class="jb-tt-icon" viewBox="0 0 16 16" fill="#f59e0b" aria-hidden="true"
-            x-bind:style="dark ? 'transform: scale(0) rotate(-45deg); opacity: 0' : 'transform: scale(1); opacity: 1'">
-            <path d="M8 1a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 1ZM10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0ZM12.95 4.11a.75.75 0 1 0-1.06-1.06l-1.062 1.06a.75.75 0 0 0 1.061 1.062l1.06-1.061ZM15 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 15 8ZM11.89 12.95a.75.75 0 0 0 1.06-1.06l-1.06-1.062a.75.75 0 0 0-1.062 1.061l1.061 1.06ZM8 12a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 8 12ZM5.172 11.89a.75.75 0 0 0-1.061-1.062L3.05 11.89a.75.75 0 1 0 1.06 1.06l1.06-1.06ZM4 8a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 4 8ZM4.11 5.172A.75.75 0 0 0 5.173 4.11L4.11 3.05a.75.75 0 1 0-1.06 1.06l1.06 1.06Z"/>
-        </svg>
-        <svg class="jb-tt-icon" viewBox="0 0 16 16" fill="#4f46e5" aria-hidden="true"
-            x-bind:style="dark ? 'transform: scale(1); opacity: 1' : 'transform: scale(0) rotate(45deg); opacity: 0'">
-            <path d="M14.438 10.148c.19-.425-.321-.787-.748-.601A5.5 5.5 0 0 1 6.453 2.31c.186-.427-.176-.938-.6-.748a6.501 6.501 0 1 0 8.585 8.586Z"/>
-        </svg>
-    </span>
+    <svg x-show="! dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+    </svg>
+    <svg x-show="dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+    </svg>
 </button>

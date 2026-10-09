@@ -1,9 +1,16 @@
+{{--
+    The heading of a page in the auth layout: the page's one h1, and an
+    optional line under it for whatever the visitor needs to know before
+    filling the form in.
+--}}
 @props([
     'title',
-    'description',
+    'description' => null,
 ])
 
-<div class="flex w-full flex-col text-center">
-    <flux:heading size="xl">{{ $title }}</flux:heading>
-    <flux:subheading>{{ $description }}</flux:subheading>
+<div class="flex w-full flex-col gap-1.5 text-center">
+    <flux:heading size="xl" level="1">{{ $title }}</flux:heading>
+    @if (filled($description))
+        <flux:subheading>{{ $description }}</flux:subheading>
+    @endif
 </div>

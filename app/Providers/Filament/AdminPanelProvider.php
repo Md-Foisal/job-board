@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Support\InitialsAvatar;
 use App\Http\Middleware\EnsureStaffHasTwoFactor;
 use App\Http\Middleware\LoadStaffMemberships;
 use App\Http\Middleware\SyncTimezone;
@@ -45,7 +46,7 @@ class AdminPanelProvider extends PanelProvider
             // are required to pass.
             // Same typeface as the rest of the application, from the same
             // font host, so moving between the two does not change voice.
-            ->font('Instrument Sans')
+            ->font('Geist')
             // Looks and behaves like the rest of the product: the app's
             // wordmark, which leads back to the public site as it does
             // everywhere else; one light/dark setting shared with the app
@@ -56,7 +57,9 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn () => view('filament.brand'))
             ->homeUrl(fn () => route('home'))
             ->themeSwitcher(false)
+            ->defaultAvatarProvider(InitialsAvatar::class)
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
+            ->renderHook(PanelsRenderHook::BODY_START, fn () => view('partials.svg-defs'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
             ->userMenuItems([
                 'site' => Action::make('site')
@@ -64,21 +67,41 @@ class AdminPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedGlobeAlt)
                     ->url(fn () => route('home')),
             ])
+            // The application's brand and neutral scales (resources/css/app.css),
+            // in oklch because Filament works out readable text colours for
+            // each shade from these values.
             ->colors([
                 'primary' => [
-                    50 => 'oklch(0.98 0.014 175)',
-                    100 => 'oklch(0.95 0.028 175)',
-                    200 => 'oklch(0.90 0.045 175)',
-                    300 => 'oklch(0.82 0.065 175)',
-                    400 => 'oklch(0.72 0.09 175)',
-                    500 => 'oklch(0.62 0.11 175)',
-                    600 => 'oklch(0.52 0.115 175)',
-                    700 => 'oklch(0.43 0.10 175)',
-                    800 => 'oklch(0.34 0.075 175)',
-                    900 => 'oklch(0.27 0.05 175)',
-                    950 => 'oklch(0.18 0.03 175)',
+                    50 => 'oklch(0.980 0.016 73.7)',
+                    100 => 'oklch(0.954 0.037 75.2)',
+                    200 => 'oklch(0.901 0.073 70.7)',
+                    300 => 'oklch(0.837 0.117 66.3)',
+                    400 => 'oklch(0.758 0.159 55.9)',
+                    500 => 'oklch(0.646 0.194 41.1)',
+                    600 => 'oklch(0.553 0.174 38.4)',
+                    700 => 'oklch(0.470 0.143 37.3)',
+                    800 => 'oklch(0.408 0.116 38.2)',
+                    900 => 'oklch(0.334 0.092 38.3)',
+                    950 => 'oklch(0.266 0.076 36.3)',
+                ],
+                'gray' => [
+                    50 => 'oklch(0.985 0 0)',
+                    100 => 'oklch(0.967 0.001 286.4)',
+                    200 => 'oklch(0.937 0 0)',
+                    300 => 'oklch(0.871 0.005 286.3)',
+                    400 => 'oklch(0.712 0.013 286.1)',
+                    500 => 'oklch(0.552 0.014 285.9)',
+                    600 => 'oklch(0.488 0.011 286.0)',
+                    700 => 'oklch(0.370 0.012 285.8)',
+                    800 => 'oklch(0.258 0.007 285.9)',
+                    900 => 'oklch(0.183 0.004 286.0)',
+                    950 => 'oklch(0.145 0.002 286.1)',
                 ],
             ])
+            // Named once, in this order, so a new group cannot jump the
+            // queue: a group whose resources set no sort would otherwise
+            // land at the top.
+            ->navigationGroups(['Users & companies', 'Moderation', 'Support', 'Master data'])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

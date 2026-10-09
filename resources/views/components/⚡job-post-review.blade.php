@@ -180,57 +180,51 @@ new class extends Component
     {{-- Plans without the review see nothing here, unless one was written
          before the plan changed. --}}
     @if ($aiStatus !== null || in_array($availability, [\App\Enums\AiAvailability::Available, \App\Enums\AiAvailability::LimitReached], true))
-        <section class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900" aria-labelledby="ai-review-heading">
+        <x-card as="section" aria-labelledby="ai-review-heading">
             <div class="flex flex-wrap items-center gap-2">
-                <h2 id="ai-review-heading" class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('AI review of this posting') }}</h2>
+                <h2 id="ai-review-heading" class="text-sm font-medium text-ink">{{ __('AI review of this posting') }}</h2>
                 @if ($aiStatus === 'done')
-                    <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — may be wrong') }}</span>
+                    <x-chip>{{ __('AI-generated — may be wrong') }}</x-chip>
                 @endif
             </div>
 
             @if ($aiStatus === 'running')
-                <div wire:poll.2s="checkAi" role="status" class="mt-3 flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
-                    <flux:icon.loading variant="mini" />
-                    <div>
-                        <p class="font-medium">{{ __('Reading the posting…') }}</p>
-                        <p>{{ __('This usually takes a few seconds.') }}</p>
-                    </div>
-                </div>
+                <x-ai-working wire:poll.2s="checkAi" class="mt-3" :heading="__('Reading the posting…')">{{ __('This usually takes a few seconds.') }}</x-ai-working>
             @elseif ($shown = $this->shownReview())
                 @if ($shown->isEmpty())
                     <flux:text class="mt-2">{{ __('The AI found nothing it would change in this posting.') }}</flux:text>
                 @else
                     @if ($shown->suggestedTitle !== null)
                         <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" x-data="copyText">
-                            <span class="text-zinc-500 dark:text-zinc-400">{{ __('A clearer title:') }}</span>
-                            <span x-ref="text" class="font-medium text-zinc-900 dark:text-zinc-100">{{ $shown->suggestedTitle }}</span>
+                            <span class="text-ink-muted">{{ __('A clearer title:') }}</span>
+                            <span x-ref="text" class="font-medium text-ink">{{ $shown->suggestedTitle }}</span>
                             <flux:button size="xs" variant="ghost" icon="clipboard" x-on:click="copy($refs.text.innerText)">
                                 <span x-show="copyState !== 'copied'">{{ __('Copy') }}</span>
                                 <span x-show="copyState === 'copied'" x-cloak>{{ __('Copied') }}</span>
                             </flux:button>
-                            <span role="status" class="text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></span>
+                            <span role="status" class="text-danger-700 dark:text-danger-300" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></span>
                         </div>
                     @endif
 
                     @if ($shown->issues !== [])
-                        <ol class="mt-3 flex flex-col divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
+                        <ol class="mt-3 flex flex-col divide-y divide-line text-sm">
                             @foreach ($shown->issues as $issue)
                                 <li class="py-3 first:pt-0" x-data="copyText">
-                                    <span class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __(\App\Enums\JobPostReviewArea::from($issue['area'])->label()) }}</span>
-                                    <p class="mt-1 font-medium text-zinc-900 dark:text-zinc-100">{{ $issue['problem'] }}</p>
-                                    <p x-ref="text" class="mt-1 whitespace-pre-line text-zinc-700 dark:text-zinc-300">{{ $issue['suggestion'] }}</p>
+                                    <span class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ __(\App\Enums\JobPostReviewArea::from($issue['area'])->label()) }}</span>
+                                    <p class="mt-1 font-medium text-ink">{{ $issue['problem'] }}</p>
+                                    <p x-ref="text" class="mt-1 whitespace-pre-line text-ink-soft">{{ $issue['suggestion'] }}</p>
                                     <flux:button class="mt-2" size="xs" variant="ghost" icon="clipboard" x-on:click="copy($refs.text.innerText)">
                                         <span x-show="copyState !== 'copied'">{{ __('Copy suggestion') }}</span>
                                         <span x-show="copyState === 'copied'" x-cloak>{{ __('Copied') }}</span>
                                     </flux:button>
-                                    <p role="status" class="mt-1 text-red-600 dark:text-red-400" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></p>
+                                    <p role="status" class="mt-1 text-danger-700 dark:text-danger-300" x-bind:class="copyState === 'failed' ? '' : 'sr-only'" x-text="({ copied: @js(__('Copied')), failed: @js(__("Couldn't copy — select the text and copy it yourself.")) })[copyState] ?? ''"></p>
                                 </li>
                             @endforeach
                         </ol>
                     @endif
                 @endif
 
-                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                <p class="mt-3 text-xs text-ink-muted">
                     {{ __('Written :when, from the posting and its last :days days of numbers. Nothing changes until you edit the posting, and an edited posting is checked again before it goes live.', [
                         'when' => \Carbon\CarbonImmutable::parse($reviewedAt)->diffForHumans(),
                         'days' => \App\Support\JobPostReviewInput::RANGE_DAYS,
@@ -244,13 +238,13 @@ new class extends Component
                 @endif
             @elseif ($aiStatus === 'unavailable' || $availability === \App\Enums\AiAvailability::LimitReached)
                 <flux:text class="mt-2">
-                    {{ __("Your company has used this month's AI reviews. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
+                    {{ __("Your company has used this month's AI reviews. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format(\App\Support\DateFormat::MOMENT)]) }}
                 </flux:text>
             @elseif (! $this->canRequest)
                 <flux:text class="mt-2">{{ __('Owners and managers can ask the AI to review this posting.') }}</flux:text>
             @else
                 @if ($aiStatus === 'failed')
-                    <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __("The AI couldn't review this posting right now.") }}</p>
+                    <p class="mt-2 text-sm font-medium text-ink">{{ __("The AI couldn't review this posting right now.") }}</p>
                     <flux:text class="mt-1">{{ __('You can try again; the numbers above do not depend on it.') }}</flux:text>
                 @else
                     <flux:text class="mt-2">{{ __('The AI can read this posting and its numbers and suggest what to change: the title, pay, requirements and description.') }}</flux:text>
@@ -259,11 +253,11 @@ new class extends Component
                     <flux:button wire:click="requestReview" icon="sparkles" size="sm">
                         {{ $aiStatus === 'failed' ? __('Try again') : __('Review with AI') }}
                     </flux:button>
-                    <span class="text-xs text-zinc-500 dark:text-zinc-400">
+                    <span class="text-xs text-ink-muted">
                         {{ __("The posting and its totals (nothing about any applicant) are sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
                     </span>
                 </div>
             @endif
-        </section>
+        </x-card>
     @endif
 </div>

@@ -2,13 +2,16 @@
 
 use App\Http\Controllers\AccountRestoreController;
 use App\Http\Controllers\ApplicationResumeDownloadController;
+use App\Http\Controllers\ApplicationResumePreviewController;
 use App\Http\Controllers\CandidateApplicationController;
 use App\Http\Controllers\CandidateDashboardController;
 use App\Http\Controllers\CandidatePreferenceController;
 use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DocumentDownloadController;
+use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\EmployerCompanyController;
 use App\Http\Controllers\EmployerDashboardController;
 use App\Http\Controllers\HomeController;
@@ -29,6 +32,16 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::view('/about', 'static.about')->name('about');
 Route::view('/privacy', 'static.privacy')->name('privacy');
 Route::view('/terms', 'static.terms')->name('terms');
+
+// Open to everyone, signed in or not: the people who most need it are
+// often the ones who cannot sign in.
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+// The hiring side's front door, linked from the navbar and footer as
+// "For employers". A view like the pages above: the one decision on it,
+// where "Post a job" leads, depends only on who is looking.
+Route::view('/employers', 'static.employers')->name('employers');
 
 Route::livewire('/jobs', 'pages::job-search')->name('jobs.index');
 Route::livewire('/categories/{categoryModel:slug}', 'pages::category-show')->name('categories.show')->withTrashed();
@@ -67,6 +80,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
 
     Route::get('/profile', [CandidateProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [CandidateProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/preview', [CandidateProfileController::class, 'preview'])->name('profile.preview');
 
     // Filling the profile from a CV in the library: the page reads the
     // file, suggests what it found, and adds only what the candidate ticks.
@@ -90,6 +104,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // owner-only check, never a guessable public URL.
     Route::livewire('/documents', 'pages::candidate.documents')->name('documents.index');
     Route::get('/documents/{document}/download', DocumentDownloadController::class)->name('documents.download');
+    Route::get('/documents/{document}/preview', DocumentPreviewController::class)->name('documents.preview');
 
     // A CV made from the profile: previewed here, then saved into the
     // document library or downloaded as a PDF.
@@ -114,6 +129,7 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // rather than its own resource: it flips one field on the
     // application and appends an ApplicationEvent.
     Route::get('/applications/{application}', [CandidateApplicationController::class, 'show'])->name('applications.show');
+    Route::get('/applications/{application}/resume', [CandidateApplicationController::class, 'resume'])->name('applications.resume');
     Route::patch('/applications/{application}/withdraw', [CandidateApplicationController::class, 'withdraw'])->name('applications.withdraw');
     Route::get('/saved-jobs', [CandidateSavedJobController::class, 'index'])->name('saved-jobs.index');
     Route::delete('/saved-jobs/unavailable', [CandidateSavedJobController::class, 'pruneUnavailable'])->name('saved-jobs.prune');
@@ -123,7 +139,14 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     Route::livewire('/job-alerts', 'pages::candidate.job-alerts')->name('job-alerts.index');
 });
 
-Route::middleware(['auth', 'candidate'])->group(function () {
+/*
+ * Signed in, but not limited to candidates: anyone who cannot apply is
+ * sent back to the job's own page, which says why and what to do next
+ * (start a candidate profile, see the application already made, see the
+ * job as candidates do). A guest pressing Apply who then signs in with
+ * an employer account lands there too, instead of on a refusal.
+ */
+Route::middleware(['auth'])->group(function () {
     Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
 });
 
@@ -203,6 +226,7 @@ Route::middleware(['auth', 'company.member'])
 
         Route::livewire('/applications/{application}', 'pages::employer.application-detail')->name('applications.show');
         Route::get('/applications/{application}/resume', ApplicationResumeDownloadController::class)->name('applications.resume');
+        Route::get('/applications/{application}/resume/preview', ApplicationResumePreviewController::class)->name('applications.resume.preview');
     });
 
 /*
@@ -216,3 +240,13 @@ Route::post('/invitations/{token}/accept', [InvitationController::class, 'accept
 Route::post('/invitations/{token}/switch-account', [InvitationController::class, 'switchAccount'])->name('invitations.switch-account');
 
 require __DIR__.'/settings.php';
+
+/*
+ * An address that matches no route would otherwise be answered before the
+ * web middleware runs, with no session, so the 404 page's navbar would
+ * offer "Log in" to someone who is signed in. Matching it here, last,
+ * gives the page the visitor's real session. Every method, not only GET
+ * as Route::fallback() registers it: a GET-only fallback would turn a
+ * POST to an unknown address into a 405.
+ */
+Route::any('{unknown}', fn () => abort(404))->where('unknown', '.*')->fallback();

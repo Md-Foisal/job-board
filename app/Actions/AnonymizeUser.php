@@ -7,6 +7,7 @@ use App\Enums\InvitationStatus;
 use App\Enums\MembershipStatus;
 use App\Models\ApplicationNote;
 use App\Models\CompanyReview;
+use App\Models\ContactMessage;
 use App\Models\Invitation;
 use App\Models\JobView;
 use App\Models\ScreeningAnswer;
@@ -22,9 +23,10 @@ use Illuminate\Support\Str;
  *
  * What goes: everything that says who they were or what they wrote about
  * themselves -- name, email, phone, photos, profile, preferences, education,
- * experience, every uploaded file, cover letters, screening answers, the
- * notes employers wrote about them, their reviews of companies (with the
- * companies' answers to them), alerts, saved jobs, viewing history,
+ * experience, projects, certifications, every uploaded file, cover
+ * letters, screening answers, the notes employers wrote about them, their
+ * reviews of companies (with the companies' answers to them), alerts,
+ * saved jobs, viewing history, messages sent through the contact page,
  * sessions and reset tokens.
  *
  * What stays: the rows other records point to, emptied -- the user row as
@@ -94,6 +96,8 @@ class AnonymizeUser
                 $profile->preference()->delete();
                 $profile->educationRecords()->delete();
                 $profile->experienceRecords()->delete();
+                $profile->projects()->delete();
+                $profile->certifications()->delete();
                 $profile->skills()->detach();
                 $profile->forceFill([
                     'headline' => null,
@@ -121,6 +125,10 @@ class AnonymizeUser
             $user->jobAlerts()->delete();
             $user->savedJobs()->detach();
             JobView::where('user_id', $user->id)->delete();
+
+            // Signed in or not when they wrote: a message carries the
+            // address it came from either way.
+            ContactMessage::where('user_id', $user->id)->orWhere('email', $originalEmail)->delete();
 
             $anonymousEmail = "deleted-{$user->id}@anonymized.invalid";
 

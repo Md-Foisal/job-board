@@ -19,7 +19,7 @@ test('a candidate saves a phone number and location, shown only on their own pro
         ->get(route('candidate.profile.edit'))
         ->assertOk()
         ->assertSee('+880 1712-345678')
-        ->assertSee("Shown on CVs you build here. Companies don't see these on your profile.");
+        ->assertSee("Only on CVs you build here. Companies don't see these on your profile.");
 });
 
 test('emptying the fields removes them', function () {
@@ -74,7 +74,7 @@ test('a phone number or location the profile cannot hold is refused, and nothing
     'a location too long' => [['location' => str_repeat('a', 101)], 'location'],
 ]);
 
-test('a refused phone number reopens its section with the message and what was typed', function () {
+test('a refused phone number reopens its dialog with the message and what was typed', function () {
     $candidate = candidateUser()->fresh();
 
     $this->actingAs($candidate)
@@ -84,16 +84,16 @@ test('a refused phone number reopens its section with the message and what was t
 
     $this->actingAs($candidate)
         ->get(route('candidate.profile.edit'))
-        ->assertSee('editingContact: true', false)
+        ->assertSee("\$flux.modal('edit-contact').show()", false)
         ->assertSee('Enter a phone number using digits, with an optional + and country code.')
         ->assertSee('value="call me"', false);
 });
 
-test('phone and location do not count towards profile completion', function () {
+test('phone and location are never named as gaps in the profile', function () {
     $candidate = candidateUser()->fresh();
-    $before = $this->actingAs($candidate)->get(route('candidate.dashboard'))->viewData('profileCompletionPercent');
+    $candidate->candidateProfile->update(['phone' => null, 'location' => null]);
 
-    $candidate->candidateProfile->update(['phone' => '+880 1712-345678', 'location' => 'Dhaka']);
+    $gaps = $this->actingAs($candidate)->get(route('candidate.dashboard'))->viewData('profileGaps');
 
-    expect($this->actingAs($candidate)->get(route('candidate.dashboard'))->viewData('profileCompletionPercent'))->toBe($before);
+    expect($gaps)->not->toContain('phone')->not->toContain('location');
 });

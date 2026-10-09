@@ -223,21 +223,17 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6">
-    <div>
-        <flux:heading size="xl" class="font-display">{{ __('Reviews') }}</flux:heading>
-        <flux:text class="mt-1">
-            {{ __('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.') }}
-        </flux:text>
-    </div>
+<x-page>
+    <x-page-header :title="__('Reviews')">
+        <x-slot:status>
+            <x-visibility-badge public :tip="__('What applicants said about your hiring process, exactly as the public sees it. Nobody here can see who wrote a review.')" />
+        </x-slot:status>
+    </x-page-header>
 
     @if ($this->summary->count === 0)
-        <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:heading>{{ __('No published reviews yet') }}</flux:heading>
-            <flux:text class="mt-1">
-                {{ __('Applicants can review your hiring process once they get a decision, reach an interview, or go :days days without an answer. Our team reads each one before it appears.', ['days' => ReviewEligibility::UNANSWERED_DAYS]) }}
-            </flux:text>
-        </div>
+        <x-empty-state icon="chat-bubble-left-right" :heading="__('No published reviews yet')">
+            {{ __('Applicants can review your hiring process once they get a decision, reach an interview, or go :days days without an answer. Our team reads each one before it appears.', ['days' => ReviewEligibility::UNANSWERED_DAYS]) }}
+        </x-empty-state>
     @else
         <div class="flex flex-wrap items-center justify-between gap-4">
             <flux:text>
@@ -262,50 +258,42 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
             </flux:radio.group>
         </div>
 
-        @unless ($this->canRespond)
-            <flux:callout icon="information-circle">
-                <flux:callout.text>{{ __('Owners and managers can answer reviews on behalf of the company.') }}</flux:callout.text>
-            </flux:callout>
-        @endunless
-
         @if ($this->reviews->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center dark:border-zinc-700 dark:bg-zinc-900">
-                <flux:text>{{ __('Every review has an answer.') }}</flux:text>
-            </div>
+            <x-empty-state icon="check-circle" :heading="__('Every review has an answer.')" />
         @endif
 
         <div class="flex flex-col gap-4">
             @foreach ($this->reviews as $review)
-                <article wire:key="review-{{ $review->id }}" class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900" aria-labelledby="review-{{ $review->id }}-title">
+                <x-card as="article" wire:key="review-{{ $review->id }}" aria-labelledby="review-{{ $review->id }}-title">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0">
                             <x-rating-stars :value="$review->overall_rating" />
-                            <h2 id="review-{{ $review->id }}-title" class="mt-2 font-medium text-zinc-900 dark:text-zinc-100">{{ $review->title }}</h2>
-                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                            <h2 id="review-{{ $review->id }}-title" class="mt-2 font-medium text-ink">{{ $review->title }}</h2>
+                            <p class="mt-1 text-xs text-ink-muted">
                                 {{ __('Verified applicant') }}
                                 <span class="mx-1">·</span>
                                 @php($publishedAt = \App\Support\LocalTime::of($review->published_at))
-                                <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format('F Y') }}</time>
+                                <time datetime="{{ $publishedAt->format('Y-m') }}">{{ $publishedAt->format(\App\Support\DateFormat::MONTH) }}</time>
                             </p>
                         </div>
 
                         <livewire:report-button :reportable="$review" :key="'report-review-'.$review->id" />
                     </div>
 
-                    <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $review->body }}</p>
+                    <p class="mt-3 whitespace-pre-line text-sm text-ink-soft">{{ $review->body }}</p>
 
                     <dl class="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                         <div class="flex gap-1">
-                            <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Communication') }}:</dt>
-                            <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
+                            <dt class="text-ink-muted">{{ __('Communication') }}:</dt>
+                            <dd class="font-medium text-ink">{{ __(':n out of 5', ['n' => $review->communication_rating]) }}</dd>
                         </div>
                         <div class="flex gap-1">
-                            <dt class="text-zinc-500 dark:text-zinc-400">{{ __('Job as described') }}:</dt>
-                            <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $review->job_as_described->label() }}</dd>
+                            <dt class="text-ink-muted">{{ __('Job as described') }}:</dt>
+                            <dd class="font-medium text-ink">{{ $review->job_as_described->label() }}</dd>
                         </div>
                     </dl>
 
-                    <div class="mt-5 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+                    <div class="mt-5 border-t border-line pt-4">
                         @if ($answering === $review->id)
                             <form wire:submit="saveAnswer" class="flex flex-col gap-3">
                                 <flux:textarea
@@ -323,14 +311,18 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                         @elseif ($review->response_status === null)
                             <div class="flex flex-wrap items-center justify-between gap-3">
                                 <flux:text>{{ __('No answer yet.') }}</flux:text>
+                                {{-- Said where the button would be, rather than in a
+                                     standing notice at the top of the page. --}}
                                 @if ($this->canRespond)
                                     <flux:button size="sm" wire:click="startAnswer({{ $review->id }})">{{ __('Answer publicly') }}</flux:button>
+                                @else
+                                    <flux:text size="sm">{{ __('Owners and managers can answer reviews on behalf of the company.') }}</flux:text>
                                 @endif
                             </div>
                         @else
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ __('Your answer') }}</span>
+                                    <span class="text-sm font-medium text-ink">{{ __('Your answer') }}</span>
                                     @switch($review->response_status)
                                         @case(ModerationStatus::Approved)
                                             <flux:badge color="green" size="sm">{{ __('Published') }}</flux:badge>
@@ -339,7 +331,7 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                                             <flux:badge color="red" size="sm">{{ __('Not published') }}</flux:badge>
                                             @break
                                         @default
-                                            <flux:badge color="blue" size="sm">{{ __('Waiting for a check') }}</flux:badge>
+                                            <flux:badge color="amber" size="sm">{{ __('Waiting for a check') }}</flux:badge>
                                     @endswitch
                                 </div>
 
@@ -351,7 +343,7 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                                 @endif
                             </div>
 
-                            <p class="mt-2 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $review->response_body }}</p>
+                            <p class="mt-2 whitespace-pre-line text-sm text-ink-soft">{{ $review->response_body }}</p>
 
                             @if ($review->response_status === ModerationStatus::Rejected)
                                 <flux:callout variant="danger" icon="x-circle" class="mt-3">
@@ -378,7 +370,7 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
                             @endif
                         @endif
                     </div>
-                </article>
+                </x-card>
             @endforeach
         </div>
 
@@ -399,4 +391,4 @@ new #[Layout('layouts::employer')] #[Title('Reviews')] class extends Component {
             </div>
         </div>
     </flux:modal>
-</div>
+</x-page>

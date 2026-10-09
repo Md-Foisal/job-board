@@ -13,6 +13,7 @@ use App\Support\AiQuota;
 use App\Support\MatchBreakdown;
 use App\Support\MatchExplanation;
 use App\Support\MatchExplanationInput;
+use App\Support\Money;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -222,7 +223,7 @@ new class extends Component
                 'job' => $this->jobSalary(),
                 'you' => $preference?->desired_salary_min === null
                     ? __('Not set')
-                    : __('From :amount a month', ['amount' => $this->money($preference->desired_salary_currency, $preference->desired_salary_min)]),
+                    : __('From :amount a month', ['amount' => Money::format($preference->desired_salary_currency, $preference->desired_salary_min)]),
             ],
             [
                 'check' => MatchCheck::Workplace,
@@ -272,19 +273,14 @@ new class extends Component
         }
 
         $amount = match (true) {
-            $min !== null && $max !== null => $this->money($job->salary_currency, $min).'–'.number_format($max),
-            $min !== null => __('from :amount', ['amount' => $this->money($job->salary_currency, $min)]),
-            default => __('up to :amount', ['amount' => $this->money($job->salary_currency, $max)]),
+            $min !== null && $max !== null => Money::format($job->salary_currency, $min).'–'.Money::format($job->salary_currency, $max),
+            $min !== null => __('from :amount', ['amount' => Money::format($job->salary_currency, $min)]),
+            default => __('up to :amount', ['amount' => Money::format($job->salary_currency, $max)]),
         };
 
         return $job->salary_period === SalaryPeriod::Monthly
             ? __(':amount a month', ['amount' => $amount])
             : __('About :amount a month', ['amount' => $amount]);
-    }
-
-    private function money(?string $currency, int $amount): string
-    {
-        return trim(strtoupper(trim((string) $currency)).' '.number_format($amount));
     }
 
     private function duration(int $months): string
@@ -301,32 +297,32 @@ new class extends Component
 ?>
 
 @placeholder
-    <section class="mt-6 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" aria-busy="true">
+    <x-card as="section" padding="sm" class="mt-6" aria-busy="true">
         <span class="sr-only">{{ __('Loading how you match this job') }}</span>
         <div class="animate-pulse space-y-3" aria-hidden="true">
-            <div class="h-5 w-40 rounded bg-zinc-200 dark:bg-zinc-800"></div>
-            <div class="h-4 w-3/4 rounded bg-zinc-100 dark:bg-zinc-800/60"></div>
-            <div class="h-4 w-2/3 rounded bg-zinc-100 dark:bg-zinc-800/60"></div>
-            <div class="h-4 w-1/2 rounded bg-zinc-100 dark:bg-zinc-800/60"></div>
+            <div class="h-5 w-40 rounded bg-line"></div>
+            <div class="h-4 w-3/4 rounded bg-line/60"></div>
+            <div class="h-4 w-2/3 rounded bg-line/60"></div>
+            <div class="h-4 w-1/2 rounded bg-line/60"></div>
         </div>
-    </section>
+    </x-card>
 @endplaceholder
 
 <div>
     @if ($this->breakdown)
         @php($breakdown = $this->breakdown)
 
-        <section class="mt-6 rounded-xl border border-zinc-200 p-4 dark:border-zinc-800" aria-labelledby="match-breakdown-heading">
+        <x-card as="section" padding="sm" class="mt-6" aria-labelledby="match-breakdown-heading">
             <div class="flex flex-wrap items-center gap-2">
-                <h2 id="match-breakdown-heading" class="font-display text-base font-semibold text-zinc-900 dark:text-zinc-50">
+                <h2 id="match-breakdown-heading" class="font-display text-base font-semibold text-ink">
                     {{ __('How you match') }}
                 </h2>
                 <x-match-score :score="$breakdown->score" size="md" />
-                <span class="text-xs text-zinc-500 dark:text-zinc-500">{{ __('Only you can see this.') }}</span>
+                <span class="text-xs text-ink-muted">{{ __('Only you can see this.') }}</span>
             </div>
 
             @if ($breakdown->isEmpty())
-                <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
+                <p class="mt-3 text-sm text-ink-muted">
                     {{ __('Your profile is empty, so there is nothing to compare yet. Add your skills, work history and job preferences, or fill them in from your CV.') }}
                 </p>
                 <div class="mt-3 flex flex-wrap gap-2">
@@ -342,20 +338,22 @@ new class extends Component
                 @foreach ($skillGroups as $group)
                     @if ($group['matched']->isNotEmpty() || $group['missing']->isNotEmpty())
                         <div class="mt-4">
-                            <h3 class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">{{ $group['label'] }}</h3>
+                            <h3 class="text-xs font-medium uppercase tracking-wide text-ink-muted">{{ $group['label'] }}</h3>
                             <ul class="mt-2 flex flex-wrap gap-2">
                                 @foreach ($group['matched'] as $skill)
-                                    <li class="inline-flex items-center gap-1 rounded-full bg-success-50 px-2.5 py-1 text-xs font-medium text-success-700 dark:bg-success-950 dark:text-success-300">
-                                        <flux:icon.check variant="micro" class="size-3.5" aria-hidden="true" />
-                                        {{ $skill->name }}
-                                        <span class="sr-only">{{ __('(you have this)') }}</span>
+                                    <li>
+                                        <x-chip variant="matched">
+                                            {{ $skill->name }}
+                                            <span class="sr-only">{{ __('(you have this)') }}</span>
+                                        </x-chip>
                                     </li>
                                 @endforeach
                                 @foreach ($group['missing'] as $skill)
-                                    <li class="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                                        <flux:icon.x-mark variant="micro" class="size-3.5" aria-hidden="true" />
-                                        {{ $skill->name }}
-                                        <span class="sr-only">{{ __('(missing from your profile)') }}</span>
+                                    <li>
+                                        <x-chip variant="missing">
+                                            {{ $skill->name }}
+                                            <span class="sr-only">{{ __('(missing from your profile)') }}</span>
+                                        </x-chip>
                                     </li>
                                 @endforeach
                             </ul>
@@ -364,19 +362,19 @@ new class extends Component
                 @endforeach
 
                 @if ($breakdown->score === null && $this->jobPosting->skills->isNotEmpty())
-                    <p class="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
-                        <a href="{{ route('candidate.skills.edit') }}" class="font-medium text-brand-700 hover:underline dark:text-brand-400" wire:navigate>{{ __('Add your skills') }}</a>
+                    <p class="mt-3 text-sm text-ink-muted">
+                        <a href="{{ route('candidate.skills.edit') }}" class="font-medium text-sunset-small hover:underline" wire:navigate>{{ __('Add your skills') }}</a>
                         {{ __('to get a match score.') }}
                     </p>
                 @endif
 
-                <dl class="mt-4 divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
+                <dl class="mt-4 divide-y divide-line text-sm">
                     @foreach ($this->rows() as $row)
                         <div class="grid grid-cols-1 gap-1 py-2 sm:grid-cols-[8rem_1fr_auto] sm:items-center sm:gap-3">
-                            <dt class="font-medium text-zinc-800 dark:text-zinc-200">{{ __($row['check']->label()) }}</dt>
-                            <dd class="text-zinc-600 dark:text-zinc-400">
+                            <dt class="font-medium text-ink">{{ __($row['check']->label()) }}</dt>
+                            <dd class="text-ink-muted">
                                 {{ __('This job: :job', ['job' => $row['job']]) }}
-                                <span class="text-zinc-300 dark:text-zinc-700" aria-hidden="true">·</span>
+                                <span class="text-line-strong" aria-hidden="true">·</span>
                                 {{ __('You: :you', ['you' => $row['you']]) }}
                             </dd>
                             <dd>
@@ -392,7 +390,7 @@ new class extends Component
                                         </span>
                                         @break
                                     @default
-                                        <span class="inline-flex items-center gap-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                                        <span class="inline-flex items-center gap-1 text-xs font-medium text-ink-muted">
                                             <flux:icon.minus-circle variant="micro" class="size-4" aria-hidden="true" />{{ __('Can\'t compare') }}
                                         </span>
                                 @endswitch
@@ -401,11 +399,11 @@ new class extends Component
                     @endforeach
                 </dl>
 
-                <p class="mt-3 text-xs text-zinc-500 dark:text-zinc-500">
+                <p class="mt-3 text-xs text-ink-muted">
                     {{ __('Compared with your') }}
-                    <a href="{{ route('candidate.preferences.edit') }}" class="font-medium text-brand-700 hover:underline dark:text-brand-400" wire:navigate>{{ __('job preferences') }}</a>
+                    <a href="{{ route('candidate.preferences.edit') }}" class="font-medium text-sunset-small hover:underline" wire:navigate>{{ __('job preferences') }}</a>
                     {{ __('and') }}
-                    <a href="{{ route('candidate.experience.index') }}" class="font-medium text-brand-700 hover:underline dark:text-brand-400" wire:navigate>{{ __('work history') }}</a>.
+                    <a href="{{ route('candidate.experience.index') }}" class="font-medium text-sunset-small hover:underline" wire:navigate>{{ __('work history') }}</a>.
                     {{ __('Employers see only the skills match.') }}
                 </p>
 
@@ -414,21 +412,15 @@ new class extends Component
                 @php($availability = $this->aiAvailability)
 
                 @if ($aiStatus === 'running')
-                    <div wire:poll.2s="checkAi" role="status" class="mt-4 flex items-center gap-3 rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm text-brand-900 dark:border-brand-800 dark:bg-brand-950 dark:text-brand-100">
-                        <flux:icon.loading variant="mini" />
-                        <div>
-                            <p class="font-medium">{{ __('Reading the job…') }}</p>
-                            <p>{{ __('This usually takes a few seconds.') }}</p>
-                        </div>
-                    </div>
+                    <x-ai-working wire:poll.2s="checkAi" class="mt-4" :heading="__('Reading the job…')">{{ __('This usually takes a few seconds.') }}</x-ai-working>
                 @elseif ($aiStatus === 'done' && $shown = $this->shownExplanation())
-                    <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">
+                    <x-card subtle padding="sm" class="mt-4 text-sm">
                         <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="font-medium text-zinc-900 dark:text-zinc-100">{{ __('AI explanation') }}</h3>
-                            <span class="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">{{ __('AI-generated — may be wrong') }}</span>
+                            <h3 class="font-medium text-ink">{{ __('AI explanation') }}</h3>
+                            <x-chip>{{ __('AI-generated — may be wrong') }}</x-chip>
                         </div>
                         @if ($shown->summary !== '')
-                            <p class="mt-2 text-zinc-700 dark:text-zinc-300">{{ $shown->summary }}</p>
+                            <p class="mt-2 text-ink-soft">{{ $shown->summary }}</p>
                         @endif
                         @foreach ([
                             __('Where you fit') => $shown->strengths,
@@ -436,40 +428,40 @@ new class extends Component
                             __('Worth stressing when you apply') => $shown->tips,
                         ] as $title => $points)
                             @if ($points !== [])
-                                <h4 class="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-500">{{ $title }}</h4>
-                                <ul class="mt-1 list-disc space-y-1 pl-5 text-zinc-700 dark:text-zinc-300">
+                                <h4 class="mt-3 text-xs font-medium uppercase tracking-wide text-ink-muted">{{ $title }}</h4>
+                                <ul class="mt-1 list-disc space-y-1 pl-5 text-ink-soft">
                                     @foreach ($points as $point)
                                         <li>{{ $point }}</li>
                                     @endforeach
                                 </ul>
                             @endif
                         @endforeach
-                    </div>
+                    </x-card>
                 @elseif ($aiStatus === 'unavailable' || ($aiStatus === null && $availability === \App\Enums\AiAvailability::LimitReached))
-                    <p class="mt-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format('j F \\a\\t g:i a')]) }}
+                    <p class="mt-4 text-sm text-ink-muted">
+                        {{ __("You've used this month's AI explanations. They reset on :date.", ['date' => \App\Support\LocalTime::of(now()->startOfMonth()->addMonth())->format(\App\Support\DateFormat::MOMENT)]) }}
                     </p>
                 @elseif ($availability === \App\Enums\AiAvailability::Available && in_array($aiStatus, [null, 'failed'], true))
-                    <div class="mt-4 rounded-lg border border-zinc-200 p-4 text-sm dark:border-zinc-700">
+                    <x-card subtle padding="sm" class="mt-4 text-sm">
                         @if ($aiStatus === 'failed')
-                            <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ __("The AI couldn't explain this match right now.") }}</p>
-                            <p class="mt-1 text-zinc-600 dark:text-zinc-400">{{ __('You can try again; the match above does not depend on it.') }}</p>
+                            <p class="font-medium text-ink">{{ __("The AI couldn't explain this match right now.") }}</p>
+                            <p class="mt-1 text-ink-muted">{{ __('You can try again; the match above does not depend on it.') }}</p>
                         @elseif (! $this->aiHasMaterial)
-                            <p class="text-zinc-600 dark:text-zinc-400">{{ __('Add your skills or work history, and the AI can explain how you fit this job.') }}</p>
+                            <p class="text-ink-muted">{{ __('Add your skills or work history, and the AI can explain how you fit this job.') }}</p>
                         @else
-                            <p class="text-zinc-600 dark:text-zinc-400">{{ __('The AI can explain in words where you fit this job, what is missing, and what to stress when you apply.') }}</p>
+                            <p class="text-ink-muted">{{ __('The AI can explain in words where you fit this job, what is missing, and what to stress when you apply.') }}</p>
                         @endif
                         <div class="mt-3 flex flex-wrap items-center gap-3">
                             <flux:button wire:click="explain" icon="sparkles" size="sm" :disabled="! $this->aiHasMaterial">
                                 {{ $aiStatus === 'failed' ? __('Try again') : __('Explain my match') }}
                             </flux:button>
-                            <span class="text-xs text-zinc-500 dark:text-zinc-400">
+                            <span class="text-xs text-ink-muted">
                                 {{ __("Your profile (not your CV, name, contact details or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
                             </span>
                         </div>
-                    </div>
+                    </x-card>
                 @endif
             @endif
-        </section>
+        </x-card>
     @endif
 </div>

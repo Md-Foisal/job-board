@@ -1,90 +1,162 @@
+@php
+    $greetingName = $user->greetingName();
+    $needsYou = $closingSaved->isNotEmpty() || $profileGaps !== [] || $importableCv || $reviewable->isNotEmpty();
+    $statusIcons = [
+        \App\Enums\CandidateApplicationStatus::Applied->value => 'paper-airplane',
+        \App\Enums\CandidateApplicationStatus::InReview->value => 'eye',
+        \App\Enums\CandidateApplicationStatus::Offer->value => 'gift',
+        \App\Enums\CandidateApplicationStatus::Closed->value => 'archive-box',
+    ];
+@endphp
+
 <x-layouts::app :title="__('Dashboard')">
-    <div class="mx-auto max-w-6xl">
-        <flux:heading size="xl" level="1">{{ __('Dashboard') }}</flux:heading>
-        <flux:subheading size="lg" class="mb-6">{{ __('Where things stand, at a glance.') }}</flux:subheading>
-        <flux:separator variant="subtle" class="mb-6" />
+    <x-page>
+        <x-page-header :title="__('Hi, :name', ['name' => $greetingName])" :description="$stateLine">
+            <x-slot:actions>
+                <flux:button :href="route('jobs.index')" wire:navigate variant="primary" class="btn-sunset" icon="magnifying-glass">{{ __('Find jobs') }}</flux:button>
+            </x-slot:actions>
+        </x-page-header>
 
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-500">{{ __('Profile completion') }}</p>
-                <p class="mt-2 font-display text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $profileCompletionPercent }}%</p>
+        {{-- The tracker: each count opens the applications behind it. --}}
+        <section aria-labelledby="applications-heading">
+            <h2 id="applications-heading" class="sr-only">{{ __('Your applications') }}</h2>
 
-                <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-                    <div class="h-full rounded-full bg-brand-600 dark:bg-brand-500" style="width: {{ $profileCompletionPercent }}%"></div>
+            <ul class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                @foreach (\App\Enums\CandidateApplicationStatus::cases() as $status)
+                    <li>
+                        <x-card as="a" interactive padding="sm" :href="route('candidate.applications.index', ['status' => $status->value])" wire:navigate class="flex items-center gap-3">
+                            <x-icon-tile :icon="$statusIcons[$status->value]" size="sm" />
+                            <span class="min-w-0">
+                                <span class="block font-display text-2xl font-semibold tabular-nums text-ink">{{ $statusCounts[$status->value] }}</span>
+                                <span class="block text-sm text-ink-muted">{{ __($status->label()) }}</span>
+                            </span>
+                        </x-card>
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+            {{-- Needs you: only what the candidate can act on, each a link. --}}
+            <x-card padding="none" class="overflow-hidden lg:col-span-2">
+                <div class="px-5 pt-5 pb-4 sm:px-6">
+                    <flux:heading size="lg" level="2">{{ __('Needs you') }}</flux:heading>
                 </div>
 
-                @if ($profileCompletionPercent < 100)
-                    {{-- Naming what's missing (not just the %) gives an actual
-                         next action -- a bare number tells you how far but not
-                         what to do about it. --}}
-                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-500">
-                        {{ __('Missing:') }}
-                        {{ $missingProfileItems->take(3)->join(', ') }}
-                        @if ($missingProfileItems->count() > 3)
-                            {{ __('+:count more', ['count' => $missingProfileItems->count() - 3]) }}
+                @if ($needsYou)
+                    <ul class="divide-y divide-line border-t border-line">
+                        @foreach ($closingSaved as $jobPosting)
+                            <x-task-row :href="route('jobs.show', $jobPosting)" icon="clock">
+                                {{ __('Saved job closes in :time', ['time' => $jobPosting->expires_at->diffForHumans(null, true)]) }}
+                                <x-slot:detail class="truncate">{{ $jobPosting->title }} &middot; {{ $jobPosting->company->name }}</x-slot:detail>
+                            </x-task-row>
+                        @endforeach
+
+                        @if ($importableCv)
+                            <x-task-row :href="route('candidate.resume-import', $importableCv)" icon="document-arrow-down">
+                                {{ __('Fill your profile from your CV') }}
+                                <x-slot:detail>{{ __('Without skills no job can show how well it fits you. We read :file and you pick what to add.', ['file' => $importableCv->original_filename]) }}</x-slot:detail>
+                            </x-task-row>
                         @endif
-                    </p>
-                    <a href="{{ route('candidate.profile.edit') }}" wire:navigate class="mt-1 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
-                        {{ __('Complete your profile') }} &rarr;
-                    </a>
+
+                        @if ($profileGaps !== [])
+                            <x-task-row :href="route('candidate.profile.edit')" icon="user-circle">
+                                {{ __('Add :parts to your profile', ['parts' => collect($profileGaps)->map(fn ($gap) => \App\Http\Controllers\CandidateDashboardController::gapLabel($gap))->join(', ', ' and ')]) }}
+                                <x-slot:detail>{{ __('These are what a company reads first when you apply.') }}</x-slot:detail>
+                            </x-task-row>
+                        @endif
+
+                        @foreach ($reviewable as $application)
+                            <x-task-row :href="route('candidate.applications.show', $application)" icon="chat-bubble-left-right">
+                                {{ __('Review how :company hired', ['company' => $application->jobPosting->company->name]) }}
+                                <x-slot:detail>{{ __('Your account helps the next person who applies there.') }}</x-slot:detail>
+                            </x-task-row>
+                        @endforeach
+                    </ul>
                 @else
-                    <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-500">{{ __('Your profile is fully filled out.') }}</p>
+                    <div class="px-5 pb-5 sm:px-6">
+                        <x-empty-state icon="check-circle" :level="3" :heading="__('Nothing needs you right now')" :action-href="route('jobs.index')" :action-label="__('Find jobs')">
+                            {{ __('A saved job about to close, a gap in your profile or a company you can review would show here.') }}
+                        </x-empty-state>
+                    </div>
                 @endif
-            </div>
+            </x-card>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-                <p class="text-sm font-medium text-zinc-500 dark:text-zinc-500">{{ __('Active applications') }}</p>
-                <p class="mt-2 font-display text-3xl font-bold text-zinc-900 dark:text-zinc-100">{{ $activeApplicationCount }}</p>
+            <div class="flex flex-col gap-6">
+                <x-card padding="none" class="overflow-hidden">
+                    <div class="flex items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-6">
+                        <flux:heading size="lg" level="2">{{ __('Recent changes') }}</flux:heading>
+                        @if ($recentChanges->isNotEmpty())
+                            <flux:link :href="route('candidate.applications.index')" wire:navigate class="text-sm">{{ __('All applications') }}</flux:link>
+                        @endif
+                    </div>
 
-                <a href="{{ route('candidate.applications.index') }}" wire:navigate class="mt-3 inline-block text-sm text-brand-700 hover:underline dark:text-brand-400">
-                    {{ __('View all applications') }} &rarr;
-                </a>
+                    @if ($recentChanges->isEmpty())
+                        <p class="border-t border-line px-5 py-4 text-sm text-ink-muted sm:px-6">{{ __('When you apply, every step of each application shows here.') }}</p>
+                    @else
+                        <ul class="divide-y divide-line border-t border-line">
+                            @foreach ($recentChanges as $change)
+                                @php
+                                    $local = \App\Support\LocalTime::of($change['at']);
+                                @endphp
+                                <li>
+                                    <a href="{{ route('candidate.applications.show', $change['application']) }}" wire:navigate class="group block px-5 py-3 transition hover:bg-surface sm:px-6">
+                                        <span class="block text-sm text-ink group-hover:text-sunset-small">{{ $change['line'] }}</span>
+                                        <time class="block text-meta text-ink-muted" datetime="{{ $local->toIso8601String() }}" title="{{ $local->format(\App\Support\DateFormat::MOMENT) }}">{{ $change['at']->diffForHumans() }}</time>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </x-card>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <x-card as="a" interactive padding="sm" :href="route('candidate.saved-jobs.index')" wire:navigate>
+                        <span class="block font-display text-2xl font-semibold tabular-nums text-ink">{{ $savedCount }}</span>
+                        <span class="block text-sm text-ink-muted">{{ trans_choice('Saved job|Saved jobs', $savedCount) }}</span>
+                    </x-card>
+                    <x-card as="a" interactive padding="sm" :href="route('candidate.job-alerts.index')" wire:navigate>
+                        <span class="block font-display text-2xl font-semibold tabular-nums text-ink">{{ $alertCount }}</span>
+                        <span class="block text-sm text-ink-muted">{{ trans_choice('Job alert on|Job alerts on', $alertCount) }}</span>
+                    </x-card>
+                </div>
             </div>
         </div>
 
-        <flux:heading size="lg" level="2" class="mb-1 mt-10">{{ __('Jobs that match your skills') }}</flux:heading>
-        <flux:subheading class="mb-6">{{ __('Open roles you have not applied to, best fit first.') }}</flux:subheading>
+        <section aria-labelledby="recommended-heading" class="flex flex-col gap-4">
+            <div>
+                <flux:heading size="lg" level="2" id="recommended-heading">{{ __('Recommended for you') }}</flux:heading>
+                <flux:text class="mt-1">{{ __('Open jobs you have not applied to that match at least :percent% of what they ask for, best fit first.', ['percent' => \App\Http\Controllers\CandidateDashboardController::RECOMMEND_FROM_PERCENT]) }}</flux:text>
+            </div>
 
-        @if (! $hasSkills)
-            {{-- Nothing to match on yet, so nothing is guessed: the only
-                 useful thing to show is how to get a real list. --}}
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __('Add your skills and we will show the open jobs that fit you, with how well each one matches.') }}
-                <a href="{{ route('candidate.skills.edit') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Add skills') }} &rarr;
-                </a>
-            </div>
-        @elseif ($matches->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-12 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __('No open job asks for your skills right now.') }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse all open roles') }} &rarr;
-                </a>
-            </div>
-        @else
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($matches as $match)
-                    <x-job-card :job-posting="$match['jobPosting']" :match-score="$match['score']" :show-save-button="true" />
-                @endforeach
-            </div>
+            @if (! $hasSkills)
+                {{-- Nothing to match on yet, so nothing is guessed. --}}
+                <x-empty-state icon="sparkles" :level="3" :heading="__('Add your skills to see the jobs that fit you')" :action-href="$importableCv ? route('candidate.resume-import', $importableCv) : route('candidate.skills.edit')" :action-label="$importableCv ? __('Fill from your CV') : __('Add skills')">
+                    {{ __('Each job is matched against your skills, with how well it fits.') }}
+                </x-empty-state>
+            @elseif ($recommended->isEmpty())
+                <x-empty-state icon="magnifying-glass" :level="3" :heading="__('No strong match open right now')" :action-href="route('jobs.index')" :action-label="__('Browse all jobs')">
+                    {{ __('New jobs come in every day. A job alert tells you when one fits.') }}
+                </x-empty-state>
+            @else
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($recommended as $match)
+                        <x-job-card :job-posting="$match['jobPosting']" :match-score="$match['score']" :show-save-button="true" />
+                    @endforeach
+                </div>
+            @endif
+        </section>
+
+        @if ($recentlyViewed->isNotEmpty())
+            <section aria-labelledby="viewed-heading" class="flex flex-col gap-4">
+                <flux:heading size="lg" level="2" id="viewed-heading">{{ __('Recently viewed') }}</flux:heading>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    @foreach ($recentlyViewed as $jobPosting)
+                        <x-job-card :job-posting="$jobPosting" :match-score="$recentlyViewedScores[$jobPosting->id] ?? null" :show-save-button="true" />
+                    @endforeach
+                </div>
+            </section>
         @endif
-
-        <flux:heading size="lg" level="2" class="mb-1 mt-10">{{ __('Recently viewed') }}</flux:heading>
-        <flux:subheading class="mb-6">{{ __('Jobs you looked at, in case you want another look.') }}</flux:subheading>
-
-        @if ($recentlyViewedJobs->isEmpty())
-            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-16 text-center text-zinc-500 dark:border-zinc-700 dark:text-zinc-500">
-                {{ __("You haven't viewed any jobs yet.") }}
-                <a href="{{ route('jobs.index') }}" class="text-brand-700 hover:underline dark:text-brand-400" wire:navigate>
-                    {{ __('Browse open roles') }} &rarr;
-                </a>
-            </div>
-        @else
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($recentlyViewedJobs as $jobPosting)
-                    <x-job-card :job-posting="$jobPosting" :match-score="$recentlyViewedScores[$jobPosting->id] ?? null" :show-save-button="true" />
-                @endforeach
-            </div>
-        @endif
-    </div>
+    </x-page>
 </x-layouts::app>

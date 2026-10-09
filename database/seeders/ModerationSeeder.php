@@ -26,6 +26,7 @@ use Database\Seeders\Demo\Postings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Something in every staff queue and every moderation state an employer
@@ -84,15 +85,22 @@ class ModerationSeeder extends Seeder
 
     private function seedOtherCompanies(User $moderator, User $superAdmin): void
     {
-        $companies = Company::query()
+        // The demo candidate's applications and saved jobs have to stay
+        // open, or its pages show nothing: a company it has dealt with only
+        // takes the parts that leave its postings live.
+        $demoCandidateCompanyIds = $this->demoCandidateCompanyIds();
+
+        [$dealtWith, $companies] = Company::query()
             ->where('slug', '!=', DemoAccountsSeeder::DEMO_COMPANY_SLUG)
             ->with('jobPostings')
             ->get()
-            ->shuffle();
+            ->shuffle()
+            ->partition(fn (Company $company) => $demoCandidateCompanyIds->contains($company->id))
+            ->map->values();
 
         // A company with three postings approved by hand: its next one
         // skips the queue.
-        $trusted = $companies->shift();
+        $trusted = $dealtWith->shift() ?? $companies->shift();
         foreach ($trusted->jobPostings->take(Company::TRUSTED_AFTER_APPROVALS) as $posting) {
             $this->resubmit($posting);
             $this->at(CarbonImmutable::instance($posting->published_at)->addMinutes(random_int(20, 240)),
@@ -100,7 +108,7 @@ class ModerationSeeder extends Seeder
         }
         $this->at(now()->subDays(random_int(10, 40)), fn () => app(VerifyCompany::class)($trusted, $moderator));
 
-        $verified = $companies->shift();
+        $verified = $dealtWith->shift() ?? $companies->shift();
         $this->at(now()->subDays(random_int(3, 9)), fn () => app(VerifyCompany::class)($verified, $moderator));
 
         // The posting queue, one of them past the review target so the
@@ -129,6 +137,25 @@ class ModerationSeeder extends Seeder
 
         $suspended = $this->reporters->last();
         $this->at(now()->subDay()->subHours(5), fn () => app(SuspendUser::class)($suspended, $superAdmin, 'Sent the same abusive message to several employers.'));
+    }
+
+    /**
+     * @return Collection<int, int>
+     */
+    private function demoCandidateCompanyIds(): Collection
+    {
+        $candidate = User::query()->where('email', 'candidate@jobboard.test')->first();
+
+        if (! $candidate?->candidateProfile) {
+            return collect();
+        }
+
+        return JobPosting::query()
+            ->whereIn('id', DB::table('saved_jobs')->where('user_id', $candidate->id)->select('job_posting_id'))
+            ->orWhereIn('id', $candidate->candidateProfile->applications()->select('job_posting_id'))
+            ->pluck('company_id')
+            ->unique()
+            ->values();
     }
 
     private function submittedPosting(Company $company, string $roleKey): JobPosting

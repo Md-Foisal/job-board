@@ -10,6 +10,7 @@ use App\Enums\StaffRole;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -18,12 +19,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
 #[Fillable(['name', 'email', 'password', 'avatar', 'timezone', 'timezone_automatic'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes, TwoFactorAuthenticatable;
@@ -43,6 +46,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
+        'avatar' => null,
         'staff_role' => null,
         'timezone' => null,
         'timezone_automatic' => true,
@@ -78,6 +82,19 @@ class User extends Authenticatable implements FilamentUser
     /**
      * Get the user's initials
      */
+    /**
+     * What to call the person in a greeting: the first name, as job sites
+     * greet people -- unless the name starts with a short form such as
+     * "Md." or "Dr.", which is not what anyone is called; then the whole
+     * name. Used by the dashboard and the emails alike.
+     */
+    public function greetingName(): string
+    {
+        $firstWord = Str::of($this->name)->trim()->explode(' ')->first();
+
+        return str_ends_with($firstWord, '.') ? trim($this->name) : $firstWord;
+    }
+
     public function initials(): string
     {
         return Str::of($this->name)
@@ -85,6 +102,26 @@ class User extends Authenticatable implements FilamentUser
             ->take(2)
             ->map(fn ($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    /**
+     * The photo that stands for this person in the account menu: their own
+     * profile photo, or the one on their recruiter profile when they have
+     * only that. Null means show initials.
+     */
+    public function avatarUrl(): ?string
+    {
+        $path = $this->avatar ?: $this->recruiterProfile?->avatar_path;
+
+        return $path ? Storage::url($path) : null;
+    }
+
+    /**
+     * The staff panel shows the same photo as the app's account menu.
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatarUrl();
     }
 
     public function memberships()
@@ -149,9 +186,31 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(JobAlert::class);
     }
 
+    /**
+     * The pivot's created_at is when the job was saved.
+     */
     public function savedJobs()
     {
-        return $this->belongsToMany(JobPosting::class, 'saved_jobs');
+        return $this->belongsToMany(JobPosting::class, 'saved_jobs')->withTimestamps();
+    }
+
+    /**
+     * Which of these postings this user has saved, in one query for a
+     * page of job cards rather than one per card.
+     *
+     * @param  Collection<int, JobPosting>  $jobPostings
+     * @return list<int>
+     */
+    public function savedJobIdsAmong(Collection $jobPostings): array
+    {
+        if ($jobPostings->isEmpty()) {
+            return [];
+        }
+
+        return $this->savedJobs()
+            ->whereIn('job_postings.id', $jobPostings->map(fn (JobPosting $jobPosting) => $jobPosting->getKey()))
+            ->pluck('job_postings.id')
+            ->all();
     }
 
     /**

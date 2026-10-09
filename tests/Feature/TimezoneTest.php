@@ -142,7 +142,7 @@ test('the invitation email gives the expiry in the company\'s zone, named', func
 
     $mail = (new TeamMemberInvited($invitation))->toMail($invitation);
 
-    expect($mail->outroLines[0])->toContain('9 October 2026, 11:41 pm')
+    expect($mail->outroLines[0])->toContain('9 Oct 2026, 11:41 pm')
         ->toContain('Asia/Dhaka (GMT+06:00)');
 });
 
@@ -156,7 +156,7 @@ test('the invitation email uses the invitee\'s own zone when they have an accoun
 
     $mail = (new TeamMemberInvited($invitation))->toMail($invitation);
 
-    expect($mail->outroLines[0])->toContain('9 October 2026, 6:41 pm')
+    expect($mail->outroLines[0])->toContain('9 Oct 2026, 6:41 pm')
         ->toContain('Europe/London (GMT+01:00)');
 });
 

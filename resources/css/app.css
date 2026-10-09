@@ -8,41 +8,88 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Design tokens. Every colour, type size, radius, shadow and easing the
+ * application uses is named here, and pages reach them through Tailwind
+ * utilities (bg-canvas, text-ink-muted, text-title, rounded-card ...) or
+ * through Flux, which reads the zinc scale and the accent variables.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-display: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    /* One family for headings and text. Headings stand apart by size,
+       weight and tighter tracking (the type scale below), not by a
+       second face. */
+    --font-display: 'Geist', ui-sans-serif, system-ui, sans-serif;
 
+    /* Neutrals, slightly cool. Flux draws all of its greys from the zinc
+       scale, so redefining it here re-colours Flux's components too. */
     --color-zinc-50: #fafafa;
-    --color-zinc-100: #f5f5f5;
-    --color-zinc-200: #e5e5e5;
-    --color-zinc-300: #d4d4d4;
-    --color-zinc-400: #a3a3a3;
-    --color-zinc-500: #737373;
-    --color-zinc-600: #525252;
-    --color-zinc-700: #404040;
-    --color-zinc-800: #262626;
-    --color-zinc-900: #171717;
-    --color-zinc-950: #0a0a0a;
+    --color-zinc-100: #f4f4f5;
+    --color-zinc-200: #eaeaea;
+    --color-zinc-300: #d4d4d8;
+    --color-zinc-400: #a1a1aa;
+    --color-zinc-500: #71717a;
+    --color-zinc-600: #5f5f66;
+    --color-zinc-700: #3f3f46;
+    --color-zinc-800: #232327;
+    --color-zinc-900: #121214;
+    --color-zinc-950: #0a0a0b;
 
     /*
-     * Brand scale -- teal (hue 175), chroma tapered: muted at the light/dark
-     * ends, most saturated in the 400-600 range where it is actually used
-     * (buttons, links, active states).
+     * Surfaces and text by role rather than by shade. Each one has a dark
+     * value further down, so a page written with these needs no dark:
+     * variants for its basic colours.
      */
-    --color-brand-50: oklch(0.98 0.014 175);
-    --color-brand-100: oklch(0.95 0.028 175);
-    --color-brand-200: oklch(0.90 0.045 175);
-    --color-brand-300: oklch(0.82 0.065 175);
-    --color-brand-400: oklch(0.72 0.09 175);
-    --color-brand-500: oklch(0.62 0.11 175);
-    --color-brand-600: oklch(0.52 0.115 175);
-    --color-brand-700: oklch(0.43 0.10 175);
-    --color-brand-800: oklch(0.34 0.075 175);
-    --color-brand-900: oklch(0.27 0.05 175);
-    --color-brand-950: oklch(0.18 0.03 175);
+    --color-canvas: #ffffff;
+    --color-surface: #fafafa;
+    --color-line: #eaeaea;
+    --color-line-strong: #d4d4d8;
+    --color-ink: #0a0a0a;
+    --color-ink-soft: #2e2e33;
+    --color-ink-muted: #5f5f66;
 
-    /* Semantic status colors -- conventional (green=good/red=bad),
-       not a brand-differentiation surface. */
+    /*
+     * Brand: the warm end of the Sunset gradient, one step darker than
+     * Tailwind's orange so the pairings used across the app hold WCAG AA:
+     * white on 600 (5.2:1), 700 as text on white (7.3:1) and on 50
+     * (6.9:1), 400 as text on the dark canvas (8.7:1).
+     */
+    --color-brand-50: #fff7ed;
+    --color-brand-100: #ffedd5;
+    --color-brand-200: #fed7aa;
+    --color-brand-300: #fdba74;
+    --color-brand-400: #fb923c;
+    --color-brand-500: #ea580c;
+    --color-brand-600: #c2410c;
+    --color-brand-700: #9a3412;
+    --color-brand-800: #7c2d12;
+    --color-brand-900: #5c210d;
+    --color-brand-950: #431407;
+
+    /*
+     * The Sunset gradient, in two sets. The fill set is for surfaces that
+     * carry white text, and every stop holds 4.5:1 against white. The ink
+     * set is for gradient text, which is allowed only at 24px and above:
+     * its first stop is 3.6:1 on white, enough for large text (3:1) but
+     * not for body text.
+     */
+    --color-sunset-1: #c2410c;
+    --color-sunset-2: #db2777;
+    --color-sunset-3: #7c3aed;
+    --color-sunset-ink-1: #ea580c;
+    --color-sunset-ink-2: #db2777;
+    --color-sunset-ink-3: #7c3aed;
+
+    /* The text set, for coloured text at any size: links, labels, skill
+       chips. Every point along it, not only the stops, holds 4.5:1 on the
+       canvas (5.2), the surface (5.0) and brand-50 (4.9). */
+    --color-sunset-text-1: #c2410c;
+    --color-sunset-text-2: #be185d;
+    --color-sunset-text-3: #7c3aed;
+
+    /* Status colours: conventional (green good, amber attention, red bad)
+       and kept apart from the brand, so a warning never reads as a link. */
     --color-success-50: oklch(0.97 0.03 145);
     --color-success-300: oklch(0.85 0.11 145);
     --color-success-500: oklch(0.64 0.15 145);
@@ -61,27 +108,233 @@
     --color-danger-700: oklch(0.44 0.16 25);
     --color-danger-950: oklch(0.24 0.07 25);
 
-    --color-accent: var(--color-brand-600);
-    --color-accent-content: var(--color-brand-600);
-    --color-accent-foreground: var(--color-white);
+    /*
+     * Flux's accent. Ordinary primary buttons, checked boxes and switches
+     * are ink, not brand: the Sunset gradient is kept for the one main
+     * action on a page (.btn-sunset), and it only stands out if the other
+     * buttons are neutral. Links and other accent text are brand.
+     */
+    --color-accent: #0a0a0a;
+    --color-accent-content: #9a3412;
+    --color-accent-foreground: #ffffff;
+
+    /*
+     * Type scale. Body text in Flux and in older pages is still text-sm;
+     * these are the named steps pages move to, so heading levels differ
+     * clearly from each other and from body text.
+     */
+    --text-display: 3rem;
+    --text-display--line-height: 1.05;
+    --text-display--letter-spacing: -0.045em;
+    --text-display--font-weight: 700;
+    --text-title: 2rem;
+    --text-title--line-height: 1.15;
+    --text-title--letter-spacing: -0.035em;
+    --text-title--font-weight: 700;
+    --text-heading: 1.25rem;
+    --text-heading--line-height: 1.35;
+    --text-heading--letter-spacing: -0.02em;
+    --text-heading--font-weight: 600;
+    --text-subheading: 1rem;
+    --text-subheading--line-height: 1.4;
+    --text-subheading--letter-spacing: -0.01em;
+    --text-subheading--font-weight: 600;
+    --text-body: 0.9375rem;
+    --text-body--line-height: 1.6;
+    --text-meta: 0.8125rem;
+    --text-meta--line-height: 1.45;
+
+    --radius-control: 0.625rem;
+    --radius-card: 1.125rem;
+
+    --shadow-lift: 0 18px 40px -22px rgb(0 0 0 / 0.35);
+    --shadow-glow: 0 30px 60px -36px rgb(194 65 12 / 0.4);
+
+    --ease-brand: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-brand-400);
-        --color-accent-content: var(--color-brand-400);
-        --color-accent-foreground: var(--color-brand-950);
+        --color-canvas: #0a0a0b;
+        --color-surface: #121214;
+        --color-line: #232327;
+        --color-line-strong: #3a3a40;
+        --color-ink: #ededef;
+        --color-ink-soft: #c9c9d1;
+        --color-ink-muted: #a1a1aa;
+
+        --color-sunset-ink-1: #fbbf24;
+        --color-sunset-ink-2: #f472b6;
+        --color-sunset-ink-3: #a78bfa;
+
+        /* At least 6.8:1 on the dark canvas and surface, 5.6:1 on
+           brand-950. */
+        --color-sunset-text-1: #fbbf24;
+        --color-sunset-text-2: #f472b6;
+        --color-sunset-text-3: #a78bfa;
+
+        --color-accent: #ededef;
+        --color-accent-content: #fb923c;
+        --color-accent-foreground: #0a0a0b;
+
+        /* Read through var() by .btn-sunset. Shadow utilities copy the
+           light value in at build time, so there is no dark lift here:
+           on the dark canvas the hover border carries it instead. */
+        --shadow-glow: 0 30px 60px -36px rgb(251 146 60 / 0.35);
     }
 }
 
+/* The Sunset fill, for the main action on a page and other surfaces that
+   carry white text. */
+@utility bg-sunset {
+    background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+}
+
+/*
+ * Coloured text is never a flat brand colour: it is the Sunset gradient.
+ * text-sunset is the brighter set for headings of 24px and above;
+ * text-sunset-small is the darker text set for everything smaller. An
+ * underline would take the transparent text colour, so it gets its own.
+ * Icons and status colours (green, amber, red) stay solid.
+ */
+@utility text-sunset-small {
+    background-image: linear-gradient(120deg, var(--color-sunset-text-1) 0%, var(--color-sunset-text-2) 55%, var(--color-sunset-text-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration-color: var(--color-sunset-text-2);
+
+    /* An icon inside draws with currentColor, which is now transparent,
+       so it takes the gradient through the shared paint server instead. */
+    & svg:not([fill='none']) {
+        fill: url(#sunset-icon);
+    }
+
+    & svg[fill='none'] {
+        stroke: url(#sunset-icon);
+    }
+}
+
+/*
+ * Flux's accent links (flux:link without variant or accent="false") set
+ * their colour to the flat accent-content; they are coloured text, so
+ * they take the text gradient like every other link. Flux turns the
+ * underline to currentColor on hover, which the gradient leaves
+ * transparent, so the underline keeps its own colour.
+ */
+[data-flux-link]:where([class*='accent-content']) {
+    background-image: linear-gradient(120deg, var(--color-sunset-text-1) 0%, var(--color-sunset-text-2) 55%, var(--color-sunset-text-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+[data-flux-link]:where([class*='accent-content']):hover {
+    text-decoration-color: var(--color-sunset-text-2);
+}
+
+/*
+ * The same gradient on an icon, through the shared paint server in
+ * partials/svg-defs: the fill of a solid icon, the stroke of an outline
+ * one. On the element itself, inside it, or on a .group's hover.
+ */
+:is(svg.icon-sunset, .icon-sunset svg, .group:hover .icon-sunset-on-hover svg):not([fill='none']) {
+    fill: url(#sunset-icon);
+}
+
+:is(svg.icon-sunset, .icon-sunset svg, .group:hover .icon-sunset-on-hover svg)[fill='none'] {
+    stroke: url(#sunset-icon);
+}
+
+/*
+ * The current page in a workspace sidebar. Flux paints it in the flat
+ * accent-content orange; here the label is ink, like the rest of the
+ * row, and the icon carries the colour, through the same Sunset paint
+ * server as every other coloured icon.
+ */
+[data-flux-sidebar-item][data-current] {
+    color: var(--color-ink);
+}
+
+[data-flux-sidebar-item][data-current] svg[fill='none'] {
+    stroke: url(#sunset-icon);
+}
+
+[data-flux-sidebar-item][data-current] svg:not([fill='none']) {
+    fill: url(#sunset-icon);
+}
+
+/*
+ * The current tab (components/tab-nav). Flux draws its underline in a
+ * flat colour; here the label stays ink, like the current sidebar row,
+ * and the underline carries the Sunset fill.
+ */
+[data-tab-nav] [data-flux-navbar-items][data-current]::after {
+    background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+}
+
+/* The highlighted option in the command palette takes the same colour. */
+[data-palette-option][aria-selected='true'] svg[fill='none'] {
+    stroke: url(#sunset-icon);
+}
+
+[data-palette-option][aria-selected='true'] svg:not([fill='none']) {
+    fill: url(#sunset-icon);
+}
+
+/* A key on the keyboard, in shortcut hints. */
+@utility kbd {
+    display: inline-flex;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-line-strong);
+    border-radius: 0.3rem;
+    background-color: var(--color-canvas);
+    padding-inline: 0.3rem;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-ink-muted);
+}
+
+/* Gradient text. Only for headings of 24px and above (see the ink set). */
+@utility text-sunset {
+    background-image: linear-gradient(120deg, var(--color-sunset-ink-1) 0%, var(--color-sunset-ink-2) 55%, var(--color-sunset-ink-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 @layer base {
+
+    /* The navbar stays at the top of every page, so an anchor jumped to
+       or a field reached with Tab would otherwise land underneath it
+       (WCAG 2.4.11, focus not obscured). On a phone, a job page's Apply
+       bar covers the bottom edge the same way, and the page gets room
+       below the footer so the bar never sits on its last line. */
+    html {
+        scroll-padding-top: 5rem;
+    }
+
+    @media (width < 64rem) {
+        html:has([data-sticky-apply]) {
+            scroll-padding-bottom: 5.5rem;
+        }
+
+        body:has([data-sticky-apply]) {
+            padding-bottom: 5rem;
+        }
+    }
 
     *,
     ::after,
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--color-line, currentColor);
     }
 
     /* Tailwind v3+ dropped the old preflight rule that gave <button> (and
@@ -97,6 +350,47 @@
     [role='button']:not(:disabled) {
         cursor: pointer;
     }
+}
+
+/*
+ * Motion is decoration here, never information, so people who ask their
+ * system for less motion get none: animations end on their final frame
+ * at once and transitions jump straight to their end state.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/*
+ * The main action on a page: Apply, Post a job, Search. One per page, so
+ * it is the first thing the eye lands on; every other button stays
+ * neutral. Works on a Flux button (variant="primary") or a plain link.
+ * Left outside any layer so it wins over the utility classes Flux puts
+ * on its buttons. Hover lifts the button rather than lightening it,
+ * which would lower the contrast of the white label.
+ */
+.btn-sunset {
+    --color-accent-foreground: #ffffff;
+    color: #ffffff;
+    background-image: linear-gradient(120deg, var(--color-sunset-1) 0%, var(--color-sunset-2) 55%, var(--color-sunset-3) 100%);
+    border-color: transparent;
+    transition: transform 150ms var(--ease-brand), box-shadow 150ms var(--ease-brand);
+}
+
+.btn-sunset:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-sunset:active {
+    transform: translateY(0);
 }
 
 [data-flux-field]:not(ui-radio, ui-checkbox) {
@@ -120,7 +414,7 @@ select:focus[data-flux-control] {
  */
 .prose-editor,
 .prose-content {
-    @apply text-sm leading-relaxed text-zinc-700 dark:text-zinc-300;
+    @apply text-sm leading-relaxed text-ink-soft;
 }
 
 .prose-editor :where(p, ul, ol),
@@ -130,12 +424,12 @@ select:focus[data-flux-control] {
 
 .prose-editor :where(h3),
 .prose-content :where(h3) {
-    @apply mt-4 mb-2 font-display text-base font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply mt-4 mb-2 font-display text-base font-semibold text-ink;
 }
 
 .prose-editor :where(h4),
 .prose-content :where(h4) {
-    @apply mt-3 mb-1 font-display text-sm font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply mt-3 mb-1 font-display text-sm font-semibold text-ink;
 }
 
 .prose-editor :where(ul),
@@ -150,10 +444,151 @@ select:focus[data-flux-control] {
 
 .prose-editor :where(a),
 .prose-content :where(a) {
-    @apply text-brand-700 underline dark:text-brand-400;
+    @apply text-sunset-small underline;
 }
 
 .prose-editor :where(strong),
 .prose-content :where(strong) {
-    @apply font-semibold text-zinc-900 dark:text-zinc-100;
+    @apply font-semibold text-ink;
+}
+
+/*
+ * Home hero. Two dot layers on a 22px grid: faint dots everywhere, and the
+ * same dots in the Sunset ink colours shown only inside a soft circle
+ * around --spot-x/--spot-y, which follow the mouse. Registered so the
+ * spot can drift by animation on screens without a pointer to follow.
+ */
+@property --spot-x {
+    syntax: '<length-percentage>';
+    inherits: true;
+    initial-value: 30%;
+}
+
+@property --spot-y {
+    syntax: '<length-percentage>';
+    inherits: true;
+    initial-value: 45%;
+}
+
+.hero-spotlight {
+    --hero-dot: rgb(0 0 0 / 0.07);
+}
+
+.dark .hero-spotlight {
+    --hero-dot: rgb(255 255 255 / 0.08);
+}
+
+.hero-dots {
+    background-image: radial-gradient(var(--hero-dot) 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+.hero-dots-lit {
+    background-image: linear-gradient(120deg, var(--color-sunset-ink-1) 0%, var(--color-sunset-ink-2) 50%, var(--color-sunset-ink-3) 100%);
+    -webkit-mask-image: radial-gradient(#000 1.7px, transparent 1.9px), radial-gradient(260px circle at var(--spot-x) var(--spot-y), #000 0%, rgb(0 0 0 / 0.6) 40%, transparent 75%);
+    -webkit-mask-size: 22px 22px, 100% 100%;
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(#000 1.7px, transparent 1.9px), radial-gradient(260px circle at var(--spot-x) var(--spot-y), #000 0%, rgb(0 0 0 / 0.6) 40%, transparent 75%);
+    mask-size: 22px 22px, 100% 100%;
+    mask-composite: intersect;
+}
+
+@media (hover: none) {
+    .hero-spotlight {
+        animation: hero-spot-drift 16s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes hero-spot-drift {
+    0% { --spot-x: 15%; --spot-y: 30%; }
+    50% { --spot-x: 75%; --spot-y: 65%; }
+    100% { --spot-x: 40%; --spot-y: 20%; }
+}
+
+/* The turning word: a one-line window over a column of words, the first
+   repeated at the end so the turn back to it is seamless. */
+.hero-words {
+    display: inline-block;
+    height: 1.25em;
+    overflow: hidden;
+    vertical-align: -0.27em;
+}
+
+.hero-words-track {
+    display: flex;
+    flex-direction: column;
+    animation: hero-words 10s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+.hero-words-track > span {
+    display: block;
+    height: 1.25em;
+    line-height: 1.25em;
+}
+
+@keyframes hero-words {
+    0%, 18% { transform: translateY(0); }
+    25%, 43% { transform: translateY(-1.25em); }
+    50%, 68% { transform: translateY(-2.5em); }
+    75%, 93% { transform: translateY(-3.75em); }
+    100% { transform: translateY(-5em); }
+}
+
+/* The rising column of openings, faded at both ends. */
+.hero-feed {
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+    mask-image: linear-gradient(180deg, transparent, #000 15%, #000 85%, transparent);
+}
+
+.hero-feed-track {
+    animation: hero-feed 40s linear infinite;
+}
+
+.hero-feed:hover .hero-feed-track,
+.hero-feed:focus-within .hero-feed-track {
+    animation-play-state: paused;
+}
+
+@keyframes hero-feed {
+    to { transform: translateY(-50%); }
+}
+
+/* The example match on the home page fills in once it scrolls into view. */
+.match-demo-ring {
+    stroke-dasharray: var(--ring-full);
+    stroke-dashoffset: var(--ring-full);
+    transition: stroke-dashoffset 2.2s var(--ease-brand) 0.3s;
+}
+
+.match-demo.is-shown .match-demo-ring {
+    stroke-dashoffset: var(--ring-rest);
+}
+
+.match-demo-number,
+.match-demo-chip {
+    opacity: 0.3;
+    transition: opacity 0.5s ease var(--chip-delay, 1.8s);
+}
+
+.match-demo.is-shown .match-demo-number,
+.match-demo.is-shown .match-demo-chip {
+    opacity: 1;
+}
+
+/* The hero's pause button stops every animation in it (WCAG 2.2.2). */
+.hero-spotlight.is-paused,
+.hero-spotlight.is-paused * {
+    animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-dots-lit {
+        display: none;
+    }
+
+    .hero-spotlight,
+    .hero-words-track,
+    .hero-feed-track {
+        animation: none !important;
+    }
 }

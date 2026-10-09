@@ -28,7 +28,7 @@ class JobPostingApproved extends Notification
     {
         return (new MailMessage)
             ->subject(__('":title" is live', ['title' => $this->jobPosting->title]))
-            ->greeting(__('Good news.'))
+            ->greeting(__('Hello :name,', ['name' => $notifiable->greetingName()]))
             ->line(__('Your posting ":title" has been reviewed and is now visible to candidates.', ['title' => $this->jobPosting->title]))
             ->action(__('See it as candidates do'), route('jobs.show', $this->jobPosting));
     }

@@ -16,4 +16,14 @@ enum DocumentType: string
             self::Certificate => 'Certificate',
         };
     }
+
+    /** The Heroicon shown beside a document of this type. */
+    public function icon(): string
+    {
+        return match ($this) {
+            self::Cv => 'document-text',
+            self::WorkSample => 'folder',
+            self::Certificate => 'shield-check',
+        };
+    }
 }

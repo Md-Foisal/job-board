@@ -11,6 +11,7 @@ use App\Enums\ReviewPart;
 use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
 use App\Models\CompanyReview;
+use App\Support\DateFormat;
 use App\Support\ReviewEligibility;
 use App\Support\ReviewTextFlags;
 use BackedEnum;
@@ -75,15 +76,21 @@ class CompanyReviewResource extends Resource
     }
 
     /**
-     * Reviews and answers waiting, together: both are decided here.
+     * Reviews and answers waiting, together: both are decided here. Shared
+     * by the menu badge and the dashboard, so the two never disagree.
      */
-    public static function getNavigationBadge(): ?string
+    public static function waitingCount(): int
     {
-        $waiting = static::getEloquentQuery()
+        return static::getEloquentQuery()
             ->where(fn (Builder $query) => $query
                 ->where('moderation_status', ModerationStatus::Pending->value)
                 ->orWhere('response_status', ModerationStatus::Pending->value))
             ->count();
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $waiting = static::waitingCount();
 
         return $waiting > 0 ? (string) $waiting : null;
     }
@@ -145,7 +152,7 @@ class CompanyReviewResource extends Resource
                             ->state(fn (CompanyReview $record) => ReviewEligibility::describe(ReviewEligibility::basisOf($record->application))),
                         TextEntry::make('applied_for')
                             ->label('Applied for')
-                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->setTimezone(FilamentTimezone::get())->format('j M Y')}"),
+                            ->state(fn (CompanyReview $record) => "{$record->application->jobPosting->title}, {$record->application->created_at->setTimezone(FilamentTimezone::get())->format(DateFormat::DAY)}"),
                         TextEntry::make('flags')
                             ->label('Text contains')
                             ->state(fn (CompanyReview $record) => collect(ReviewTextFlags::in($record->title, $record->body))
@@ -184,7 +191,7 @@ class CompanyReviewResource extends Resource
                         TextEntry::make('job_as_described')->label('Job as described')
                             ->formatStateUsing(fn ($state) => $state->label()),
                         TextEntry::make('updated_at')->label('Last written')->since(),
-                        TextEntry::make('published_at')->label('Published')->dateTime('F Y')->placeholder('Not yet'),
+                        TextEntry::make('published_at')->label('Published')->date(DateFormat::MONTH)->placeholder('Not yet'),
                         TextEntry::make('title')->columnSpanFull(),
                         TextEntry::make('body')->columnSpanFull()->extraAttributes(['class' => 'whitespace-pre-line']),
                     ]),
@@ -296,7 +303,8 @@ class CompanyReviewResource extends Resource
                     ->description(fn (CompanyReview $record) => $record->company->name),
                 TextColumn::make('overall_rating')
                     ->label('Overall')
-                    ->suffix(' / 5'),
+                    ->suffix(' / 5')
+                    ->visibleFrom('md'),
                 TextColumn::make('flags')
                     ->label('Flags')
                     ->state(fn (CompanyReview $record, $livewire) => collect(static::partShownOn($livewire) === ReviewPart::Response
@@ -306,13 +314,15 @@ class CompanyReviewResource extends Resource
                         ->all())
                     ->badge()
                     ->color('warning')
-                    ->placeholder('None'),
+                    ->placeholder('None')
+                    ->visibleFrom('lg'),
                 TextColumn::make('ai_hint')
                     ->label('AI hint')
                     ->state(fn (CompanyReview $record, $livewire) => $record->screeningOf(static::partShownOn($livewire))?->labels() ?? [])
                     ->badge()
                     ->color('warning')
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->visibleFrom('lg'),
                 TextColumn::make('response_status')
                     ->label('Response')
                     ->badge()
@@ -322,11 +332,13 @@ class CompanyReviewResource extends Resource
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
                     })
-                    ->placeholder('None'),
+                    ->placeholder('None')
+                    ->visibleFrom('lg'),
                 TextColumn::make('open_reports_count')
                     ->label('Reports')
                     ->badge()
-                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray'),
+                    ->color(fn (int $state) => $state > 0 ? 'danger' : 'gray')
+                    ->visibleFrom('md'),
                 TextColumn::make('moderation_status')
                     ->label('Status')
                     ->badge()
@@ -335,7 +347,9 @@ class CompanyReviewResource extends Resource
                         ModerationStatus::Pending => 'warning',
                         ModerationStatus::Approved => 'success',
                         ModerationStatus::Rejected => 'danger',
-                    }),
+                    })
+                    // The tab already says it; on a phone the room goes to the title.
+                    ->visibleFrom('md'),
                 TextColumn::make('updated_at')
                     ->label('Written')
                     ->state(fn (CompanyReview $record, $livewire) => static::partShownOn($livewire) === ReviewPart::Response

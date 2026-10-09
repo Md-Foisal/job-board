@@ -115,43 +115,47 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto max-w-2xl px-6 py-10">
-    <div class="flex items-center justify-between gap-4">
-        <div>
-            <flux:heading size="xl">{{ __('Documents') }}</flux:heading>
-            <flux:subheading>{{ __('Your CV, work samples and certificates — used when you apply.') }}</flux:subheading>
-        </div>
-
-        <div class="flex shrink-0 flex-wrap justify-end gap-2">
+<x-page>
+    {{-- One preview window for every file: opened with the file's address,
+         emptied again on close so a large PDF stops loading. --}}
+    <div
+        x-data="{
+            src: null,
+            image: false,
+            name: '',
+            download: null,
+            open(src, image, name, download) {
+                [this.src, this.image, this.name, this.download] = [src, image, name, download];
+                $flux.modal('document-preview').show();
+            },
+        }"
+        class="contents"
+    >
+    <x-page-header :title="__('Documents')">
+        <x-slot:actions>
             <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
-            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add') }}</flux:button>
-        </div>
-    </div>
+            <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add document') }}</flux:button>
+        </x-slot:actions>
+    </x-page-header>
 
-    <div class="mt-6 space-y-4">
+    <div class="space-y-4">
         @forelse ($documents as $document)
-            <div wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4 rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+            <x-card wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4">
                 <div class="flex gap-4">
-                    <div class="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
-                        <flux:icon :name="match ($document->document_type) {
-                            \App\Enums\DocumentType::Cv => 'document-text',
-                            \App\Enums\DocumentType::WorkSample => 'folder',
-                            \App\Enums\DocumentType::Certificate => 'shield-check',
-                        }" variant="mini" />
-                    </div>
+                    <x-icon-tile :icon="$document->document_type->icon()" />
 
                     <div>
-                        <p class="font-medium text-zinc-900 dark:text-zinc-100">{{ $document->original_filename }}</p>
-                        <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $document->document_type->label() }}</p>
-                        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-500">{{ \App\Support\LocalTime::of($document->created_at)->format('M j, Y') }}</p>
+                        <p class="font-medium text-ink">{{ $document->original_filename }}</p>
+                        <p class="text-sm text-ink-muted">{{ $document->document_type->label() }}</p>
+                        <p class="mt-1 text-sm text-ink-muted">{{ \App\Support\LocalTime::of($document->created_at)->format(\App\Support\DateFormat::DAY) }}</p>
 
                         @if ($document->document_type === \App\Enums\DocumentType::Cv)
                             @if (\App\Support\CvText::supports($document))
-                                <flux:button :href="route('candidate.resume-import', $document)" wire:navigate size="xs" icon="user-plus" class="mt-3">
+                                <flux:button :href="route('candidate.resume-import', $document)" wire:navigate size="sm" icon="document-arrow-down" class="mt-3">
                                     {{ __('Fill my profile from this CV') }}
                                 </flux:button>
                             @else
-                                <p class="mt-2 text-xs text-zinc-500 dark:text-zinc-500">
+                                <p class="mt-2 text-xs text-ink-muted">
                                     {{ __('Upload this CV as PDF or DOCX to fill your profile from it.') }}
                                 </p>
                             @endif
@@ -159,17 +163,65 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                     </div>
                 </div>
 
+                {{-- Icons alone, with their names on hover and focus: three
+                     words side by side would crowd the file name on a phone. --}}
                 <div class="flex shrink-0 items-center gap-1">
-                    <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
-                    <flux:button wire:click="replace({{ $document->id }})" variant="ghost" size="sm" icon="arrow-path" :aria-label="__('Replace')" />
-                    <flux:button wire:click="delete({{ $document->id }})" wire:confirm="{{ __('Remove this document?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
+                    @if (\App\Http\Controllers\DocumentPreviewController::canPreview($document))
+                        <flux:tooltip :content="__('Preview')">
+                            <flux:button
+                                variant="ghost"
+                                size="sm"
+                                icon="eye"
+                                :aria-label="__('Preview')"
+                                data-src="{{ route('candidate.documents.preview', $document) }}"
+                                data-image="{{ \App\Http\Controllers\DocumentPreviewController::isImage($document) ? '1' : '' }}"
+                                data-name="{{ $document->original_filename }}"
+                                data-download="{{ route('candidate.documents.download', $document) }}"
+                                x-on:click="open($el.dataset.src, $el.dataset.image === '1', $el.dataset.name, $el.dataset.download)"
+                            />
+                        </flux:tooltip>
+                    @else
+                        <flux:tooltip :content="__('Word files and archives open once downloaded')">
+                            <flux:button variant="ghost" size="sm" icon="eye-slash" :aria-label="__('No preview for this file type')" disabled />
+                        </flux:tooltip>
+                    @endif
+                    <flux:tooltip :content="__('Download')">
+                        <flux:button href="{{ route('candidate.documents.download', $document) }}" variant="ghost" size="sm" icon="arrow-down-tray" :aria-label="__('Download')" />
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Replace')">
+                        <flux:button wire:click="replace({{ $document->id }})" variant="ghost" size="sm" icon="arrow-path" :aria-label="__('Replace')" />
+                    </flux:tooltip>
+                    <flux:tooltip :content="__('Remove')">
+                        <flux:button wire:click="delete({{ $document->id }})" wire:confirm="{{ __('Remove this document?') }}" variant="ghost" size="sm" icon="trash" :aria-label="__('Remove')" />
+                    </flux:tooltip>
+                </div>
+            </x-card>
+        @empty
+            <x-empty-state icon="document" :heading="__('You haven\'t added any documents yet.')">
+                <x-slot:actions>
+                    <flux:button wire:click="create" size="sm" icon="plus">{{ __('Add document') }}</flux:button>
+                </x-slot:actions>
+            </x-empty-state>
+        @endforelse
+    </div>
+
+    <flux:modal name="document-preview" class="w-full max-w-4xl" x-on:close="src = null">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-3 pe-10">
+                <flux:heading size="lg" class="min-w-0 truncate" x-text="name"></flux:heading>
+                <div class="ms-auto flex gap-2">
+                    <flux:button size="sm" icon="arrow-top-right-on-square" href="#" x-bind:href="src" target="_blank" rel="noopener">{{ __('Open in new tab') }}</flux:button>
+                    <flux:button size="sm" icon="arrow-down-tray" href="#" x-bind:href="download">{{ __('Download') }}</flux:button>
                 </div>
             </div>
-        @empty
-            <div class="rounded-2xl border border-dashed border-zinc-300 p-8 text-center dark:border-zinc-700">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __("You haven't added any documents yet.") }}</p>
-            </div>
-        @endforelse
+            <template x-if="src && ! image">
+                <iframe :src="src" :title="name" class="h-[75vh] w-full rounded-control bg-surface ring-1 ring-line"></iframe>
+            </template>
+            <template x-if="src && image">
+                <img :src="src" :alt="name" class="mx-auto max-h-[75vh] w-auto rounded-control ring-1 ring-line">
+            </template>
+        </div>
+    </flux:modal>
     </div>
 
     <flux:modal wire:model="showModal" class="max-w-lg" @close="closeModal">
@@ -189,7 +241,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             <div>
                 <flux:input type="file" wire:model="file" :label="__('File')"
                     accept="{{ \App\Support\DocumentUploads::accept(\App\Enums\DocumentType::from($documentType)) }}" />
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-500">
+                <p class="mt-1 text-xs text-ink-muted">
                     {{ \App\Support\DocumentUploads::hint(\App\Enums\DocumentType::from($documentType)) }}
                 </p>
             </div>
@@ -200,4 +252,4 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
             </div>
         </form>
     </flux:modal>
-</div>
+</x-page>

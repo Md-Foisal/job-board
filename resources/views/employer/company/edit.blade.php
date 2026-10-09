@@ -1,22 +1,18 @@
 <x-layouts::employer :company="$company" :title="__('Company profile')">
-    <div class="mx-auto flex max-w-3xl flex-col gap-8">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <flux:heading size="xl" class="font-display">{{ __('Company profile') }}</flux:heading>
-                <flux:text class="mt-1">{{ __('This is what candidates see before they decide to apply.') }}</flux:text>
-            </div>
-
+    <x-page width="narrow">
+        <x-page-header :title="__('Company profile')">
             {{-- Verification is the platform's judgement, not the company's,
                  so it is shown here rather than edited: a company that has
                  been asked for documents otherwise has no way of knowing. --}}
-            @if ($company->verified_at)
-                <flux:badge color="green">{{ __('Verified') }}</flux:badge>
-            @elseif ($company->outstandingDocumentsRequest())
-                <flux:badge color="amber">{{ __('Documents requested') }}</flux:badge>
-            @else
-                <flux:badge color="zinc">{{ __('Pending verification') }}</flux:badge>
-            @endif
-        </div>
+            <x-slot:status>
+                <x-visibility-badge public :tip="__('This is what candidates see before they decide to apply.')" />
+                <x-verification-status :company="$company" />
+            </x-slot:status>
+
+            <x-slot:actions>
+                <flux:button size="sm" variant="ghost" icon="eye" :href="route('companies.show', $company)" wire:navigate>{{ __('View public page') }}</flux:button>
+            </x-slot:actions>
+        </x-page-header>
 
         @if ($documentsRequest = $company->outstandingDocumentsRequest())
             <flux:callout icon="document-text" color="amber">
@@ -33,7 +29,7 @@
             @csrf
             @method('PATCH')
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <x-card>
                 <flux:heading size="lg">{{ __('Identity') }}</flux:heading>
 
                 <div class="mt-6 flex flex-col gap-6">
@@ -48,9 +44,9 @@
 
                     <flux:input type="url" name="website_url" :label="__('Website')" :value="old('website_url', $company->website_url)" placeholder="https://example.com" />
                 </div>
-            </div>
+            </x-card>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <x-card>
                 <flux:heading size="lg">{{ __('About') }}</flux:heading>
 
                 <div class="mt-6 flex flex-col gap-6">
@@ -88,30 +84,37 @@
                         @endforeach
                     </flux:select>
                 </div>
-            </div>
+            </x-card>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+            <x-card>
                 <flux:heading size="lg">{{ __('Branding') }}</flux:heading>
 
-                <div class="mt-6 flex flex-col gap-6">
-                    <div class="flex items-center gap-4">
-                        <div class="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-brand-50 font-display text-lg font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
-                            @if ($company->logo_path)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($company->logo_path) }}" alt="{{ __('Current logo of :company', ['company' => $company->name]) }}" class="size-full object-cover">
-                            @else
-                                {{ \Illuminate\Support\Str::of($company->name)->substr(0, 1) }}
-                            @endif
-                        </div>
-                        <flux:input type="file" name="logo" :label="__('Logo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::LOGO)" class="flex-1" />
-                    </div>
+                <div class="mt-6 flex flex-col gap-8">
+                    <x-image-picker
+                        name="logo"
+                        shape="square"
+                        :label="__('Logo')"
+                        :current="$company->logo_path ? \Illuminate\Support\Facades\Storage::url($company->logo_path) : null"
+                        :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::LOGO)"
+                    >
+                        <x-company-logo :company="$company" size="lg" />
+                    </x-image-picker>
 
-                    <flux:input type="file" name="cover_photo" :label="__('Cover photo')" :accept="\App\Support\ImageUploads::ACCEPT" :description:trailing="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)" />
+                    <x-image-picker
+                        name="cover_photo"
+                        shape="wide"
+                        :label="__('Cover photo')"
+                        :current="$company->cover_photo_path ? \Illuminate\Support\Facades\Storage::url($company->cover_photo_path) : null"
+                        :hint="\App\Support\ImageUploads::hint(\App\Support\ImageUploads::COVER)"
+                    >
+                        <div class="bg-sunset size-full"></div>
+                    </x-image-picker>
                 </div>
-            </div>
+            </x-card>
 
             <div class="flex justify-end">
                 <flux:button variant="primary" type="submit">{{ __('Save changes') }}</flux:button>
             </div>
         </form>
-    </div>
+    </x-page>
 </x-layouts::employer>
