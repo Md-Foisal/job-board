@@ -67,6 +67,11 @@ dataset('hand-made patterns', [
         'Status colours are the success, warning and danger tokens; accents are the brand tint and the Sunset gradient.',
         ['components/company-logo.blade.php'],
     ],
+    'badges outside the status colours' => [
+        '/<flux:badge\b[^>]*\scolor="(?!(?:green|amber|red|zinc)")[^"]*"/',
+        'A badge colour is a status: green, amber or red, and zinc when it says nothing good or bad.',
+        [],
+    ],
     'hand-drawn empty states' => [
         '/(?<![\w-])border-dashed(?![\w-])/',
         'An empty list or section is <x-empty-state>.',

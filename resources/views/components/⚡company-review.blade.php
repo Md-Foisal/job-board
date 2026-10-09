@@ -237,7 +237,7 @@ new class extends Component
                             <flux:badge color="red" size="sm">{{ __('Not published') }}</flux:badge>
                             @break
                         @default
-                            <flux:badge color="blue" size="sm">{{ __('Waiting for a check') }}</flux:badge>
+                            <flux:badge color="amber" size="sm">{{ __('Waiting for a check') }}</flux:badge>
                     @endswitch
                 </div>
 
