@@ -173,22 +173,49 @@ The main design decisions are written down as Architecture Decision Records in [
 
 ## Run it locally
 
-You need PHP 8.4 or newer (with the DOM, MBString and GD extensions), Composer, Node.js 22 and SQLite.
+The database is MySQL 8.4 and runs in Docker, so you need
+[Docker](https://docs.docker.com/get-started/get-docker/) either way.
+
+### The whole app in Docker
+
+```bash
+git clone https://github.com/Md-Foisal/job-board.git
+cd job-board
+cp .env.example .env
+docker compose run --rm --no-deps app php artisan key:generate --show
+```
+
+Put the printed key into `APP_KEY` in `.env`, then:
+
+```bash
+docker compose up -d --build --wait
+docker compose exec app php artisan migrate:fresh --seed
+```
+
+Open http://localhost:8000. One container serves the site and keeps the queue worker and the scheduler
+running beside it, the same image a host runs. Emails are written to `storage/logs/laravel.log` inside
+it: `docker compose exec app tail -f storage/logs/laravel.log`.
+
+### For working on the code
+
+You need PHP 8.4 or newer (with the DOM, MBString, Intl and GD extensions), Composer and Node.js 22.
 [Laravel Herd](https://herd.laravel.com) on macOS has all of them.
 
 ```bash
 git clone https://github.com/Md-Foisal/job-board.git
 cd job-board
+docker compose up -d --wait mysql
 composer run setup
 php artisan migrate:fresh --seed
 php artisan storage:link
 composer run dev
 ```
 
-`composer run setup` installs the PHP and Node packages, creates `.env`, generates the app key,
-creates the SQLite database and builds the assets. `composer run dev` starts the web server, the queue
-worker and Vite together. Open http://localhost:8000, and set `APP_URL` in `.env` to the same address so
-links in emails point to it.
+`docker compose up -d --wait mysql` starts only the database. `composer run setup` installs the PHP and
+Node packages, creates `.env`, generates the app key, runs the migrations and builds the assets.
+`composer run dev` starts the web server, the queue worker and Vite together. Open http://localhost:8000,
+and set `APP_URL` in `.env` to the same address so links in emails point to it. Both ways share one
+database, so run one of them at a time.
 
 Emails are written to `storage/logs/laravel.log`, so verification and alert links show up there.
 To run the scheduled commands as well, keep `php artisan schedule:work` running in another terminal.
@@ -217,12 +244,15 @@ Set `AI_ENABLED=true` and `ANTHROPIC_API_KEY` in `.env`. The free plan's monthly
 ## Tests and CI
 
 ```bash
+docker compose up -d --wait mysql
 php artisan test --parallel
 vendor/bin/pint --test
 ```
 
-Feature and unit tests are written with Pest. GitHub Actions runs the test suite on PHP 8.4 and 8.5,
-and Laravel Pint checks the code style, on every push and pull request to `main`.
+Feature and unit tests are written with Pest and run against MySQL, in a `testing` database the
+container creates on its first start. GitHub Actions runs the test suite on PHP 8.4 and 8.5 against
+the same MySQL version, Laravel Pint checks the code style, and the Docker image is built, on every
+push and pull request to `main`.
 
 ## Status and roadmap
 
