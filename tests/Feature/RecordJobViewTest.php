@@ -9,7 +9,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Defer\DeferredCallbackCollection;
 use Illuminate\Support\Facades\Exceptions;
-use Illuminate\Support\Facades\Schema;
 
 const BROWSER_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36';
 
@@ -221,7 +220,7 @@ test('a guest leaves no recently viewed row', function () {
 test('a failed count is reported and the visitor still gets the page', function () {
     Exceptions::fake();
     $job = JobPosting::factory()->create();
-    Schema::drop('job_posting_daily_stats');
+    failWritesTo('job_posting_daily_stats');
 
     $this->get(route('jobs.show', $job))->assertOk()->assertSee($job->title);
 

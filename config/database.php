@@ -59,6 +59,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // TIMESTAMP columns are converted through the session's time
+            // zone, which otherwise follows whatever the server is set to.
+            // Pinning it to the app's own zone (UTC) keeps stored moments
+            // and CURRENT_TIMESTAMP the same on every host.
+            'timezone' => '+00:00',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

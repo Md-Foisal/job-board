@@ -6,7 +6,10 @@ use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\Membership;
 use App\Models\User;
+use Illuminate\Database\Connection;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /*
@@ -121,4 +124,21 @@ function fillJobForm($component, array $overrides = [])
     }
 
     return $component;
+}
+
+/**
+ * Makes every write to the table fail the way a database error does,
+ * without touching the schema. Dropping or altering a table to force the
+ * failure does not work on MySQL: schema changes commit the open
+ * transaction, so the test's rows outlive it and break the tests after.
+ */
+function failWritesTo(string $table): void
+{
+    $pattern = '/^\s*(insert|update|delete)\b[^;]*?\b'.preg_quote($table, '/').'\b/i';
+
+    DB::connection()->beforeExecuting(function (string $query, array $bindings, Connection $connection) use ($pattern, $table) {
+        if (preg_match($pattern, $query) === 1) {
+            throw new QueryException($connection->getName(), $query, $bindings, new PDOException("Writes to {$table} fail in this test."));
+        }
+    });
 }

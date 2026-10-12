@@ -12,7 +12,6 @@ use App\Models\Skill;
 use App\Models\User;
 use App\Support\CvChecks;
 use App\Support\CvData;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
 use Spatie\LaravelPdf\Enums\Format;
@@ -282,7 +281,7 @@ test('saving twice makes two documents, never overwriting the first', function (
 test('when the document cannot be recorded, the file just stored is removed', function () {
     Storage::fake('local');
     $profile = karimForCv()->candidateProfile;
-    DB::statement('DROP TABLE documents');
+    failWritesTo('documents');
 
     expect(fn () => app(StoreCandidateDocument::class)->generated($profile, DocumentType::Cv, 'pdf', 'CV.pdf'))
         ->toThrow(Exception::class);
