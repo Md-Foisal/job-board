@@ -93,7 +93,13 @@
                  dispatcher (routes/web.php) when we already know where a
                  candidate is headed. --}}
             @unless ($showSidebarToggle)
-                <a href="{{ auth()->user()->isCandidate() ? route('candidate.dashboard') : route('dashboard') }}" class="hidden rounded-control px-2 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink sm:inline" wire:navigate>
+                {{-- Staff go straight to the admin panel, a separate app
+                     with its own scripts: a full load, not wire:navigate. --}}
+                @if (auth()->user()->isActiveStaff())
+                    <a href="{{ filament()->getPanel('admin')->getUrl() }}" class="hidden rounded-control px-2 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink sm:inline">
+                @else
+                    <a href="{{ auth()->user()->isCandidate() ? route('candidate.dashboard') : route('dashboard') }}" class="hidden rounded-control px-2 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-ink sm:inline" wire:navigate>
+                @endif
                     {{ __('Dashboard') }}
                 </a>
             @endunless

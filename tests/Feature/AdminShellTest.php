@@ -56,3 +56,37 @@ test('the people list calls a person\'s role a role', function () {
         ->assertSee('Role')
         ->assertDontSee('Standing');
 });
+
+test('a panel page reached through wire:navigate reloads itself in full', function () {
+    $this->actingAs(staffWithTwoFactor())
+        ->get('/admin')
+        ->assertSee("if (document.readyState !== 'loading')", false)
+        ->assertSee('window.location.replace', false);
+});
+
+test('the site\'s Dashboard link takes staff to the panel as a full page load', function () {
+    $html = $this->actingAs(staffWithTwoFactor())->get(route('home'))->assertOk()->getContent();
+    $panel = preg_quote(filament()->getPanel('admin')->getUrl(), '/');
+
+    preg_match('/<a href="'.$panel.'"[^>]*>\s*Dashboard\s*<\/a>/', $html, $link);
+
+    expect($link)->not->toBeEmpty()
+        ->and($link[0])->not->toContain('wire:navigate');
+});
+
+test('the panel sidebar folds to icons on desktop, from a button in the sidebar as in the app', function () {
+    $this->actingAs(staffWithTwoFactor())
+        ->get('/admin')
+        ->assertOk()
+        ->assertSee('class="jb-sidebar-collapse-btn"', false)
+        ->assertSee('.fi-topbar-collapse-sidebar-btn-ctn { display: none !important; }', false);
+
+    expect(filament()->getPanel('admin')->isSidebarCollapsibleOnDesktop())->toBeTrue();
+});
+
+test('the user menu leads to the account settings every user has', function () {
+    $this->actingAs(staffWithTwoFactor())
+        ->get('/admin')
+        ->assertSee('Account settings')
+        ->assertSee(route('profile.edit'), false);
+});

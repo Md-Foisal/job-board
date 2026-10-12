@@ -61,7 +61,19 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
             ->renderHook(PanelsRenderHook::BODY_START, fn () => view('partials.svg-defs'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.sidebar-collapse'))
+            // Folds to icons on desktop like the app's own sidebars, from a
+            // button in the sidebar itself (filament/sidebar-collapse);
+            // Filament remembers the choice in the viewer's browser.
+            ->sidebarCollapsibleOnDesktop()
+            // The name heads the menu as plain text, as on GitHub or Linear;
+            // the account itself (password, two-factor) is the app's
+            // settings page, the same one every other user has.
             ->userMenuItems([
+                'settings' => Action::make('settings')
+                    ->label('Account settings')
+                    ->icon(Heroicon::OutlinedCog6Tooth)
+                    ->url(fn () => route('profile.edit')),
                 'site' => Action::make('site')
                     ->label('View site')
                     ->icon(Heroicon::OutlinedGlobeAlt)
