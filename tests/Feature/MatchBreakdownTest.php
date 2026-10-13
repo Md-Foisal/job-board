@@ -8,6 +8,7 @@ use App\Models\ExperienceRecord;
 use App\Models\JobPosting;
 use App\Models\Skill;
 use App\Services\MatchScoreCalculator;
+use App\Support\Countries;
 use App\Support\ExperienceDuration;
 use App\Support\MatchBreakdown;
 use Illuminate\Support\Carbon;
@@ -58,6 +59,9 @@ function breakdownCandidate(array $skills = [], ?array $preference = null, array
             'desired_salary_currency' => null,
             'preferred_workplace_type' => null,
             'preferred_employment_type' => null,
+            'location_country' => null,
+            'location_city' => null,
+            'open_to_relocation' => false,
         ], $preference));
     }
 
@@ -170,15 +174,57 @@ test('salary is compared monthly, in the same currency, against the candidate\'s
     ],
 ]);
 
-test('with no preferences saved, salary, workplace and employment type are unknown', function () {
+test('with no preferences saved, salary, workplace, location and employment type are unknown', function () {
     $posting = breakdownPosting(['salary_min' => 50000, 'salary_max' => 80000, 'salary_currency' => 'BDT', 'salary_period' => 'monthly']);
 
     $breakdown = breakdownOf($posting, breakdownCandidate());
 
     expect($breakdown->check(MatchCheck::Salary))->toBe(MatchCheckResult::Unknown)
         ->and($breakdown->check(MatchCheck::Workplace))->toBe(MatchCheckResult::Unknown)
+        ->and($breakdown->check(MatchCheck::Location))->toBe(MatchCheckResult::Unknown)
         ->and($breakdown->check(MatchCheck::Employment))->toBe(MatchCheckResult::Unknown);
 });
+
+test('location compares countries for a remote job, and country then city for any other', function (array $job, array $candidate, MatchCheckResult $expected) {
+    $posting = breakdownPosting($job);
+    $profile = breakdownCandidate(preference: $candidate);
+
+    expect(breakdownOf($posting, $profile)->check(MatchCheck::Location))->toBe($expected);
+})->with([
+    'remote, same country' => [['workplace_type' => 'remote', 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'location_city' => 'Sylhet'], MatchCheckResult::Fits],
+    'remote, another country' => [['workplace_type' => 'remote', 'location_country' => 'United Kingdom'], ['location_country' => 'BD'], MatchCheckResult::Misses],
+    'remote, the city does not matter' => [['workplace_type' => 'remote', 'location_city' => 'London', 'location_country' => 'UK'], ['location_country' => 'GB', 'location_city' => 'Leeds'], MatchCheckResult::Fits],
+    'remote, only a city given' => [['workplace_type' => 'remote', 'location_country' => 'Bangladesh'], ['location_city' => 'Dhaka'], MatchCheckResult::Unknown],
+    'remote, a country no list knows' => [['workplace_type' => 'remote', 'location_country' => 'Anywhere'], ['location_country' => 'BD'], MatchCheckResult::Unknown],
+    'on site, same city' => [['workplace_type' => 'onsite', 'location_city' => 'Dhaka', 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'location_city' => ' dhaka '], MatchCheckResult::Fits],
+    'on site, same city, accents aside' => [['workplace_type' => 'onsite', 'location_city' => 'São Paulo', 'location_country' => 'Brazil'], ['location_country' => 'BR', 'location_city' => 'Sao Paulo'], MatchCheckResult::Fits],
+    'on site, another city' => [['workplace_type' => 'onsite', 'location_city' => 'Chattogram', 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'location_city' => 'Dhaka'], MatchCheckResult::Misses],
+    'hybrid, another city, open to moving' => [['workplace_type' => 'hybrid', 'location_city' => 'Chattogram', 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'location_city' => 'Dhaka', 'open_to_relocation' => true], MatchCheckResult::Fits],
+    'on site, another country' => [['workplace_type' => 'onsite', 'location_city' => 'London', 'location_country' => 'United Kingdom'], ['location_country' => 'BD', 'location_city' => 'London'], MatchCheckResult::Misses],
+    'on site, another country, open to moving' => [['workplace_type' => 'onsite', 'location_city' => 'London', 'location_country' => 'United Kingdom'], ['location_country' => 'BD', 'location_city' => 'Dhaka', 'open_to_relocation' => true], MatchCheckResult::Unknown],
+    'on site, no city on the job' => [['workplace_type' => 'onsite', 'location_city' => null, 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'location_city' => 'Dhaka'], MatchCheckResult::Unknown],
+    'on site, no city on the job, open to moving' => [['workplace_type' => 'onsite', 'location_city' => null, 'location_country' => 'Bangladesh'], ['location_country' => 'BD', 'open_to_relocation' => true], MatchCheckResult::Fits],
+    'on site, no city on the profile' => [['workplace_type' => 'onsite', 'location_city' => 'Dhaka', 'location_country' => 'Bangladesh'], ['location_country' => 'BD'], MatchCheckResult::Unknown],
+    'nothing on the profile, open to moving alone' => [['workplace_type' => 'onsite', 'location_city' => 'Dhaka', 'location_country' => 'Bangladesh'], ['open_to_relocation' => true], MatchCheckResult::Unknown],
+]);
+
+test('a country written by an employer is read the way people write it', function (?string $typed, ?string $code) {
+    expect(Countries::resolve($typed))->toBe($code);
+})->with([
+    ['Bangladesh', 'BD'],
+    ['  united kingdom ', 'GB'],
+    ['UK', 'GB'],
+    ['U.K.', 'GB'],
+    ['USA', 'US'],
+    ['us', 'US'],
+    ['DEU', 'DE'],
+    ['The Netherlands', 'NL'],
+    ['Türkiye', 'TR'],
+    ['Turkey', 'TR'],
+    ['Worldwide', null],
+    ['', null],
+    [null, null],
+]);
 
 test('workplace and employment type must match exactly', function (?string $workplace, ?string $employment, MatchCheckResult $workplaceResult, MatchCheckResult $employmentResult) {
     $posting = breakdownPosting(['workplace_type' => 'hybrid', 'employment_type' => 'contract']);
@@ -251,5 +297,9 @@ test('a profile with nothing to compare is empty; any skill, role or preference 
         ->and(breakdownOf($posting, breakdownCandidate(preference: []))->isEmpty())->toBeTrue()
         ->and(breakdownOf($posting, breakdownCandidate(['Go']))->isEmpty())->toBeFalse()
         ->and(breakdownOf($posting, breakdownCandidate(experience: [['2022-01-01', null]]))->isEmpty())->toBeFalse()
-        ->and(breakdownOf($posting, breakdownCandidate(preference: ['preferred_workplace_type' => 'remote']))->isEmpty())->toBeFalse();
+        ->and(breakdownOf($posting, breakdownCandidate(preference: ['preferred_workplace_type' => 'remote']))->isEmpty())->toBeFalse()
+        ->and(breakdownOf($posting, breakdownCandidate(preference: ['location_country' => 'BD']))->isEmpty())->toBeFalse()
+        ->and(breakdownOf($posting, breakdownCandidate(preference: ['location_city' => 'Dhaka']))->isEmpty())->toBeFalse()
+        // Being open to moving says nothing about where from.
+        ->and(breakdownOf($posting, breakdownCandidate(preference: ['open_to_relocation' => true]))->isEmpty())->toBeTrue();
 });

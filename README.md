@@ -33,7 +33,7 @@ it is made up, and the people's pictures are drawn avatars.
 ![Home page](docs/screenshots/home.jpg)
 
 **A job page, as a candidate sees it.** The match box compares the job with the candidate's skills, pay,
-workplace, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
+workplace, location, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
 
 ![Job page with the match breakdown](docs/screenshots/job-page.jpg)
 
@@ -238,8 +238,16 @@ Staff two-factor: use the secret `JBSWY3DPEHPK3PXP` in an authenticator app, or 
 
 ### Trying the AI features
 
-Set `AI_ENABLED=true` and `ANTHROPIC_API_KEY` in `.env`. The free plan's monthly limits in
-[`config/plans.php`](config/plans.php) are 0 on purpose, so raise the ones you want to try.
+The free plan's monthly limits in [`config/plans.php`](config/plans.php) are 0 on purpose. On your
+own machine, `PLAN_DEFAULT=local` gives everyone a small allowance instead; production ignores it.
+
+- With Anthropic, as the product runs: `AI_ENABLED=true`, `ANTHROPIC_API_KEY=...`.
+- With Gemini's free tier, for demo data only: `AI_ENABLED=true`, `AI_PROVIDER=gemini`,
+  `GEMINI_API_KEY=...` (a free key from Google AI Studio). Google may use what its free tier is sent,
+  and its terms do not allow serving people in the EEA, Switzerland or the UK on it, so never point it at
+  real accounts. Each AI button names the provider in use and what it does with what it is sent.
+
+Run the queue worker as well (`composer run dev` starts it), since every AI call runs on the queue.
 
 ## Tests and CI
 

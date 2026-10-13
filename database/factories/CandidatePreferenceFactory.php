@@ -26,6 +26,9 @@ class CandidatePreferenceFactory extends Factory
             'desired_salary_currency' => fake()->randomElement(SalaryCurrencies::codes()),
             'preferred_workplace_type' => fake()->randomElement(WorkplaceType::cases()),
             'preferred_employment_type' => fake()->randomElement(EmploymentType::cases()),
+            'location_country' => fake()->randomElement(['BD', 'GB', 'US', 'DE', 'IN']),
+            'location_city' => fake()->city(),
+            'open_to_relocation' => fake()->boolean(20),
             'is_actively_searching' => fake()->boolean(70),
             'available_from' => fake()->boolean(50) ? fake()->dateTimeBetween('now', '+2 months') : null,
         ];

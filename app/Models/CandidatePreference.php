@@ -15,6 +15,9 @@ use Illuminate\Database\Eloquent\Model;
     'desired_salary_currency',
     'preferred_workplace_type',
     'preferred_employment_type',
+    'location_country',
+    'location_city',
+    'open_to_relocation',
     'is_actively_searching',
     'available_from',
 ])]
@@ -29,6 +32,7 @@ class CandidatePreference extends Model
             'desired_salary_max' => 'integer',
             'preferred_workplace_type' => WorkplaceType::class,
             'preferred_employment_type' => EmploymentType::class,
+            'open_to_relocation' => 'boolean',
             'is_actively_searching' => 'boolean',
             'available_from' => 'date',
         ];

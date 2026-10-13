@@ -15,6 +15,8 @@ function componentPosting(array $attributes = []): JobPosting
     $posting = JobPosting::factory()->create(array_merge([
         'employment_type' => 'full-time',
         'workplace_type' => 'hybrid',
+        'location_city' => 'Chattogram',
+        'location_country' => 'Bangladesh',
         'min_experience_years' => 2,
         'salary_min' => 50000,
         'salary_max' => 80000,
@@ -42,6 +44,9 @@ function filledCandidate(): User
         'desired_salary_currency' => 'bdt',
         'preferred_workplace_type' => 'remote',
         'preferred_employment_type' => null,
+        'location_country' => 'BD',
+        'location_city' => 'Dhaka',
+        'open_to_relocation' => false,
     ]);
     ExperienceRecord::factory()->for($profile)->create(['start_date' => '2022-01-01', 'end_date' => '2023-02-01']);
 
@@ -98,6 +103,7 @@ test('the breakdown shows the score, each skill and each check with both sides i
         ->assertSeeInOrder(['Nice to have', 'Vue', '(missing from your profile)'])
         ->assertSeeInOrder(['Salary', "This job: BDT\u{a0}50,000–BDT\u{a0}80,000 a month", "You: From BDT\u{a0}70,000 a month", 'Fits'])
         ->assertSeeInOrder(['Workplace', 'This job: Hybrid', 'You: Remote', 'Doesn&#039;t fit'], false)
+        ->assertSeeInOrder(['Location', 'This job: Chattogram, Bangladesh', 'You: Dhaka, Bangladesh', 'Doesn&#039;t fit'], false)
         ->assertSeeInOrder(['Employment type', 'This job: Full-time', 'You: No preference', 'Can&#039;t compare'], false)
         ->assertSeeInOrder(['Experience', 'This job: 2+ years', 'You: 1 year 2 months', 'Doesn&#039;t fit'], false)
         ->assertSee('Employers see only the skills match.');

@@ -40,7 +40,7 @@ test('the privacy policy says what an AI match explanation sends, to whom, and w
         ->assertSee('neither are the phone number and location on your profile')
         ->assertSee('How you match a job')
         ->assertSee("An employer sees only how many of the job's skills you have", false)
-        ->assertSee('name, contact details, photos, links, CVs and salary expectations are')
+        ->assertSee('name, contact details, photos, links, CVs, where you live and salary')
         ->assertSee('We keep it for a day');
 });
 

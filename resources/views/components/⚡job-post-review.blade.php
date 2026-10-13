@@ -254,7 +254,7 @@ new class extends Component
                         {{ $aiStatus === 'failed' ? __('Try again') : __('Review with AI') }}
                     </flux:button>
                     <span class="text-xs text-ink-muted">
-                        {{ __("The posting and its totals (nothing about any applicant) are sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
+                        {{ __('The posting and its totals (nothing about any applicant) are sent to :provider.', ['provider' => \App\Support\AiProvider::name()]) }} {{ \App\Support\AiProvider::handling() }}
                     </span>
                 </div>
             @endif

@@ -12,9 +12,10 @@ use Illuminate\Support\Collection;
  *
  * The score is the same skill-only number an employer sees; the checks
  * sit beside it and never change it. They compare the candidate's own
- * expectations (salary, workplace, employment type) and experience, which
- * are theirs to see, so mixing them into the shared number would let an
- * employer read a candidate's salary hopes off a percentage.
+ * expectations (salary, workplace, employment type), where they live and
+ * their experience, which are theirs to see, so mixing them into the
+ * shared number would let an employer read a candidate's salary hopes or
+ * home town off a percentage.
  */
 final readonly class MatchBreakdown
 {

@@ -16,11 +16,15 @@
 | Review screening is not listed: it is the platform moderating itself,
 | paid for by the platform, and never counted against anyone's plan.
 |
+| The "local" plan is for trying the AI features on a developer's machine
+| (PLAN_DEFAULT=local). Production always runs the free plan, whatever
+| the environment says.
+|
 */
 
 return [
 
-    'default' => 'free',
+    'default' => env('APP_ENV') === 'production' ? 'free' : env('PLAN_DEFAULT', 'free'),
 
     'limits' => [
 
@@ -29,6 +33,13 @@ return [
             'match_explanation' => 0,
             'cv_builder' => 0,
             'job_post_review' => 0,
+        ],
+
+        'local' => [
+            'resume_parser' => 5,
+            'match_explanation' => 10,
+            'cv_builder' => 5,
+            'job_post_review' => 5,
         ],
 
     ],

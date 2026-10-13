@@ -679,7 +679,7 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
                                 {{ $aiStatus === 'failed' ? __('Try again') : __('Improve with AI') }}
                             </flux:button>
                             <flux:text size="sm" class="mt-2 text-ink-muted">
-                                {{ __("Your headline, summary, roles, education and skills (not your name, contact details, links or photo) are sent to Anthropic. Anthropic doesn't train on them and, by default, deletes them within 30 days.") }}
+                                {{ __('Your headline, summary, roles, education and skills (not your name, contact details, links or photo) are sent to :provider.', ['provider' => \App\Support\AiProvider::name()]) }} {{ \App\Support\AiProvider::handling('them') }}
                             </flux:text>
                         </x-card>
                     @endif

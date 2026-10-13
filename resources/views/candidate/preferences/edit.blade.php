@@ -2,7 +2,7 @@
     <x-page width="narrow">
         <x-page-header :title="__('Job preferences')">
             <x-slot:status>
-                <x-visibility-badge :tip="__('Only you see these. Each job page compares its pay, workplace and type of work with them.')" />
+                <x-visibility-badge :tip="__('Only you see these. Each job page compares its pay, workplace, location and type of work with them.')" />
             </x-slot:status>
         </x-page-header>
 
@@ -97,6 +97,48 @@
                     </flux:select.option>
                 @endforeach
             </flux:select>
+
+            {{-- Where the candidate lives, not where they would like to work:
+                 a remote job is open to one country, and an on-site one is in
+                 a city, so these two answer both. Moving is the third
+                 answer, the way the large boards ask it. --}}
+            <flux:fieldset>
+                <flux:legend>{{ __('Where you live') }}</flux:legend>
+                <flux:text size="sm">{{ __('A remote job is compared by country, an on-site or hybrid one by country and city.') }}</flux:text>
+
+                @php
+                    $country = old('location_country', $preference?->location_country);
+                    // After a failed save the box shows what was sent, and an
+                    // unticked box sends nothing.
+                    $relocation = $errors->any() ? (bool) old('open_to_relocation') : (bool) $preference?->open_to_relocation;
+                @endphp
+
+                <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <flux:select name="location_country" :label="__('Country')">
+                        <flux:select.option value="">{{ __('Not set') }}</flux:select.option>
+                        @foreach (\App\Support\Countries::options($country) as $code => $name)
+                            <flux:select.option :value="$code" :selected="$country === $code">{{ $name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+
+                    <flux:input
+                        name="location_city"
+                        maxlength="100"
+                        autocomplete="address-level2"
+                        :label="__('City')"
+                        :value="old('location_city', $preference?->location_city)"
+                    />
+                </div>
+
+                <div class="mt-4">
+                    <flux:checkbox
+                        name="open_to_relocation"
+                        value="1"
+                        :label="__('I would move to another city for the right job')"
+                        :checked="$relocation"
+                    />
+                </div>
+            </flux:fieldset>
 
             <flux:select
                 name="preferred_employment_type"

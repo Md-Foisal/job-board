@@ -125,7 +125,7 @@
             <p class="w-fit font-mono text-meta tracking-wider uppercase text-sunset-small">{{ __('Your match, before you apply') }}</p>
             <h2 class="mt-3 text-title text-ink">{{ __('See which skills you have, and which you are missing.') }}</h2>
             <p class="mt-4 max-w-xl text-body text-ink-muted sm:text-lg">
-                {{ __('Every job compares its skills, pay, workplace, job type and experience with yours. The full comparison is yours alone; the company sees only the skills match.') }}
+                {{ __('Every job compares its skills, pay, workplace, location, job type and experience with yours. The full comparison is yours alone; the company sees only the skills match.') }}
             </p>
             @guest
                 <flux:button :href="route('register')" variant="primary" icon:trailing="arrow-right" class="mt-8">

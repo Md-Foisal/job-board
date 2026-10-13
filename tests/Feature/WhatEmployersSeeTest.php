@@ -27,6 +27,8 @@ test('a candidate saves their preferences', function () {
             'desired_salary_max' => 4500,
             'desired_salary_currency' => 'EUR',
             'preferred_workplace_type' => WorkplaceType::Remote->value,
+            'location_country' => 'NL',
+            'location_city' => 'Utrecht',
         ])
         ->assertSessionHasNoErrors()
         ->assertRedirect();
@@ -36,7 +38,10 @@ test('a candidate saves their preferences', function () {
     expect($preference->desired_salary_min)->toBe(3000)
         ->and($preference->desired_salary_max)->toBe(4500)
         ->and($preference->desired_salary_currency)->toBe('EUR')
-        ->and($preference->preferred_workplace_type)->toBe(WorkplaceType::Remote);
+        ->and($preference->preferred_workplace_type)->toBe(WorkplaceType::Remote)
+        ->and($preference->location_country)->toBe('NL')
+        ->and($preference->location_city)->toBe('Utrecht')
+        ->and($preference->open_to_relocation)->toBeFalse();
 });
 
 test('the own profile starts with the person, and shows what a company sees one click away', function () {
@@ -119,6 +124,7 @@ test('the company never sees the contact details or the preferences on a profile
     CandidatePreference::factory()->for($profile)->create([
         'desired_salary_min' => 98765,
         'desired_salary_max' => 123456,
+        'location_city' => 'Kurigram',
     ]);
     $application = Application::factory()->create([
         'job_posting_id' => JobPosting::factory()->for($company)->create()->id,
@@ -130,6 +136,7 @@ test('the company never sees the contact details or the preferences on a profile
         ->assertOk()
         ->assertDontSee('7700 900456')
         ->assertDontSee('Lalmonirhat')
+        ->assertDontSee('Kurigram')
         ->assertDontSee('98,765')
         ->assertDontSee('98765')
         ->assertDontSee('123,456');

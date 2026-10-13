@@ -78,6 +78,8 @@ function karimCandidate(): User
         'desired_salary_currency' => 'BDT',
         'preferred_workplace_type' => 'remote',
         'preferred_employment_type' => 'full-time',
+        'location_country' => 'BD',
+        'location_city' => 'Sylhet',
     ]);
     ExperienceRecord::factory()->for($profile)->create([
         'company_name' => 'Acme Ltd',
@@ -335,7 +337,17 @@ test('the button is offered on a paid plan, with what is sent and to whom', func
     Livewire::actingAs(karimCandidate())
         ->test('match-breakdown', ['jobPosting' => explainedPosting()])
         ->assertSee('Explain my match')
-        ->assertSee("Your profile (not your CV, name, contact details or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.");
+        ->assertSee("Your profile (not your CV, name, contact details, location or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.");
+});
+
+test('on Gemini the button names Google and says what its free tier does with the profile', function () {
+    config(['ai.default' => 'gemini', 'ai.providers.gemini.key' => 'test-key']);
+
+    Livewire::actingAs(karimCandidate())
+        ->test('match-breakdown', ['jobPosting' => explainedPosting()])
+        ->assertSee('Explain my match')
+        ->assertSee("is sent to Google. On Google's free tier, Google may use it to improve its products, and people at Google may read it.")
+        ->assertDontSee('Anthropic');
 });
 
 test('with AI off, or a plan without it, there is no AI part at all', function (array $config) {

@@ -5,14 +5,17 @@ namespace App\Services;
 use App\Enums\MatchCheck;
 use App\Enums\MatchCheckResult;
 use App\Enums\SkillImportance;
+use App\Enums\WorkplaceType;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\JobPosting;
 use App\Models\Skill;
+use App\Support\Countries;
 use App\Support\ExperienceDuration;
 use App\Support\MatchBreakdown;
 use BackedEnum;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * The product's signature candidate-facing match score: how well a
@@ -85,6 +88,7 @@ class MatchScoreCalculator
             checks: [
                 MatchCheck::Salary->value => $this->salary($jobPosting, $preference),
                 MatchCheck::Workplace->value => $this->same($preference?->preferred_workplace_type, $jobPosting->workplace_type),
+                MatchCheck::Location->value => $this->location($jobPosting, $preference),
                 MatchCheck::Employment->value => $this->same($preference?->preferred_employment_type, $jobPosting->employment_type),
                 MatchCheck::Experience->value => $this->experience($jobPosting, $experienceMonths),
             ],
@@ -93,7 +97,9 @@ class MatchScoreCalculator
                 && $experience->isEmpty()
                 && $preference?->desired_salary_min === null
                 && $preference?->preferred_workplace_type === null
-                && $preference?->preferred_employment_type === null,
+                && $preference?->preferred_employment_type === null
+                && $preference?->location_country === null
+                && blank($preference?->location_city),
         );
     }
 
@@ -141,6 +147,57 @@ class MatchScoreCalculator
         }
 
         return $wanted === $offered ? MatchCheckResult::Fits : MatchCheckResult::Misses;
+    }
+
+    /**
+     * Whether the candidate can work where the job is. A remote job's
+     * country is where it can be done from, so only the countries are
+     * compared; an on-site or hybrid job is compared by country and then
+     * by city. A candidate open to moving fits any city in the job's
+     * country, but another country stays unknown: moving abroad needs the
+     * right to work there, which the profile does not say. Where either
+     * side leaves out what is needed, or the employer's country names no
+     * country, it is unknown. Cities compare by name only, so a nearby
+     * town is a different city; the row shows both names beside the
+     * result.
+     */
+    private function location(JobPosting $jobPosting, ?CandidatePreference $preference): MatchCheckResult
+    {
+        $homeCountry = $preference?->location_country;
+        $homeCity = $this->place($preference?->location_city);
+
+        if ($homeCountry === null && $homeCity === '') {
+            return MatchCheckResult::Unknown;
+        }
+
+        $jobCountry = Countries::resolve($jobPosting->location_country);
+        $relocates = (bool) $preference->open_to_relocation;
+
+        if ($homeCountry !== null && $jobCountry !== null && $homeCountry !== $jobCountry) {
+            return $relocates ? MatchCheckResult::Unknown : MatchCheckResult::Misses;
+        }
+
+        $sameCountry = $homeCountry !== null && $homeCountry === $jobCountry;
+
+        if ($jobPosting->workplace_type === WorkplaceType::Remote) {
+            return $sameCountry ? MatchCheckResult::Fits : MatchCheckResult::Unknown;
+        }
+
+        $jobCity = $this->place($jobPosting->location_city);
+
+        if ($jobCity !== '' && $homeCity !== '') {
+            return $jobCity === $homeCity || $relocates ? MatchCheckResult::Fits : MatchCheckResult::Misses;
+        }
+
+        return $relocates && $sameCountry ? MatchCheckResult::Fits : MatchCheckResult::Unknown;
+    }
+
+    /**
+     * A place name as compared: "  São Paulo " and "sao paulo" are one.
+     */
+    private function place(?string $name): string
+    {
+        return Str::of((string) $name)->ascii()->lower()->squish()->value();
     }
 
     /**

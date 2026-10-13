@@ -5,7 +5,7 @@
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
             and location, education and work history, projects, certifications,
-            skills, salary and work-type preferences, and any documents you upload
+            skills, salary, work-type and location preferences, and any documents you upload
             or build, such as a CV. If you post jobs, we store your company details
             and the postings themselves.
         </p>
@@ -93,8 +93,8 @@
             in words. Only then is the following sent to Anthropic, which reads it
             on our behalf as our processor: the job posting, your headline, about
             text, skills, work history and education, and our own comparison. Your
-            name, contact details, photos, links, CVs and salary expectations are
-            not sent. The explanation is shown only to you, never to employers, and
+            name, contact details, photos, links, CVs, where you live and salary
+            expectations are not sent. The explanation is shown only to you, never to employers, and
             never changes your match or where you appear. We keep it for a day, so
             you can come back to it, and then delete it; we keep a record that one
             was made, to count it against your plan's allowance, but not what it
