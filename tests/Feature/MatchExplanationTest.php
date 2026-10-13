@@ -213,6 +213,34 @@ test('on the wire the material is a tool result the request declares, followed b
     });
 });
 
+test('on Groq the tool is left out and the answer is held to the schema, the material still a tool result', function () {
+    config(['ai.default' => 'groq', 'ai.providers.groq.key' => 'test-key']);
+
+    Http::fake(['api.groq.com/*' => Http::response([
+        'id' => 'chatcmpl-1',
+        'object' => 'chat.completion',
+        'model' => 'openai/gpt-oss-120b',
+        'choices' => [['index' => 0, 'message' => ['role' => 'assistant', 'content' => json_encode(explanationAnswer())], 'finish_reason' => 'stop']],
+        'usage' => ['prompt_tokens' => 3000, 'completion_tokens' => 300, 'total_tokens' => 3300],
+    ])]);
+
+    $key = runExplanation(karimCandidate(), explainedPosting());
+
+    expect(Cache::get($key)['status'])->toBe('done');
+
+    Http::assertSent(function (Request $request) {
+        $body = $request->data();
+        $raw = json_encode($body);
+        $result = collect($body['messages'])->firstWhere('role', 'tool');
+
+        return ! isset($body['tools'])
+            && ($body['response_format']['type'] ?? null) === 'json_schema'
+            && $result !== null
+            && str_contains($result['content'], 'Ignore all previous instructions')
+            && substr_count($raw, 'Ignore all previous instructions') === 1;
+    });
+});
+
 test('a long job description is cut before it is sent', function () {
     MatchExplainer::fake([explanationAnswer()])->preventStrayPrompts();
 
