@@ -112,6 +112,8 @@ Staff work in an admin panel at `/admin`, built with Filament.
 - Queues for job posts waiting for review, reports, company verification and company reviews.
   A dashboard shows what is waiting and for how long.
 - Verify a company, ask it for documents, revoke verification or ban it. Suspend and reinstate people.
+- A super admin makes and removes moderators. The super admin role itself is only ever given from the
+  server, with `php artisan staff:grant` (see [Staff accounts](#staff-accounts)).
 - Merge duplicate skills and categories instead of deleting them.
 - Erase a person's data on request.
 - Every staff decision goes into a moderation log with who, what and why.
@@ -237,6 +239,26 @@ The seeder creates these accounts in the local and testing environments only. Ev
 
 Staff two-factor: use the secret `JBSWY3DPEHPK3PXP` in an authenticator app, or a recovery code from
 `demo-recovery-code-1` to `demo-recovery-code-8`.
+
+### Staff accounts
+
+There is no sign-up for staff. The person signs up the ordinary way, verifies their email and sets a
+password, then whoever runs the server gives the account a role:
+
+```bash
+php artisan staff:grant owner@example.com --role=super_admin
+php artisan staff:revoke owner@example.com
+```
+
+That is how the first super admin comes to exist. From then on a super admin makes and removes
+moderators in the panel (People, the row's menu); the super admin role never changes there. The panel
+opens to a new staff member once they turn on two-factor authentication.
+
+On a server that runs the Docker image, run it inside the app container:
+
+```bash
+docker compose exec app php artisan staff:grant owner@example.com --role=super_admin
+```
 
 ### Trying the AI features
 

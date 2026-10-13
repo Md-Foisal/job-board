@@ -176,7 +176,14 @@ class ModerationEventResource extends Resource
                         ->all()),
                 SelectFilter::make('admin_id')
                     ->label('By')
-                    ->options(fn () => User::query()->whereNotNull('staff_role')->orderBy('name')->pluck('name', 'id')->all()),
+                    // Everyone who has taken a decision, including staff who
+                    // have since lost the role: their past decisions stay
+                    // theirs to look up.
+                    ->options(fn () => User::withTrashed()
+                        ->whereIn('id', ModerationEvent::query()->whereNotNull('admin_id')->select('admin_id'))
+                        ->orderBy('name')
+                        ->pluck('name', 'id')
+                        ->all()),
                 SelectFilter::make('subject_type')
                     ->label('About')
                     ->options([

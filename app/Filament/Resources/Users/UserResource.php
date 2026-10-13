@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Users;
 
 use App\Actions\EraseUserData;
+use App\Actions\MakeModerator;
 use App\Actions\ReinstateUser;
+use App\Actions\RemoveModerator;
 use App\Actions\SuspendUser;
 use App\Enums\AccountStatus;
 use App\Enums\MembershipStatus;
@@ -31,9 +33,9 @@ use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
 /**
- * Everyone on the platform, and the one decision staff can take about a
- * person: suspending them. Super admins only -- it is the heaviest thing
- * the platform does to anyone.
+ * Everyone on the platform, and the decisions a super admin can take about
+ * a person: making or removing a moderator, suspending them, and erasing
+ * their data on request. Super admins only.
  */
 class UserResource extends Resource
 {
@@ -227,10 +229,66 @@ class UserResource extends Resource
                 ViewAction::make(),
                 static::reinstateAction(),
                 ActionGroup::make([
+                    static::makeModeratorAction(),
+                    static::removeModeratorAction(),
                     static::suspendAction(),
                     static::eraseAction(),
                 ])->label('More actions')->tooltip('More actions')->color('gray'),
             ]);
+    }
+
+    /**
+     * The only staff role handed out here. The super admin role comes from
+     * the server (php artisan staff:grant), never from a panel session.
+     */
+    public static function makeModeratorAction(): Action
+    {
+        return Action::make('makeModerator')
+            ->label('Make moderator')
+            ->icon(Heroicon::OutlinedShieldCheck)
+            ->color('gray')
+            ->authorize('makeModerator')
+            ->modalHeading(fn (User $record) => "Make {$record->name} a moderator?")
+            ->modalDescription(fn (User $record) => 'They can review postings, companies, company reviews and reports in the staff panel. '
+                .($record->hasEnabledTwoFactorAuthentication()
+                    ? 'The panel opens to them straight away.'
+                    : 'The panel opens to them once they turn on two-factor authentication in their security settings.'))
+            ->modalSubmitActionLabel('Make moderator')
+            ->modalSubmitAction(fn (Action $action) => $action->color('primary'))
+            ->schema(fn () => ConfirmsPassword::fields())
+            ->before(fn () => ConfirmsPassword::remember())
+            ->action(function (User $record) {
+                app(MakeModerator::class)($record, auth()->user());
+
+                Notification::make()->title("{$record->name} is now a moderator")->success()->send();
+            });
+    }
+
+    public static function removeModeratorAction(): Action
+    {
+        return Action::make('removeModerator')
+            ->label('Remove as moderator')
+            ->icon(Heroicon::OutlinedShieldExclamation)
+            ->color('danger')
+            ->authorize('removeModerator')
+            ->modalHeading(fn (User $record) => "Remove {$record->name} as a moderator?")
+            ->modalDescription('The staff panel closes to them straight away. Their account stays as it is, and the decisions they took stay in the log under their name.')
+            ->modalSubmitActionLabel('Remove as moderator')
+            ->schema(fn () => [
+                Textarea::make('reason')
+                    ->label('Reason')
+                    ->helperText('Kept on the record.')
+                    ->required()
+                    ->maxLength(2000)
+                    ->rows(3),
+                ...ConfirmsPassword::fields(),
+            ])
+            ->before(fn () => ConfirmsPassword::remember())
+            ->action(function (User $record, array $data) {
+                app(RemoveModerator::class)($record, auth()->user(), $data['reason']);
+
+                Notification::make()->title("{$record->name} is no longer a moderator")->success()->send();
+            });
     }
 
     public static function suspendAction(): Action
