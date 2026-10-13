@@ -28,6 +28,7 @@
              processes if it is simply growth. -->
         <ini name="memory_limit" value="256M"/>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_NAME" value="HearBack"/>
         <!-- A real key, provider or plan in a developer's .env must never
              reach the tests: they switch AI on themselves, against faked
              models. -->

@@ -1,4 +1,4 @@
-# Job Board
+# HearBack
 
 [![tests](https://github.com/Md-Foisal/job-board/actions/workflows/tests.yml/badge.svg)](https://github.com/Md-Foisal/job-board/actions/workflows/tests.yml)
 [![linter](https://github.com/Md-Foisal/job-board/actions/workflows/lint.yml/badge.svg)](https://github.com/Md-Foisal/job-board/actions/workflows/lint.yml)

@@ -8,7 +8,7 @@ test('the staff panel carries the app wordmark, its theme switch and a way back 
         ->get('/admin')
         ->assertOk()
         ->assertSee('jb-brand', false)
-        ->assertSee('<span>JobBoard</span>', false)
+        ->assertSee('<span>HearBack</span>', false)
         ->assertSee('class="jb-tt"', false)
         ->assertSee('View site')
         ->assertSee(route('home'), false)

@@ -53,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
             // (its switch in the bar, Filament's own three-way one removed so
             // there are not two that disagree); and the app's surfaces.
             // See resources/views/filament/.
-            ->brandName('JobBoard')
+            ->brandName(fn () => config('app.name'))
             ->brandLogo(fn () => view('filament.brand'))
             ->favicon(asset('favicon.svg'))
             ->homeUrl(fn () => route('home'))
