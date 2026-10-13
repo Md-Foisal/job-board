@@ -34,8 +34,10 @@ it is made up, and the people's pictures are drawn avatars.
 
 **A job page, as a candidate sees it.** The match box compares the job with the candidate's skills, pay,
 workplace, location, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
+On a plan with AI, the candidate can also ask for the match in words. This recording ran on Groq's free
+tier with the demo data; the live site runs with AI off.
 
-![Job page with the match breakdown](docs/screenshots/job-page.jpg)
+![Job page: the match breakdown, then the AI explaining the match](docs/screenshots/match-explanation.gif)
 
 **Candidate dashboard.** Applications by status, what needs the candidate's attention, the latest changes
 from companies, and open jobs that match at least half of what they ask for.
