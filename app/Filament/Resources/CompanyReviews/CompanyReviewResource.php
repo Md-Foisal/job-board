@@ -292,6 +292,7 @@ class CompanyReviewResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             // Oldest first: the review's own writing time, or on the
             // Responses tab the time the answer was written.
             ->defaultSort(fn ($livewire) => static::partShownOn($livewire) === ReviewPart::Response ? 'responded_at' : 'updated_at', 'asc')

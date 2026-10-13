@@ -96,34 +96,6 @@
         border-inline-end-color: var(--gray-800);
     }
 
-    /* The sidebar's fold button sits in the sidebar, as in the app
-       (filament/sidebar-collapse), not in the top bar. Desktop only: on a
-       phone the sidebar is a drawer with its own open and close. */
-    .fi-topbar-collapse-sidebar-btn-ctn { display: none !important; }
-    .jb-sidebar-collapse {
-        display: none;
-        justify-content: flex-end;
-        margin-bottom: 0.5rem;
-    }
-    @media (min-width: 64rem) {
-        .jb-sidebar-collapse { display: flex; }
-    }
-    .fi-sidebar:not(.fi-sidebar-open) .jb-sidebar-collapse { justify-content: center; }
-    .jb-sidebar-collapse-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 0.5rem;
-        color: var(--gray-500);
-        cursor: pointer;
-    }
-    .jb-sidebar-collapse-btn:hover { background-color: rgb(0 0 0 / 0.05); color: var(--gray-800); }
-    .dark .jb-sidebar-collapse-btn { color: var(--gray-400); }
-    .dark .jb-sidebar-collapse-btn:hover { background-color: rgb(255 255 255 / 0.15); color: #fff; }
-    .jb-sidebar-collapse-btn:focus-visible { outline: 2px solid var(--jb-ink); outline-offset: 2px; }
-
     /*
      * The colour rule of the app (resources/css/app.css): anything coloured
      * that is not a status carries the Sunset gradient, and the rest is

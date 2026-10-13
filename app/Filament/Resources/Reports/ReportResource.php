@@ -262,6 +262,7 @@ class ReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('open_count', 'desc')
             ->columns([
                 TextColumn::make('subject')
@@ -286,7 +287,9 @@ class ReportResource extends Resource
             ->emptyStateHeading('No open reports')
             ->emptyStateDescription('Reports from signed-in users about postings, companies and reviews land here.')
             ->recordActions([
-                ViewAction::make()->label('Read reports'),
+                ViewAction::make()
+                    ->label('Read reports')
+                    ->modalHeading(fn (Report $record) => static::subjectLabel($record)),
                 static::rejectPostingAction(),
                 static::rejectReviewAction(),
                 static::banCompanyAction(),

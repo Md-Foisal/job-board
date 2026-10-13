@@ -55,16 +55,18 @@ class AdminPanelProvider extends PanelProvider
             // See resources/views/filament/.
             ->brandName('JobBoard')
             ->brandLogo(fn () => view('filament.brand'))
+            ->favicon(asset('favicon.svg'))
             ->homeUrl(fn () => route('home'))
             ->themeSwitcher(false)
             ->defaultAvatarProvider(InitialsAvatar::class)
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
             ->renderHook(PanelsRenderHook::BODY_START, fn () => view('partials.svg-defs'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
-            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.sidebar-collapse'))
-            // Folds to icons on desktop like the app's own sidebars, from a
-            // button in the sidebar itself (filament/sidebar-collapse);
-            // Filament remembers the choice in the viewer's browser.
+            // Folds to icons on desktop like the app's own sidebars. The
+            // button is Filament's own, beside the logo in the top bar: the
+            // fold control sits in the same row as the brand, and here the
+            // brand is in the top bar. Filament remembers the choice in the
+            // viewer's browser.
             ->sidebarCollapsibleOnDesktop()
             // The name heads the menu as plain text, as on GitHub or Linear;
             // the account itself (password, two-factor) is the app's

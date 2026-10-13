@@ -25,6 +25,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -98,6 +99,17 @@ class JobPostingResource extends Resource
     public static function canView(Model $record): bool
     {
         return static::canViewAny();
+    }
+
+    /**
+     * What the View action asks. Left alone, Filament asks the model's
+     * policy, which answers for the public site -- where a posting still
+     * waiting for review is hidden -- so the one posting staff most need
+     * to read before deciding could not be opened.
+     */
+    public static function getViewAuthorizationResponse(Model $record): Response
+    {
+        return static::canView($record) ? Response::allow() : Response::deny();
     }
 
     public static function canCreate(): bool
@@ -200,6 +212,7 @@ class JobPostingResource extends Resource
                         TextEntry::make('submitted_at')->label('Submitted')->since(),
                     ]),
                 Section::make('Description')
+                    ->columnSpanFull()
                     ->schema([
                         TextEntry::make('description')->hiddenLabel()->html()->prose(),
                     ]),
@@ -209,6 +222,7 @@ class JobPostingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('submitted_at', 'asc')
             ->columns([
                 TextColumn::make('title')

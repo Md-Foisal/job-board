@@ -133,6 +133,7 @@ class SkillResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),

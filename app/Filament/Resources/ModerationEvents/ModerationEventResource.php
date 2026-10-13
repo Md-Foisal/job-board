@@ -141,6 +141,7 @@ class ModerationEventResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('created_at')
@@ -155,7 +156,10 @@ class ModerationEventResource extends Resource
                 TextColumn::make('action')
                     ->badge()
                     ->formatStateUsing(fn (ModerationAction $state) => $state->label())
-                    ->color(fn (ModerationAction $state) => $state->requiresReason() ? 'danger' : 'gray'),
+                    // Red for a decision against someone. A request for
+                    // documents also carries a reason, but it is a question,
+                    // and the button that sends it is neutral too.
+                    ->color(fn (ModerationAction $state) => $state->requiresReason() && $state !== ModerationAction::RequestCompanyDocuments ? 'danger' : 'gray'),
                 TextColumn::make('subject')
                     ->label('About')
                     ->state(fn (ModerationEvent $record) => static::subjectLabel($record)),
