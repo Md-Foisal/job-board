@@ -21,6 +21,9 @@
                 >
             </label>
 
+            {{-- One list open at a time: moving to this box closes the job
+                 suggestions, which would otherwise stay open over its places
+                 and take the clicks meant for them. --}}
             <div
                 class="relative sm:w-48"
                 x-data="{ placesOpen: false }"
@@ -34,8 +37,8 @@
                     <input
                         type="text"
                         wire:model.live.debounce.250ms="where"
-                        x-on:focus="placesOpen = true"
-                        x-on:input="placesOpen = true"
+                        x-on:focus="placesOpen = true; open = false"
+                        x-on:input="placesOpen = true; open = false"
                         x-on:keydown.down.prevent="placesOpen = true; $nextTick(() => $focus.within($refs.places).first())"
                         placeholder="{{ __('City or remote') }}"
                         autocomplete="off"
