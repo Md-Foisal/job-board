@@ -35,6 +35,7 @@
         <env name="AI_PROVIDER" value="anthropic"/>
         <env name="ANTHROPIC_API_KEY" value=""/>
         <env name="GEMINI_API_KEY" value=""/>
+        <env name="GROQ_API_KEY" value=""/>
         <env name="PLAN_DEFAULT" value="free"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

@@ -7,11 +7,12 @@ namespace App\Support;
  * tell people before they press an AI button, and what that company does
  * with it under the terms the product uses it on.
  *
- * The product runs on Anthropic's paid API. Gemini is here for trying
- * the features on a developer's machine with demo data: on Google's free
- * tier what is sent may be used to improve Google's products and read by
- * people at Google, which is why it never serves real users, and why the
- * page then says so instead of repeating Anthropic's terms.
+ * The product runs on Anthropic's paid API. Groq and Gemini are here for
+ * trying the features on a developer's machine with demo data, on their
+ * free tiers, which never serve real users. Each says what it does with
+ * what it is sent instead of repeating Anthropic's terms: Groq keeps
+ * nothing by default; on Gemini's free tier what is sent may be used to
+ * improve Google's products and read by people at Google.
  */
 final class AiProvider
 {
@@ -20,6 +21,7 @@ final class AiProvider
         return match (self::driver()) {
             'anthropic' => 'Anthropic',
             'gemini' => 'Google',
+            'groq' => 'Groq',
             default => ucfirst(self::driver()),
         };
     }
@@ -33,6 +35,7 @@ final class AiProvider
         return match (self::driver()) {
             'anthropic' => __("Anthropic doesn't train on :it and, by default, deletes :it within 30 days.", ['it' => $it]),
             'gemini' => __("On Google's free tier, Google may use :it to improve its products, and people at Google may read :it.", ['it' => $it]),
+            'groq' => __("By default, Groq doesn't keep :it once it has answered.", ['it' => $it]),
             default => __(':name handles :it under its own terms.', ['name' => self::name(), 'it' => $it]),
         };
     }

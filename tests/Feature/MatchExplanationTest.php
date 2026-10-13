@@ -340,15 +340,18 @@ test('the button is offered on a paid plan, with what is sent and to whom', func
         ->assertSee("Your profile (not your CV, name, contact details, location or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.");
 });
 
-test('on Gemini the button names Google and says what its free tier does with the profile', function () {
-    config(['ai.default' => 'gemini', 'ai.providers.gemini.key' => 'test-key']);
+test('on a free tier the button names that provider and says what it does with the profile', function (string $provider, string $says) {
+    config(['ai.default' => $provider, "ai.providers.{$provider}.key" => 'test-key']);
 
     Livewire::actingAs(karimCandidate())
         ->test('match-breakdown', ['jobPosting' => explainedPosting()])
         ->assertSee('Explain my match')
-        ->assertSee("is sent to Google. On Google's free tier, Google may use it to improve its products, and people at Google may read it.")
+        ->assertSee($says)
         ->assertDontSee('Anthropic');
-});
+})->with([
+    'Gemini' => ['gemini', "is sent to Google. On Google's free tier, Google may use it to improve its products, and people at Google may read it."],
+    'Groq' => ['groq', "is sent to Groq. By default, Groq doesn't keep it once it has answered."],
+]);
 
 test('with AI off, or a plan without it, there is no AI part at all', function (array $config) {
     config($config);

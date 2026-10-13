@@ -242,10 +242,12 @@ The free plan's monthly limits in [`config/plans.php`](config/plans.php) are 0 o
 own machine, `PLAN_DEFAULT=local` gives everyone a small allowance instead; production ignores it.
 
 - With Anthropic, as the product runs: `AI_ENABLED=true`, `ANTHROPIC_API_KEY=...`.
-- With Gemini's free tier, for demo data only: `AI_ENABLED=true`, `AI_PROVIDER=gemini`,
-  `GEMINI_API_KEY=...` (a free key from Google AI Studio). Google may use what its free tier is sent,
-  and its terms do not allow serving people in the EEA, Switzerland or the UK on it, so never point it at
-  real accounts. Each AI button names the provider in use and what it does with what it is sent.
+- With Groq's free tier, for demo data only: `AI_ENABLED=true`, `AI_PROVIDER=groq`,
+  `GROQ_API_KEY=...` (a free key from the Groq console). Groq keeps nothing by default, but a free
+  tier is still not for real accounts. `AI_PROVIDER=gemini` with `GEMINI_API_KEY` works the same way;
+  Google may use what its free tier is sent.
+
+Each AI button names the provider in use and what it does with what it is sent.
 
 Run the queue worker as well (`composer run dev` starts it), since every AI call runs on the queue.
 
