@@ -71,16 +71,16 @@
                 <flux:button variant="ghost" size="sm" icon="bars-3" :aria-label="__('Menu')" />
 
                 <flux:menu class="min-w-52">
-                    <flux:menu.item :href="route('jobs.index')" icon="magnifying-glass" wire:navigate>
+                    <flux:menu.item :href="route('jobs.index')" icon:variant="outline" icon="magnifying-glass" wire:navigate>
                         {{ __('Browse jobs') }}
                     </flux:menu.item>
-                    <flux:menu.item :href="route('employers')" icon="building-office-2" wire:navigate>
+                    <flux:menu.item :href="route('employers')" icon:variant="outline" icon="building-office-2" wire:navigate>
                         {{ __('For employers') }}
                     </flux:menu.item>
 
                     <flux:menu.separator />
 
-                    <flux:menu.item :href="route('login')" icon="arrow-right-end-on-rectangle">
+                    <flux:menu.item :href="route('login')" icon:variant="outline" icon="arrow-right-end-on-rectangle">
                         {{ __('Log in') }}
                     </flux:menu.item>
                 </flux:menu>

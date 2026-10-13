@@ -278,6 +278,52 @@
     stroke: url(#sunset-icon);
 }
 
+/*
+ * Flux draws its floating surfaces -- menus, modals, toasts -- in its own
+ * zinc scale. On the dark canvas that is a grey slab from another product
+ * (zinc-700 behind the account menu, zinc-800 behind a modal), and in
+ * light mode its menu icons are a paler grey than any other icon here.
+ * They take the app's surfaces, lines and ink instead: a floating surface
+ * is set apart by its border and shadow, not by a lighter grey.
+ */
+[data-flux-menu] {
+    background-color: var(--color-canvas);
+    border-color: var(--color-line);
+}
+
+[data-flux-menu-item]:not([data-active]) [data-flux-menu-item-icon] {
+    color: var(--color-ink-muted);
+}
+
+.dark [data-flux-menu] {
+    background-color: var(--color-surface);
+}
+
+/* Flux marks its own dark separator colour important. */
+[data-flux-menu-separator] [data-flux-separator] {
+    background-color: var(--color-line) !important;
+}
+
+.dark [data-flux-menu-item]:not([data-active]) {
+    color: var(--color-ink);
+}
+
+.dark [data-flux-menu-item][data-active]:not([class*='red']) {
+    background-color: var(--color-line);
+}
+
+.dark [data-flux-modal] > dialog:not([data-flux-modal-overflow], .bg-transparent),
+.dark [data-flux-modal-content]:not(.bg-transparent) {
+    background-color: var(--color-surface);
+    border-color: var(--color-line);
+    --tw-ring-color: var(--color-line);
+}
+
+.dark [data-flux-toast-dialog] > div {
+    background-color: var(--color-surface);
+    border-color: var(--color-line-strong);
+}
+
 [data-palette-option][aria-selected='true'] svg:not([fill='none']) {
     fill: url(#sunset-icon);
 }
@@ -401,6 +447,14 @@
     @apply  !mb-0 !leading-tight;
 }
 
+/*
+ * Focus, everywhere: a 2px ring in ink -- black on light, near-white on
+ * dark -- like the buttons, not in a colour. Ink against the canvas is far
+ * above the 3:1 WCAG asks of a focus indicator (1.4.11 at AA, 2.4.13 at
+ * AAA); the canvas greys are not. The large search boxes (partials/
+ * job-search, the hero) draw it
+ * around the whole box, with the focused half shaded.
+ */
 input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {

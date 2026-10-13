@@ -11,13 +11,13 @@
 @endphp
 
 @if ($spaceIsCandidate)
-    <flux:menu.item :href="route('candidate.dashboard')" icon="user" wire:navigate>
+    <flux:menu.item :href="route('candidate.dashboard')" icon:variant="outline" icon="user" wire:navigate>
         {{ __('Personal') }}
     </flux:menu.item>
 @endif
 
 @foreach ($spaceCompanies as $spaceCompany)
-    <flux:menu.item :href="route('employer.dashboard', $spaceCompany)" icon="building-office" wire:navigate>
+    <flux:menu.item :href="route('employer.dashboard', $spaceCompany)" icon:variant="outline" icon="building-office" wire:navigate>
         {{ $spaceCompany->name }}
     </flux:menu.item>
 @endforeach
@@ -29,12 +29,12 @@
 @unless ($spaceIsCandidate)
     <form method="POST" action="{{ route('candidate.start') }}" class="w-full">
         @csrf
-        <flux:menu.item as="button" type="submit" icon="plus" class="w-full cursor-pointer">
+        <flux:menu.item as="button" type="submit" icon:variant="outline" icon="plus" class="w-full cursor-pointer">
             {{ __('Start a candidate profile') }}
         </flux:menu.item>
     </form>
 @endunless
 
-<flux:menu.item :href="route('companies.create')" icon="plus">
+<flux:menu.item :href="route('companies.create')" icon:variant="outline" icon="plus">
     {{ __('Create a company') }}
 </flux:menu.item>
