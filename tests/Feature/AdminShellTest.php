@@ -74,12 +74,12 @@ test('the site\'s Dashboard link takes staff to the panel as a full page load', 
         ->and($link[0])->not->toContain('wire:navigate');
 });
 
-test('the panel sidebar folds to icons on desktop, from the button beside the logo', function () {
+test('the panel sidebar folds to icons on desktop, from a button in the sidebar as in the app', function () {
     $this->actingAs(staffWithTwoFactor())
         ->get('/admin')
         ->assertOk()
-        ->assertSee('fi-topbar-close-collapse-sidebar-btn', false)
-        ->assertDontSee('jb-sidebar-collapse', false);
+        ->assertSee('class="jb-sidebar-collapse-btn"', false)
+        ->assertSee('.fi-topbar-collapse-sidebar-btn-ctn { display: none !important; }', false);
 
     expect(filament()->getPanel('admin')->isSidebarCollapsibleOnDesktop())->toBeTrue();
 });

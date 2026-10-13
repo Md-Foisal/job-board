@@ -96,6 +96,40 @@
         border-inline-end-color: var(--gray-800);
     }
 
+    /* The sidebar's fold button (filament/sidebar-collapse) as in the
+       app's sidebar: its first row, right edge, 16px from the top, with the
+       menu starting just under it rather than a full gap lower. Desktop
+       only: on a phone the sidebar is a drawer with its own open and
+       close, and Filament's own fold button in the top bar is hidden. */
+    .jb-sidebar-collapse { display: none; }
+    @media (min-width: 64rem) {
+        .fi-topbar-collapse-sidebar-btn-ctn { display: none !important; }
+        .fi-main-sidebar .fi-sidebar-nav { padding-top: 1rem; }
+        .jb-sidebar-collapse {
+            display: flex;
+            justify-content: flex-end;
+            margin-inline-end: -0.5rem;
+            margin-bottom: -0.75rem;
+        }
+        /* Folded, it lines up with the icons under it. */
+        .fi-sidebar:not(.fi-sidebar-open) .jb-sidebar-collapse {
+            justify-content: flex-start;
+            margin-inline: -0.5rem 0;
+        }
+    }
+    .jb-sidebar-collapse-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        color: var(--gray-400);
+        cursor: pointer;
+    }
+    .jb-sidebar-collapse-btn:hover { background-color: rgb(0 0 0 / 0.05); color: var(--gray-800); }
+    .dark .jb-sidebar-collapse-btn:hover { background-color: rgb(255 255 255 / 0.15); color: #fff; }
+
     /*
      * The colour rule of the app (resources/css/app.css): anything coloured
      * that is not a status carries the Sunset gradient, and the rest is
