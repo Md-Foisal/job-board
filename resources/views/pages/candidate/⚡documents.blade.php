@@ -140,12 +140,12 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
 
     <div class="space-y-4">
         @forelse ($documents as $document)
-            <x-card wire:key="document-{{ $document->id }}" class="flex items-start justify-between gap-4">
-                <div class="flex gap-4">
+            <x-card wire:key="document-{{ $document->id }}" class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                <div class="flex min-w-0 gap-4">
                     <x-icon-tile :icon="$document->document_type->icon()" />
 
-                    <div>
-                        <p class="font-medium text-ink">{{ $document->original_filename }}</p>
+                    <div class="min-w-0">
+                        <p class="font-medium break-words text-ink">{{ $document->original_filename }}</p>
                         <p class="text-sm text-ink-muted">{{ $document->document_type->label() }}</p>
                         <p class="mt-1 text-sm text-ink-muted">{{ \App\Support\LocalTime::of($document->created_at)->format(\App\Support\DateFormat::DAY) }}</p>
 
@@ -164,8 +164,9 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
                 </div>
 
                 {{-- Icons alone, with their names on hover and focus: three
-                     words side by side would crowd the file name on a phone. --}}
-                <div class="flex shrink-0 items-center gap-1">
+                     words side by side would crowd the file name. On a
+                     phone they go under it, in line with the text. --}}
+                <div class="flex shrink-0 items-center gap-1 ps-15 sm:ps-0">
                     @if (\App\Http\Controllers\DocumentPreviewController::canPreview($document))
                         <flux:tooltip :content="__('Preview')">
                             <flux:button
