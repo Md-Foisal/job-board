@@ -9,6 +9,7 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\JobPostings\Pages\ManageJobPostings;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\JobPosting;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -39,6 +40,8 @@ use UnitEnum;
  */
 class JobPostingResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = JobPosting::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -94,6 +97,17 @@ class JobPostingResource extends Resource
     public static function canViewAny(): bool
     {
         return auth()->user()?->isActiveStaff() ?? false;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Company' => $record->company->name,
+            'Status' => $record->moderation_status->label(),
+        ];
     }
 
     public static function canView(Model $record): bool

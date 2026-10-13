@@ -9,6 +9,7 @@ use App\Enums\AccountStatus;
 use App\Enums\MembershipStatus;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Filament\Support\ConfirmsPassword;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -36,6 +37,8 @@ use UnitEnum;
  */
 class UserResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
@@ -62,6 +65,25 @@ class UserResource extends Resource
             ->with(['candidateProfile:id,user_id', 'memberships' => fn ($query) => $query
                 ->where('status', MembershipStatus::Active)
                 ->with('company:id,name')]);
+    }
+
+    /**
+     * Staff look people up by the address they write from as often as by
+     * name.
+     *
+     * @return list<string>
+     */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return ['Email' => $record->email];
     }
 
     public static function canViewAny(): bool

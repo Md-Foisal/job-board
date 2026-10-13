@@ -183,6 +183,18 @@
         --color-950: var(--gray-950);
     }
 
+    /* Focus, as everywhere in the app (resources/css/app.css): a ring in
+       ink, not the brand orange, which here read as a flat amber border on
+       the search box. A field with an error keeps its red. */
+    .fi-body :focus-visible:not(.fi-invalid),
+    .fi-body input:is([type='checkbox'], [type='radio']):focus,
+    .fi-input-wrp:not(.fi-disabled, .fi-invalid):focus-within {
+        --tw-ring-color: var(--jb-ink);
+    }
+
+    /* Search result groups in sentence case, as the menu names them. */
+    .fi-global-search-result-group-header { text-transform: none; }
+
     /* The current page number, in ink rather than orange. */
     .fi-pagination-item.fi-active .fi-pagination-item-label { color: var(--jb-ink); }
 

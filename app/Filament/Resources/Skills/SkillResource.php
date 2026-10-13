@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Skills;
 
 use App\Actions\MergeSkill;
 use App\Filament\Resources\Skills\Pages\ManageSkills;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\Skill;
 use BackedEnum;
 use Closure;
@@ -35,6 +36,8 @@ use UnitEnum;
  */
 class SkillResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = Skill::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
