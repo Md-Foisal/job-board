@@ -36,7 +36,7 @@ class CreateNewUser implements CreatesNewUsers
 
         if (RateLimiter::tooManyAttempts($limitKey, SubmissionLimits::REGISTRATIONS_PER_HOUR)) {
             throw ValidationException::withMessages([
-                'email' => trans_choice('{1} Too many accounts have been created from this network recently. Please try again in 1 minute.|[2,*] Too many accounts have been created from this network recently. Please try again in :count minutes.', SubmissionLimits::minutesUntilAvailable($limitKey)),
+                'email' => SubmissionLimits::registrationRefusal($limitKey),
             ]);
         }
 

@@ -6,6 +6,7 @@ namespace App\Models;
 use App\Enums\AccountStatus;
 use App\Enums\MembershipRole;
 use App\Enums\MembershipStatus;
+use App\Enums\SignInProvider;
 use App\Enums\StaffRole;
 use Carbon\CarbonInterface;
 use Database\Factories\UserFactory;
@@ -47,6 +48,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected $attributes = [
         'account_status' => AccountStatus::Active->value,
         'avatar' => null,
+        'password' => null,
         'staff_role' => null,
         'timezone' => null,
         'timezone_automatic' => true,
@@ -156,6 +158,33 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function recruiterProfile()
     {
         return $this->hasOne(RecruiterProfile::class);
+    }
+
+    /**
+     * The Google and GitHub accounts this person signs in with.
+     */
+    public function connectedAccounts()
+    {
+        return $this->hasMany(ConnectedAccount::class);
+    }
+
+    /**
+     * False for someone who signed up with Google or GitHub and has not
+     * added a password since.
+     */
+    public function hasPassword(): bool
+    {
+        return $this->password !== null;
+    }
+
+    /**
+     * Whether this connected account can go without leaving the person
+     * locked out: they need a password or another connected account.
+     */
+    public function canDisconnect(SignInProvider $provider): bool
+    {
+        return $this->hasPassword()
+            || $this->connectedAccounts()->where('provider', '!=', $provider->value)->exists();
     }
 
     /**

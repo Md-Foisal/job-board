@@ -10,6 +10,15 @@
             and the postings themselves.
         </p>
         <p>
+            If you sign up or sign in with Google or GitHub, that service tells
+            us your name and email address, which it has already checked is
+            yours, and gives us an ID number for your account there, which we
+            keep so we recognise you next time. We never see your password
+            there, we keep no access to your account there, and we ask for
+            nothing else from it. You can disconnect it in your security
+            settings once you have another way to sign in.
+        </p>
+        <p>
             We also record which job postings you open while signed in, so your
             dashboard can show you what you were last looking at, and the jobs
             you save, with when you saved them, so your saved list can put the

@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\PasswordValidationRules;
+use App\Enums\SignInProvider;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -49,13 +50,18 @@ new #[Layout('layouts::settings')] #[Title('Security settings')] class extends C
     }
 
     /**
-     * Update the password for the currently authenticated user.
+     * Update the password for the currently authenticated user -- or add
+     * one, for someone who signed up with Google or GitHub. Adding needs
+     * no current password; the page itself is behind a fresh confirmation.
      */
     public function updatePassword(): void
     {
+        $user = Auth::user();
+        $hadPassword = $user->hasPassword();
+
         try {
             $validated = $this->validate([
-                'current_password' => $this->currentPasswordRules(),
+                ...($hadPassword ? ['current_password' => $this->currentPasswordRules()] : []),
                 'password' => $this->passwordRules(),
             ]);
         } catch (ValidationException $e) {
@@ -64,13 +70,35 @@ new #[Layout('layouts::settings')] #[Title('Security settings')] class extends C
             throw $e;
         }
 
-        Auth::user()->update([
+        $user->update([
             'password' => $validated['password'],
         ]);
 
         $this->reset('current_password', 'password');
 
-        Flux::toast(variant: 'success', text: __('Password updated.'));
+        Flux::toast(variant: 'success', text: $hadPassword
+            ? __('Password updated.')
+            : __('Password added. You can sign in with your email address too.'));
+    }
+
+    /**
+     * Stop signing in with a Google or GitHub account -- unless it is the
+     * only way in left, which would lock the person out.
+     */
+    public function disconnect(string $provider): void
+    {
+        $provider = SignInProvider::tryFrom($provider) ?? abort(404);
+        $user = Auth::user();
+
+        if (! $user->canDisconnect($provider)) {
+            Flux::toast(variant: 'danger', text: __('Add a password first, so you can still sign in.'));
+
+            return;
+        }
+
+        $user->connectedAccounts()->where('provider', $provider->value)->delete();
+
+        Flux::toast(variant: 'success', text: __(':provider disconnected.', ['provider' => $provider->label()]));
     }
 
     /**
@@ -101,20 +129,33 @@ new #[Layout('layouts::settings')] #[Title('Security settings')] class extends C
     @include('partials.settings-heading')
 
     <x-pages::settings.layout current="security" :workspace="$workspace">
+        @php
+            $user = auth()->user();
+            $connected = $user->connectedAccounts()->get()->keyBy(fn ($account) => $account->provider->value);
+        @endphp
+
         <x-card as="form" method="POST" wire:submit="updatePassword" class="space-y-6">
             <flux:heading size="lg" level="2">{{ __('Password') }}</flux:heading>
 
-            <flux:input
-                wire:model="current_password"
-                :label="__('Current password')"
-                type="password"
-                required
-                autocomplete="current-password"
-                viewable
-            />
+            @if ($user->hasPassword())
+                <flux:input
+                    wire:model="current_password"
+                    :label="__('Current password')"
+                    type="password"
+                    required
+                    autocomplete="current-password"
+                    viewable
+                />
+            @else
+                <flux:text>
+                    {{ __('You sign in with :providers. Add a password to sign in with your email address as well.', [
+                        'providers' => $connected->map(fn ($account) => $account->provider->label())->join(' or '),
+                    ]) }}
+                </flux:text>
+            @endif
             <flux:input
                 wire:model="password"
-                :label="__('New password')"
+                :label="$user->hasPassword() ? __('New password') : __('Password')"
                 :description="\App\Support\PasswordPolicy::hint()"
                 type="password"
                 required
@@ -124,10 +165,56 @@ new #[Layout('layouts::settings')] #[Title('Security settings')] class extends C
 
             <div class="flex items-center gap-4">
                 <flux:button variant="primary" type="submit" data-test="update-password-button">
-                    {{ __('Save') }}
+                    {{ $user->hasPassword() ? __('Save') : __('Add password') }}
                 </flux:button>
             </div>
         </x-card>
+
+        {{-- A provider shows when it can be used here, or when it is
+             already connected (so it can still be disconnected). Connect is
+             a plain form: it leaves the site for the provider and comes
+             back through SocialSignInController. --}}
+        @php
+            $providers = collect(\App\Enums\SignInProvider::cases())
+                ->filter(fn ($provider) => $provider->isConfigured() || $connected->has($provider->value));
+        @endphp
+
+        @if ($providers->isNotEmpty())
+            <x-card as="section" aria-labelledby="connected-accounts-heading" class="flex flex-col gap-4 text-sm">
+                <div>
+                    <flux:heading size="lg" level="2" id="connected-accounts-heading">{{ __('Connected accounts') }}</flux:heading>
+                    <flux:text class="mt-1">{{ __('Sign in with one of these instead of typing a password.') }}</flux:text>
+                </div>
+
+                <ul class="divide-y divide-line">
+                    @foreach ($providers as $provider)
+                        @php
+                            $account = $connected->get($provider->value);
+                        @endphp
+                        <li class="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0" data-test="connected-{{ $provider->value }}">
+                            <div class="flex min-w-0 items-center gap-3">
+                                <x-provider-logo :provider="$provider" />
+                                <div class="min-w-0">
+                                    <div class="font-medium text-ink">{{ $provider->label() }}</div>
+                                    <div class="truncate text-ink-muted">{{ $account ? ($account->email ?? __('Connected')) : __('Not connected') }}</div>
+                                </div>
+                            </div>
+
+                            @if ($account && $user->canDisconnect($provider))
+                                <flux:button size="sm" wire:click="disconnect('{{ $provider->value }}')">{{ __('Disconnect') }}</flux:button>
+                            @elseif ($account)
+                                <flux:text size="sm">{{ __('Your only way to sign in. Add a password to disconnect it.') }}</flux:text>
+                            @elseif ($provider->isConfigured())
+                                <form method="POST" action="{{ route('social.connect', $provider) }}">
+                                    @csrf
+                                    <flux:button size="sm" type="submit">{{ __('Connect') }}</flux:button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </x-card>
+        @endif
 
         @if ($canManageTwoFactor)
             <x-card as="section" aria-labelledby="two-factor-heading" class="flex flex-col gap-4 text-sm" wire:cloak>
@@ -150,7 +237,7 @@ new #[Layout('layouts::settings')] #[Title('Security settings')] class extends C
                 @if ($twoFactorEnabled)
                     <div class="space-y-4">
                         <flux:text>
-                            {{ __('When you sign in, we ask for a code from the authenticator app on your phone as well as your password.') }}
+                            {{ __('When you sign in, we also ask for a code from the authenticator app on your phone.') }}
                         </flux:text>
 
                         @if (auth()->user()->isStaff())

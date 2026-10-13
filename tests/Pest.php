@@ -10,6 +10,8 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\Socialite;
+use Laravel\Socialite\Two\User as OutsideAccount;
 use Tests\TestCase;
 
 /*
@@ -141,4 +143,37 @@ function failWritesTo(string $table): void
             throw new QueryException($connection->getName(), $query, $bindings, new PDOException("Writes to {$table} fail in this test."));
         }
     });
+}
+
+/**
+ * Gives both sign-in providers credentials, so their buttons and routes
+ * are on. Nothing here ever reaches Google or GitHub: tests fake the
+ * round trip with Socialite::fake().
+ */
+function configureSignInProviders(): void
+{
+    config([
+        'services.google.client_id' => 'google-client-id',
+        'services.google.client_secret' => 'google-client-secret',
+        'services.github.client_id' => 'github-client-id',
+        'services.github.client_secret' => 'github-client-secret',
+    ]);
+}
+
+/**
+ * What Google or GitHub hands back after the person agrees: by default a
+ * Google account whose address Google has verified.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function fakeOutsideAccount(string $provider = 'google', array $attributes = []): void
+{
+    Socialite::fake($provider, OutsideAccount::fake([
+        'id' => $provider.'-123',
+        'nickname' => 'nadia-r',
+        'name' => 'Nadia Rahman',
+        'email' => 'nadia@gmail.com',
+        'email_verified' => true,
+        ...$attributes,
+    ]));
 }

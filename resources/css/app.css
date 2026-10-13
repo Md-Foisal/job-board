@@ -439,6 +439,54 @@
     transform: translateY(0);
 }
 
+/*
+ * "Continue with Google / GitHub" (components/social-sign-in): one frame
+ * for every provider, so none is shown more prominently than another --
+ * Google's branding guidelines ask for that. Google's own fills, strokes
+ * and text colours are fixed by those guidelines (light: white, #747775
+ * stroke; dark: #131314, #8E918F stroke), so they are plain values here
+ * rather than tokens; the hover lift is the one on Google's own button.
+ * https://developers.google.com/identity/branding-guidelines
+ */
+.btn-provider {
+    display: flex;
+    width: 100%;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding-inline: 0.75rem;
+    border: 1px solid var(--color-line-strong);
+    border-radius: var(--radius-control);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    transition: box-shadow 150ms var(--ease-brand);
+}
+
+.btn-provider:hover {
+    box-shadow: 0 1px 2px 0 rgb(60 64 67 / 0.3), 0 1px 3px 1px rgb(60 64 67 / 0.15);
+}
+
+.btn-provider:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.btn-provider-google {
+    border-color: #747775;
+    background-color: #ffffff;
+    color: #1f1f1f;
+}
+
+.dark .btn-provider-google {
+    border-color: #8e918f;
+    background-color: #131314;
+    color: #e3e3e3;
+}
+
 [data-flux-field]:not(ui-radio, ui-checkbox) {
     @apply grid gap-2;
 }

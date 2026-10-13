@@ -65,6 +65,15 @@ final class SubmissionLimits
         return 'registrations:'.$ip;
     }
 
+    /**
+     * What someone turned away by the registration limit is told: the same
+     * for every way of creating an account, password or Google/GitHub.
+     */
+    public static function registrationRefusal(string $key): string
+    {
+        return trans_choice('{1} Too many accounts have been created from this network recently. Please try again in 1 minute.|[2,*] Too many accounts have been created from this network recently. Please try again in :count minutes.', self::minutesUntilAvailable($key));
+    }
+
     public static function applicationKey(User $candidate): string
     {
         return 'applications:'.$candidate->id;
