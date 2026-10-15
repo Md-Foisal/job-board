@@ -122,3 +122,15 @@ test('a CV\'s skills and profile links are found from the file itself', function
         hyperlinks: ['https://www.linkedin.com/in/karim-rahman', 'https://github.com/karim', 'https://karim.dev'],
     )],
 ]);
+
+test('reading a CV leaves no temporary file behind, even when the file cannot be read', function () {
+    $before = glob(sys_get_temp_dir().'/cvtext*') ?: [];
+
+    $document = CvFiles::stored('pdf', CvFiles::pdf([['Karim Rahman']]));
+    CvText::of($document);
+
+    Storage::disk('local')->delete($document->file_path);
+    expect(CvText::of($document))->toBe('');
+
+    expect(glob(sys_get_temp_dir().'/cvtext*') ?: [])->toBe($before);
+});
