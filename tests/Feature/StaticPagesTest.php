@@ -18,7 +18,8 @@ test('the privacy policy names who runs the service and how to reach them about 
         ->assertSee('Who we are')
         ->assertSee('Md. Foisal')
         ->assertSee('the controller of that data')
-        ->assertSee(route('contact', ['topic' => 'privacy']), false);
+        ->assertSee(route('contact', ['topic' => 'privacy']), false)
+        ->assertSee('support@hearbackjobs.com');
 });
 
 test('the privacy policy says job views are counted for everyone, and what the count keeps', function () {

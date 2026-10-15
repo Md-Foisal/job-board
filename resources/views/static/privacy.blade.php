@@ -5,7 +5,8 @@
             Bangladesh. He decides what personal data the service collects and
             why, which makes him the controller of that data. To reach him about
             your data,
-            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>,
+            or email <a href="mailto:support@hearbackjobs.com" class="font-medium text-sunset-small hover:underline">support@hearbackjobs.com</a>.
         </p>
     </x-prose-section>
 
@@ -232,7 +233,8 @@
         </p>
         <p>
             To ask what we hold about you, or to have it corrected or erased,
-            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>,
+            or email <a href="mailto:support@hearbackjobs.com" class="font-medium text-sunset-small hover:underline">support@hearbackjobs.com</a>.
         </p>
     </x-prose-section>
 
