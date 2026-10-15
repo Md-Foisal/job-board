@@ -5,6 +5,8 @@
 
 A job board where silence shows. Built with Laravel, Livewire, Filament and Pest.
 
+Live at [hearbackjobs.com](https://hearbackjobs.com).
+
 This project is in active development. Everything described here is merged on `main`.
 See [A look at it](#a-look-at-it) for screenshots and [Status and roadmap](#status-and-roadmap) for what comes next.
 
@@ -300,10 +302,11 @@ push and pull request to `main`.
 | 6 AI features | CV import, match explanation, CV builder, employer analytics, company reviews ([#6](https://github.com/Md-Foisal/job-board/pull/6)) | Oct 2026 |
 | 7 Polish | Time zones, currencies, best-match sort and realistic demo data ([#7](https://github.com/Md-Foisal/job-board/pull/7)) | Oct 2026 |
 | 8 UI/UX | A design system with light and dark themes, every page rebuilt per role, a command palette, an applicant board, CV templates and branded emails ([#8](https://github.com/Md-Foisal/job-board/pull/8)) | Oct 2026 |
+| 9 Launch | MySQL, Docker, sign-in with Google or GitHub, confirmed email addresses, uploads in S3-compatible storage, real mail, and the live site ([#9](https://github.com/Md-Foisal/job-board/pull/9)) | Oct 2026 |
 
 Next:
 
-- **Launch,** with AI off.
+- **Live now,** with AI off, on free hosting.
 - **After launch:** paid plans, which is when the AI features can be turned on.
 
 ## License

@@ -17,3 +17,4 @@ is marked as superseded, and points to the new one.
 | [0006](0006-utc-moments-and-plain-calendar-dates.md) | Moments in UTC, calendar dates as they are | Accepted |
 | [0007](0007-pay-compared-within-one-currency.md) | Pay is compared only within one currency | Accepted |
 | [0008](0008-one-design-system-guarded-by-tests.md) | One design system, guarded by tests | Accepted |
+| [0009](0009-staff-sign-in-through-the-one-login.md) | Staff sign in through the one login, with two-factor required | Accepted |
