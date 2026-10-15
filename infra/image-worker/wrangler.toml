@@ -1,0 +1,15 @@
+name = "hearback-images"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+
+# Be explicit: serve on workers.dev only, no per-version preview URLs.
+workers_dev = true
+preview_urls = false
+
+[vars]
+B2_BUCKET = "hearbackjobs-images"
+B2_REGION = "eu-central-003"
+
+# Secrets are NOT stored here. Set them once with:
+#   npx wrangler@4 secret put B2_KEY_ID
+#   npx wrangler@4 secret put B2_APP_KEY
