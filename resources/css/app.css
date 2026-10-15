@@ -601,6 +601,13 @@ select:focus[data-flux-control] {
     }
 }
 
+/* A hero with no pause button keeps the light still on touch screens. */
+@media (hover: none) {
+    .hero-spotlight.hero-still {
+        animation: none;
+    }
+}
+
 @keyframes hero-spot-drift {
     0% { --spot-x: 15%; --spot-y: 30%; }
     50% { --spot-x: 75%; --spot-y: 65%; }
