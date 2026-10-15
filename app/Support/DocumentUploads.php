@@ -8,15 +8,17 @@ use App\Enums\DocumentType;
  * What each kind of document a candidate keeps has to be, in one place,
  * so the validation, the file picker and the hint under the field agree.
  *
- * The limits follow what established hiring tools accept:
+ * The limits are deliberately small, because every file is kept in
+ * storage and downloaded by employers:
  *
- * - CV: PDF or Word up to 5 MB, the same as Workable and LinkedIn.
+ * - CV: PDF or Word up to 1 MB. A text CV is a few hundred kilobytes, so
+ *   anything larger is almost always an embedded photo or a scan.
  *   Paper size (A4 or Letter) is deliberately not checked: no major board
  *   does, a CV is A4 in most of the world and Letter in North America,
  *   and a Word file has no fixed page size until someone prints it.
- * - Work sample: up to 10 MB, since a portfolio piece can be a zip or a
- *   high-resolution image.
- * - Certificate: PDF or image up to 5 MB.
+ * - Work sample: up to 2 MB, enough for a short PDF, a few screenshots or
+ *   a small zip; larger portfolios belong behind a link.
+ * - Certificate: PDF or image up to 1 MB.
  *
  * How many are kept follows LinkedIn for CVs: the four most recent stay
  * and an older one leaves the library by itself, so nobody has to tidy up
@@ -35,9 +37,9 @@ final class DocumentUploads
      * @var array<string, array{extensions: array<int, string>, max_kilobytes: int}>
      */
     private const SPECS = [
-        'cv' => ['extensions' => ['pdf', 'doc', 'docx'], 'max_kilobytes' => 5120],
-        'work_sample' => ['extensions' => ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'zip'], 'max_kilobytes' => 10240],
-        'certificate' => ['extensions' => ['pdf', 'jpg', 'jpeg', 'png'], 'max_kilobytes' => 5120],
+        'cv' => ['extensions' => ['pdf', 'doc', 'docx'], 'max_kilobytes' => 1024],
+        'work_sample' => ['extensions' => ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'zip'], 'max_kilobytes' => 2048],
+        'certificate' => ['extensions' => ['pdf', 'jpg', 'jpeg', 'png'], 'max_kilobytes' => 1024],
     ];
 
     /**
