@@ -49,9 +49,11 @@ final class CvText
 
     public static function of(Document $document): string
     {
-        $path = Storage::disk('local')->path($document->file_path);
+        $path = null;
 
         try {
+            $path = self::copyToTemporaryFile($document);
+
             $text = match (self::extension($document)) {
                 'pdf' => self::fromPdf($path),
                 'docx' => self::fromDocx($path),
@@ -64,9 +66,50 @@ final class CvText
             ]);
 
             return '';
+        } finally {
+            if ($path !== null) {
+                @unlink($path);
+            }
         }
 
         return self::tidy($text);
+    }
+
+    /**
+     * The parsers need a path on the local file system, and the document
+     * may live in remote storage, so the file is copied to a temporary
+     * one first. The caller removes it.
+     */
+    private static function copyToTemporaryFile(Document $document): string
+    {
+        $source = Storage::disk('local')->readStream($document->file_path);
+
+        if (! is_resource($source)) {
+            throw new RuntimeException('The CV file could not be read.');
+        }
+
+        $path = tempnam(sys_get_temp_dir(), 'cvtext');
+
+        try {
+            $target = $path === false ? false : fopen($path, 'wb');
+
+            if ($target === false) {
+                throw new RuntimeException('A temporary file for the CV could not be created.');
+            }
+
+            stream_copy_to_stream($source, $target);
+            fclose($target);
+        } catch (Throwable $exception) {
+            if ($path !== false) {
+                @unlink($path);
+            }
+
+            throw $exception;
+        } finally {
+            fclose($source);
+        }
+
+        return $path;
     }
 
     /**

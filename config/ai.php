@@ -24,9 +24,16 @@ return [
     | default for AI operations when no explicit provider is provided
     | for the operation. This should be any provider defined below.
     |
+    | The product runs on Anthropic. AI_PROVIDER=groq (or gemini) is for
+    | trying the features on a developer's machine with demo data only, on
+    | the provider's free tier. Gemini's free tier may use what it is sent
+    | and may not serve users in the EEA, Switzerland or the UK. Each AI
+    | button names the provider and says what it does with what it is sent
+    | (App\Support\AiProvider).
+    |
     */
 
-    'default' => 'anthropic',
+    'default' => env('AI_PROVIDER', 'anthropic'),
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -122,11 +129,21 @@ return [
             'driver' => 'gemini',
             'key' => env('GEMINI_API_KEY'),
             'url' => env('GEMINI_URL', 'https://generativelanguage.googleapis.com/v1beta/'),
+            'models' => [
+                'text' => [
+                    'default' => env('GEMINI_TEXT_MODEL', 'gemini-3.6-flash'),
+                ],
+            ],
         ],
 
         'groq' => [
             'driver' => 'groq',
             'key' => env('GROQ_API_KEY'),
+            'models' => [
+                'text' => [
+                    'default' => env('GROQ_TEXT_MODEL', 'openai/gpt-oss-120b'),
+                ],
+            ],
         ],
 
         'jina' => [

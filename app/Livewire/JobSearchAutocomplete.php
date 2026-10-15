@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\WorkplaceType;
 use App\Models\JobPosting;
+use App\Support\PlaceSuggestions;
 use Illuminate\Support\Collection;
 use Livewire\Component;
 
@@ -47,6 +48,14 @@ class JobSearchAutocomplete extends Component
             ->latest('id')
             ->limit(6)
             ->get();
+    }
+
+    /**
+     * @return list<array{value: string, label: string, jobs: int, remote: bool}>
+     */
+    public function getPlaceSuggestionsProperty(): array
+    {
+        return PlaceSuggestions::for($this->where);
     }
 
     public function goToSearch(): mixed

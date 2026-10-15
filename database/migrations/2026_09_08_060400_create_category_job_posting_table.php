@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained()->restrictOnDelete();
             $table->foreignId('job_posting_id')->constrained()->cascadeOnDelete();
 
-            $table->unique(['job_posting_id', 'category_id']);
+            $table->primary(['job_posting_id', 'category_id']);
         });
     }
 

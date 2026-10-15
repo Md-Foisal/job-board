@@ -6,7 +6,7 @@
 >
     @if ($variant === 'hero')
         {{-- What and where, the two questions every large board asks first. --}}
-        <form wire:submit="goToSearch" class="flex flex-col gap-1.5 rounded-2xl border border-line bg-canvas p-1.5 text-left shadow-lift transition-shadow focus-within:border-line-strong sm:flex-row">
+        <form wire:submit="goToSearch" class="flex flex-col gap-1.5 rounded-2xl border border-line bg-canvas p-1.5 text-left shadow-lift transition-shadow focus-within:border-ink focus-within:ring-1 focus-within:ring-ink sm:flex-row">
             <label class="flex min-h-12 flex-1 items-center gap-2.5 rounded-xl px-3.5 focus-within:bg-surface">
                 <flux:icon.magnifying-glass class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
                 <span class="sr-only">{{ __('Job title, skill or company') }}</span>
@@ -21,17 +21,33 @@
                 >
             </label>
 
-            <label class="flex min-h-12 items-center gap-2.5 rounded-xl border-t border-line px-3.5 focus-within:bg-surface sm:w-48 sm:border-t-0 sm:border-l">
-                <flux:icon.map-pin class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
-                <span class="sr-only">{{ __('City, or remote') }}</span>
-                <input
-                    type="text"
-                    wire:model="where"
-                    placeholder="{{ __('City or remote') }}"
-                    autocomplete="off"
-                    class="w-full min-w-0 border-0 bg-transparent p-0 text-base text-ink placeholder:text-ink-muted focus:outline-none"
-                >
-            </label>
+            {{-- One list open at a time: moving to this box closes the job
+                 suggestions, which would otherwise stay open over its places
+                 and take the clicks meant for them. --}}
+            <div
+                class="relative sm:w-48"
+                x-data="{ placesOpen: false }"
+                x-on:click.outside="placesOpen = false"
+                x-on:focusout="$el.contains($event.relatedTarget) || (placesOpen = false)"
+                x-on:keydown.escape="placesOpen = false"
+            >
+                <label class="flex min-h-12 items-center gap-2.5 rounded-xl border-t border-line px-3.5 focus-within:bg-surface sm:border-t-0 sm:border-l">
+                    <flux:icon.map-pin class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
+                    <span class="sr-only">{{ __('City, or remote') }}</span>
+                    <input
+                        type="text"
+                        wire:model.live.debounce.250ms="where"
+                        x-on:focus="placesOpen = true; open = false"
+                        x-on:input="placesOpen = true; open = false"
+                        x-on:keydown.down.prevent="placesOpen = true; $nextTick(() => $focus.within($refs.places).first())"
+                        placeholder="{{ __('City or remote') }}"
+                        autocomplete="off"
+                        class="w-full min-w-0 border-0 bg-transparent p-0 text-base text-ink placeholder:text-ink-muted focus:outline-none"
+                    >
+                </label>
+
+                @include('partials.place-suggestions', ['model' => 'where', 'places' => $this->placeSuggestions, 'typed' => $where])
+            </div>
 
             <button type="submit" class="btn-sunset min-h-12 rounded-xl px-6 text-body font-semibold">
                 {{ __('Search jobs') }}

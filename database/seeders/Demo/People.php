@@ -17,6 +17,7 @@ use App\Models\JobPosting;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
+use App\Support\Countries;
 use App\Support\CvData;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
@@ -67,10 +68,12 @@ final class People
             ...$user,
         ]);
 
+        $city = self::pick($where['cities']);
+
         $profile = CandidateProfile::factory()->for($account)->create([
             'headline' => null,
             'bio' => strtr($kind['bio'], [':years' => self::YEARS[$years], ':focus' => self::pick($kind['focus'])]),
-            'location' => self::pick($where['cities']).', '.$where['country'],
+            'location' => $city.', '.$where['country'],
             'portfolio_url' => random_int(1, 4) === 1 ? 'https://'.Str::slug($name, '').'.example' : null,
             'github_url' => null,
             'linkedin_url' => null,
@@ -87,7 +90,7 @@ final class People
         }
 
         self::giveEducation($profile, $kind, $where, $careerStart);
-        self::givePreference($profile, $kind, $where, $level);
+        self::givePreference($profile, $kind, $where, $city, $level);
 
         return $profile;
     }
@@ -165,6 +168,9 @@ final class People
             'desired_salary_currency' => $wants['currency'],
             'preferred_workplace_type' => WorkplaceType::from($wants['workplace']),
             'preferred_employment_type' => EmploymentType::from($wants['employment']),
+            'location_country' => $wants['country'],
+            'location_city' => $wants['city'],
+            'open_to_relocation' => $wants['relocation'],
             'is_actively_searching' => true,
             'available_from' => null,
         ]);
@@ -352,12 +358,12 @@ final class People
 
     /**
      * A monthly range in the local currency around what their level of
-     * work pays where they live.
+     * work pays where they live, and where that is. Some would move.
      *
      * @param  array<string, mixed>  $kind
      * @param  array<string, mixed>  $where
      */
-    private static function givePreference(CandidateProfile $profile, array $kind, array $where, int $level): void
+    private static function givePreference(CandidateProfile $profile, array $kind, array $where, string $city, int $level): void
     {
         $step = $where['pay'] >= 10 ? 1000 : 100;
         $monthly = $kind['pay'] * [0.75, 1.0, 1.3][$level] * $where['pay'] / 12;
@@ -369,6 +375,9 @@ final class People
             'desired_salary_currency' => $where['currency'],
             'preferred_workplace_type' => self::pick(WorkplaceType::cases()),
             'preferred_employment_type' => random_int(1, 6) === 1 ? EmploymentType::Contract : EmploymentType::FullTime,
+            'location_country' => Countries::resolve($where['country']),
+            'location_city' => $city,
+            'open_to_relocation' => random_int(1, 4) === 1,
             'is_actively_searching' => true,
             'available_from' => random_int(1, 3) === 1 ? CarbonImmutable::today()->addWeeks(random_int(2, 8)) : null,
         ]);

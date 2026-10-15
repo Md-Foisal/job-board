@@ -42,6 +42,16 @@ it('shows staff the postings waiting for review, but never an unfinished draft',
         ->assertDontSee('Unfinished Draft');
 });
 
+it('lets staff open a waiting posting and read it before deciding', function () {
+    $posting = JobPosting::factory()->pendingModeration()->create(['description' => '<p>Pays in gift cards.</p>']);
+    $this->actingAs(staffWithTwoFactor());
+
+    Livewire::test(ManageJobPostings::class)
+        ->assertActionVisible(TestAction::make('view')->table($posting))
+        ->mountAction(TestAction::make('view')->table($posting))
+        ->assertMountedActionModalSee(['Before you decide', 'Pays in gift cards.']);
+});
+
 it('keeps the queue closed to anyone who is not staff', function () {
     $this->actingAs(candidateUser())
         ->get('/admin/moderation/jobs')

@@ -257,11 +257,12 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                     <flux:menu>
                                         {{-- The company's own people can open the job page in
                                              every state; it says there who can see it. --}}
-                                        <flux:menu.item icon="eye" :href="route('jobs.show', $jobPosting)">
+                                        <flux:menu.item icon:variant="outline" icon="eye" :href="route('jobs.show', $jobPosting)">
                                             {{ __('View job page') }}
                                         </flux:menu.item>
 
                                         <flux:menu.item
+                                            icon:variant="outline"
                                             icon="chart-bar"
                                             :href="route('employer.analytics', ['company' => $this->company, 'job' => $jobPosting->slug])"
                                             :aria-label="__('Stats for :title', ['title' => $jobPosting->title])"
@@ -273,12 +274,12 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                         @can('update', $jobPosting)
                                             <flux:menu.separator />
 
-                                            <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $jobPosting->id }})">
+                                            <flux:menu.item icon:variant="outline" icon="document-duplicate" wire:click="duplicate({{ $jobPosting->id }})">
                                                 {{ __('Duplicate') }}
                                             </flux:menu.item>
 
                                             @if ($state !== \App\Enums\PostingState::Draft)
-                                                <flux:menu.item icon="calendar" wire:click="extend({{ $jobPosting->id }})">
+                                                <flux:menu.item icon:variant="outline" icon="calendar" wire:click="extend({{ $jobPosting->id }})">
                                                     {{ __('Extend by a month') }}
                                                 </flux:menu.item>
                                             @endif
@@ -288,6 +289,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
 
                                                 <flux:menu.item
                                                     variant="danger"
+                                                    icon:variant="outline"
                                                     icon="x-circle"
                                                     wire:click="close({{ $jobPosting->id }})"
                                                     wire:confirm="{{ __('Close this posting? Candidates will no longer be able to apply.') }}"
@@ -295,7 +297,7 @@ new #[Layout('layouts::employer')] #[Title('Job postings')] class extends Compon
                                                     {{ __('Close') }}
                                                 </flux:menu.item>
                                             @elseif ($jobPosting->availability_status !== AvailabilityStatus::Draft)
-                                                <flux:menu.item icon="arrow-path" wire:click="reopen({{ $jobPosting->id }})">
+                                                <flux:menu.item icon:variant="outline" icon="arrow-path" wire:click="reopen({{ $jobPosting->id }})">
                                                     {{ __('Reopen') }}
                                                 </flux:menu.item>
                                             @endif

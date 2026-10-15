@@ -9,6 +9,7 @@ use App\Enums\AvailabilityStatus;
 use App\Enums\ModerationStatus;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\JobPostings\Pages\ManageJobPostings;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\JobPosting;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -25,6 +26,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
@@ -38,6 +40,8 @@ use UnitEnum;
  */
 class JobPostingResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = JobPosting::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -95,9 +99,31 @@ class JobPostingResource extends Resource
         return auth()->user()?->isActiveStaff() ?? false;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Company' => $record->company->name,
+            'Status' => $record->moderation_status->label(),
+        ];
+    }
+
     public static function canView(Model $record): bool
     {
         return static::canViewAny();
+    }
+
+    /**
+     * What the View action asks. Left alone, Filament asks the model's
+     * policy, which answers for the public site -- where a posting still
+     * waiting for review is hidden -- so the one posting staff most need
+     * to read before deciding could not be opened.
+     */
+    public static function getViewAuthorizationResponse(Model $record): Response
+    {
+        return static::canView($record) ? Response::allow() : Response::deny();
     }
 
     public static function canCreate(): bool
@@ -200,6 +226,7 @@ class JobPostingResource extends Resource
                         TextEntry::make('submitted_at')->label('Submitted')->since(),
                     ]),
                 Section::make('Description')
+                    ->columnSpanFull()
                     ->schema([
                         TextEntry::make('description')->hiddenLabel()->html()->prose(),
                     ]),
@@ -209,6 +236,7 @@ class JobPostingResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('submitted_at', 'asc')
             ->columns([
                 TextColumn::make('title')

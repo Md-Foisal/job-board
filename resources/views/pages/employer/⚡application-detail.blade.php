@@ -413,7 +413,7 @@ new #[Layout('layouts::employer')] #[Title('Application')] class extends Compone
                     <flux:menu>
                         @foreach (ApplicationStage::cases() as $stage)
                             @if ($stage === $this->application->stage)
-                                <flux:menu.item disabled icon="check">{{ __(':stage (now)', ['stage' => $stage->label()]) }}</flux:menu.item>
+                                <flux:menu.item disabled icon:variant="outline" icon="check">{{ __(':stage (now)', ['stage' => $stage->label()]) }}</flux:menu.item>
                             @else
                                 <flux:menu.item wire:click="moveTo('{{ $stage->value }}')">{{ $stage->label() }}</flux:menu.item>
                             @endif

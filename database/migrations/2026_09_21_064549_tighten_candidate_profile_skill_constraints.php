@@ -9,13 +9,14 @@ return new class extends Migration
 {
     /**
      * Brings candidate_profile_skill in line with the physical data model
-     * and with job_posting_skill: one row per candidate and skill, and a
-     * skill that people claim cannot be hard-deleted out from under them.
-     * It shipped with neither -- a cascade instead of a restrict, and no
-     * unique pair.
+     * and with job_posting_skill: a skill that people claim cannot be
+     * hard-deleted out from under them, so the foreign key restricts
+     * instead of cascading.
      *
-     * Any duplicate pairs are collapsed first, keeping the higher
-     * proficiency, since the unique index cannot be added over them.
+     * One row per candidate and skill is the table's primary key, set when
+     * it is created. Any duplicate pairs from a database built before that
+     * are collapsed first, keeping the higher proficiency; on a fresh
+     * database there are none.
      */
     public function up(): void
     {
@@ -50,14 +51,12 @@ return new class extends Migration
 
         Schema::table('candidate_profile_skill', function (Blueprint $table) {
             $table->foreign('skill_id')->references('id')->on('skills')->restrictOnDelete();
-            $table->unique(['candidate_profile_id', 'skill_id']);
         });
     }
 
     public function down(): void
     {
         Schema::table('candidate_profile_skill', function (Blueprint $table) {
-            $table->dropUnique(['candidate_profile_id', 'skill_id']);
             $table->dropForeign(['skill_id']);
         });
 

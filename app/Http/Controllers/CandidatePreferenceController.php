@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\EmploymentType;
 use App\Enums\WorkplaceType;
 use App\Rules\CurrencyInUse;
+use App\Support\Countries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -28,8 +29,13 @@ class CandidatePreferenceController extends Controller
             'desired_salary_currency' => ['required_with:desired_salary_min,desired_salary_max', 'nullable', 'string', new CurrencyInUse],
             'preferred_workplace_type' => ['nullable', Rule::enum(WorkplaceType::class)],
             'preferred_employment_type' => ['nullable', Rule::enum(EmploymentType::class)],
+            'location_country' => ['nullable', 'string', Rule::in(Countries::codes())],
+            'location_city' => ['nullable', 'string', 'max:100'],
             'available_from' => ['nullable', 'date'],
         ]);
+
+        // An unticked box sends nothing at all.
+        $validated['open_to_relocation'] = $request->boolean('open_to_relocation');
 
         // Preference is a singleton per candidate profile, created here on
         // first save rather than provisioned eagerly at registration --

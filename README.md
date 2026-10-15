@@ -1,4 +1,4 @@
-# Job Board
+# HearBack
 
 [![tests](https://github.com/Md-Foisal/job-board/actions/workflows/tests.yml/badge.svg)](https://github.com/Md-Foisal/job-board/actions/workflows/tests.yml)
 [![linter](https://github.com/Md-Foisal/job-board/actions/workflows/lint.yml/badge.svg)](https://github.com/Md-Foisal/job-board/actions/workflows/lint.yml)
@@ -33,9 +33,11 @@ it is made up, and the people's pictures are drawn avatars.
 ![Home page](docs/screenshots/home.jpg)
 
 **A job page, as a candidate sees it.** The match box compares the job with the candidate's skills, pay,
-workplace, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
+workplace, location, job type and experience. Only the candidate sees it; the employer sees the skills match alone.
+On a plan with AI, the candidate can also ask for the match in words. This recording ran on Groq's free
+tier with the demo data; the live site runs with AI off.
 
-![Job page with the match breakdown](docs/screenshots/job-page.jpg)
+![Job page: the match breakdown, then the AI explaining the match](docs/screenshots/match-explanation.gif)
 
 **Candidate dashboard.** Applications by status, what needs the candidate's attention, the latest changes
 from companies, and open jobs that match at least half of what they ask for.
@@ -110,6 +112,8 @@ Staff work in an admin panel at `/admin`, built with Filament.
 - Queues for job posts waiting for review, reports, company verification and company reviews.
   A dashboard shows what is waiting and for how long.
 - Verify a company, ask it for documents, revoke verification or ban it. Suspend and reinstate people.
+- A super admin makes and removes moderators. The super admin role itself is only ever given from the
+  server, with `php artisan staff:grant` (see [Staff accounts](#staff-accounts)).
 - Merge duplicate skills and categories instead of deleting them.
 - Erase a person's data on request.
 - Every staff decision goes into a moderation log with who, what and why.
@@ -173,22 +177,49 @@ The main design decisions are written down as Architecture Decision Records in [
 
 ## Run it locally
 
-You need PHP 8.4 or newer (with the DOM, MBString and GD extensions), Composer, Node.js 22 and SQLite.
+The database is MySQL 8.4 and runs in Docker, so you need
+[Docker](https://docs.docker.com/get-started/get-docker/) either way.
+
+### The whole app in Docker
+
+```bash
+git clone https://github.com/Md-Foisal/job-board.git
+cd job-board
+cp .env.example .env
+docker compose run --rm --no-deps app php artisan key:generate --show
+```
+
+Put the printed key into `APP_KEY` in `.env`, then:
+
+```bash
+docker compose up -d --build --wait
+docker compose exec app php artisan migrate:fresh --seed
+```
+
+Open http://localhost:8000. One container serves the site and keeps the queue worker and the scheduler
+running beside it, the same image a host runs. Emails are written to `storage/logs/laravel.log` inside
+it: `docker compose exec app tail -f storage/logs/laravel.log`.
+
+### For working on the code
+
+You need PHP 8.4 or newer (with the DOM, MBString, Intl and GD extensions), Composer and Node.js 22.
 [Laravel Herd](https://herd.laravel.com) on macOS has all of them.
 
 ```bash
 git clone https://github.com/Md-Foisal/job-board.git
 cd job-board
+docker compose up -d --wait mysql
 composer run setup
 php artisan migrate:fresh --seed
 php artisan storage:link
 composer run dev
 ```
 
-`composer run setup` installs the PHP and Node packages, creates `.env`, generates the app key,
-creates the SQLite database and builds the assets. `composer run dev` starts the web server, the queue
-worker and Vite together. Open http://localhost:8000, and set `APP_URL` in `.env` to the same address so
-links in emails point to it.
+`docker compose up -d --wait mysql` starts only the database. `composer run setup` installs the PHP and
+Node packages, creates `.env`, generates the app key, runs the migrations and builds the assets.
+`composer run dev` starts the web server, the queue worker and Vite together. Open http://localhost:8000,
+and set `APP_URL` in `.env` to the same address so links in emails point to it. Both ways share one
+database, so run one of them at a time.
 
 Emails are written to `storage/logs/laravel.log`, so verification and alert links show up there.
 To run the scheduled commands as well, keep `php artisan schedule:work` running in another terminal.
@@ -209,20 +240,53 @@ The seeder creates these accounts in the local and testing environments only. Ev
 Staff two-factor: use the secret `JBSWY3DPEHPK3PXP` in an authenticator app, or a recovery code from
 `demo-recovery-code-1` to `demo-recovery-code-8`.
 
+### Staff accounts
+
+There is no sign-up for staff. The person signs up the ordinary way, verifies their email and sets a
+password, then whoever runs the server gives the account a role:
+
+```bash
+php artisan staff:grant owner@example.com --role=super_admin
+php artisan staff:revoke owner@example.com
+```
+
+That is how the first super admin comes to exist. From then on a super admin makes and removes
+moderators in the panel (People, the row's menu); the super admin role never changes there. The panel
+opens to a new staff member once they turn on two-factor authentication.
+
+On a server that runs the Docker image, run it inside the app container:
+
+```bash
+docker compose exec app php artisan staff:grant owner@example.com --role=super_admin
+```
+
 ### Trying the AI features
 
-Set `AI_ENABLED=true` and `ANTHROPIC_API_KEY` in `.env`. The free plan's monthly limits in
-[`config/plans.php`](config/plans.php) are 0 on purpose, so raise the ones you want to try.
+The free plan's monthly limits in [`config/plans.php`](config/plans.php) are 0 on purpose. On your
+own machine, `PLAN_DEFAULT=local` gives everyone a small allowance instead; production ignores it.
+
+- With Anthropic, as the product runs: `AI_ENABLED=true`, `ANTHROPIC_API_KEY=...`.
+- With Groq's free tier, for demo data only: `AI_ENABLED=true`, `AI_PROVIDER=groq`,
+  `GROQ_API_KEY=...` (a free key from the Groq console). Groq keeps nothing by default, but a free
+  tier is still not for real accounts. `AI_PROVIDER=gemini` with `GEMINI_API_KEY` works the same way;
+  Google may use what its free tier is sent.
+
+Each AI button names the provider in use and what it does with what it is sent.
+
+Run the queue worker as well (`composer run dev` starts it), since every AI call runs on the queue.
 
 ## Tests and CI
 
 ```bash
+docker compose up -d --wait mysql
 php artisan test --parallel
 vendor/bin/pint --test
 ```
 
-Feature and unit tests are written with Pest. GitHub Actions runs the test suite on PHP 8.4 and 8.5,
-and Laravel Pint checks the code style, on every push and pull request to `main`.
+Feature and unit tests are written with Pest and run against MySQL, in a `testing` database the
+container creates on its first start. GitHub Actions runs the test suite on PHP 8.4 and 8.5 against
+the same MySQL version, Laravel Pint checks the code style, and the Docker image is built, on every
+push and pull request to `main`.
 
 ## Status and roadmap
 

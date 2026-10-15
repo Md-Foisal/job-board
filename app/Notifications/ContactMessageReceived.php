@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Filament\Resources\ContactMessages\ContactMessageResource;
 use App\Models\ContactMessage;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * and nothing more: the message, and who sent it, are read in the panel,
  * not copied into every staff mailbox.
  */
-class ContactMessageReceived extends Notification
+class ContactMessageReceived extends Notification implements ShouldQueue
 {
     use Queueable;
 

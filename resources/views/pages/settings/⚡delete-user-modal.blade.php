@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\PasswordValidationRules;
+use App\Filament\Support\ConfirmsPassword;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -15,11 +16,20 @@ new class extends Component {
      */
     public function deleteUser(Logout $logout): void
     {
-        $this->validate([
-            'password' => $this->currentPasswordRules(),
-        ]);
-
         $user = Auth::user();
+
+        // Without a password, a fresh sign-in with Google or GitHub is the
+        // confirmation (SocialSignInController::confirm), within the same
+        // window a typed password opens.
+        if ($user->hasPassword()) {
+            $this->validate([
+                'password' => $this->currentPasswordRules(),
+            ]);
+        } elseif (! ConfirmsPassword::recentlyConfirmed()) {
+            $this->addError('password', __('Confirm it is you first.'));
+
+            return;
+        }
 
         // Account-deletion guard: don't let an employer's account vanish
         // while a job posting of theirs is still open -- any candidate who
@@ -70,20 +80,57 @@ new class extends Component {
             <flux:heading size="lg">{{ __('Are you sure you want to delete your account?') }}</flux:heading>
 
             <flux:subheading>
-                {{ __('Your account is switched off straight away. Sign in again within :days days to restore it. After that your name, email, profile and files are erased for good; applications you sent stay with employers only as anonymous records. Enter your password to confirm.', ['days' => \App\Models\User::DELETION_GRACE_DAYS]) }}
+                {{ __('Your account is switched off straight away. Sign in again within :days days to restore it. After that your name, email, profile and files are erased for good; applications you sent stay with employers only as anonymous records.', ['days' => \App\Models\User::DELETION_GRACE_DAYS]) }}
             </flux:subheading>
         </div>
 
-        <flux:input wire:model="password" :label="__('Password')" type="password" viewable />
+        @php
+            $user = auth()->user();
+            $needsSignIn = ! $user->hasPassword() && ! \App\Filament\Support\ConfirmsPassword::recentlyConfirmed();
+        @endphp
+
+        @if ($user->hasPassword())
+            <flux:input wire:model="password" :label="__('Enter your password to confirm')" type="password" viewable />
+        @elseif ($needsSignIn)
+            {{-- Leaves the page for the provider and comes back here, inside
+                 the confirmation window; the button below then works. --}}
+            <div class="flex flex-col gap-3">
+                <flux:text>{{ __('Sign in again to confirm it is you.') }}</flux:text>
+                @foreach ($user->connectedAccounts()->get() as $account)
+                    @if ($account->provider->isConfigured())
+                        <x-social-button
+                            :provider="$account->provider"
+                            type="submit"
+                            form="confirm-with-{{ $account->provider->value }}"
+                        >
+                            {{ __('Continue with :provider', ['provider' => $account->provider->label()]) }}
+                        </x-social-button>
+                    @endif
+                @endforeach
+            </div>
+            <flux:error name="password" />
+        @else
+            <flux:error name="password" />
+        @endif
 
         <div class="flex justify-end space-x-2 rtl:space-x-reverse">
             <flux:modal.close>
                 <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
             </flux:modal.close>
 
-            <flux:button variant="danger" type="submit" data-test="confirm-delete-user-button">
+            <flux:button variant="danger" type="submit" :disabled="$needsSignIn" data-test="confirm-delete-user-button">
                 {{ __('Delete account') }}
             </flux:button>
         </div>
     </form>
+
+    {{-- Outside the Livewire form, which they cannot sit inside: the
+         buttons above reach them through their form attribute. --}}
+    @if ($needsSignIn)
+        @foreach (auth()->user()->connectedAccounts()->get() as $account)
+            <form id="confirm-with-{{ $account->provider->value }}" method="POST" action="{{ route('social.confirm', $account->provider) }}" class="hidden">
+                @csrf
+            </form>
+        @endforeach
+    @endif
 </flux:modal>

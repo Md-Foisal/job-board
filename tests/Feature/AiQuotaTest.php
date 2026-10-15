@@ -191,3 +191,40 @@ test('a fraction of a micro-dollar rounds up, and an unpriced model records no c
 
     Log::shouldHaveReceived('warning')->once();
 });
+
+test('the local plan is never the plan in production', function () {
+    expect(config('plans.limits.local.match_explanation'))->toBeGreaterThan(0);
+
+    $defaultIn = function (string $environment): string {
+        $saved = [];
+
+        foreach (['APP_ENV' => $environment, 'PLAN_DEFAULT' => 'local'] as $name => $value) {
+            $saved[$name] = [$_ENV[$name] ?? null, $_SERVER[$name] ?? null, getenv($name)];
+            $_ENV[$name] = $_SERVER[$name] = $value;
+            putenv("{$name}={$value}");
+        }
+
+        try {
+            return (require config_path('plans.php'))['default'];
+        } finally {
+            foreach ($saved as $name => [$env, $server, $process]) {
+                if ($env === null) {
+                    unset($_ENV[$name]);
+                } else {
+                    $_ENV[$name] = $env;
+                }
+
+                if ($server === null) {
+                    unset($_SERVER[$name]);
+                } else {
+                    $_SERVER[$name] = $server;
+                }
+
+                putenv($process === false ? $name : "{$name}={$process}");
+            }
+        }
+    };
+
+    expect($defaultIn('local'))->toBe('local')
+        ->and($defaultIn('production'))->toBe('free');
+});

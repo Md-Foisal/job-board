@@ -9,6 +9,7 @@ use App\Support\DocumentUploads;
 use App\Support\ImageUploads;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Livewire\Livewire;
 
 function uploadLogo(Company $company, UploadedFile $logo)
@@ -184,4 +185,24 @@ test('work samples are capped rather than rotated', function () {
 
     expect($candidate->candidateProfile->documents()->where('document_type', DocumentType::WorkSample)->count())
         ->toBe(DocumentUploads::MAX_OTHER_DOCUMENTS_PER_TYPE);
+});
+
+test('a document is accepted at its size limit and refused one kilobyte above it', function (DocumentType $type, string $extension, string $mime, int $limitKilobytes) {
+    $passes = fn (int $kilobytes) => Validator::make(
+        ['file' => UploadedFile::fake()->create("file.{$extension}", $kilobytes, $mime)],
+        ['file' => DocumentUploads::rules($type)],
+    )->passes();
+
+    expect($passes($limitKilobytes))->toBeTrue()
+        ->and($passes($limitKilobytes + 1))->toBeFalse();
+})->with([
+    'cv' => [DocumentType::Cv, 'pdf', 'application/pdf', 1024],
+    'work sample' => [DocumentType::WorkSample, 'zip', 'application/zip', 2048],
+    'certificate' => [DocumentType::Certificate, 'pdf', 'application/pdf', 1024],
+]);
+
+test('the document hints state the limit the check uses', function () {
+    expect(DocumentUploads::hint(DocumentType::Cv))->toContain('1 MB')
+        ->and(DocumentUploads::hint(DocumentType::WorkSample))->toContain('2 MB')
+        ->and(DocumentUploads::hint(DocumentType::Certificate))->toContain('1 MB');
 });

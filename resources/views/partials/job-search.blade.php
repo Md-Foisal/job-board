@@ -16,7 +16,7 @@
     x-init="window.matchMedia('(min-width: 64rem)').addEventListener('change', (event) => { if (event.matches) filtersOpen = false })"
     x-on:keydown.escape.window="filtersOpen = false"
 >
-    <div role="search" class="flex flex-col gap-1.5 rounded-2xl border border-line bg-canvas p-1.5 shadow-lift transition-shadow focus-within:border-line-strong sm:flex-row">
+    <div role="search" class="flex flex-col gap-1.5 rounded-2xl border border-line bg-canvas p-1.5 shadow-lift transition-shadow focus-within:border-ink focus-within:ring-1 focus-within:ring-ink sm:flex-row">
         <label class="flex min-h-11 flex-1 items-center gap-2.5 rounded-xl px-3.5 focus-within:bg-surface">
             <flux:icon.magnifying-glass class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
             <span class="sr-only">{{ __('Job title, skill or company') }}</span>
@@ -29,17 +29,30 @@
             >
         </label>
 
-        <label class="flex min-h-11 items-center gap-2.5 rounded-xl border-t border-line px-3.5 focus-within:bg-surface sm:w-60 sm:border-t-0 sm:border-l">
-            <flux:icon.map-pin class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
-            <span class="sr-only">{{ __('City, or remote') }}</span>
-            <input
-                type="text"
-                wire:model.live.debounce.400ms="location"
-                placeholder="{{ __('City or remote') }}"
-                autocomplete="off"
-                class="w-full min-w-0 border-0 bg-transparent p-0 text-base text-ink placeholder:text-ink-muted focus:outline-none"
-            >
-        </label>
+        <div
+            class="relative sm:w-60"
+            x-data="{ placesOpen: false }"
+            x-on:click.outside="placesOpen = false"
+            x-on:focusout="$el.contains($event.relatedTarget) || (placesOpen = false)"
+            x-on:keydown.escape="placesOpen = false"
+        >
+            <label class="flex min-h-11 items-center gap-2.5 rounded-xl border-t border-line px-3.5 focus-within:bg-surface sm:border-t-0 sm:border-l">
+                <flux:icon.map-pin class="size-5 shrink-0 text-ink-muted" aria-hidden="true" />
+                <span class="sr-only">{{ __('City, or remote') }}</span>
+                <input
+                    type="text"
+                    wire:model.live.debounce.400ms="location"
+                    x-on:focus="placesOpen = true"
+                    x-on:input="placesOpen = true"
+                    x-on:keydown.down.prevent="placesOpen = true; $nextTick(() => $focus.within($refs.places).first())"
+                    placeholder="{{ __('City or remote') }}"
+                    autocomplete="off"
+                    class="w-full min-w-0 border-0 bg-transparent p-0 text-base text-ink placeholder:text-ink-muted focus:outline-none"
+                >
+            </label>
+
+            @include('partials.place-suggestions', ['model' => 'location', 'places' => $placeSuggestions, 'typed' => $location])
+        </div>
     </div>
 
     <div class="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">

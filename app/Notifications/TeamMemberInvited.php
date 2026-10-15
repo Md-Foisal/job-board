@@ -7,10 +7,11 @@ use App\Models\User;
 use App\Support\DateFormat;
 use App\Support\LocalTime;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TeamMemberInvited extends Notification
+class TeamMemberInvited extends Notification implements ShouldQueue
 {
     use Queueable;
 

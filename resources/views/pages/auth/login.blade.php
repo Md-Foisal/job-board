@@ -3,6 +3,12 @@
 
     <x-auth-session-status class="text-center" :status="session('status')" />
 
+    @error('social')
+        <flux:callout variant="danger" icon="exclamation-circle" :heading="$message" />
+    @enderror
+
+    <x-social-sign-in />
+
     <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
         @csrf
 

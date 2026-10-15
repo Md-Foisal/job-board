@@ -132,7 +132,7 @@ class ModerationQueuesOverview extends StatsOverviewWidget
                 ReportResource::getUrl('index'),
                 Heroicon::OutlinedFlag,
             ),
-            $this->queueStat(
+            $this->backlogStat(
                 'Companies not verified',
                 $companies->count(),
                 $companies->min('created_at'),
@@ -140,6 +140,25 @@ class ModerationQueuesOverview extends StatsOverviewWidget
                 Heroicon::OutlinedBuildingOffice2,
             ),
         ];
+    }
+
+    /**
+     * A company does not ask to be verified: staff verify it once there is
+     * proof. So nothing is waiting on staff and no clock runs against them
+     * -- the card says how long the oldest one has gone unverified, in
+     * grey, rather than how long it has waited.
+     */
+    private function backlogStat(string $label, int $count, CarbonInterface|string|null $oldest, string $url, Heroicon $icon): Stat
+    {
+        $stat = Stat::make($label, $count)->icon($icon)->url($url);
+
+        if ($count === 0 || $oldest === null) {
+            return $stat->description('All clear')->color('success');
+        }
+
+        return $stat
+            ->description('Unverified for up to '.now()->parse($oldest)->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE))
+            ->color('gray');
     }
 
     private function queueStat(string $label, int $count, CarbonInterface|string|null $oldest, string $url, Heroicon $icon): Stat

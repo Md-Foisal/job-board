@@ -17,8 +17,9 @@ use App\Models\Skill;
  *
  * Only what the explanation needs goes out: the job, the candidate's
  * professional profile, and the product's own breakdown. Never the name,
- * email, phone, photo, links, CV file or salary expectations -- the
- * salary check is left out of the facts for the same reason.
+ * email, phone, photo, links, CV file, where they live or salary
+ * expectations -- the salary and location checks are left out of the
+ * facts for the same reason.
  *
  * The key hashes all of it with the prompt's version, so an explanation
  * is shown again only while the job, the profile and the prompt are the

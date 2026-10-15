@@ -17,6 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a host's load balancer the request reaches PHP as plain
+        // HTTP; trusting its forwarded headers keeps generated URLs and the
+        // secure-cookie check on https. Off unless TRUSTED_PROXIES is set
+        // ('*' or a comma-separated list of addresses).
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : explode(',', $proxies));
+        }
+
         // The one-click unsubscribe POST comes from a mail client, with no
         // session and so no token; its signed URL is what protects it.
         $middleware->preventRequestForgery(except: [

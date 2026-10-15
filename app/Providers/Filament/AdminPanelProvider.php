@@ -53,15 +53,29 @@ class AdminPanelProvider extends PanelProvider
             // (its switch in the bar, Filament's own three-way one removed so
             // there are not two that disagree); and the app's surfaces.
             // See resources/views/filament/.
-            ->brandName('JobBoard')
+            ->brandName(fn () => config('app.name'))
             ->brandLogo(fn () => view('filament.brand'))
+            ->favicon(asset('favicon.svg'))
             ->homeUrl(fn () => route('home'))
             ->themeSwitcher(false)
             ->defaultAvatarProvider(InitialsAvatar::class)
             ->renderHook(PanelsRenderHook::STYLES_AFTER, fn () => view('filament.shell-head'))
             ->renderHook(PanelsRenderHook::BODY_START, fn () => view('partials.svg-defs'))
             ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn () => view('filament.theme-toggle'))
+            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn () => view('filament.sidebar-collapse'))
+            // Folds to icons on desktop like the app's own sidebars, from a
+            // button in the same place as theirs: the sidebar's first row
+            // (filament/sidebar-collapse). Filament remembers the choice in
+            // the viewer's browser.
+            ->sidebarCollapsibleOnDesktop()
+            // The name heads the menu as plain text, as on GitHub or Linear;
+            // the account itself (password, two-factor) is the app's
+            // settings page, the same one every other user has.
             ->userMenuItems([
+                'settings' => Action::make('settings')
+                    ->label('Account settings')
+                    ->icon(Heroicon::OutlinedCog6Tooth)
+                    ->url(fn () => route('profile.edit')),
                 'site' => Action::make('site')
                     ->label('View site')
                     ->icon(Heroicon::OutlinedGlobeAlt)

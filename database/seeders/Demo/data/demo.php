@@ -130,6 +130,9 @@ return [
             'currency' => 'GBP',
             'workplace' => 'hybrid',
             'employment' => 'full-time',
+            'country' => 'GB',
+            'city' => 'London',
+            'relocation' => false,
         ],
     ],
 

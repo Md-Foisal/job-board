@@ -10,6 +10,7 @@ use App\Models\JobPosting;
 use App\Models\Skill;
 use App\Services\MatchScoreCalculator;
 use App\Support\JobSearchCriteria;
+use App\Support\PlaceSuggestions;
 use App\Support\PublicCache;
 use App\Support\SalaryCurrencies;
 use Illuminate\Support\Collection;
@@ -408,6 +409,7 @@ trait FiltersJobPostings
             'remoteOnly' => $remoteOnly,
             'activeFilterCount' => count($applied) + ($remoteOnly ? 1 : 0),
             'searching' => trim($this->q) !== '' || trim($this->location) !== '',
+            'placeSuggestions' => PlaceSuggestions::for($this->location),
             // Guests too: the link signs them in and brings them back
             // with the search intact. Employers have no alerts to keep.
             'canCreateAlert' => ! $user || $user->isCandidate(),

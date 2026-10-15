@@ -134,6 +134,7 @@ class ContactMessageResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('created_at', 'asc')
             ->columns([
                 TextColumn::make('name')

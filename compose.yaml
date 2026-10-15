@@ -1,0 +1,40 @@
+services:
+  app:
+    build: .
+    image: job-board
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_APP_PORT:-8000}:8080"
+    env_file: .env
+    environment:
+      APP_URL: "http://localhost:${FORWARD_APP_PORT:-8000}"
+      DB_HOST: mysql
+      DB_PORT: 3306
+      AUTORUN_ENABLED: "true"
+    # The same files the Herd setup uses: both share one database, and
+    # the database names files (logos, CVs) that must exist for both.
+    volumes:
+      - ./storage/app:/var/www/html/storage/app
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    ports:
+      - "${FORWARD_DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  mysql-data:

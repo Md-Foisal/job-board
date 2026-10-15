@@ -20,6 +20,8 @@ use App\Http\Controllers\JobAlertUnsubscribeController;
 use App\Http\Controllers\JobPostingController;
 use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SocialSignInController;
+use App\Http\Controllers\SocialSignUpController;
 use App\Http\Controllers\StartCandidateProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +65,21 @@ Route::get('/companies/{company:slug}', [CompanyController::class, 'show'])->nam
 Route::middleware('guest')->group(function () {
     Route::get('/account/restore', [AccountRestoreController::class, 'show'])->name('account.restore');
     Route::post('/account/restore', [AccountRestoreController::class, 'store'])->name('account.restore.store');
+});
+
+// Signing in with Google or GitHub (SocialSignInController). The callback
+// serves signing in, connecting and confirming alike, so it is open to
+// guests and signed-in people both.
+Route::middleware('guest')->group(function () {
+    Route::get('/auth/{provider}/redirect', [SocialSignInController::class, 'redirect'])->name('social.redirect');
+    Route::post('/auth/{provider}/start', [SocialSignInController::class, 'start'])->name('social.start');
+    Route::get('/auth/finish', [SocialSignUpController::class, 'show'])->name('social.finish');
+    Route::post('/auth/finish', [SocialSignUpController::class, 'store'])->name('social.finish.store');
+});
+Route::get('/auth/{provider}/callback', [SocialSignInController::class, 'callback'])->name('social.callback');
+Route::middleware('auth')->group(function () {
+    Route::post('/auth/{provider}/connect', [SocialSignInController::class, 'connect'])->name('social.connect');
+    Route::post('/auth/{provider}/confirm', [SocialSignInController::class, 'confirm'])->name('social.confirm');
 });
 
 // Job alert unsubscribe: no sign-in, the signature is
@@ -145,8 +162,13 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
  * (start a candidate profile, see the application already made, see the
  * job as candidates do). A guest pressing Apply who then signs in with
  * an employer account lands there too, instead of on a refusal.
+ *
+ * Applying and working for a company both reach other people, so they
+ * wait until the email address is confirmed. Browsing, the profile
+ * settings (where the address is fixed and a new link asked for) and
+ * signing out stay open.
  */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('/jobs/{jobPosting:slug}/apply', 'pages::job-apply')->name('jobs.apply');
 });
 
@@ -194,12 +216,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
  * belongs to the person, not to any one company, and an agency recruiter
  * posting for three clients shows the same face to all of them.
  */
-Route::middleware(['auth', 'employer'])->group(function () {
+Route::middleware(['auth', 'verified', 'employer'])->group(function () {
     Route::get('/employer/profile', [RecruiterProfileController::class, 'edit'])->name('employer.recruiter-profile.edit');
     Route::patch('/employer/profile', [RecruiterProfileController::class, 'update'])->name('employer.recruiter-profile.update');
 });
 
-Route::middleware(['auth', 'company.member'])
+Route::middleware(['auth', 'verified', 'company.member'])
     ->prefix('companies/{company:slug}')
     ->name('employer.')
     ->group(function () {

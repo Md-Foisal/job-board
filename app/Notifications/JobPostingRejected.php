@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\JobPosting;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * A posting sent back, with the reviewer's reason and the way forward:
  * editing it and publishing again puts it straight back into review.
  */
-class JobPostingRejected extends Notification
+class JobPostingRejected extends Notification implements ShouldQueue
 {
     use Queueable;
 

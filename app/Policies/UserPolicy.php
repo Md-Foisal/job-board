@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\AccountStatus;
+use App\Enums\StaffRole;
 use App\Models\User;
 
 class UserPolicy
@@ -58,5 +60,37 @@ class UserPolicy
     public function erase(User $user, User $target): bool
     {
         return $target->anonymized_at === null && $this->suspend($user, $target);
+    }
+
+    /**
+     * Making a moderator is the only staff role the panel hands out; the
+     * super admin role comes from the server (staff:grant). The person
+     * must be someone who can actually do the job and be held to it: a
+     * live account, an email address that is known to reach them, and a
+     * password -- staff actions ask for it again before anything is taken
+     * away from anyone.
+     */
+    public function makeModerator(User $user, User $target): bool
+    {
+        return $user->isActiveStaff()
+            && $user->isSuperAdmin()
+            && $user->id !== $target->id
+            && ! $target->isStaff()
+            && ! $target->trashed()
+            && $target->anonymized_at === null
+            && $target->account_status === AccountStatus::Active
+            && $target->hasVerifiedEmail()
+            && $target->hasPassword();
+    }
+
+    /**
+     * Only the moderator role can be taken away here, for the same reason
+     * only it can be given.
+     */
+    public function removeModerator(User $user, User $target): bool
+    {
+        return $user->isActiveStaff()
+            && $user->isSuperAdmin()
+            && $target->staff_role === StaffRole::Moderator;
     }
 }

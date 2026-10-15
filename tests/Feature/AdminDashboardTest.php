@@ -30,6 +30,16 @@ it('says how long the oldest item in a queue has waited, not just how many there
         ->assertSee('Oldest waiting 2 days');
 });
 
+it('does not count an unverified company as waiting on staff', function () {
+    Company::query()->update(['verified_at' => now()]);
+    Company::factory()->create(['created_at' => now()->subYears(2)]);
+    $this->actingAs(staffWithTwoFactor());
+
+    Livewire::test(ModerationQueuesOverview::class)
+        ->assertSee('Unverified for up to 2 years')
+        ->assertDontSee('Oldest waiting 2 years');
+});
+
 it('calls an empty queue all clear', function () {
     Company::query()->update(['verified_at' => now()]);
     $this->actingAs(staffWithTwoFactor());

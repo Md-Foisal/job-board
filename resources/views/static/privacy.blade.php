@@ -1,13 +1,32 @@
 <x-static-page :heading="__('Privacy Policy')">
+    <x-prose-section heading="Who we are">
+        <p>
+            {{ config('app.name') }} is run by Md. Foisal, an individual based in
+            Bangladesh. He decides what personal data the service collects and
+            why, which makes him the controller of that data. To reach him about
+            your data,
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="What we collect">
         <p>
             When you create an account we store your name, email address and
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
             and location, education and work history, projects, certifications,
-            skills, salary and work-type preferences, and any documents you upload
+            skills, salary, work-type and location preferences, and any documents you upload
             or build, such as a CV. If you post jobs, we store your company details
             and the postings themselves.
+        </p>
+        <p>
+            If you sign up or sign in with Google or GitHub, that service tells
+            us your name and email address, which it has already checked is
+            yours, and gives us an ID number for your account there, which we
+            keep so we recognise you next time. We never see your password
+            there, we keep no access to your account there, and we ask for
+            nothing else from it. You can disconnect it in your security
+            settings once you have another way to sign in.
         </p>
         <p>
             We also record which job postings you open while signed in, so your
@@ -93,8 +112,8 @@
             in words. Only then is the following sent to Anthropic, which reads it
             on our behalf as our processor: the job posting, your headline, about
             text, skills, work history and education, and our own comparison. Your
-            name, contact details, photos, links, CVs and salary expectations are
-            not sent. The explanation is shown only to you, never to employers, and
+            name, contact details, photos, links, CVs, where you live and salary
+            expectations are not sent. The explanation is shown only to you, never to employers, and
             never changes your match or where you appear. We keep it for a day, so
             you can come back to it, and then delete it; we keep a record that one
             was made, to count it against your plan's allowance, but not what it

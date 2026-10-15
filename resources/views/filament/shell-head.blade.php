@@ -14,6 +14,19 @@
 @include('partials.timezone-cookie')
 
 <script>
+    // The app's links move between its own pages with wire:navigate, which
+    // swaps the page in place and keeps the running Alpine. The panel's
+    // scripts register their Alpine stores and components when Alpine
+    // starts, which by then has long passed, so a panel page arriving that
+    // way renders but nothing on it responds. On a normal load this runs
+    // while the document is still being parsed; run any later, it was
+    // merged into an already loaded page, so the panel is loaded in full.
+    if (document.readyState !== 'loading') {
+        window.location.replace(@js(request()->fullUrl()))
+    }
+</script>
+
+<script>
     (() => {
         try {
             localStorage.setItem('theme', localStorage.getItem('flux.appearance') || 'system')
@@ -82,6 +95,40 @@
         background-color: var(--gray-900);
         border-inline-end-color: var(--gray-800);
     }
+
+    /* The sidebar's fold button (filament/sidebar-collapse) as in the
+       app's sidebar: its first row, right edge, 16px from the top, with the
+       menu starting just under it rather than a full gap lower. Desktop
+       only: on a phone the sidebar is a drawer with its own open and
+       close, and Filament's own fold button in the top bar is hidden. */
+    .jb-sidebar-collapse { display: none; }
+    @media (min-width: 64rem) {
+        .fi-topbar-collapse-sidebar-btn-ctn { display: none !important; }
+        .fi-main-sidebar .fi-sidebar-nav { padding-top: 1rem; }
+        .jb-sidebar-collapse {
+            display: flex;
+            justify-content: flex-end;
+            margin-inline-end: -0.5rem;
+            margin-bottom: -0.75rem;
+        }
+        /* Folded, it lines up with the icons under it. */
+        .fi-sidebar:not(.fi-sidebar-open) .jb-sidebar-collapse {
+            justify-content: flex-start;
+            margin-inline: -0.5rem 0;
+        }
+    }
+    .jb-sidebar-collapse-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        color: var(--gray-400);
+        cursor: pointer;
+    }
+    .jb-sidebar-collapse-btn:hover { background-color: rgb(0 0 0 / 0.05); color: var(--gray-800); }
+    .dark .jb-sidebar-collapse-btn:hover { background-color: rgb(255 255 255 / 0.15); color: #fff; }
 
     /*
      * The colour rule of the app (resources/css/app.css): anything coloured
@@ -169,6 +216,18 @@
         --color-900: var(--gray-900);
         --color-950: var(--gray-950);
     }
+
+    /* Focus, as everywhere in the app (resources/css/app.css): a ring in
+       ink, not the brand orange, which here read as a flat amber border on
+       the search box. A field with an error keeps its red. */
+    .fi-body :focus-visible:not(.fi-invalid),
+    .fi-body input:is([type='checkbox'], [type='radio']):focus,
+    .fi-input-wrp:not(.fi-disabled, .fi-invalid):focus-within {
+        --tw-ring-color: var(--jb-ink);
+    }
+
+    /* Search result groups in sentence case, as the menu names them. */
+    .fi-global-search-result-group-header { text-transform: none; }
 
     /* The current page number, in ink rather than orange. */
     .fi-pagination-item.fi-active .fi-pagination-item-label { color: var(--jb-ink); }

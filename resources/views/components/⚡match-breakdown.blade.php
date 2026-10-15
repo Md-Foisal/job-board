@@ -9,7 +9,9 @@ use App\Jobs\ExplainMatchWithAi;
 use App\Models\CandidatePreference;
 use App\Models\JobPosting;
 use App\Services\MatchScoreCalculator;
+use App\Enums\WorkplaceType;
 use App\Support\AiQuota;
+use App\Support\Countries;
 use App\Support\MatchBreakdown;
 use App\Support\MatchExplanation;
 use App\Support\MatchExplanationInput;
@@ -232,6 +234,12 @@ new class extends Component
                 'you' => $preference?->preferred_workplace_type?->label() ?? __('No preference'),
             ],
             [
+                'check' => MatchCheck::Location,
+                'result' => $breakdown->check(MatchCheck::Location),
+                'job' => $this->jobPlace(),
+                'you' => $this->yourPlace($preference),
+            ],
+            [
                 'check' => MatchCheck::Employment,
                 'result' => $breakdown->check(MatchCheck::Employment),
                 'job' => $this->jobPosting->employment_type->label(),
@@ -281,6 +289,34 @@ new class extends Component
         return $job->salary_period === SalaryPeriod::Monthly
             ? __(':amount a month', ['amount' => $amount])
             : __('About :amount a month', ['amount' => $amount]);
+    }
+
+    /**
+     * Where the job is, as the check reads it: a remote job only by the
+     * country it can be done from, in the employer's own words.
+     */
+    private function jobPlace(): string
+    {
+        $job = $this->jobPosting;
+
+        if ($job->workplace_type === WorkplaceType::Remote) {
+            return filled($job->location_country)
+                ? __('Remote, from :country', ['country' => $job->location_country])
+                : __('Remote');
+        }
+
+        return collect([$job->location_city, $job->location_country])->filter()->implode(', ') ?: __('Not stated');
+    }
+
+    private function yourPlace(?CandidatePreference $preference): string
+    {
+        $place = collect([$preference?->location_city, Countries::name($preference?->location_country)])->filter()->implode(', ');
+
+        if ($place === '') {
+            return __('Not set');
+        }
+
+        return $preference->open_to_relocation ? __(':place, open to moving', ['place' => $place]) : $place;
     }
 
     private function duration(int $months): string
@@ -456,7 +492,7 @@ new class extends Component
                                 {{ $aiStatus === 'failed' ? __('Try again') : __('Explain my match') }}
                             </flux:button>
                             <span class="text-xs text-ink-muted">
-                                {{ __("Your profile (not your CV, name, contact details or salary) is sent to Anthropic. Anthropic doesn't train on it and, by default, deletes it within 30 days.") }}
+                                {{ __('Your profile (not your CV, name, contact details, location or salary) is sent to :provider.', ['provider' => \App\Support\AiProvider::name()]) }} {{ \App\Support\AiProvider::handling() }}
                             </span>
                         </div>
                     </x-card>

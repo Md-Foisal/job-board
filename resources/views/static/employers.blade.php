@@ -34,8 +34,16 @@
 @endphp
 
 <x-layouts::guest :title="__('For employers')">
-    <section class="relative overflow-hidden border-b border-line">
-        <div aria-hidden="true" class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,var(--color-line-strong)_1px,transparent_0)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]"></div>
+    {{-- Same dot field as the home hero: the dots near the pointer light up. Still on touch screens, so there is nothing moving to pause. --}}
+    <section
+        class="hero-spotlight hero-still relative isolate overflow-hidden border-b border-line"
+        x-data
+        x-on:pointermove="if ($event.pointerType === 'mouse') { const r = $el.getBoundingClientRect(); $el.style.setProperty('--spot-x', ($event.clientX - r.left) + 'px'); $el.style.setProperty('--spot-y', ($event.clientY - r.top) + 'px') }"
+    >
+        <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+            <div class="hero-dots absolute inset-0"></div>
+            <div class="hero-dots-lit absolute inset-0"></div>
+        </div>
 
         <div class="relative mx-auto flex max-w-4xl flex-col items-center px-6 py-20 text-center sm:py-28">
             <p class="text-meta font-semibold uppercase tracking-[0.12em] text-ink-muted">{{ __('For employers') }}</p>
@@ -54,7 +62,7 @@
                 </flux:button>
 
                 @guest
-                    <flux:button :href="route('login')" variant="ghost">
+                    <flux:button :href="route('login')" variant="outline">
                         {{ __('Log in to your account') }}
                     </flux:button>
                 @endguest

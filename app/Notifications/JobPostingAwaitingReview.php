@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Filament\Resources\JobPostings\JobPostingResource;
 use App\Models\JobPosting;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notification;
  * that decides whether they come back -- waits on someone happening to
  * look.
  */
-class JobPostingAwaitingReview extends Notification
+class JobPostingAwaitingReview extends Notification implements ShouldQueue
 {
     use Queueable;
 

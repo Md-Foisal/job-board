@@ -34,6 +34,9 @@ enum ModerationAction: string
     case ReinstateUser = 'reinstate_user';
     case EraseUser = 'erase_user';
 
+    case GrantModerator = 'grant_moderator';
+    case RevokeModerator = 'revoke_moderator';
+
     public function label(): string
     {
         return match ($this) {
@@ -52,6 +55,8 @@ enum ModerationAction: string
             self::SuspendUser => 'Suspended user',
             self::ReinstateUser => 'Reinstated user',
             self::EraseUser => 'Erased personal data',
+            self::GrantModerator => 'Made moderator',
+            self::RevokeModerator => 'Removed as moderator',
         };
     }
 
@@ -71,6 +76,7 @@ enum ModerationAction: string
             self::BanCompany,
             self::SuspendUser,
             self::EraseUser,
+            self::RevokeModerator,
         ], true);
     }
 }

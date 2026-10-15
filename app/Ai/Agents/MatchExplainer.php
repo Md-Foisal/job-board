@@ -3,15 +3,18 @@
 namespace App\Ai\Agents;
 
 use App\Ai\Tools\MatchMaterial;
+use Closure;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Timeout;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasMiddleware;
 use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Messages\AssistantMessage;
 use Laravel\Ai\Messages\ToolResultMessage;
 use Laravel\Ai\Messages\UserMessage;
+use Laravel\Ai\PendingStep;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\Data\ToolCall;
@@ -35,7 +38,7 @@ use Stringable;
  */
 #[MaxTokens(1024)]
 #[Timeout(60)]
-class MatchExplainer implements Agent, HasStructuredOutput, HasTools
+class MatchExplainer implements Agent, HasMiddleware, HasStructuredOutput, HasTools
 {
     use Promptable;
 
@@ -84,6 +87,26 @@ class MatchExplainer implements Agent, HasStructuredOutput, HasTools
     public function tools(): iterable
     {
         return [new MatchMaterial($this->material)];
+    }
+
+    /**
+     * The tool is there for the material to arrive as its result; the
+     * model never needs to call it. Anthropic holds the answer to the
+     * schema with the tool offered. Other providers cannot do both at
+     * once, and asked for the shape in words some call a tool that does
+     * not exist (Groq rejects the whole request), so for them the tool is
+     * left out and the answer is held to the schema instead. The material
+     * still arrives only as the earlier call's result.
+     *
+     * @return array<int, Closure>
+     */
+    public function middleware(): array
+    {
+        return [
+            fn (PendingStep $step, Closure $next) => $next(
+                $step->provider === 'anthropic' ? $step : $step->withoutTools(MatchMaterial::NAME),
+            ),
+        ];
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * not published, and why. The review itself is never quoted: the mail
  * goes to an inbox, the review is on the page.
  */
-class ReviewResponseRejected extends Notification
+class ReviewResponseRejected extends Notification implements ShouldQueue
 {
     use Queueable;
 

@@ -27,7 +27,8 @@ use Illuminate\Support\Str;
  * letters, screening answers, the notes employers wrote about them, their
  * reviews of companies (with the companies' answers to them), alerts,
  * saved jobs, viewing history, messages sent through the contact page,
- * sessions and reset tokens.
+ * the Google or GitHub accounts they signed in with, sessions and reset
+ * tokens.
  *
  * What stays: the rows other records point to, emptied -- the user row as
  * "Deleted user", the candidate profile, the applications with their
@@ -122,6 +123,7 @@ class AnonymizeUser
             // staff queue ages reviews by it.
             DB::table('company_reviews')->where('responded_by_id', $user->id)->update(['responded_by_id' => null]);
 
+            $user->connectedAccounts()->delete();
             $user->jobAlerts()->delete();
             $user->savedJobs()->detach();
             JobView::where('user_id', $user->id)->delete();

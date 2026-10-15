@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Categories;
 
 use App\Actions\MergeCategory;
 use App\Filament\Resources\Categories\Pages\ManageCategories;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\Category;
 use BackedEnum;
 use Closure;
@@ -35,6 +36,8 @@ use UnitEnum;
  */
 class CategoryResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = Category::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
@@ -133,6 +136,7 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),

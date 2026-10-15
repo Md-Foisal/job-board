@@ -12,6 +12,7 @@ use App\Enums\DomainCheck;
 use App\Enums\ReportStatus;
 use App\Filament\Resources\Companies\Pages\ManageCompanies;
 use App\Filament\Support\ConfirmsPassword;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\Company;
 use App\Support\EmailDomain;
 use BackedEnum;
@@ -42,6 +43,8 @@ use UnitEnum;
  */
 class CompanyResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = Company::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
@@ -197,6 +200,7 @@ class CompanyResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('created_at', 'asc')
             ->columns([
                 TextColumn::make('name')

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Skills;
 
 use App\Actions\MergeSkill;
 use App\Filament\Resources\Skills\Pages\ManageSkills;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\Skill;
 use BackedEnum;
 use Closure;
@@ -35,6 +36,8 @@ use UnitEnum;
  */
 class SkillResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = Skill::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSparkles;
@@ -133,6 +136,7 @@ class SkillResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),

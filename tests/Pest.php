@@ -6,7 +6,12 @@ use App\Models\CandidateProfile;
 use App\Models\Company;
 use App\Models\Membership;
 use App\Models\User;
+use Illuminate\Database\Connection;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\Socialite;
+use Laravel\Socialite\Two\User as OutsideAccount;
 use Tests\TestCase;
 
 /*
@@ -121,4 +126,54 @@ function fillJobForm($component, array $overrides = [])
     }
 
     return $component;
+}
+
+/**
+ * Makes every write to the table fail the way a database error does,
+ * without touching the schema. Dropping or altering a table to force the
+ * failure does not work on MySQL: schema changes commit the open
+ * transaction, so the test's rows outlive it and break the tests after.
+ */
+function failWritesTo(string $table): void
+{
+    $pattern = '/^\s*(insert|update|delete)\b[^;]*?\b'.preg_quote($table, '/').'\b/i';
+
+    DB::connection()->beforeExecuting(function (string $query, array $bindings, Connection $connection) use ($pattern, $table) {
+        if (preg_match($pattern, $query) === 1) {
+            throw new QueryException($connection->getName(), $query, $bindings, new PDOException("Writes to {$table} fail in this test."));
+        }
+    });
+}
+
+/**
+ * Gives both sign-in providers credentials, so their buttons and routes
+ * are on. Nothing here ever reaches Google or GitHub: tests fake the
+ * round trip with Socialite::fake().
+ */
+function configureSignInProviders(): void
+{
+    config([
+        'services.google.client_id' => 'google-client-id',
+        'services.google.client_secret' => 'google-client-secret',
+        'services.github.client_id' => 'github-client-id',
+        'services.github.client_secret' => 'github-client-secret',
+    ]);
+}
+
+/**
+ * What Google or GitHub hands back after the person agrees: by default a
+ * Google account whose address Google has verified.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function fakeOutsideAccount(string $provider = 'google', array $attributes = []): void
+{
+    Socialite::fake($provider, OutsideAccount::fake([
+        'id' => $provider.'-123',
+        'nickname' => 'nadia-r',
+        'name' => 'Nadia Rahman',
+        'email' => 'nadia@gmail.com',
+        'email_verified' => true,
+        ...$attributes,
+    ]));
 }

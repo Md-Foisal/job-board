@@ -37,18 +37,18 @@
         <flux:menu.separator />
 
         @if ($menuUser->isActiveStaff())
-            <flux:menu.item :href="filament()->getPanel('admin')->getUrl()" icon="shield-check">
+            <flux:menu.item :href="filament()->getPanel('admin')->getUrl()" icon:variant="outline" icon="shield-check">
                 {{ __('Admin panel') }}
             </flux:menu.item>
         @endif
 
         @if ($menuUser->isCandidate())
-            <flux:menu.item :href="route('candidate.profile.edit')" icon="user" wire:navigate>
+            <flux:menu.item :href="route('candidate.profile.edit')" icon:variant="outline" icon="user" wire:navigate>
                 {{ __('My profile') }}
             </flux:menu.item>
         @endif
 
-        <flux:menu.item :href="$settingsUrl" icon="cog-6-tooth" wire:navigate>
+        <flux:menu.item :href="$settingsUrl" icon:variant="outline" icon="cog-6-tooth" wire:navigate>
             {{ __('Settings') }}
         </flux:menu.item>
 
@@ -56,7 +56,7 @@
 
         <form method="POST" action="{{ route('logout') }}" class="w-full">
             @csrf
-            <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full cursor-pointer" data-test="logout-button">
+            <flux:menu.item as="button" type="submit" icon:variant="outline" icon="arrow-right-start-on-rectangle" class="w-full cursor-pointer" data-test="logout-button">
                 {{ __('Log out') }}
             </flux:menu.item>
         </form>

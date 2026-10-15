@@ -10,6 +10,7 @@ use App\Enums\ResponseRejectionReason;
 use App\Enums\ReviewPart;
 use App\Enums\ReviewRejectionReason;
 use App\Filament\Resources\CompanyReviews\Pages\ManageCompanyReviews;
+use App\Filament\Support\OpensSearchResultsInTheirTab;
 use App\Models\CompanyReview;
 use App\Support\DateFormat;
 use App\Support\ReviewEligibility;
@@ -48,6 +49,8 @@ use UnitEnum;
  */
 class CompanyReviewResource extends Resource
 {
+    use OpensSearchResultsInTheirTab;
+
     protected static ?string $model = CompanyReview::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleLeftRight;
@@ -292,6 +295,7 @@ class CompanyReviewResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->emptyStateIcon(static::getNavigationIcon())
             // Oldest first: the review's own writing time, or on the
             // Responses tab the time the answer was written.
             ->defaultSort(fn ($livewire) => static::partShownOn($livewire) === ReviewPart::Response ? 'responded_at' : 'updated_at', 'asc')

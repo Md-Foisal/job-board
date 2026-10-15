@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Application;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * digest. A hiring team that finds out a day late is how an application
  * starts going stale, which is the thing this product is built against.
  */
-class NewApplicationReceived extends Notification
+class NewApplicationReceived extends Notification implements ShouldQueue
 {
     use Queueable;
 

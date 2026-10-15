@@ -15,7 +15,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('job_posting_id')->constrained()->cascadeOnDelete();
 
-            $table->unique(['user_id', 'job_posting_id']);
+            $table->primary(['user_id', 'job_posting_id']);
         });
     }
 
