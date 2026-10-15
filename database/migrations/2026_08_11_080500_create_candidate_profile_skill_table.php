@@ -15,6 +15,8 @@ return new class extends Migration
             $table->foreignId('candidate_profile_id')->constrained()->cascadeOnDelete();
             $table->foreignId('skill_id')->constrained()->cascadeOnDelete();
             $table->string('proficiency')->default('intermediate');
+
+            $table->primary(['candidate_profile_id', 'skill_id']);
         });
     }
 

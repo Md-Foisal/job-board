@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('skill_id')->constrained()->restrictOnDelete();
             $table->string('importance')->default('required');
 
-            $table->unique(['job_posting_id', 'skill_id']);
+            $table->primary(['job_posting_id', 'skill_id']);
         });
     }
 
