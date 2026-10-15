@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\JobPosting;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * out by checking -- the same courtesy the platform asks employers to
  * show candidates.
  */
-class JobPostingApproved extends Notification
+class JobPostingApproved extends Notification implements ShouldQueue
 {
     use Queueable;
 

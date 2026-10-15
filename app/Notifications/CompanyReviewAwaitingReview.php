@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notification;
  * says which company, never who wrote it: staff see that in the panel,
  * where it belongs, not in a mailbox.
  */
-class CompanyReviewAwaitingReview extends Notification
+class CompanyReviewAwaitingReview extends Notification implements ShouldQueue
 {
     use Queueable;
 

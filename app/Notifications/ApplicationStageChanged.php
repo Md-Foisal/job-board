@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Application;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notification;
  * remember to write to them. It names the company rather than the staff
  * member -- the candidate is owed the decision, not a name to chase.
  */
-class ApplicationStageChanged extends Notification
+class ApplicationStageChanged extends Notification implements ShouldQueue
 {
     use Queueable;
 

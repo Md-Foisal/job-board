@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\JobAlert;
 use App\Support\JobSearchCriteria;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
@@ -18,7 +19,7 @@ use Symfony\Component\Mime\Email;
  * Yahoo require of anything sent in bulk: the mail client can switch the
  * alert off with a single POST, no sign-in, straight from its own button.
  */
-class JobAlertMatches extends Notification
+class JobAlertMatches extends Notification implements ShouldQueue
 {
     use Queueable;
 

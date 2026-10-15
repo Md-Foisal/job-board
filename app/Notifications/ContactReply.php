@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\ContactMessage;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
  * handed out. Their own message comes back under the answer, as mail
  * replies usually quote what they answer.
  */
-class ContactReply extends Notification
+class ContactReply extends Notification implements ShouldQueue
 {
     use Queueable;
 

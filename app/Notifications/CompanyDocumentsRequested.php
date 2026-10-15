@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\Company;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * What staff need before they can verify the company. There is no upload
  * page for it yet, so the reply goes to support by email.
  */
-class CompanyDocumentsRequested extends Notification
+class CompanyDocumentsRequested extends Notification implements ShouldQueue
 {
     use Queueable;
 

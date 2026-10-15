@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notification;
  * Tells the writer their review was held back, why, and that an edit
  * sends it for another check.
  */
-class CompanyReviewRejected extends Notification
+class CompanyReviewRejected extends Notification implements ShouldQueue
 {
     use Queueable;
 

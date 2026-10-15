@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Filament\Resources\CompanyReviews\CompanyReviewResource;
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -12,7 +13,7 @@ use Illuminate\Notifications\Notification;
  * A company has answered a review, or changed its answer, and the answer
  * waits for staff before it appears.
  */
-class ReviewResponseAwaitingReview extends Notification
+class ReviewResponseAwaitingReview extends Notification implements ShouldQueue
 {
     use Queueable;
 

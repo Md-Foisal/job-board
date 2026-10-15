@@ -4,13 +4,14 @@ namespace App\Notifications;
 
 use App\Models\CompanyReview;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * Tells the writer their review is now on the company's page.
  */
-class CompanyReviewApproved extends Notification
+class CompanyReviewApproved extends Notification implements ShouldQueue
 {
     use Queueable;
 
