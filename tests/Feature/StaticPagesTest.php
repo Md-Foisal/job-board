@@ -12,6 +12,15 @@ test('the privacy policy renders for a guest', function () {
         ->assertSee('What we collect');
 });
 
+test('the privacy policy names who runs the service and how to reach them about data', function () {
+    $this->get(route('privacy'))
+        ->assertOk()
+        ->assertSee('Who we are')
+        ->assertSee('Md. Foisal')
+        ->assertSee('the controller of that data')
+        ->assertSee(route('contact', ['topic' => 'privacy']), false);
+});
+
 test('the privacy policy says job views are counted for everyone, and what the count keeps', function () {
     $this->get(route('privacy'))
         ->assertOk()

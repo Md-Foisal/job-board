@@ -1,4 +1,14 @@
 <x-static-page :heading="__('Privacy Policy')">
+    <x-prose-section heading="Who we are">
+        <p>
+            {{ config('app.name') }} is run by Md. Foisal, an individual based in
+            Bangladesh. He decides what personal data the service collects and
+            why, which makes him the controller of that data. To reach him about
+            your data,
+            <a href="{{ route('contact', ['topic' => \App\Enums\ContactTopic::Privacy->value]) }}" class="font-medium text-sunset-small hover:underline">write to us about your data and privacy</a>.
+        </p>
+    </x-prose-section>
+
     <x-prose-section heading="What we collect">
         <p>
             When you create an account we store your name, email address and
