@@ -46,8 +46,9 @@ from companies, and open jobs that match at least half of what they ask for.
 
 ![Candidate dashboard](docs/screenshots/candidate-dashboard.jpg)
 
-**CV builder.** The CV is built from the profile, with three templates, six colours and a live preview,
-and downloads as a PDF.
+**CV builder.** The CV is built from the profile, with seven templates, six colours and a live preview,
+and downloads as a PDF. Six of the templates keep one reading order for applicant tracking systems; the
+two-column one says so before it is picked.
 
 ![CV builder with the Creative template](docs/screenshots/cv-builder.jpg)
 
