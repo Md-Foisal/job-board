@@ -82,14 +82,20 @@ final readonly class CvDesign
 
     /**
      * The colour mixed mostly with white, for the side panel of a
-     * template: a hex value, since the PDF renderer reads no colour
-     * functions.
+     * template.
      */
     public function tint(float $amount = 0.92): string
     {
-        $hex = ltrim($this->colour(), '#');
+        return self::mixWithWhite($this->colour(), $amount);
+    }
 
-        return '#'.collect(str_split($hex, 2))
+    /**
+     * A hex colour mixed with white by the given share, returned as hex,
+     * since the PDF renderer reads no colour functions.
+     */
+    public static function mixWithWhite(string $hex, float $amount): string
+    {
+        return '#'.collect(str_split(ltrim($hex, '#'), 2))
             ->map(fn (string $channel) => str_pad(dechex((int) round(hexdec($channel) + (255 - hexdec($channel)) * $amount)), 2, '0', STR_PAD_LEFT))
             ->implode('');
     }

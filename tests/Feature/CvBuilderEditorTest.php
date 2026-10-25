@@ -154,7 +154,50 @@ test('every template builds a real PDF', function (string $template) {
     $pdf = app(RenderCvPdf::class)(CvData::fromProfile($profile->fresh()), design: CvDesign::from($template, 'navy'));
 
     expect($pdf)->toStartWith('%PDF');
-})->with(['classic', 'modern', 'creative']);
+})->with(array_map(fn (CvTemplate $template) => $template->value, CvTemplate::cases()));
+
+test('every template prints the whole profile in its preview', function (CvTemplate $template) {
+    $profile = candidateUser()->candidateProfile;
+    $profile->update(['bio' => 'I build things that last.', 'headline' => 'Laravel developer']);
+    Project::factory()->for($profile)->create(['name' => 'Shiftboard']);
+    Certification::factory()->for($profile)->create(['name' => 'AWS Cloud Practitioner']);
+
+    $html = view($template->view(), [
+        'cv' => CvData::fromProfile($profile->fresh()),
+        'photo' => null,
+        'design' => CvDesign::from($template->value, 'teal'),
+        'preview' => true,
+    ])->render();
+
+    expect($html)
+        ->toContain($profile->user->name)
+        ->toContain('Laravel developer')
+        ->toContain('I build things that last.')
+        ->toContain('Shiftboard')
+        ->toContain('AWS Cloud Practitioner');
+})->with(CvTemplate::cases());
+
+test('only the two-column template is flagged for application systems, and only Classic ignores the colour', function () {
+    $flagged = collect(CvTemplate::cases())->reject->readsWellInTrackingSystems()->values()->all();
+    $black = collect(CvTemplate::cases())->reject->usesAccent()->values()->all();
+
+    expect($flagged)->toBe([CvTemplate::Creative])
+        ->and($black)->toBe([CvTemplate::Classic])
+        ->and(CvDesign::from('bold', 'berry')->colour())->toBe('#BE185D')
+        ->and(CvDesign::mixWithWhite('#000000', 0.5))->toBe('#808080');
+});
+
+test('the template picker shows every template with a sketch and its fit for application systems', function () {
+    $page = Livewire::actingAs(candidateUser())->test('pages::candidate.cv-builder');
+
+    foreach (CvTemplate::cases() as $template) {
+        $page->assertSee($template->label())->assertSee($template->description());
+    }
+
+    $page->assertSeeHtml('aspect-[3/4]')
+        ->assertSee('Reads well in application systems')
+        ->assertSee('Application systems may read it out of order');
+});
 
 test('the builder switches template, hides and moves sections, and remembers it', function () {
     $candidate = candidateUser();

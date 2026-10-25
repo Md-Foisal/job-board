@@ -690,17 +690,23 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
                 <div id="cv-panel-design" role="tabpanel" aria-labelledby="cv-tab-design" x-show="tab === 'design'" x-cloak class="flex flex-col gap-6">
                     <x-card as="section">
                         <flux:heading>{{ __('Template') }}</flux:heading>
-                        <div class="mt-3 grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="{{ __('Template') }}">
+                        <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3" role="radiogroup" aria-label="{{ __('Template') }}">
                             @foreach (\App\Enums\CvTemplate::cases() as $option)
                                 <label @class([
-                                    'flex cursor-pointer flex-col gap-1 rounded-control p-3 ring-1 transition',
+                                    'flex cursor-pointer flex-col gap-1 rounded-control p-3 ring-1 transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ink',
                                     'bg-surface ring-2 ring-ink' => $template === $option->value,
                                     'ring-line hover:ring-line-strong' => $template !== $option->value,
                                 ])>
                                     <input type="radio" wire:model.live="template" value="{{ $option->value }}" class="sr-only">
+                                    <x-cv-template-sketch :template="$option" :accent="$option->usesAccent() ? \App\Support\CvDesign::ACCENTS[$accent] ?? \App\Support\CvDesign::ACCENTS['ink'] : \App\Support\CvDesign::ACCENTS['ink']" class="mb-2" />
                                     <span class="font-medium text-ink">{{ __($option->label()) }}</span>
                                     <span class="text-xs text-ink-muted">{{ __($option->description()) }}</span>
-                                    @if (! $option->readsWellInTrackingSystems())
+                                    @if ($option->readsWellInTrackingSystems())
+                                        <span class="mt-1 inline-flex w-fit items-center gap-1 text-xs font-medium text-success-700 dark:text-success-300">
+                                            <flux:icon.check-circle variant="micro" aria-hidden="true" />
+                                            {{ __('Reads well in application systems') }}
+                                        </span>
+                                    @else
                                         <span class="mt-1 inline-flex w-fit items-center gap-1 text-xs font-medium text-warning-700 dark:text-warning-300">
                                             <flux:icon.exclamation-triangle variant="micro" aria-hidden="true" />
                                             {{ __('Application systems may read it out of order') }}
