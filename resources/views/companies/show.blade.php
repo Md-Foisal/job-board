@@ -6,9 +6,13 @@
         'reviews' => __('Reviews'),
     ]);
     $counts = ['jobs' => $jobCount, 'reviews' => $reviewSummary->count];
+    // The line a shared link to this page shows (partials/head).
+    $previewLine = $company->description
+        ? Str::limit(Str::squish((string) \App\Support\RichText::plain($company->description, 400)), 160)
+        : null;
 @endphp
 
-<x-layouts::guest :title="$company->name">
+<x-layouts::guest :title="$company->name" :description="$previewLine">
     <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:pt-10">
         {{-- One card: cover photo, profile photo, name and the links to the
              page's sections all belong to the same unit, so they live

@@ -1,4 +1,13 @@
-<x-layouts::guest :title="$jobPosting->title.' at '.$jobPosting->company->name">
+@php
+    // The line a shared link to this job shows (partials/head); the title
+    // already names the company. A draft a company member previews keeps
+    // the site's own line.
+    $previewLine = $isPublic && filled($jobPosting->description)
+        ? Str::limit(Str::squish((string) \App\Support\RichText::plain($jobPosting->description, 400)), 160)
+        : null;
+@endphp
+
+<x-layouts::guest :title="$jobPosting->title.' at '.$jobPosting->company->name" :description="$previewLine">
     {{-- Google-for-Jobs structured data: no route of its own, emitted
          inside this page's HTML. Built and safely encoded in
          App\Services\JobPostingStructuredData. --}}
