@@ -7,6 +7,7 @@
 --}}
 @php
     $design ??= new \App\Support\CvDesign(\App\Enums\CvTemplate::Executive, 'navy');
+    $pageMargins = '16mm 20mm';
     $accent = $design->colour();
 @endphp
 <!DOCTYPE html>
@@ -15,26 +16,27 @@
     <meta charset="utf-8">
     <title>{{ $cv->name }} – {{ __('CV') }}</title>
     <style>
-        @page { margin: 16mm 20mm; }
+        @include('cv.partials.style')
+        @page { margin: {{ $design->page($pageMargins) }}; }
         body, h1, h2, h3, h4, p, ul, ol, li { margin: 0; padding: 0; }
         body {
-            font-family: 'DejaVu Serif', serif;
-            font-size: 10pt;
+            font-family: {!! $design->typeface()->stack() !!};
+            font-size: {{ $design->pt(10) }};
             line-height: 1.45;
             color: #1f2937;
             background: #ffffff;
         }
-        body.preview { padding: 16mm 20mm; }
+        body.preview { padding: {{ $design->page($pageMargins) }}; }
         .letterhead { text-align: center; }
-        .photo { width: 24mm; height: 24mm; margin-bottom: 3mm; }
-        h1 { font-size: 22pt; line-height: 1.1; letter-spacing: 0.04em; color: #111827; font-weight: normal; }
-        .headline { font-size: 11pt; color: #374151; margin-top: 1.5mm; font-style: italic; }
-        .contact { font-size: 9pt; color: #374151; margin-top: 1.5mm; }
+        .photo { width: 24mm; height: 24mm; margin-bottom: {{ $design->gap(3) }}; }
+        h1 { font-size: {{ $design->pt(22) }}; line-height: 1.1; letter-spacing: 0.04em; color: #111827; font-weight: normal; }
+        .headline { font-size: {{ $design->pt(11) }}; color: #374151; margin-top: {{ $design->gap(1.5) }}; font-style: italic; }
+        .contact { font-size: {{ $design->pt(9) }}; color: #374151; margin-top: {{ $design->gap(1.5) }}; }
         .contact a { color: #374151; text-decoration: none; }
         .separator { color: #9ca3af; }
-        .rule { border-bottom: 1pt solid {{ $accent }}; margin-top: 4mm; }
+        .rule { border-bottom: 1pt solid {{ $accent }}; margin-top: {{ $design->gap(4) }}; }
         h2 {
-            font-size: 10pt;
+            font-size: {{ $design->pt(10) }};
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 0.14em;
@@ -43,25 +45,25 @@
             border-top: 0.6pt solid {{ $accent }};
             border-bottom: 0.6pt solid {{ $accent }};
             padding: 1mm 0;
-            margin-top: 6mm;
-            margin-bottom: 3mm;
+            margin-top: {{ $design->gap(6) }};
+            margin-bottom: {{ $design->gap(3) }};
         }
-        .entry { margin-bottom: 3.5mm; page-break-inside: avoid; }
-        h3 { font-size: 10.5pt; color: #111827; }
+        .entry { margin-bottom: {{ $design->gap(3.5) }}; page-break-inside: avoid; }
+        h3 { font-size: {{ $design->pt(10.5) }}; color: #111827; }
         .at { font-weight: normal; font-style: italic; color: #374151; }
-        .dates { font-size: 9pt; color: #6b7280; }
-        .description { margin-top: 1mm; }
-        .description p { margin-bottom: 1mm; }
+        .dates { font-size: {{ $design->pt(9) }}; color: #6b7280; }
+        .description { margin-top: {{ $design->gap(1) }}; }
+        .description p { margin-bottom: {{ $design->gap(1) }}; }
         .description ul, .description ol { margin: 1mm 0 1mm 5mm; }
         .description ul { list-style-type: disc; }
-        .description li { margin-bottom: 0.5mm; }
-        .description h3, .description h4 { font-size: 10pt; margin: 1.5mm 0 0.5mm; }
+        .description li { margin-bottom: {{ $design->gap(0.5) }}; }
+        .description h3, .description h4 { font-size: {{ $design->pt(10) }}; margin: 1.5mm 0 0.5mm; }
         .description a { color: #1f2937; }
-        .links { font-size: 9pt; color: #374151; margin-top: 1mm; }
+        .links { font-size: {{ $design->pt(9) }}; color: #374151; margin-top: {{ $design->gap(1) }}; }
         .links a { color: #1f2937; }
     </style>
 </head>
-<body @class(['preview' => $preview ?? false])>
+<body @class(['preview' => $preview ?? false]) data-margins="{{ implode(',', $design->pageMargins($pageMargins)) }}">
     <div class="letterhead">
         @if ($photo)
             <img class="photo" src="{{ $photo }}" alt="{{ $cv->name }}">
@@ -79,5 +81,7 @@
     @foreach ($design->sections() as $section)
         @include('cv.partials.section')
     @endforeach
+
+    @include('cv.partials.qr')
 </body>
 </html>

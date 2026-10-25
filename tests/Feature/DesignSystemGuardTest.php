@@ -35,6 +35,11 @@ function bladeViewLines(): array
 const DESIGN_SYSTEM_EXCEPTIONS = [
     // The CV preview is a printed page: white whichever theme the app is in.
     ['pages/candidate/⚡cv-builder.blade.php', 'bg-white shadow-sm'],
+    // So is the cover letter's preview.
+    ['pages/candidate/⚡cover-letters.blade.php', 'bg-white shadow-sm'],
+    // The dashed line across the CV preview marks where a printed page
+    // breaks; it is not an empty state.
+    ['pages/candidate/⚡cv-builder.blade.php', 'border-dashed border-danger-400'],
     // A QR code needs a light background to scan.
     ['pages/settings/⚡two-factor-setup-modal.blade.php', 'class="bg-white p-3 rounded"'],
     // The large letter printed on a company's default cover, not its logo.

@@ -2,6 +2,7 @@
 
 use App\Actions\AnonymizeUser;
 use App\Actions\RenderCvPdf;
+use App\Enums\CvSection;
 use App\Enums\CvTemplate;
 use App\Enums\DocumentType;
 use App\Models\Application;
@@ -135,7 +136,7 @@ test('the design keeps only what is known and fills in the order', function () {
     expect($design->template)->toBe(CvTemplate::Classic)
         ->and($design->accent)->toBe('ink')
         ->and($design->order[0])->toBe('skills')
-        ->and($design->order)->toHaveCount(6)
+        ->and($design->order)->toHaveCount(count(CvSection::cases()))
         ->and($design->hidden)->toBe(['summary'])
         ->and(collect($design->sections())->pluck('value'))->not->toContain('summary');
 });

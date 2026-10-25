@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -28,6 +29,13 @@ new #[Layout('layouts::guest')] class extends Component {
     public $newResume = null;
 
     public string $coverLetter = '';
+
+    /**
+     * Whether the cover letter came from one written for this job in the
+     * cover letter builder.
+     */
+    #[Locked]
+    public bool $fromCoverLetter = false;
 
     public array $screeningAnswers = [];
 
@@ -61,6 +69,20 @@ new #[Layout('layouts::guest')] class extends Component {
         $this->resumeChoice = $this->existingCvs->isNotEmpty()
             ? (string) $this->existingCvs->first()->id
             : 'new';
+
+        // A cover letter written for this job in the cover letter builder
+        // fills the field; the candidate can still change it here.
+        $letter = auth()->user()->candidateProfile->coverLetters()
+            ->where('job_posting_id', $jobPosting->id)
+            ->latest('updated_at')
+            ->first();
+
+        if ($letter !== null && trim($letter->body) !== '') {
+            $this->coverLetter = collect(preg_split('/\R{2,}/u', trim($letter->body)) ?: [])
+                ->map(fn (string $paragraph) => '<p>'.nl2br(e($paragraph), false).'</p>')
+                ->implode('');
+            $this->fromCoverLetter = true;
+        }
 
         foreach ($this->jobPosting->screeningQuestions as $question) {
             $this->screeningAnswers[$question->id] = '';
@@ -180,6 +202,13 @@ new #[Layout('layouts::guest')] class extends Component {
                     <flux:radio value="new" :label="__('Upload a new CV')" />
                 </flux:radio.group>
 
+                {{-- A CV aimed at this job, made in the builder and saved to
+                     the library, then shows in the list above. --}}
+                <p class="mt-2 text-sm text-ink-muted">
+                    <a href="{{ route('candidate.cv-builder.tailor', $jobPosting) }}" class="font-medium text-sunset-small hover:underline">{{ __('Tailor a CV for this job') }}</a>
+                    {{ __('in the CV builder, save it to your CVs, and it appears here.') }}
+                </p>
+
                 @if ($resumeChoice === 'new')
                     <div class="mt-4">
                         <flux:input
@@ -203,6 +232,12 @@ new #[Layout('layouts::guest')] class extends Component {
                 :description="__('A few lines on why you fit this job.')"
                 :headings="false"
             />
+            <p class="-mt-4 text-sm text-ink-muted">
+                @if ($fromCoverLetter)
+                    {{ __('Filled from the cover letter you wrote for this job.') }}
+                @endif
+                <a href="{{ route('candidate.cover-letters', ['job' => $jobPosting->slug]) }}" class="font-medium text-sunset-small hover:underline" wire:navigate>{{ $fromCoverLetter ? __('Edit it in the cover letter builder') : __('Write one in the cover letter builder') }}</a>
+            </p>
 
             @if ($jobPosting->screeningQuestions->isNotEmpty())
                 <fieldset class="flex flex-col gap-6">
@@ -259,7 +294,7 @@ new #[Layout('layouts::guest')] class extends Component {
                 <h2 class="font-medium text-ink">{{ __('What :company sees', ['company' => $company->name]) }}</h2>
                 <ul class="mt-2 list-disc space-y-1 pl-4 text-ink-muted">
                     <li>{{ __('The CV, cover letter and answers you send now.') }}</li>
-                    <li>{{ __('Your profile: photo, headline, About, links, experience, education, certifications, projects and skills with their levels, as they are when they read it.') }}</li>
+                    <li>{{ __('Your profile: photo, headline, About, links, experience, education, certifications, projects, skills with their levels, languages, awards, volunteering and publications, as they are when they read it.') }}</li>
                     <li>{{ __('How well your skills match the job.') }}</li>
                 </ul>
                 <p class="mt-2 text-ink-muted">{{ __('Your job preferences and the pay you want stay private.') }}</p>

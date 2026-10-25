@@ -133,6 +133,7 @@ new #[Layout('layouts::app')] #[Title('Documents')] class extends Component {
     >
     <x-page-header :title="__('Documents')">
         <x-slot:actions>
+            <flux:button :href="route('candidate.cover-letters')" wire:navigate variant="ghost" icon="envelope">{{ __('Write a cover letter') }}</flux:button>
             <flux:button :href="route('candidate.cv-builder')" wire:navigate icon="document-plus">{{ __('Build a CV from your profile') }}</flux:button>
             <flux:button wire:click="create" variant="primary" icon="plus">{{ __('Add document') }}</flux:button>
         </x-slot:actions>

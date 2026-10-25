@@ -443,6 +443,13 @@ new class extends Component
                     {{ __('Employers see only the skills match.') }}
                 </p>
 
+                {{-- Making the CV fit this job: a saved CV aimed at it, and a
+                     cover letter for it. --}}
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <flux:button size="sm" icon="document-plus" :href="route('candidate.cv-builder.tailor', $this->jobPosting)">{{ __('Tailor my CV for this job') }}</flux:button>
+                    <flux:button size="sm" variant="ghost" icon="envelope" :href="route('candidate.cover-letters', ['job' => $this->jobPosting->slug])" wire:navigate>{{ __('Write a cover letter') }}</flux:button>
+                </div>
+
                 {{-- The AI explanation: offered, running, shown, failed, or out of allowance.
                      Plans without it see nothing here. --}}
                 @php($availability = $this->aiAvailability)

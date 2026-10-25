@@ -8,6 +8,7 @@
 --}}
 @php
     $design ??= new \App\Support\CvDesign(\App\Enums\CvTemplate::Bold, 'sunset');
+    $pageMargins = '12mm 14mm';
     $accent = $design->colour();
 @endphp
 <!DOCTYPE html>
@@ -16,49 +17,50 @@
     <meta charset="utf-8">
     <title>{{ $cv->name }} – {{ __('CV') }}</title>
     <style>
-        @page { margin: 12mm 14mm; }
+        @include('cv.partials.style')
+        @page { margin: {{ $design->page($pageMargins) }}; }
         body, h1, h2, h3, h4, p, ul, ol, li { margin: 0; padding: 0; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9.5pt;
+            font-family: {!! $design->typeface()->stack() !!};
+            font-size: {{ $design->pt(9.5) }};
             line-height: 1.4;
             color: #1f2937;
             background: #ffffff;
         }
-        body.preview { padding: 12mm 14mm; }
+        body.preview { padding: {{ $design->page($pageMargins) }}; }
         .band { background: {{ $accent }}; color: #ffffff; padding: 8mm 9mm 7mm; }
         .photo { float: right; width: 26mm; height: 26mm; margin-left: 6mm; border: 1.5pt solid #ffffff; }
-        h1 { font-size: 24pt; line-height: 1.1; color: #ffffff; }
-        .headline { font-size: 11pt; color: #ffffff; margin-top: 1mm; }
-        .band .contact { font-size: 8.5pt; color: #ffffff; margin-top: 1.5mm; }
+        h1 { font-size: {{ $design->pt(24) }}; line-height: 1.1; color: #ffffff; }
+        .headline { font-size: {{ $design->pt(11) }}; color: #ffffff; margin-top: {{ $design->gap(1) }}; }
+        .band .contact { font-size: {{ $design->pt(8.5) }}; color: #ffffff; margin-top: {{ $design->gap(1.5) }}; }
         .band .contact a { color: #ffffff; text-decoration: none; }
         .band .separator { color: #ffffff; }
         .band .end { clear: both; }
         .main { padding: 0 4mm; }
         h2 {
-            font-size: 11pt;
+            font-size: {{ $design->pt(11) }};
             color: {{ $accent }};
             border-bottom: 1.2pt solid {{ $accent }};
-            padding-bottom: 1mm;
-            margin-top: 6mm;
-            margin-bottom: 2.5mm;
+            padding-bottom: {{ $design->gap(1) }};
+            margin-top: {{ $design->gap(6) }};
+            margin-bottom: {{ $design->gap(2.5) }};
         }
-        .entry { margin-bottom: 3.5mm; page-break-inside: avoid; }
-        h3 { font-size: 10.5pt; color: #111827; }
+        .entry { margin-bottom: {{ $design->gap(3.5) }}; page-break-inside: avoid; }
+        h3 { font-size: {{ $design->pt(10.5) }}; color: #111827; }
         .at { font-weight: normal; color: #374151; }
-        .dates { font-size: 9pt; color: #6b7280; }
-        .description { margin-top: 1mm; }
-        .description p { margin-bottom: 1mm; }
+        .dates { font-size: {{ $design->pt(9) }}; color: #6b7280; }
+        .description { margin-top: {{ $design->gap(1) }}; }
+        .description p { margin-bottom: {{ $design->gap(1) }}; }
         .description ul, .description ol { margin: 1mm 0 1mm 5mm; }
         .description ul { list-style-type: disc; }
-        .description li { margin-bottom: 0.5mm; }
-        .description h3, .description h4 { font-size: 10pt; margin: 1.5mm 0 0.5mm; }
+        .description li { margin-bottom: {{ $design->gap(0.5) }}; }
+        .description h3, .description h4 { font-size: {{ $design->pt(10) }}; margin: 1.5mm 0 0.5mm; }
         .description a { color: #1f2937; }
-        .links { font-size: 9pt; color: #374151; margin-top: 1mm; }
+        .links { font-size: {{ $design->pt(9) }}; color: #374151; margin-top: {{ $design->gap(1) }}; }
         .links a { color: {{ $accent }}; }
     </style>
 </head>
-<body @class(['preview' => $preview ?? false])>
+<body @class(['preview' => $preview ?? false]) data-margins="{{ implode(',', $design->pageMargins($pageMargins)) }}">
     <div class="band">
         @if ($photo)
             <img class="photo" src="{{ $photo }}" alt="{{ $cv->name }}">
@@ -78,5 +80,7 @@
             @include('cv.partials.section')
         @endforeach
     </div>
+
+    @include('cv.partials.qr')
 </body>
 </html>

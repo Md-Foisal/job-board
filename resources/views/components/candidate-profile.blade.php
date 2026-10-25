@@ -195,6 +195,10 @@
             <livewire:profile.certifications-section />
             <livewire:profile.projects-section />
             <livewire:profile.skills-section />
+            <livewire:profile.languages-section />
+            <livewire:profile.awards-section />
+            <livewire:profile.volunteering-section />
+            <livewire:profile.publications-section />
 
             {{-- Kept for the CVs the candidate builds here; never on the profile
                  a company reads. --}}
@@ -274,6 +278,55 @@
                     @endif
                 </div>
             </x-profile.section>
+
+            {{-- The optional sections, in LinkedIn's order, only when filled. --}}
+            @php
+                $languages = $profile->languages()->get()->sortByDesc(fn ($language) => $language->level->rank());
+                $awards = $profile->awards()->newestFirst()->get();
+                $volunteering = $profile->volunteerExperiences()->newestFirst()->get();
+                $publications = $profile->publications()->newestFirst()->get();
+                $span = fn ($start, $end) => $start ? $start->format(\App\Support\DateFormat::MONTH).' – '.($end?->format(\App\Support\DateFormat::MONTH) ?? __('Present')) : null;
+            @endphp
+
+            @if ($languages->isNotEmpty())
+                <x-profile.section :heading="__('Languages')">
+                    <ul class="divide-y divide-line border-t border-line">
+                        @foreach ($languages as $language)
+                            <x-profile.entry-item icon="language" :title="$language->name" :meta="__($language->level->label())" />
+                        @endforeach
+                    </ul>
+                </x-profile.section>
+            @endif
+
+            @if ($awards->isNotEmpty())
+                <x-profile.section :heading="__('Awards')">
+                    <ul class="divide-y divide-line border-t border-line">
+                        @foreach ($awards as $award)
+                            <x-profile.entry-item icon="trophy" :title="$award->title" :subtitle="$award->issuer" :meta="$award->awarded_on?->format(\App\Support\DateFormat::MONTH)" :note="$award->description" />
+                        @endforeach
+                    </ul>
+                </x-profile.section>
+            @endif
+
+            @if ($volunteering->isNotEmpty())
+                <x-profile.section :heading="__('Volunteering')">
+                    <ul class="divide-y divide-line border-t border-line">
+                        @foreach ($volunteering as $role)
+                            <x-profile.entry-item icon="hand-raised" :title="$role->role" :subtitle="$role->organization" :meta="$span($role->start_date, $role->end_date)" :note="$role->description" />
+                        @endforeach
+                    </ul>
+                </x-profile.section>
+            @endif
+
+            @if ($publications->isNotEmpty())
+                <x-profile.section :heading="__('Publications')">
+                    <ul class="divide-y divide-line border-t border-line">
+                        @foreach ($publications as $publication)
+                            <x-profile.entry-item icon="newspaper" :title="$publication->title" :subtitle="$publication->publisher" :meta="$publication->published_on?->format(\App\Support\DateFormat::MONTH)" :note="$publication->description" :link="$publication->url" />
+                        @endforeach
+                    </ul>
+                </x-profile.section>
+            @endif
         @endif
     </div>
 
