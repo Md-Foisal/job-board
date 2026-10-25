@@ -1,6 +1,8 @@
 {{-- "errorPage" is set by error pages that keep the site's own frame
-     (components/error-page), so they can load Livewire themselves. --}}
-@props(['title' => null, 'errorPage' => false])
+     (components/error-page), so they can load Livewire themselves.
+     "description" is the line a shared link to the page shows
+     (partials/head). --}}
+@props(['title' => null, 'description' => null, 'errorPage' => false])
 
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
