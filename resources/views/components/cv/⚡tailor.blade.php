@@ -95,7 +95,7 @@ new class extends Component {
             </div>
         @else
             <flux:text size="sm">{{ __('Paste the description of a job you are applying for elsewhere, or open a job on this board and choose "Tailor my CV for this job".') }}</flux:text>
-            <flux:textarea wire:model.blur="jobDescription" :label="__('Job description')" rows="5" maxlength="10000" :placeholder="__('Paste the job ad here')" />
+            <flux:textarea wire:model.blur.live="jobDescription" :label="__('Job description')" rows="5" maxlength="10000" :placeholder="__('Paste the job ad here')" />
         @endif
 
         @if ($tailoring->hasTarget())

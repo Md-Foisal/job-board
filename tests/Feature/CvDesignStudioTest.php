@@ -254,3 +254,14 @@ test('the apply form points to a CV tailored for the job', function () {
         ->assertSee('Tailor a CV for this job')
         ->assertSee(route('candidate.cv-builder.tailor', $job));
 });
+
+test('fields that save on their own send the change when the candidate leaves them', function (string $view) {
+    // Livewire 4's .blur only defers the value in the browser; without
+    // .live nothing reaches the server, and a test's set() would not show it.
+    expect(file_get_contents(resource_path('views/'.$view)))->not->toContain('wire:model.blur="');
+})->with([
+    'components/cv/⚡extras.blade.php',
+    'components/cv/⚡tailor.blade.php',
+    'pages/candidate/⚡cv-builder.blade.php',
+    'pages/candidate/⚡cover-letters.blade.php',
+]);

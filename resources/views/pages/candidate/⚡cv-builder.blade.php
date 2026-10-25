@@ -1000,7 +1000,7 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
         <flux:modal name="rename-cv" class="w-full max-w-md">
             <div class="space-y-6">
                 <flux:heading size="lg">{{ __('Rename this CV') }}</flux:heading>
-                <flux:input wire:model.blur="versionName" :label="__('Name')" :description="__('Only you see it, to tell your CVs apart: “Backend roles”, “For Acme”.')" maxlength="80" />
+                <flux:input wire:model.blur.live="versionName" :label="__('Name')" :description="__('Only you see it, to tell your CVs apart: “Backend roles”, “For Acme”.')" maxlength="80" />
                 <div class="flex justify-end">
                     <flux:modal.close>
                         <flux:button variant="primary">{{ __('Done') }}</flux:button>
@@ -1156,8 +1156,8 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
                         <details class="border-t border-line px-5 py-4 sm:px-6" @if (filled($cvHeadline) || filled($cvSummary)) open @endif>
                             <summary class="cursor-pointer text-sm font-medium text-ink">{{ __('A different headline and summary on this CV only') }}</summary>
                             <div class="mt-4 space-y-4">
-                                <flux:input wire:model.blur="cvHeadline" :label="__('Headline on this CV')" :placeholder="$profile->headline ?: __('Same as your profile')" maxlength="255" />
-                                <flux:textarea wire:model.blur="cvSummary" :label="__('Summary on this CV')" :placeholder="$profile->bio ? \Illuminate\Support\Str::limit($profile->bio, 160) : __('Same as your profile')" rows="4" maxlength="2000" :description="__('Leave empty to use your profile\'s. Your profile, which companies read, does not change.')" />
+                                <flux:input wire:model.blur.live="cvHeadline" :label="__('Headline on this CV')" :placeholder="$profile->headline ?: __('Same as your profile')" maxlength="255" />
+                                <flux:textarea wire:model.blur.live="cvSummary" :label="__('Summary on this CV')" :placeholder="$profile->bio ? \Illuminate\Support\Str::limit($profile->bio, 160) : __('Same as your profile')" rows="4" maxlength="2000" :description="__('Leave empty to use your profile\'s. Your profile, which companies read, does not change.')" />
                             </div>
                         </details>
                     </x-profile.section>
@@ -1435,6 +1435,9 @@ new #[Layout('layouts::app')] #[Title('CV builder')] class extends Component {
                             drawnAgain() {
                                 this.drawn = true
                                 this.measure()
+                                // Web fonts can arrive after the frame's load
+                                // event and change the page's height.
+                                this.$refs.frame?.contentDocument?.fonts?.ready.then(() => this.measure())
                                 if (! this.fitting) return
                                 if (this.pages <= 1) {
                                     this.fitting = false

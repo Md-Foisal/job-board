@@ -188,19 +188,19 @@ new class extends Component {
                 <flux:text size="sm" class="mt-1">{{ __('Expected on many CVs in Bangladesh and South Asia, and left off in the US, UK and Canada. Leave any of it empty. Never add an NID or passport number: a CV is passed around.') }}</flux:text>
             </div>
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <flux:input type="date" wire:model.blur="personal.date_of_birth" :label="__('Date of birth')" />
-                <flux:input wire:model.blur="personal.nationality" :label="__('Nationality')" placeholder="Bangladeshi" maxlength="100" />
-                <flux:input wire:model.blur="personal.father_name" :label="__('Father\'s name')" maxlength="100" />
-                <flux:input wire:model.blur="personal.mother_name" :label="__('Mother\'s name')" maxlength="100" />
-                <flux:input wire:model.blur="personal.marital_status" :label="__('Marital status')" maxlength="100" />
-                <flux:input wire:model.blur="personal.religion" :label="__('Religion')" maxlength="100" />
-                <flux:input wire:model.blur="personal.gender" :label="__('Gender')" maxlength="100" />
+                <flux:input type="date" wire:model.blur.live="personal.date_of_birth" :label="__('Date of birth')" />
+                <flux:input wire:model.blur.live="personal.nationality" :label="__('Nationality')" placeholder="Bangladeshi" maxlength="100" />
+                <flux:input wire:model.blur.live="personal.father_name" :label="__('Father\'s name')" maxlength="100" />
+                <flux:input wire:model.blur.live="personal.mother_name" :label="__('Mother\'s name')" maxlength="100" />
+                <flux:input wire:model.blur.live="personal.marital_status" :label="__('Marital status')" maxlength="100" />
+                <flux:input wire:model.blur.live="personal.religion" :label="__('Religion')" maxlength="100" />
+                <flux:input wire:model.blur.live="personal.gender" :label="__('Gender')" maxlength="100" />
             </div>
-            <flux:textarea wire:model.blur="personal.permanent_address" :label="__('Permanent address')" rows="2" maxlength="255" />
+            <flux:textarea wire:model.blur.live="personal.permanent_address" :label="__('Permanent address')" rows="2" maxlength="255" />
         </section>
 
         <section class="space-y-4">
-            <flux:textarea wire:model.blur="interests" :label="__('Interests')" :placeholder="__('Open-source, chess, photography')" rows="2" maxlength="300" />
+            <flux:textarea wire:model.blur.live="interests" :label="__('Interests')" :placeholder="__('Open-source, chess, photography')" rows="2" maxlength="300" />
         </section>
 
         <section class="space-y-4">
@@ -214,12 +214,12 @@ new class extends Component {
                 @foreach ($references as $index => $person)
                     <div wire:key="reference-{{ $index }}" class="space-y-3 rounded-control p-4 ring-1 ring-line">
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            <flux:input wire:model.blur="references.{{ $index }}.name" :label="__('Name')" maxlength="100" />
-                            <flux:input wire:model.blur="references.{{ $index }}.position" :label="__('Position')" maxlength="100" />
-                            <flux:input wire:model.blur="references.{{ $index }}.organization" :label="__('Organisation')" maxlength="150" />
-                            <flux:input wire:model.blur="references.{{ $index }}.relationship" :label="__('How they know you')" :placeholder="__('My manager at Acme')" maxlength="100" />
-                            <flux:input type="email" wire:model.blur="references.{{ $index }}.email" :label="__('Email')" maxlength="150" />
-                            <flux:input wire:model.blur="references.{{ $index }}.phone" :label="__('Phone')" maxlength="30" />
+                            <flux:input wire:model.blur.live="references.{{ $index }}.name" :label="__('Name')" maxlength="100" />
+                            <flux:input wire:model.blur.live="references.{{ $index }}.position" :label="__('Position')" maxlength="100" />
+                            <flux:input wire:model.blur.live="references.{{ $index }}.organization" :label="__('Organisation')" maxlength="150" />
+                            <flux:input wire:model.blur.live="references.{{ $index }}.relationship" :label="__('How they know you')" :placeholder="__('My manager at Acme')" maxlength="100" />
+                            <flux:input type="email" wire:model.blur.live="references.{{ $index }}.email" :label="__('Email')" maxlength="150" />
+                            <flux:input wire:model.blur.live="references.{{ $index }}.phone" :label="__('Phone')" maxlength="30" />
                         </div>
                         <flux:button wire:click="removeReference({{ $index }})" variant="ghost" size="sm" icon="trash">{{ __('Remove') }}</flux:button>
                     </div>
@@ -235,8 +235,8 @@ new class extends Component {
             <flux:heading id="cv-extras-declaration">{{ __('Declaration') }}</flux:heading>
             <flux:switch wire:model.live="declaration" :label="__('End with a signed declaration')" :description="__('A line that the CV is true, a signature line and the date. Usual on CVs in Bangladesh.')" />
             @if ($declaration)
-                <flux:textarea wire:model.blur="declarationText" :label="__('Wording')" :placeholder="__(\App\Support\CvExtras::DECLARATION_EN)" :description="__('Leave empty for the usual wording, in the language of the headings.')" rows="2" maxlength="500" />
-                <flux:input wire:model.blur="declarationPlace" :label="__('Place')" :placeholder="__('Dhaka')" maxlength="100" />
+                <flux:textarea wire:model.blur.live="declarationText" :label="__('Wording')" :placeholder="__(\App\Support\CvExtras::DECLARATION_EN)" :description="__('Leave empty for the usual wording, in the language of the headings.')" rows="2" maxlength="500" />
+                <flux:input wire:model.blur.live="declarationPlace" :label="__('Place')" :placeholder="__('Dhaka')" maxlength="100" />
             @endif
         </section>
 
@@ -248,16 +248,16 @@ new class extends Component {
 
             @foreach ($custom as $index => $section)
                 <div wire:key="custom-{{ $index }}" class="space-y-4 rounded-control p-4 ring-1 ring-line">
-                    <flux:input wire:model.blur="custom.{{ $index }}.title" :label="__('Section heading')" :placeholder="__('Training')" maxlength="60" />
+                    <flux:input wire:model.blur.live="custom.{{ $index }}.title" :label="__('Section heading')" :placeholder="__('Training')" maxlength="60" />
 
                     @foreach ($section['items'] as $itemIndex => $item)
                         <div wire:key="custom-{{ $index }}-{{ $itemIndex }}" class="space-y-3 border-t border-line pt-4">
                             <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <flux:input wire:model.blur="custom.{{ $index }}.items.{{ $itemIndex }}.title" :label="__('Title')" maxlength="150" />
-                                <flux:input wire:model.blur="custom.{{ $index }}.items.{{ $itemIndex }}.subtitle" :label="__('Where or with whom')" maxlength="150" />
-                                <flux:input wire:model.blur="custom.{{ $index }}.items.{{ $itemIndex }}.dates" :label="__('When')" :placeholder="__('2025')" maxlength="60" />
+                                <flux:input wire:model.blur.live="custom.{{ $index }}.items.{{ $itemIndex }}.title" :label="__('Title')" maxlength="150" />
+                                <flux:input wire:model.blur.live="custom.{{ $index }}.items.{{ $itemIndex }}.subtitle" :label="__('Where or with whom')" maxlength="150" />
+                                <flux:input wire:model.blur.live="custom.{{ $index }}.items.{{ $itemIndex }}.dates" :label="__('When')" :placeholder="__('2025')" maxlength="60" />
                             </div>
-                            <flux:textarea wire:model.blur="custom.{{ $index }}.items.{{ $itemIndex }}.description" :label="__('Details')" rows="2" maxlength="1000" />
+                            <flux:textarea wire:model.blur.live="custom.{{ $index }}.items.{{ $itemIndex }}.description" :label="__('Details')" rows="2" maxlength="1000" />
                             <flux:button wire:click="removeItem({{ $index }}, {{ $itemIndex }})" variant="ghost" size="sm" icon="minus">{{ __('Remove this entry') }}</flux:button>
                         </div>
                     @endforeach

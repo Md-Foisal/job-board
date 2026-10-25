@@ -344,12 +344,12 @@ new #[Layout('layouts::app')] #[Title('Cover letters')] class extends Component 
 
                         @if ($jobId === '')
                             <div class="grid gap-4 sm:grid-cols-2">
-                                <flux:input wire:model.blur="companyName" :label="__('Company')" maxlength="255" />
-                                <flux:input wire:model.blur="roleTitle" :label="__('Role')" maxlength="255" />
+                                <flux:input wire:model.blur.live="companyName" :label="__('Company')" maxlength="255" />
+                                <flux:input wire:model.blur.live="roleTitle" :label="__('Role')" maxlength="255" />
                             </div>
                         @endif
 
-                        <flux:input wire:model.blur="recipient" :label="__('Addressed to')" :description="__('The hiring manager\'s name, if the job ad gives one. Otherwise the letter opens with “Dear Hiring Team”.')" maxlength="255" />
+                        <flux:input wire:model.blur.live="recipient" :label="__('Addressed to')" :description="__('The hiring manager\'s name, if the job ad gives one. Otherwise the letter opens with “Dear Hiring Team”.')" maxlength="255" />
 
                         <div class="grid gap-4 sm:grid-cols-2">
                             <flux:select wire:model.live="cvVersionId" :label="__('Look')" :description="__('The typeface and colour of one of your CVs.')">
@@ -371,7 +371,7 @@ new #[Layout('layouts::app')] #[Title('Cover letters')] class extends Component 
                             <flux:button wire:click="draft" wire:confirm="{{ __('Replace the letter with a new draft from your profile and the job?') }}" size="sm" icon="arrow-path">{{ __('Start again from my profile') }}</flux:button>
                         </div>
                         <flux:text size="sm">{{ __('A starting draft built from what your profile says, with nothing added. Put it in your own words: say why this company, and what you would bring.') }}</flux:text>
-                        <flux:textarea wire:model.blur="body" :label="__('Letter')" rows="16" maxlength="{{ \App\Models\CoverLetter::BODY_MAX }}" :description="__('A blank line starts a new paragraph.')" />
+                        <flux:textarea wire:model.blur.live="body" :label="__('Letter')" rows="16" maxlength="{{ \App\Models\CoverLetter::BODY_MAX }}" :description="__('A blank line starts a new paragraph.')" />
                         <div class="flex flex-wrap gap-2">
                             <flux:button wire:click="download" variant="primary" icon="arrow-down-tray">{{ __('Download PDF') }}</flux:button>
                             <flux:button x-data="{ copied: false }" x-on:click="navigator.clipboard.writeText($wire.body).then(() => { copied = true; setTimeout(() => copied = false, 2000) })" icon="clipboard">
