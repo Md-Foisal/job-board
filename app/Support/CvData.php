@@ -2,13 +2,19 @@
 
 namespace App\Support;
 
+use App\Enums\LanguageLevel;
 use App\Enums\ProficiencyLevel;
+use App\Models\Award;
+use App\Models\CandidateLanguage;
 use App\Models\CandidateProfile;
 use App\Models\Certification;
+use App\Models\CvVersion;
 use App\Models\EducationRecord;
 use App\Models\ExperienceRecord;
 use App\Models\Project;
+use App\Models\Publication;
 use App\Models\Skill;
+use App\Models\VolunteerExperience;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -32,6 +38,15 @@ use Illuminate\Support\Str;
  *   of the page, since applicant tracking systems often skip headers and
  *   footers.
  *
+ * - Languages: strongest first. Awards, volunteering and publications:
+ *   newest first.
+ *
+ * A saved CV (CvVersion) can give its own headline and summary, leave
+ * out single entries, and add what belongs on a CV only (CvExtras).
+ * When it is aimed at a job, its projects are ordered by how many of
+ * the job's skills each mentions, the closest first; roles keep their
+ * dates' order, which recruiters read for.
+ *
  * Salary and work-type preferences are never part of it: they are not
  * shown to employers anywhere else either.
  */
@@ -46,12 +61,22 @@ final class CvData
     private const SUPPORTED_SCRIPTS = '/[^\p{Latin}\p{Greek}\p{Cyrillic}\p{Common}\p{Inherited}]/u';
 
     /**
+     * The same, for the browser engine, which also has the shipped
+     * Bengali fonts.
+     */
+    private const BROWSER_SCRIPTS = '/[^\p{Latin}\p{Greek}\p{Cyrillic}\p{Bengali}\p{Common}\p{Inherited}]/u';
+
+    /**
      * @param  array<int, array{label: string, url: ?string, text: string}>  $links
      * @param  array<int, array{id: int, title: string, company: string, dates: string, description: ?string}>  $experience
      * @param  array<int, array{title: string, institution: string, dates: string}>  $education
      * @param  array<int, string>  $skills
      * @param  array<int, array{name: string, dates: ?string, description: ?string, links: array<int, array{label: string, url: ?string, text: string}>}>  $projects
      * @param  array<int, array{name: string, issuer: string, dates: ?string, credentialId: ?string, link: ?array{label: string, url: ?string, text: string}}>  $certifications
+     * @param  array<int, array{name: string, level: LanguageLevel}>  $languages
+     * @param  array<int, array{id: int, title: string, issuer: ?string, date: ?string, description: ?string}>  $awards
+     * @param  array<int, array{id: int, role: string, organization: string, dates: ?string, description: ?string}>  $volunteering
+     * @param  array<int, array{id: int, title: string, publisher: ?string, date: ?string, link: ?array{label: string, url: ?string, text: string}, description: ?string}>  $publications
      */
     public function __construct(
         public readonly string $name,
@@ -67,22 +92,39 @@ final class CvData
         public readonly array $skills,
         public readonly array $projects = [],
         public readonly array $certifications = [],
+        public readonly array $languages = [],
+        public readonly array $awards = [],
+        public readonly array $volunteering = [],
+        public readonly array $publications = [],
+        public readonly CvExtras $extras = new CvExtras,
+        public readonly ?string $qr = null,
+        public readonly ?string $qrUrl = null,
     ) {}
 
-    public static function fromProfile(CandidateProfile $profile): self
+    /**
+     * @param  array<int, string>  $keywords  the skills of the job a CV is aimed at
+     * @param  bool  $public  for the web page anyone with the link can open:
+     *                        without contact details unless the CV allows them
+     */
+    public static function fromProfile(CandidateProfile $profile, ?CvVersion $version = null, array $keywords = [], bool $public = false): self
     {
         $user = $profile->user;
+        $hidden = fn (string $kind) => $version?->hiddenIds($kind) ?? [];
+        $visible = fn (string $kind) => fn ($record) => ! in_array($record->id, $hidden($kind), true);
+        $withContact = ! $public || (bool) $version?->public_shows_contact;
+        $extras = $version?->cvExtras() ?? new CvExtras;
 
         return new self(
             name: $user->name,
-            email: $user->email,
-            headline: self::filledOrNull($profile->headline),
-            summary: self::filledOrNull($profile->bio),
-            phone: self::filledOrNull($profile->phone),
-            location: self::filledOrNull($profile->location),
+            email: $withContact ? $user->email : '',
+            headline: self::filledOrNull($version?->headline) ?? self::filledOrNull($profile->headline),
+            summary: self::filledOrNull($version?->summary) ?? self::filledOrNull($profile->bio),
+            phone: $withContact ? self::filledOrNull($profile->phone) : null,
+            location: $withContact ? self::filledOrNull($profile->location) : null,
             links: self::links($profile),
             avatarPath: $user->avatar,
             experience: $profile->experienceRecords()->get()
+                ->filter($visible('experience'))
                 ->sortBy([
                     fn (ExperienceRecord $a, ExperienceRecord $b) => ($a->end_date !== null) <=> ($b->end_date !== null),
                     fn (ExperienceRecord $a, ExperienceRecord $b) => $b->end_date <=> $a->end_date,
@@ -98,12 +140,14 @@ final class CvData
                 ->values()
                 ->all(),
             education: $profile->educationRecords()->get()
+                ->filter($visible('education'))
                 ->sortBy([
                     fn (EducationRecord $a, EducationRecord $b) => ($a->end_date !== null) <=> ($b->end_date !== null),
                     fn (EducationRecord $a, EducationRecord $b) => $b->end_date <=> $a->end_date,
                     fn (EducationRecord $a, EducationRecord $b) => $b->start_date <=> $a->start_date,
                 ])
                 ->map(fn (EducationRecord $record) => [
+                    'id' => $record->id,
                     'title' => self::qualification($record->degree, $record->field_of_study),
                     'institution' => $record->institution_name,
                     'dates' => self::dates($record->start_date, $record->end_date),
@@ -119,13 +163,16 @@ final class CvData
                 ->values()
                 ->all(),
             projects: $profile->projects()->get()
+                ->filter($visible('projects'))
                 ->sortBy([
+                    fn (Project $a, Project $b) => self::relevance($b, $keywords) <=> self::relevance($a, $keywords),
                     fn (Project $a, Project $b) => ($a->end_date !== null) <=> ($b->end_date !== null),
                     fn (Project $a, Project $b) => $b->end_date <=> $a->end_date,
                     fn (Project $a, Project $b) => $b->start_date <=> $a->start_date,
                     fn (Project $a, Project $b) => $b->id <=> $a->id,
                 ])
                 ->map(fn (Project $project) => [
+                    'id' => $project->id,
                     'name' => $project->name,
                     'dates' => $project->start_date ? self::dates($project->start_date, $project->end_date) : null,
                     'description' => filled(strip_tags((string) $project->description)) ? $project->description : null,
@@ -138,11 +185,13 @@ final class CvData
                 ->values()
                 ->all(),
             certifications: $profile->certifications()->get()
+                ->filter($visible('certifications'))
                 ->sortBy([
                     fn (Certification $a, Certification $b) => $b->issued_on <=> $a->issued_on,
                     fn (Certification $a, Certification $b) => $b->id <=> $a->id,
                 ])
                 ->map(fn (Certification $certification) => [
+                    'id' => $certification->id,
                     'name' => $certification->name,
                     'issuer' => $certification->issuer,
                     'dates' => self::certificationDates($certification),
@@ -151,7 +200,110 @@ final class CvData
                 ])
                 ->values()
                 ->all(),
+            languages: $profile->languages()->get()
+                ->sortBy([
+                    fn (CandidateLanguage $a, CandidateLanguage $b) => $b->level->rank() <=> $a->level->rank(),
+                    fn (CandidateLanguage $a, CandidateLanguage $b) => strnatcasecmp($a->name, $b->name),
+                ])
+                ->map(fn (CandidateLanguage $language) => ['name' => $language->name, 'level' => $language->level])
+                ->values()
+                ->all(),
+            awards: $profile->awards()->newestFirst()->get()
+                ->filter($visible('awards'))
+                ->map(fn (Award $award) => [
+                    'id' => $award->id,
+                    'title' => $award->title,
+                    'issuer' => self::filledOrNull($award->issuer),
+                    'date' => $award->awarded_on?->format(DateFormat::MONTH),
+                    'description' => self::filledOrNull($award->description),
+                ])
+                ->values()
+                ->all(),
+            volunteering: $profile->volunteerExperiences()->newestFirst()->get()
+                ->filter($visible('volunteering'))
+                ->map(fn (VolunteerExperience $role) => [
+                    'id' => $role->id,
+                    'role' => $role->role,
+                    'organization' => $role->organization,
+                    'dates' => $role->start_date ? self::dates($role->start_date, $role->end_date) : null,
+                    'description' => self::filledOrNull($role->description),
+                ])
+                ->values()
+                ->all(),
+            publications: $profile->publications()->newestFirst()->get()
+                ->filter($visible('publications'))
+                ->map(fn (Publication $publication) => [
+                    'id' => $publication->id,
+                    'title' => $publication->title,
+                    'publisher' => self::filledOrNull($publication->publisher),
+                    'date' => $publication->published_on?->format(DateFormat::MONTH),
+                    'link' => $publication->url ? self::link(__('Read'), $publication->url) : null,
+                    'description' => self::filledOrNull($publication->description),
+                ])
+                ->values()
+                ->all(),
+            extras: $withContact ? $extras : $extras->withoutContactDetails(),
         );
+    }
+
+    /**
+     * The same CV with a QR code pointing to its web page, printed at its
+     * end.
+     */
+    public function withQr(string $image, string $url): self
+    {
+        return new self(
+            ...[...get_object_vars($this), 'qr' => $image, 'qrUrl' => $url],
+        );
+    }
+
+    /**
+     * Whether any text on the CV is in Bengali script, so the Bengali
+     * font has to go along with a PDF.
+     */
+    public function hasBengali(): bool
+    {
+        return preg_match('/\p{Bengali}/u', $this->plainText()) === 1;
+    }
+
+    /**
+     * Every word on the CV as plain text, for checks that read it the
+     * way a parser does: keyword coverage, the score.
+     */
+    public function plainText(): string
+    {
+        return collect([
+            $this->name, $this->headline, $this->summary, $this->location,
+            ...collect($this->experience)->flatMap(fn (array $role) => [$role['title'], $role['company'], strip_tags((string) $role['description'])]),
+            ...collect($this->education)->flatMap(fn (array $course) => [$course['title'], $course['institution']]),
+            ...$this->skills,
+            ...collect($this->projects)->flatMap(fn (array $project) => [$project['name'], strip_tags((string) $project['description'])]),
+            ...collect($this->certifications)->flatMap(fn (array $certification) => [$certification['name'], $certification['issuer']]),
+            ...collect($this->languages)->pluck('name'),
+            ...collect($this->awards)->flatMap(fn (array $award) => [$award['title'], $award['issuer'], $award['description']]),
+            ...collect($this->volunteering)->flatMap(fn (array $role) => [$role['role'], $role['organization'], $role['description']]),
+            ...collect($this->publications)->flatMap(fn (array $publication) => [$publication['title'], $publication['publisher'], $publication['description']]),
+            $this->extras->interests,
+            ...collect($this->extras->custom)->flatMap(fn (array $section) => [$section['title'], ...collect($section['items'])->flatMap(fn (array $item) => [$item['title'], $item['subtitle'], $item['description']])]),
+            ...array_values($this->extras->personal),
+        ])->filter(fn ($text) => filled($text))->implode("\n");
+    }
+
+    /**
+     * How many of a job's skills a project mentions, in its name or
+     * description, as whole words.
+     *
+     * @param  array<int, string>  $keywords
+     */
+    private static function relevance(Project $project, array $keywords): int
+    {
+        if ($keywords === []) {
+            return 0;
+        }
+
+        $text = $project->name.' '.strip_tags((string) $project->description);
+
+        return collect($keywords)->filter(fn (string $keyword) => SkillMatcher::mentions($keyword, $text))->count();
     }
 
     /**
@@ -161,7 +313,8 @@ final class CvData
     public function hasContent(): bool
     {
         return $this->experience !== [] || $this->education !== [] || $this->skills !== []
-            || $this->projects !== [] || $this->certifications !== [];
+            || $this->projects !== [] || $this->certifications !== [] || $this->languages !== []
+            || $this->awards !== [] || $this->volunteering !== [] || $this->publications !== [];
     }
 
     /**
@@ -206,8 +359,10 @@ final class CvData
      *
      * @return array<int, string>
      */
-    public function unsupportedScriptParts(): array
+    public function unsupportedScriptParts(bool $browserEngine = false): array
     {
+        $pattern = $browserEngine ? self::BROWSER_SCRIPTS : self::SUPPORTED_SCRIPTS;
+
         $parts = [
             'Name' => [$this->name],
             'Headline' => [$this->headline],
@@ -218,10 +373,17 @@ final class CvData
             'Skills' => $this->skills,
             'Projects' => collect($this->projects)->flatMap(fn (array $project) => [$project['name'], strip_tags((string) $project['description'])])->all(),
             'Certifications' => collect($this->certifications)->flatMap(fn (array $certification) => [$certification['name'], $certification['issuer']])->all(),
+            'Languages' => collect($this->languages)->pluck('name')->all(),
+            'Awards' => collect($this->awards)->flatMap(fn (array $award) => [$award['title'], $award['issuer'], $award['description']])->all(),
+            'Volunteering' => collect($this->volunteering)->flatMap(fn (array $role) => [$role['role'], $role['organization'], $role['description']])->all(),
+            'Publications' => collect($this->publications)->flatMap(fn (array $publication) => [$publication['title'], $publication['publisher'], $publication['description']])->all(),
+            'Your own sections' => collect($this->extras->custom)->flatMap(fn (array $section) => [$section['title'], ...collect($section['items'])->flatMap(fn (array $item) => [$item['title'], $item['subtitle'], $item['description']])])->all(),
+            'Interests' => [$this->extras->interests],
+            'Personal information' => array_values($this->extras->personal),
         ];
 
         return collect($parts)
-            ->filter(fn (array $texts) => collect($texts)->contains(fn (?string $text) => $text !== null && preg_match(self::SUPPORTED_SCRIPTS, $text) === 1))
+            ->filter(fn (array $texts) => collect($texts)->contains(fn (?string $text) => $text !== null && preg_match($pattern, $text) === 1))
             ->keys()
             ->all();
     }

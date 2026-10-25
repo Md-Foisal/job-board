@@ -46,9 +46,18 @@ from companies, and open jobs that match at least half of what they ask for.
 
 ![Candidate dashboard](docs/screenshots/candidate-dashboard.jpg)
 
-**CV builder.** The CV is built from the profile, with seven templates, six colours and a live preview,
-and downloads as a PDF. Six of the templates keep one reading order for applicant tracking systems; the
-two-column one says so before it is picked.
+**CV builder.** The CV is built from the profile, with seven templates, any colour that reads on white,
+seven typefaces with Bengali partners, steps for type size, spacing and margins, and a live preview that
+marks where pages break and can fit the CV onto one page. A candidate keeps up to ten saved CVs: each
+can leave out single entries, carry its own headline and summary, and hold what belongs on a CV but not
+on the profile (personal information, references, a declaration, sections of their own), with one-click
+setups for international, European and Bangladeshi employers and headings in English or Bengali. A CV can
+be aimed at a job on the board, or one whose ad is pasted in, to see which of its skills the CV covers;
+a score explains what recruiters would miss. CVs download as PDF, Word or plain text, can be shared as
+an unlisted web page with view counts and a QR code, and come with a cover letter builder that drafts a
+letter from the profile and the job. PDFs are drawn by Chromium in Cloudflare Browser Rendering when it is
+set up (any typeface, Bengali, tagged PDF), and by DOMPDF on the server otherwise. Six of the templates
+keep one reading order for applicant tracking systems; the two-column one says so before it is picked.
 
 ![CV builder with the Creative template](docs/screenshots/cv-builder.jpg)
 

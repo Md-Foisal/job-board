@@ -50,15 +50,17 @@ final class Navigation
 
             // Experience, Education and Skills are parts of the profile and
             // are edited on it, so they light up My profile rather than
-            // standing beside it. Documents and the CV builder are the CV
-            // library; preferences are private. Neither is the profile.
+            // standing beside it. Documents, the CV builder and cover
+            // letters are the application papers; preferences are private.
+            // None of them is the profile.
             $sections[] = new NavSection(__('Profile'), [
                 new NavItem(__('My profile'), 'user-circle', route('candidate.profile.edit'), [
                     'candidate.profile.*', 'candidate.resume-import',
                     'candidate.experience.*', 'candidate.education.*', 'candidate.skills.*',
                 ]),
                 new NavItem(__('Documents'), 'document-text', route('candidate.documents.index'), ['candidate.documents.*']),
-                new NavItem(__('CV builder'), 'document-plus', route('candidate.cv-builder'), ['candidate.cv-builder']),
+                new NavItem(__('CV builder'), 'document-plus', route('candidate.cv-builder'), ['candidate.cv-builder', 'candidate.cv-builder.*']),
+                new NavItem(__('Cover letters'), 'envelope', route('candidate.cover-letters'), ['candidate.cover-letters']),
                 new NavItem(__('Job preferences'), 'adjustments-horizontal', route('candidate.preferences.edit'), ['candidate.preferences.*']),
             ]);
         }

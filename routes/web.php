@@ -10,6 +10,7 @@ use App\Http\Controllers\CandidateProfileController;
 use App\Http\Controllers\CandidateSavedJobController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CvFontController;
 use App\Http\Controllers\DocumentDownloadController;
 use App\Http\Controllers\DocumentPreviewController;
 use App\Http\Controllers\EmployerCompanyController;
@@ -18,15 +19,28 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\JobAlertUnsubscribeController;
 use App\Http\Controllers\JobPostingController;
+use App\Http\Controllers\PublicCvController;
 use App\Http\Controllers\RecruiterProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SocialSignInController;
 use App\Http\Controllers\SocialSignUpController;
 use App\Http\Controllers\StartCandidateProfileController;
+use App\Http\Controllers\TailorCvController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
+// The typefaces CVs are drawn in, for the builder's preview and web CVs.
+Route::get('/cv-fonts/{file}', CvFontController::class)
+    ->where('file', '[a-z0-9-]+\.woff2')->name('cv-fonts');
+
+// A CV its owner shares as a web page: open to anyone with the link,
+// never listed (noindex), gone when sharing stops.
+Route::get('/cv/{slug}', [PublicCvController::class, 'show'])
+    ->where('slug', '[a-z0-9]{12}')->name('cv.public');
+Route::get('/cv/{slug}/pdf', [PublicCvController::class, 'pdf'])
+    ->where('slug', '[a-z0-9]{12}')->middleware('throttle:20,60')->name('cv.public.pdf');
 
 // Static guest pages. Route::view, not a
 // controller: there is no data to fetch, and they are linked from
@@ -126,6 +140,14 @@ Route::middleware(['auth', 'candidate'])->prefix('candidate')->name('candidate.'
     // A CV made from the profile: previewed here, then saved into the
     // document library or downloaded as a PDF.
     Route::livewire('/cv-builder', 'pages::candidate.cv-builder')->name('cv-builder');
+
+    // A saved CV aimed at one job on the board: made the first time, then
+    // reopened, and the builder shows how it covers the job's skills.
+    Route::get('/cv-builder/for/{jobPosting:slug}', TailorCvController::class)->name('cv-builder.tailor');
+
+    // Cover letters, each aimed at one job and printed in the look of one
+    // of the candidate's CVs.
+    Route::livewire('/cover-letters', 'pages::candidate.cover-letters')->name('cover-letters');
 
     // Skill selection: unlike Education/Experience/Documents this is a
     // singleton "edit your skill set, then Save" page (one pivot sync on

@@ -50,6 +50,39 @@ class CandidateProfile extends Model
         return $this->hasMany(Certification::class);
     }
 
+    public function languages()
+    {
+        return $this->hasMany(CandidateLanguage::class);
+    }
+
+    public function awards()
+    {
+        return $this->hasMany(Award::class);
+    }
+
+    public function volunteerExperiences()
+    {
+        return $this->hasMany(VolunteerExperience::class);
+    }
+
+    public function publications()
+    {
+        return $this->hasMany(Publication::class);
+    }
+
+    /**
+     * The candidate's saved CVs, the most recently worked on first.
+     */
+    public function cvVersions()
+    {
+        return $this->hasMany(CvVersion::class);
+    }
+
+    public function coverLetters()
+    {
+        return $this->hasMany(CoverLetter::class);
+    }
+
     public function documents()
     {
         return $this->hasMany(Document::class);

@@ -82,7 +82,7 @@ test('roles are listed current first, then newest, each with its dates', functio
 test('courses read as qualification and institution, leaving out blank parts', function () {
     $cv = CvData::fromProfile(karimForCv()->candidateProfile);
 
-    expect($cv->education)->toBe([
+    expect(array_map(fn (array $course) => array_diff_key($course, ['id' => true]), $cv->education))->toBe([
         ['title' => 'Data Science', 'institution' => 'Open University', 'dates' => 'Sep 2024 – Present'],
         ['title' => 'BSc in CSE', 'institution' => 'University of Dhaka', 'dates' => 'Jan 2015 – Jan 2019'],
     ]);

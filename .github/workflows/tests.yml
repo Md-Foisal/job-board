@@ -71,5 +71,8 @@ jobs:
       - name: Build Assets
         run: npm run build
 
+      # Split across processes: in one process the suite grew past
+      # phpunit.xml's 256 MB (262 MB peak at 1,580 tests). Each process
+      # gets its own copy of the testing database.
       - name: Run Tests
-        run: ./vendor/bin/pest
+        run: ./vendor/bin/pest --parallel

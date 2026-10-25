@@ -7,6 +7,8 @@ use App\Enums\DocumentType;
 use App\Enums\EmploymentType;
 use App\Enums\ProficiencyLevel;
 use App\Enums\WorkplaceType;
+use App\Models\Award;
+use App\Models\CandidateLanguage;
 use App\Models\CandidatePreference;
 use App\Models\CandidateProfile;
 use App\Models\Certification;
@@ -17,6 +19,7 @@ use App\Models\JobPosting;
 use App\Models\Project;
 use App\Models\Skill;
 use App\Models\User;
+use App\Models\VolunteerExperience;
 use App\Support\Countries;
 use App\Support\CvData;
 use Carbon\CarbonImmutable;
@@ -149,6 +152,29 @@ final class People
                 'expires_on' => self::monthsAgo($certification['expires']),
                 'credential_id' => $certification['credential_id'],
                 'credential_url' => $certification['credential_url'],
+            ]);
+        }
+
+        foreach ($details['languages'] ?? [] as $language) {
+            CandidateLanguage::factory()->for($profile)->create(['name' => $language['name'], 'level' => $language['level']]);
+        }
+
+        foreach ($details['awards'] ?? [] as $award) {
+            Award::factory()->for($profile)->create([
+                'title' => $award['title'],
+                'issuer' => $award['issuer'],
+                'awarded_on' => self::monthsAgo($award['months_ago']),
+                'description' => $award['description'],
+            ]);
+        }
+
+        foreach ($details['volunteering'] ?? [] as $role) {
+            VolunteerExperience::factory()->for($profile)->create([
+                'role' => $role['role'],
+                'organization' => $role['organization'],
+                'start_date' => self::monthsAgo($role['start']),
+                'end_date' => $role['end'] === null ? null : self::monthsAgo($role['end']),
+                'description' => $role['description'],
             ]);
         }
 

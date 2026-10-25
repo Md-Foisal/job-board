@@ -78,6 +78,15 @@ final class SkillMatcher
      * the parts people write differently. + and # stay, since they change
      * which language is meant.
      */
+    /**
+     * Whether a text mentions one skill name, as a whole word by the
+     * rules above.
+     */
+    public static function mentions(string $name, string $text): bool
+    {
+        return trim($name) !== '' && preg_match(self::pattern($name), $text) === 1;
+    }
+
     private static function key(string $name): string
     {
         return mb_strtolower(preg_replace('/[\s.\-_]+/u', '', $name) ?? '');

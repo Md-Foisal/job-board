@@ -64,6 +64,20 @@ enum CvTemplate: string
         return $this !== self::Classic;
     }
 
+    /**
+     * The typeface the template is drawn for, used until the candidate
+     * picks another.
+     */
+    public function font(): CvFont
+    {
+        return match ($this) {
+            self::Classic => CvFont::SourceSans,
+            self::Modern, self::Compact, self::Bold => CvFont::Inter,
+            self::Executive => CvFont::SourceSerif,
+            self::Timeline, self::Creative => CvFont::Lato,
+        };
+    }
+
     public function view(): string
     {
         return 'cv.'.$this->value;

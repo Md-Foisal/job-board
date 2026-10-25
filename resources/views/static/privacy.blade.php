@@ -16,9 +16,26 @@
             password (hashed, never in readable form). If you build a candidate
             profile we store what you enter: headline, bio, links, phone number
             and location, education and work history, projects, certifications,
-            skills, salary, work-type and location preferences, and any documents you upload
-            or build, such as a CV. If you post jobs, we store your company details
-            and the postings themselves.
+            languages, awards, volunteering, publications, skills, salary, work-type
+            and location preferences, and any documents you upload or build, such as
+            a CV. A CV you save in the CV builder also keeps what you add to that CV
+            only (interests, references, personal details such as your date of birth
+            or your parents' names, a declaration) and any cover letters you write
+            there. If you post jobs, we store your company details and the postings
+            themselves.
+        </p>
+        <p>
+            If you share a saved CV as a web page, anyone with its link can read it
+            until you turn sharing off or the date you set passes. Your email, phone,
+            city, personal details and references stay off that page unless you
+            choose to show them, and we count how often the page is opened and the
+            CV downloaded. The page asks search engines not to list it.
+        </p>
+        <p>
+            To turn a CV or cover letter you build into a PDF, we send that page to
+            Cloudflare Browser Rendering, a browser Cloudflare runs for us, which
+            draws it and sends the file back. When Cloudflare cannot be reached, our own
+            server makes the PDF instead.
         </p>
         <p>
             If you sign up or sign in with Google or GitHub, that service tells

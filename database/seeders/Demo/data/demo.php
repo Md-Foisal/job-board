@@ -117,6 +117,16 @@ return [
                 'credential_url' => 'https://certificates.rafiahmed.example/aws-ccp',
             ],
         ],
+        'languages' => [
+            ['name' => 'English', 'level' => 'c2'],
+            ['name' => 'Bengali', 'level' => 'native'],
+        ],
+        'awards' => [
+            ['title' => 'Best final-year project', 'issuer' => 'University of Greenwich', 'months_ago' => 64, 'description' => 'For a timetabling app the department went on to use.'],
+        ],
+        'volunteering' => [
+            ['role' => 'Mentor', 'organization' => 'Code Club', 'start' => 30, 'end' => null, 'description' => 'Teaching primary school children to build their first web pages, one afternoon a month.'],
+        ],
         'education' => [
             'institution' => 'University of Greenwich',
             'degree' => 'BSc',

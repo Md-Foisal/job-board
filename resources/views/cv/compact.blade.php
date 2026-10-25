@@ -6,6 +6,7 @@
 --}}
 @php
     $design ??= new \App\Support\CvDesign(\App\Enums\CvTemplate::Compact, 'ink');
+    $pageMargins = '12mm 15mm';
     $accent = $design->colour();
 @endphp
 <!DOCTYPE html>
@@ -14,49 +15,50 @@
     <meta charset="utf-8">
     <title>{{ $cv->name }} – {{ __('CV') }}</title>
     <style>
-        @page { margin: 12mm 15mm; }
+        @include('cv.partials.style')
+        @page { margin: {{ $design->page($pageMargins) }}; }
         body, h1, h2, h3, h4, p, ul, ol, li { margin: 0; padding: 0; }
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9pt;
+            font-family: {!! $design->typeface()->stack() !!};
+            font-size: {{ $design->pt(9) }};
             line-height: 1.35;
             color: #1f2937;
             background: #ffffff;
         }
-        body.preview { padding: 12mm 15mm; }
+        body.preview { padding: {{ $design->page($pageMargins) }}; }
         .photo { float: right; width: 20mm; height: 20mm; margin-left: 5mm; }
-        h1 { font-size: 17pt; line-height: 1.1; color: {{ $accent }}; }
-        .headline { font-size: 10pt; color: #374151; margin-top: 0.5mm; }
-        .contact { font-size: 8.5pt; color: #374151; margin-top: 1mm; }
+        h1 { font-size: {{ $design->pt(17) }}; line-height: 1.1; color: {{ $accent }}; }
+        .headline { font-size: {{ $design->pt(10) }}; color: #374151; margin-top: {{ $design->gap(0.5) }}; }
+        .contact { font-size: {{ $design->pt(8.5) }}; color: #374151; margin-top: {{ $design->gap(1) }}; }
         .contact a { color: #374151; text-decoration: none; }
         .separator { color: #9ca3af; }
         h2 {
             clear: both;
-            font-size: 9.5pt;
+            font-size: {{ $design->pt(9.5) }};
             text-transform: uppercase;
             letter-spacing: 0.08em;
             color: {{ $accent }};
             border-bottom: 0.5pt solid #d1d5db;
-            padding-bottom: 0.5mm;
-            margin-top: 4mm;
-            margin-bottom: 1.5mm;
+            padding-bottom: {{ $design->gap(0.5) }};
+            margin-top: {{ $design->gap(4) }};
+            margin-bottom: {{ $design->gap(1.5) }};
         }
-        .entry { margin-bottom: 2mm; page-break-inside: avoid; }
-        h3 { font-size: 9.5pt; color: #111827; display: inline; }
+        .entry { margin-bottom: {{ $design->gap(2) }}; page-break-inside: avoid; }
+        h3 { font-size: {{ $design->pt(9.5) }}; color: #111827; display: inline; }
         .at { font-weight: normal; color: #374151; }
-        .entry .dates { display: inline; font-size: 8.5pt; color: #6b7280; padding-left: 2mm; }
-        .description { margin-top: 0.5mm; }
-        .description p { margin-bottom: 0.5mm; }
+        .entry .dates { display: inline; font-size: {{ $design->pt(8.5) }}; color: #6b7280; padding-left: 2mm; }
+        .description { margin-top: {{ $design->gap(0.5) }}; }
+        .description p { margin-bottom: {{ $design->gap(0.5) }}; }
         .description ul, .description ol { margin: 0.5mm 0 0.5mm 4.5mm; }
         .description ul { list-style-type: disc; }
-        .description li { margin-bottom: 0.3mm; }
-        .description h3, .description h4 { display: block; font-size: 9pt; margin: 1mm 0 0.3mm; }
+        .description li { margin-bottom: {{ $design->gap(0.3) }}; }
+        .description h3, .description h4 { display: block; font-size: {{ $design->pt(9) }}; margin: 1mm 0 0.3mm; }
         .description a { color: #1f2937; }
-        .links { font-size: 8.5pt; color: #374151; margin-top: 0.5mm; }
+        .links { font-size: {{ $design->pt(8.5) }}; color: #374151; margin-top: {{ $design->gap(0.5) }}; }
         .links a { color: {{ $accent }}; }
     </style>
 </head>
-<body @class(['preview' => $preview ?? false])>
+<body @class(['preview' => $preview ?? false]) data-margins="{{ implode(',', $design->pageMargins($pageMargins)) }}">
     @if ($photo)
         <img class="photo" src="{{ $photo }}" alt="{{ $cv->name }}">
     @endif
@@ -71,5 +73,7 @@
     @foreach ($design->sections() as $section)
         @include('cv.partials.section')
     @endforeach
+
+    @include('cv.partials.qr')
 </body>
 </html>

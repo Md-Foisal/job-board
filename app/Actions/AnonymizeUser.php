@@ -23,8 +23,10 @@ use Illuminate\Support\Str;
  *
  * What goes: everything that says who they were or what they wrote about
  * themselves -- name, email, phone, photos, profile, preferences, education,
- * experience, projects, certifications, every uploaded file, cover
- * letters, screening answers, the notes employers wrote about them, their
+ * experience, projects, certifications, languages, awards, volunteering,
+ * publications, saved CVs and their web pages, cover letters written in
+ * the builder, every uploaded file, the cover letters sent with
+ * applications, screening answers, the notes employers wrote about them, their
  * reviews of companies (with the companies' answers to them), alerts,
  * saved jobs, viewing history, messages sent through the contact page,
  * the Google or GitHub accounts they signed in with, sessions and reset
@@ -99,6 +101,14 @@ class AnonymizeUser
                 $profile->experienceRecords()->delete();
                 $profile->projects()->delete();
                 $profile->certifications()->delete();
+                $profile->languages()->delete();
+                $profile->awards()->delete();
+                $profile->volunteerExperiences()->delete();
+                $profile->publications()->delete();
+                // Saved CVs hold personal details and references, and
+                // their web pages must stop answering.
+                $profile->coverLetters()->delete();
+                $profile->cvVersions()->delete();
                 $profile->skills()->detach();
                 $profile->forceFill([
                     'headline' => null,
