@@ -313,6 +313,7 @@ push and pull request to `main`.
 | 7 Polish | Time zones, currencies, best-match sort and realistic demo data ([#7](https://github.com/Md-Foisal/job-board/pull/7)) | Oct 2026 |
 | 8 UI/UX | A design system with light and dark themes, every page rebuilt per role, a command palette, an applicant board, CV templates and branded emails ([#8](https://github.com/Md-Foisal/job-board/pull/8)) | Oct 2026 |
 | 9 Launch | MySQL, Docker, sign-in with Google or GitHub, confirmed email addresses, uploads in S3-compatible storage, real mail, and the live site ([#9](https://github.com/Md-Foisal/job-board/pull/9)) | Oct 2026 |
+| 10 CV builder | Seven templates, PDFs drawn by Chromium with real typefaces and Bengali, a design studio, saved CVs aimed at jobs with a score, web CVs, Word export and cover letters ([#10](https://github.com/Md-Foisal/job-board/pull/10), [#11](https://github.com/Md-Foisal/job-board/pull/11)) | Oct 2026 |
 
 Next:
 
