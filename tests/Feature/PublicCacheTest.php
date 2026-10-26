@@ -4,6 +4,7 @@ use App\Models\Category;
 use App\Models\JobPosting;
 use App\Support\PublicCache;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
@@ -67,3 +68,31 @@ test('cached models come back as models, relation included, through a store that
 test('only plain data can be put in the public cache directly', function () {
     PublicCache::remember('not-plain', fn () => ['posting' => JobPosting::factory()->create()]);
 })->throws(LogicException::class, 'PublicCache stores plain data only');
+
+test('the public cache keeps its entries in its own store, apart from the default one', function () {
+    config([
+        'cache.stores.public-test' => ['driver' => 'array', 'serialize' => true],
+        'cache.public_store' => 'public-test',
+    ]);
+
+    PublicCache::remember('where', fn () => 'own store');
+    PublicCache::flushPublic();
+    PublicCache::remember('where', fn () => 'next generation');
+
+    expect(Cache::store('public-test')->get('public:1:where'))->toBe('own store')
+        ->and(Cache::store('public-test')->get('public:2:where'))->toBe('next generation')
+        ->and(Cache::get('public:1:where'))->toBeNull()
+        ->and(Cache::get('cache-generation:public'))->toBeNull();
+});
+
+test('outside the tests the public cache is a file store of its own on the app disk', function () {
+    expect(config('cache.stores.public.driver'))->toBe('file')
+        ->and(config('cache.stores.public.path'))->toBe(storage_path('framework/cache/public'))
+        ->and(config('cache.stores.public.path'))->not->toBe(config('cache.stores.file.path'));
+});
+
+test('the public cache is cleared every night', function () {
+    $this->artisan('schedule:list')
+        ->expectsOutputToContain('cache:clear')
+        ->assertSuccessful();
+});
