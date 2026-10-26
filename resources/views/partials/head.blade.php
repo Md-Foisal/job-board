@@ -14,7 +14,7 @@
     $previewTitle = filled($title ?? null) ? $title : config('app.name', 'Laravel');
     $previewDescription = filled($description ?? null)
         ? $description
-        : __('Find work that fits your skills. Every job shows how well you match, before you apply.');
+        : __('Find work that fits your skills. Add your skills once and every job shows how well you match, before you apply.');
 @endphp
 <meta name="description" content="{{ $previewDescription }}">
 <meta property="og:site_name" content="{{ config('app.name', 'Laravel') }}">
