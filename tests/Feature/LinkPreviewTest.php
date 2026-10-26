@@ -17,6 +17,10 @@ test('the home page carries a full link preview with an absolute image', functio
         ->toContain('<meta name="twitter:card" content="summary_large_image">')
         ->toContain('<meta name="description" content="Find work that fits your skills.');
 
+    // LinkedIn's Post Inspector warns below 100 characters.
+    preg_match('/<meta name="description" content="([^"]+)">/', $html, $match);
+    expect(mb_strlen(html_entity_decode($match[1])))->toBeGreaterThanOrEqual(100);
+
     expect(asset('images/og-image.jpg'))->toStartWith('http');
     expect(public_path('images/og-image.jpg'))->toBeFile();
     [$width, $height] = getimagesize(public_path('images/og-image.jpg'));
