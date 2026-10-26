@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Closure;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -14,11 +15,16 @@ use LogicException;
  * responsiveness mark, and the skill and category lists every filter and
  * form draws from.
  *
+ * It has a store of its own (cache.public_store), a file store on the
+ * app's disk in production: these entries are read on nearly every public
+ * page, and reading them from the database store cost a round trip each.
+ *
  * Invalidation works by generation rather than by tags. Laravel's cache
- * tags are not available on the database or file stores, which is what
- * this app runs on, so every key carries a generation number and flushing
- * means moving to the next one; the old entries are simply never read
- * again and expire on their own. It works the same on every store.
+ * tags are not available on the database or file stores, so every key
+ * carries a generation number and flushing means moving to the next one;
+ * the old entries are simply never read again. A file store only deletes
+ * an expired entry when it is read, so the store is also cleared every
+ * night (routes/console.php). It works the same on every store.
  *
  * There are two generations, because they change at very different rates:
  * "public" moves whenever a posting, a company or a report changes, since
@@ -62,7 +68,7 @@ final class PublicCache
      */
     public static function remember(string $key, Closure $callback, int $seconds = self::TTL_SECONDS): mixed
     {
-        return Cache::remember(self::key(self::PUBLIC, $key), $seconds, fn () => self::plain($callback()));
+        return self::store()->remember(self::key(self::PUBLIC, $key), $seconds, fn () => self::plain($callback()));
     }
 
     /**
@@ -76,7 +82,7 @@ final class PublicCache
      */
     public static function models(string $key, string $model, Closure $query, array $relations = []): Collection
     {
-        return self::rebuild($model, $relations, Cache::remember(
+        return self::rebuild($model, $relations, self::store()->remember(
             self::key(self::PUBLIC, $key), self::TTL_SECONDS, fn () => self::flatten($query(), $relations),
         ));
     }
@@ -89,7 +95,7 @@ final class PublicCache
      */
     public static function lookupModels(string $key, string $model, Closure $query): Collection
     {
-        return self::rebuild($model, [], Cache::remember(
+        return self::rebuild($model, [], self::store()->remember(
             self::key(self::LOOKUPS, $key), self::TTL_SECONDS, fn () => self::flatten($query(), []),
         ));
     }
@@ -109,6 +115,11 @@ final class PublicCache
         self::advance(self::PUBLIC);
     }
 
+    private static function store(): Repository
+    {
+        return Cache::store(config('cache.public_store'));
+    }
+
     private static function key(string $generation, string $key): string
     {
         return "{$generation}:".self::generation($generation).":{$key}";
@@ -116,15 +127,15 @@ final class PublicCache
 
     private static function generation(string $name): int
     {
-        return (int) Cache::rememberForever("cache-generation:{$name}", fn () => 1);
+        return (int) self::store()->rememberForever("cache-generation:{$name}", fn () => 1);
     }
 
     private static function advance(string $name): void
     {
         // Seed first: incrementing a key that does not exist yet fails
         // quietly on some stores.
-        Cache::add("cache-generation:{$name}", 1);
-        Cache::increment("cache-generation:{$name}");
+        self::store()->add("cache-generation:{$name}", 1);
+        self::store()->increment("cache-generation:{$name}");
     }
 
     /**

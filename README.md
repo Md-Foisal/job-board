@@ -165,7 +165,9 @@ employers. See [ADR 0005](docs/adr/0005-ai-is-optional-and-never-scores-candidat
   [`routes/console.php`](routes/console.php) close expired jobs and invitations, send job alerts,
   anonymise deleted accounts and clear expired cache.
 - **Cache:** pages every guest sees the same way (home, categories, lookups) are cached. Any change to
-  that data moves a generation key, so old entries are never read again.
+  that data moves a generation key, so old entries are never read again. That cache sits in a file store
+  on the app's own disk, so a page does not wait on the database for it; rate limits, scheduler locks and
+  per-person AI results stay in the shared database store.
 - **Uploads:** images are re-encoded before they are stored. CVs and documents are on a private disk and
   are only served after a policy check.
 - **Design system:** colours, type and spacing are named tokens in

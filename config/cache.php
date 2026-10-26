@@ -19,6 +19,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Cache Store
+    |--------------------------------------------------------------------------
+    |
+    | The store App\Support\PublicCache uses for what every visitor sees
+    | alike: the skill, category and currency lists and the homepage. These
+    | are read on nearly every public page, so they are kept on the app's
+    | own disk instead of behind a round trip to the database. The default
+    | store above keeps everything that must be shared and pruned: rate
+    | limits, scheduler locks and the AI results about a person.
+    |
+    */
+
+    'public_store' => env('PUBLIC_CACHE_STORE', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------
     |
@@ -55,6 +71,16 @@ return [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
             'lock_path' => storage_path('framework/cache/data'),
+        ],
+
+        // The web server, the queue worker and the scheduler run in one
+        // container and see this one directory, so a flush made by any of
+        // them reaches the others. With more than one app server this must
+        // move to a store they all share, such as Redis.
+        'public' => [
+            'driver' => 'file',
+            'path' => storage_path('framework/cache/public'),
+            'lock_path' => storage_path('framework/cache/public'),
         ],
 
         'memcached' => [

@@ -27,6 +27,11 @@ Schedule::command(AnonymizeDeletedUsers::class)->dailyAt('03:00')->timezone('Asi
 // must not outlive their hour or day.
 Schedule::command(PruneExpiredCache::class)->hourly()->withoutOverlapping()->onOneServer();
 
+// Nightly: the public cache's file store keeps every entry of a past
+// generation until something reads that key again, which nothing will.
+// Clearing it costs one slower page per list; the next visitor refills it.
+Schedule::command('cache:clear', [config('cache.public_store')])->dailyAt('03:15')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();
+
 // Nightly: contact messages closed long enough ago that nobody will
 // write back about them (ContactMessage::KEPT_AFTER_CLOSING_MONTHS).
 Schedule::command('model:prune', ['--model' => [ContactMessage::class]])->dailyAt('03:30')->timezone('Asia/Dhaka')->withoutOverlapping()->onOneServer();
