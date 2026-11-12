@@ -8,7 +8,8 @@ A job board where silence shows. Built with Laravel, Livewire, Filament and Pest
 Live at [hearbackjobs.com](https://hearbackjobs.com).
 
 This project is in active development. Everything described here is merged on `main`.
-See [A look at it](#a-look-at-it) for screenshots and [Status and roadmap](#status-and-roadmap) for what comes next.
+See [Watch the film](#watch-the-film) for a two-minute tour, [A look at it](#a-look-at-it) for screenshots and
+[Status and roadmap](#status-and-roadmap) for what comes next.
 
 ## What it is
 
@@ -24,6 +25,18 @@ This board is built so that a company's silence is visible:
 
 It is for three groups of people: job seekers, employers (a company, an agency, or one person hiring),
 and the staff who keep the board clean.
+
+## Watch the film
+
+Two minutes of the running app with the demo data: one application, followed from the search box to
+the answer, then the company page, the CV builder, analytics and staff review.
+
+<p align="center">
+  <a href="docs/media/film/hearback-film.mp4"><img alt="A silent preview of the film: the HearBack title, a candidate reading how a job matches on a phone, the employer moving the application through its stages, the candidate's timeline ending in Hired, and the CV builder" src="docs/media/film/hearback-teaser.webp" width="800"></a>
+</p>
+
+[Download the MP4](docs/media/film/hearback-film.mp4) (4K, with sound). How it was made, and what was
+arranged for the camera, is in [docs/media/film/NOTES.md](docs/media/film/NOTES.md).
 
 ## A look at it
 
