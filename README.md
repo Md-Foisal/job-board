@@ -32,10 +32,10 @@ Two minutes of the running app with the demo data: one application, followed fro
 the answer, then the company page, the CV builder, analytics and staff review.
 
 <p align="center">
-  <a href="docs/media/film/hearback-film.mp4"><img alt="A silent preview of the film: the HearBack title, a candidate reading how a job matches on a phone, the employer moving the application through its stages, the candidate's timeline ending in Hired, and the CV builder" src="docs/media/film/hearback-teaser.webp" width="800"></a>
+  <a href="https://youtu.be/ZavoyqCT30E"><img alt="A silent preview of the film: the HearBack title, a candidate reading how a job matches on a phone, the employer moving the application through its stages, the candidate's timeline ending in Hired, and the CV builder" src="docs/media/film/hearback-teaser.webp" width="800"></a>
 </p>
 
-[Download the MP4](docs/media/film/hearback-film.mp4) (4K, with sound). How it was made, and what was
+[Watch it on YouTube](https://youtu.be/ZavoyqCT30E) (with English subtitles) or [download the MP4](docs/media/film/hearback-film.mp4) (4K, with sound). How it was made, and what was
 arranged for the camera, is in [docs/media/film/NOTES.md](docs/media/film/NOTES.md).
 
 ## A look at it
