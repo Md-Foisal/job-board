@@ -1,0 +1,100 @@
+1
+00:00:00,400 --> 00:00:04,300
+You applied. Then nothing.
+
+2
+00:00:04,900 --> 00:00:08,000
+HearBack. A job board where silence shows.
+
+3
+00:00:08,900 --> 00:00:13,900
+A job board, built end to end.
+One application, followed until it gets an answer.
+
+4
+00:00:14,300 --> 00:00:17,781
+Rafi looks for Laravel work.
+Each result shows his match.
+
+5
+00:00:17,931 --> 00:00:25,116
+The match, before he applies.
+Skills, pay, workplace, location and experience, line by line. Only he can see it.
+
+6
+00:00:25,416 --> 00:00:31,015
+A CV and a few honest lines.
+Applied here, so it can be followed to the end.
+
+7
+00:00:31,315 --> 00:00:36,567
+Sent. And it has a timeline.
+Every answer from the company will land here.
+
+8
+00:00:37,067 --> 00:00:40,224
+Hannah opens her applicants.
+
+9
+00:00:40,624 --> 00:00:43,484
+Profile, CV and application in one place.
+
+10
+00:00:43,884 --> 00:00:49,351
+Rafi opens his application. It is already there.
+
+11
+00:00:49,751 --> 00:00:53,773
+Each stage, as it happens.
+
+12
+00:00:54,173 --> 00:00:57,636
+Ten minutes to undo it, before he is told.
+
+13
+00:00:58,086 --> 00:01:01,233
+He heard back.
+
+14
+00:01:01,833 --> 00:01:06,949
+Answering people is public.
+Companies that answer their applicants carry this mark.
+
+15
+00:01:07,349 --> 00:01:13,900
+Candidates review the hiring.
+After an interview, a decision, or 30 days of silence. The company can answer in public.
+
+16
+00:01:14,500 --> 00:01:20,938
+A CV, drawn from the profile.
+Seven templates and a live preview. No design tool needed.
+
+17
+00:01:21,238 --> 00:01:29,900
+Any colour that reads on white.
+Up to ten saved CVs, aimed at a job, as PDF, Word or a web page.
+
+18
+00:01:30,500 --> 00:01:37,233
+How each posting is doing.
+Views, applications, how far people got, and how quickly the team answers.
+
+19
+00:01:37,833 --> 00:01:45,233
+A new employer is read first.
+Their postings wait for a moderator before the public sees them.
+
+20
+00:01:45,833 --> 00:01:50,567
+Light and dark, from the same tokens.
+
+21
+00:01:50,967 --> 00:01:59,333
+Nothing just disappears.
+1,590+ Pest tests. 19 policies. Ten minutes to undo a decision. 9 architecture decisions written down.
+
+22
+00:01:59,733 --> 00:02:07,033
+HearBack. github.com/Md-Foisal/job-board
+Designed and built by Md. Foisal. A portfolio project, shown with demo data.
