@@ -3,12 +3,14 @@
 use App\Actions\AnonymizeUser;
 use App\Enums\ContactTopic;
 use App\Filament\Resources\ContactMessages\Pages\ManageContactMessages;
+use App\Http\Controllers\ContactController;
 use App\Models\ContactMessage;
 use App\Notifications\ContactMessageReceived;
 use App\Notifications\ContactReply;
 use App\Support\SubmissionLimits;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
@@ -20,12 +22,14 @@ function contactPayload(array $overrides = []): array
         'email' => 'nadia@example.com',
         'topic' => ContactTopic::Account->value,
         'body' => 'I cannot sign in since I changed my phone.',
+        // Shown a minute ago, as when a person has just written it.
+        ContactController::STARTED_FIELD => ContactController::startedToken(now()->subMinute()->getTimestamp()),
     ], $overrides);
 }
 
 function contactMessage(array $overrides = []): ContactMessage
 {
-    return ContactMessage::create(contactPayload($overrides));
+    return ContactMessage::create(Arr::except(contactPayload($overrides), ContactController::STARTED_FIELD));
 }
 
 test('anyone can open the contact page, and it says when to expect an answer', function () {
@@ -95,6 +99,65 @@ test('a script that fills the hidden field is told it worked, and nothing is kep
 
     expect(ContactMessage::count())->toBe(0);
     Notification::assertNothingSent();
+});
+
+test('a post that never opened the form, or carries a forged time, is told it worked, and nothing is kept', function (?string $started) {
+    Notification::fake();
+    staffWithTwoFactor();
+
+    $this->post(route('contact.store'), contactPayload([ContactController::STARTED_FIELD => $started]))
+        ->assertRedirect(route('contact'))
+        ->assertSessionHas('contactSentTo');
+
+    expect(ContactMessage::count())->toBe(0);
+    Notification::assertNothingSent();
+})->with([
+    'no field' => [null],
+    'a plain number' => [(string) now()->subHour()->getTimestamp()],
+    'tampered' => ['eyJpdiI6Im5vdC1yZWFsIn0='],
+]);
+
+test('a form sent faster than anyone can write is told it worked, and nothing is kept', function () {
+    Notification::fake();
+    staffWithTwoFactor();
+
+    $this->post(route('contact.store'), contactPayload([
+        ContactController::STARTED_FIELD => ContactController::startedToken(now()->getTimestamp()),
+    ]))->assertSessionHas('contactSentTo');
+
+    expect(ContactMessage::count())->toBe(0);
+    Notification::assertNothingSent();
+});
+
+test('the contact page hands out the time it was shown, and a person who takes a while gets through', function () {
+    $html = $this->get(route('contact'))->getContent();
+    preg_match('/name="'.ContactController::STARTED_FIELD.'" value="([^"]+)"/', $html, $match);
+
+    $this->travel(ContactController::MIN_SECONDS_TO_WRITE)->seconds();
+
+    $this->post(route('contact.store'), contactPayload([ContactController::STARTED_FIELD => $match[1] ?? null]))
+        ->assertSessionHasNoErrors();
+
+    expect(ContactMessage::count())->toBe(1);
+});
+
+test('the same words from the same address again are not kept twice, and staff are told once', function () {
+    Notification::fake();
+    $staff = staffWithTwoFactor();
+
+    $this->post(route('contact.store'), contactPayload(['topic' => ContactTopic::Privacy->value]));
+    $this->post(route('contact.store'), contactPayload())->assertSessionHas('contactSentTo');
+
+    expect(ContactMessage::count())->toBe(1);
+    Notification::assertSentToTimes($staff, ContactMessageReceived::class, 1);
+
+    $this->travel(ContactController::REPEAT_WINDOW_DAYS + 1)->days();
+    $this->post(route('contact.store'), contactPayload([
+        ContactController::STARTED_FIELD => ContactController::startedToken(now()->subMinute()->getTimestamp()),
+    ]));
+    $this->post(route('contact.store'), contactPayload(['body' => 'A different question about my account.']));
+
+    expect(ContactMessage::count())->toBe(3);
 });
 
 test('one network cannot keep sending messages', function () {
