@@ -78,6 +78,8 @@
                         <input type="text" name="{{ \App\Http\Controllers\ContactController::HONEYPOT }}" tabindex="-1" autocomplete="off">
                     </label>
                 </div>
+                <input type="hidden" name="{{ \App\Http\Controllers\ContactController::STARTED_FIELD }}" value="{{ $started }}">
+
 
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-meta text-ink-muted">
